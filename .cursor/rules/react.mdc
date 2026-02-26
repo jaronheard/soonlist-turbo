@@ -1,0 +1,32 @@
+---
+description: React component patterns and hooks guidelines
+globs: "**/*.tsx,**/*.jsx"
+alwaysApply: false
+---
+# React Patterns
+
+## Components
+
+- Functional components only
+- Named exports preferred
+- File structure: exported component, subcomponents, helpers, static content, types
+- Check for existing UI components in `packages/ui/` before creating new ones
+
+## Hooks
+
+- Question if `useEffect` is needed - only use for syncing with external systems
+- Prefer React Query (@tanstack/react-query) for external system sync
+- Convex handles data fetching, caching, and state management
+- Avoid premature `useMemo`/`useCallback` optimization
+
+## Error Handling
+
+- Early returns and guard clauses
+- Model expected errors as return values in Server Actions
+- Error boundaries for unexpected errors
+
+## Styling
+
+- Web: Shadcn UI, Radix, and TailwindCSS
+- Mobile: NativeWind (TailwindCSS for React Native)
+- Mobile-first responsive design

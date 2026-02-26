@@ -214,6 +214,10 @@ export default defineSchema({
     beforeThisDateTime: v.optional(v.string()), // Optional ISO date string for custom filtering
     // Group membership for grouped feed derivation (optional during migration)
     similarityGroupId: v.optional(v.string()),
+    // Event visibility for filtering public feeds (optional during migration)
+    eventVisibility: v.optional(
+      v.union(v.literal("public"), v.literal("private")),
+    ),
   })
     .index("by_feed_hasEnded_startTime", [
       "feedId",
@@ -222,7 +226,13 @@ export default defineSchema({
     ]) // For efficient filtering and sorting
     .index("by_feed_event", ["feedId", "eventId"]) // For deduplication checks
     .index("by_event", ["eventId"]) // For event removal across all feeds
-    .index("by_feed_group", ["feedId", "similarityGroupId"]), // Lookup membership for a given feed+group
+    .index("by_feed_group", ["feedId", "similarityGroupId"]) // Lookup membership for a given feed+group
+    .index("by_feed_visibility_hasEnded_startTime", [
+      "feedId",
+      "eventVisibility",
+      "hasEnded",
+      "eventStartTime",
+    ]), // For filtering by visibility before pagination
 
   // Grouped feed table - one entry per similarity group per feed (used for pagination and server-side grouping)
   userFeedGroups: defineTable({

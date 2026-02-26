@@ -7,11 +7,11 @@ import {
   View,
 } from "react-native";
 import { Stack } from "expo-router";
-import { toast } from "sonner-native";
 
 import type { CalendarAppInfo } from "~/utils/calendarAppDetection";
 import { Check } from "~/components/icons";
 import { useCalendar } from "~/hooks/useCalendar";
+import { hapticSuccess } from "~/utils/feedback";
 
 export default function CalendarSettingsScreen() {
   const {
@@ -25,7 +25,7 @@ export default function CalendarSettingsScreen() {
     // Type guard to ensure the appId is valid
     if (appId === "google" || appId === "apple") {
       setPreferredCalendarApp(appId);
-      toast.success(`Set ${appId} as your preferred calendar app`);
+      void hapticSuccess();
     } else {
       console.error("Invalid calendar app ID:", appId);
     }

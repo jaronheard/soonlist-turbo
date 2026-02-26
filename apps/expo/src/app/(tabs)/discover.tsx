@@ -35,7 +35,6 @@ function DiscoverContent() {
     results: events,
     status,
     loadMore,
-    isLoading,
   } = useStablePaginatedQuery(
     api.feeds.getDiscoverFeed,
     canAccessDiscover
@@ -105,14 +104,14 @@ function DiscoverContent() {
       return null;
     }
 
-    // User's own events should always show as saved
     const isOwnEvent = event.userId === user.id;
-    const isSaved = isOwnEvent || savedEventIds.has(event.id);
+    const isSaved = savedEventIds.has(event.id);
 
     return (
       <SaveShareButton
         eventId={event.id}
         isSaved={isSaved}
+        isOwnEvent={isOwnEvent}
         source="discover_list"
       />
     );
@@ -120,23 +119,18 @@ function DiscoverContent() {
 
   return (
     <View className="flex-1 bg-white">
-      {isLoading && status === "LoadingFirstPage" ? (
-        <LoadingSpinner />
-      ) : (
-        <View className="flex-1">
-          <UserEventsList
-            events={enrichedEvents}
-            onEndReached={handleLoadMore}
-            isFetchingNextPage={status === "LoadingMore"}
-            ActionButton={SaveShareButtonWrapper}
-            showCreator="always"
-            hideDiscoverableButton={true}
-            isDiscoverFeed={true}
-            savedEventIds={savedEventIds}
-            HeaderComponent={DiscoverShareBanner}
-          />
-        </View>
-      )}
+      <UserEventsList
+        events={enrichedEvents}
+        onEndReached={handleLoadMore}
+        isFetchingNextPage={status === "LoadingMore"}
+        isLoadingFirstPage={status === "LoadingFirstPage"}
+        ActionButton={SaveShareButtonWrapper}
+        showCreator="always"
+        hideDiscoverableButton={true}
+        isDiscoverFeed={true}
+        savedEventIds={savedEventIds}
+        HeaderComponent={DiscoverShareBanner}
+      />
     </View>
   );
 }
@@ -147,7 +141,8 @@ export default function Page() {
   return (
     <>
       <AuthLoading>
-        <View className="flex-1 bg-white">
+        <View className="flex-1 bg-interactive-3">
+          <View className="h-[100px]" />
           <LoadingSpinner />
         </View>
       </AuthLoading>

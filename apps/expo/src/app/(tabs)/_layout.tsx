@@ -9,6 +9,15 @@ export const unstable_settings = {
   initialRouteName: "feed",
 };
 
+const tabHeaderConfig = {
+  feed: { title: "Upcoming", active: "upcoming" },
+  following: { title: "Following", active: "following" },
+  past: { title: "Past", active: "past" },
+  discover: { title: "Discover", active: "discover" },
+} as const;
+
+type TabRouteName = keyof typeof tabHeaderConfig;
+
 export default function TabsLayout() {
   const myListBadgeCount = useAppStore((s) => s.myListBadgeCount);
   const communityBadgeCount = useAppStore((s) => s.communityBadgeCount);

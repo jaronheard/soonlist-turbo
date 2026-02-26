@@ -1,6 +1,6 @@
 import type { FunctionReturnType } from "convex/server";
 import type { ViewStyle } from "react-native";
-import React, { useMemo } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import {
   ActivityIndicator,
   Image,
@@ -43,11 +43,14 @@ import {
   getDateTimeInfo,
   isOver,
 } from "~/utils/dates";
+import { setEventCache } from "~/utils/eventCache";
 import { getEventEmoji } from "~/utils/eventEmoji";
 import { collapseSimilarEvents } from "~/utils/similarEvents";
 import { EventMenu } from "./EventMenu";
 import { EventStats } from "./EventStats";
 import { UserProfileFlair } from "./UserProfileFlair";
+
+const HEADER_HEIGHT_DEFAULT = 100;
 
 type ShowCreatorOption = "always" | "otherUsers" | "never" | "savedFromOthers";
 
@@ -85,6 +88,8 @@ function EventSaversRow({
   eventId: string;
   currentUserId?: string;
 }) {
+  const [isExpanded, setIsExpanded] = useState(false);
+
   // Combine creator with savers, deduplicate by id, and limit to first 2
   const allUsers: UserForDisplay[] = [creator];
   for (const saver of savers) {
@@ -105,42 +110,127 @@ function EventSaversRow({
     }
   };
 
-  // Format names text
-  const getNamesText = () => {
-    const names = displayUsers.map(
-      (u) => u.displayName || u.username || "unknown",
-    );
-    if (names.length === 1) {
-      return names[0];
-    }
-    if (remainingCount > 0) {
-      return `${names.join(", ")} +${remainingCount} more`;
-    }
-    return names.join(", ");
-  };
-
   const avatarSize = iconSize * 1.1;
   const overlap = avatarSize * 0.3;
 
-  return (
-    <View className="mx-auto mt-1 flex-row items-center gap-2">
-      {/* Stacked avatars */}
-      <View
-        className="flex-row items-center"
-        style={{
-          width:
-            avatarSize + (displayUsers.length - 1) * (avatarSize - overlap),
-        }}
+  // Render individual tappable name
+  const renderTappableName = (user: UserForDisplay, isLast: boolean) => {
+    const displayName = user.displayName || user.username || "unknown";
+    return (
+      <Pressable
+        key={user.id}
+        onPress={() => handleUserPress(user)}
+        hitSlop={{ top: 8, bottom: 8, left: 4, right: 4 }}
       >
-        {displayUsers.map((user, index) => (
-          <Pressable
+        <Text className="text-xs text-neutral-2">
+          {displayName}
+          {!isLast && ", "}
+        </Text>
+      </Pressable>
+    );
+  };
+
+  // Collapsed view
+  if (!isExpanded) {
+    return (
+      <View className="mx-auto mt-1 flex-row items-center gap-2">
+        {/* Stacked avatars */}
+        <View
+          className="flex-row items-center"
+          style={{
+            width:
+              avatarSize + (displayUsers.length - 1) * (avatarSize - overlap),
+          }}
+        >
+          {displayUsers.map((user, index) => (
+            <Pressable
+              key={user.id}
+              onPress={() => handleUserPress(user)}
+              hitSlop={{ top: 12, bottom: 12, left: 8, right: 8 }}
+              style={{
+                position: index === 0 ? "relative" : "absolute",
+                left: index * (avatarSize - overlap),
+                zIndex: displayUsers.length - index,
+              }}
+            >
+              <UserProfileFlair username={user.username} size="xs">
+                {user.userImage ? (
+                  <ExpoImage
+                    source={{ uri: user.userImage }}
+                    style={{
+                      width: avatarSize,
+                      height: avatarSize,
+                      borderRadius: 9999,
+                      borderWidth: 2,
+                      borderColor: "white",
+                    }}
+                    contentFit="cover"
+                    contentPosition="center"
+                    cachePolicy="disk"
+                    transition={100}
+                    recyclingKey={`${eventId}-saver-${user.id}`}
+                  />
+                ) : (
+                  <View
+                    style={{
+                      width: avatarSize,
+                      height: avatarSize,
+                      borderRadius: 9999,
+                      borderWidth: 2,
+                      borderColor: "white",
+                      backgroundColor: "#E0D9FF",
+                      alignItems: "center",
+                      justifyContent: "center",
+                    }}
+                  >
+                    <User size={avatarSize * 0.6} color="#627496" />
+                  </View>
+                )}
+              </UserProfileFlair>
+            </Pressable>
+          ))}
+        </View>
+
+        {/* Names text - individually tappable */}
+        <View className="flex-row flex-wrap items-center">
+          {displayUsers.map((user, index) =>
+            renderTappableName(
+              user,
+              index === displayUsers.length - 1 && remainingCount === 0,
+            ),
+          )}
+          {remainingCount > 0 && (
+            <Pressable
+              onPress={() => setIsExpanded(true)}
+              hitSlop={{ top: 8, bottom: 8, left: 4, right: 4 }}
+            >
+              <Text className="text-xs text-interactive-1">
+                +{remainingCount} more
+              </Text>
+            </Pressable>
+          )}
+        </View>
+      </View>
+    );
+  }
+
+  // Expanded view - show all users in a vertical list
+  return (
+    <View className="mx-auto mt-1">
+      <TouchableOpacity
+        onPress={() => setIsExpanded(false)}
+        className="mb-2 items-center"
+        activeOpacity={0.7}
+      >
+        <Text className="text-xs text-interactive-1">Hide</Text>
+      </TouchableOpacity>
+      <View className="space-y-2">
+        {allUsers.map((user) => (
+          <TouchableOpacity
             key={user.id}
             onPress={() => handleUserPress(user)}
-            style={{
-              position: index === 0 ? "relative" : "absolute",
-              left: index * (avatarSize - overlap),
-              zIndex: displayUsers.length - index,
-            }}
+            className="flex-row items-center py-1"
+            activeOpacity={0.7}
           >
             <UserProfileFlair username={user.username} size="xs">
               {user.userImage ? (
@@ -157,7 +247,7 @@ function EventSaversRow({
                   contentPosition="center"
                   cachePolicy="disk"
                   transition={100}
-                  recyclingKey={`${eventId}-saver-${user.id}`}
+                  recyclingKey={`${eventId}-saver-expanded-${user.id}`}
                 />
               ) : (
                 <View
@@ -176,16 +266,12 @@ function EventSaversRow({
                 </View>
               )}
             </UserProfileFlair>
-          </Pressable>
+            <Text className="ml-2 text-xs text-neutral-2">
+              {user.displayName || user.username}
+            </Text>
+          </TouchableOpacity>
         ))}
       </View>
-
-      {/* Names text */}
-      <Pressable
-        onPress={() => displayUsers[0] && handleUserPress(displayUsers[0])}
-      >
-        <Text className="text-xs text-neutral-2">{getNamesText()}</Text>
-      </Pressable>
     </View>
   );
 }
@@ -291,6 +377,14 @@ export function UserEventListItem(props: UserEventListItemProps) {
   const { user: currentUser } = useUser();
   const eventUser = event.user;
 
+  // Prefetch the full-size image for the detail screen so it loads instantly
+  useEffect(() => {
+    const imageUrl = e.images?.[3];
+    if (imageUrl && typeof imageUrl === "string") {
+      void ExpoImage.prefetch(`${imageUrl}?max-w=1284&fit=contain&f=webp&q=80`);
+    }
+  }, [e.images]);
+
   const isRecent = useMemo(() => {
     const threeHoursAgoTimestamp = Date.now() - 3 * 60 * 60 * 1000;
 
@@ -372,6 +466,7 @@ export function UserEventListItem(props: UserEventListItemProps) {
           if (isDemoEvent) {
             router.navigate(`/onboarding/demo-event/${id}`);
           } else {
+            setEventCache(id, event);
             router.navigate(`/event/${id}`);
           }
         }}
@@ -492,7 +587,7 @@ export function UserEventListItem(props: UserEventListItemProps) {
               {ActionButton && <ActionButton event={event} />}
 
               <TouchableOpacity
-                className="-mb-0.5 -ml-2.5 flex-row items-center gap-1 pl-4 pr-1 py-2.5"
+                className="-mb-0.5 -ml-2.5 flex-row items-center gap-1 py-2.5 pl-4 pr-1"
                 onPress={handleAddToCal}
                 hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
               >
@@ -994,6 +1089,7 @@ interface UserEventsListProps {
   isDiscoverFeed?: boolean;
   savedEventIds?: Set<string>;
   HeaderComponent?: React.ComponentType<Record<string, never>>;
+  EmptyStateComponent?: React.ComponentType<Record<string, never>>;
   source?: string;
 }
 
@@ -1013,6 +1109,7 @@ export default function UserEventsList(props: UserEventsListProps) {
     isDiscoverFeed = false,
     savedEventIds,
     HeaderComponent,
+    EmptyStateComponent,
     source,
   } = props;
   const { user } = useUser();
@@ -1052,15 +1149,25 @@ export default function UserEventsList(props: UserEventsListProps) {
   };
 
   if (isLoadingFirstPage) {
+    // Calculate header height to match the loaded state
+    const headerHeight = HEADER_HEIGHT_DEFAULT;
     return (
-      <View className="flex-1 items-center justify-center">
-        <ActivityIndicator size="large" color="#5A32FB" />
+      <View style={{ flex: 1, backgroundColor: "#F4F1FF" }}>
+        <View style={{ height: headerHeight }} />
+        <View className="flex-1 items-center justify-center">
+          <ActivityIndicator size="large" color="#5A32FB" />
+        </View>
       </View>
     );
   }
 
-  if (collapsedEvents.length === 0 && !HeaderComponent) {
-    return renderEmptyState();
+  if (collapsedEvents.length === 0) {
+    if (EmptyStateComponent) {
+      return <EmptyStateComponent />;
+    }
+    if (!HeaderComponent) {
+      return renderEmptyState();
+    }
   }
 
   const renderFooter = () => {
@@ -1078,9 +1185,14 @@ export default function UserEventsList(props: UserEventsListProps) {
   };
 
   const renderHeader = () => {
-    if (!HeaderComponent && !stats) return null;
     return (
-      <View>
+      <>
+        <View
+          style={{
+            height: HEADER_HEIGHT_DEFAULT,
+          }}
+        />
+        {(HeaderComponent || stats) && <View style={{ height: 8 }} />}
         {HeaderComponent && <HeaderComponent />}
         {stats && (
           <EventStats
@@ -1090,7 +1202,9 @@ export default function UserEventsList(props: UserEventsListProps) {
             allTimeEvents={stats.allTimeEvents ?? 0}
           />
         )}
-      </View>
+        {/* when showing list items, add a bit of padding. not needed for empty state */}
+        <View style={{ height: 16 }} />
+      </>
     );
   };
 

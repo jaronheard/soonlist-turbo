@@ -59,7 +59,7 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
   name: getAppName(),
   slug: "timetimecc",
   scheme: getScheme(),
-  version: "1.3.3",
+  version: "1.3.8",
   orientation: "portrait",
   icon: IS_DEV ? "./assets/icon-dev.png" : "./assets/icon.png",
   userInterfaceStyle: "light",
@@ -161,6 +161,10 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
       UIBackgroundModes: ["fetch"],
       NSLocationWhenInUseUsageDescription:
         "Soonlist uses your location for notifications and locating events.",
+      // AppsFlyer SKAN & AdAttributionKit postback copies
+      NSAdvertisingAttributionReportEndpoint:
+        "https://appsflyer-skadnetwork.com/",
+      AdAttributionKitPostbackCopyURL: "https://appsflyer-skadnetwork.com/",
       CFBundleURLTypes: [
         {
           CFBundleURLName: "Soonlist Schemes",
@@ -206,7 +210,6 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
     typedRoutes: true,
     reactCompiler: true,
   },
-  newArchEnabled: true,
   // plugins: ["expo-router"],
   extra: {
     eas: {

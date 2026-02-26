@@ -4,16 +4,18 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Image } from "expo-image";
 import { Stack, useLocalSearchParams, useRouter } from "expo-router";
 import { useConvexAuth, useMutation, useQuery } from "convex/react";
-import { toast } from "sonner-native";
 
 import { api } from "@soonlist/backend/convex/_generated/api";
 
-import { Heart, User } from "~/components/icons";
+import { Check, User } from "~/components/icons";
+import { LiquidGlassHeader } from "~/components/LiquidGlassHeader";
+import SaveShareButton from "~/components/SaveShareButton";
 import UserEventsList from "~/components/UserEventsList";
 import { UserProfileFlair } from "~/components/UserProfileFlair";
 import { useStablePaginatedQuery } from "~/hooks/useStableQuery";
 import { useStableTimestamp } from "~/store";
 import { logError } from "~/utils/errorLogging";
+import { hapticSuccess, toast } from "~/utils/feedback";
 
 export default function UserProfilePage() {
   const { username } = useLocalSearchParams<{ username: string }>();
@@ -41,23 +43,36 @@ export default function UserProfilePage() {
   const followUserMutation = useMutation(api.users.followUser);
   const unfollowUserMutation = useMutation(api.users.unfollowUser);
 
-  // Fetch user's public events
+  // Query to get current user's saved event IDs
+  const savedEventIdsQuery = useQuery(
+    api.events.getSavedIdsForUser,
+    isAuthenticated && currentUser?.username
+      ? { userName: currentUser.username }
+      : "skip",
+  );
+
+  const savedEventIds = new Set(
+    savedEventIdsQuery?.map((event) => event.id) ?? [],
+  );
+
+  // Fetch user's public feed (uses visibility index for proper pagination)
   const {
     results: events,
     status,
     loadMore,
   } = useStablePaginatedQuery(
-    api.feeds.getUserCreatedEvents,
-    targetUser
+    api.feeds.getPublicUserFeed,
+    username
       ? {
-          userId: targetUser.id,
+          username: username,
           filter: "upcoming" as const,
         }
       : "skip",
     { initialNumItems: 50 },
   );
 
-  // Filter events client-side as safety check (backend should handle this, but good fallback)
+  // Client-side safety filter: hide events that have ended
+  // This prevents showing ended events if the cron job hasn't run recently
   const filteredEvents = useMemo(() => {
     const currentTime = new Date(stableTimestamp).getTime();
     return events.filter((event) => {
@@ -85,15 +100,10 @@ export default function UserProfilePage() {
     try {
       if (isFollowing) {
         await unfollowUserMutation({ followingId: targetUser.id });
-        toast.success(
-          `Unfollowed ${targetUser.displayName || targetUser.username}`,
-        );
       } else {
         await followUserMutation({ followingId: targetUser.id });
-        toast.success(
-          `Following ${targetUser.displayName || targetUser.username}`,
-        );
       }
+      void hapticSuccess();
     } catch (error) {
       logError("Error following/unfollowing user", error);
       toast.error(isFollowing ? "Failed to unfollow" : "Failed to follow");
@@ -120,13 +130,9 @@ export default function UserProfilePage() {
       <>
         <Stack.Screen
           options={{
-            headerShown: true,
-            headerTitle: "",
-            headerBackVisible: true,
-            headerBackTitle: "Back",
-            headerStyle: { backgroundColor: "#F4F1FF" },
-            headerShadowVisible: false,
-            headerTintColor: "#5A32FB",
+            headerTransparent: true,
+            headerBackground: () => <LiquidGlassHeader />,
+            headerRight: () => null,
           }}
         />
         <View className="flex-1 items-center justify-center bg-interactive-3">
@@ -142,13 +148,9 @@ export default function UserProfilePage() {
       <>
         <Stack.Screen
           options={{
-            headerShown: true,
-            headerTitle: "",
-            headerBackVisible: true,
-            headerBackTitle: "Back",
-            headerStyle: { backgroundColor: "#F4F1FF" },
-            headerShadowVisible: false,
-            headerTintColor: "#5A32FB",
+            headerTransparent: true,
+            headerBackground: () => <LiquidGlassHeader />,
+            headerRight: () => null,
           }}
         />
         <View className="flex-1 items-center justify-center bg-white">
@@ -158,49 +160,72 @@ export default function UserProfilePage() {
     );
   }
 
+  function ProfileSaveShareButtonWrapper({
+    event,
+  }: {
+    event: { id: string; userId: string };
+  }) {
+    if (!isAuthenticated || !currentUser) {
+      return null;
+    }
+    const isOwnEvent = event.userId === currentUser.id;
+    const isSaved = savedEventIds.has(event.id);
+    return (
+      <SaveShareButton
+        eventId={event.id}
+        isSaved={isSaved}
+        isOwnEvent={isOwnEvent}
+        source="user_profile"
+      />
+    );
+  }
+
   return (
     <>
       <Stack.Screen
         options={{
-          headerShown: true,
-          headerTitle: "",
-          headerBackVisible: true,
-          headerBackTitle: "Back",
-          headerStyle: { backgroundColor: "#F4F1FF" },
-          headerShadowVisible: false,
-          headerTintColor: "#5A32FB",
+          title: "Public List",
+          headerTransparent: true,
+          headerBackground: () => (
+            <View
+              style={{
+                flex: 1,
+                backgroundColor: "#E0D9FF", // interactive-2
+              }}
+            />
+          ),
+          headerTintColor: "#5A32FB", // interactive-1
+          headerTitleStyle: {
+            color: "#5A32FB", // interactive-1
+          },
+          headerRight: () => null,
         }}
       />
       <View className="flex-1 bg-interactive-3">
-        {status === "LoadingFirstPage" ? (
-          <View className="flex-1 items-center justify-center">
-            <ActivityIndicator size="large" color="#5A32FB" />
-          </View>
-        ) : (
-          <>
-            <UserEventsList
-              events={filteredEvents}
-              onEndReached={handleLoadMore}
-              isFetchingNextPage={status === "LoadingMore"}
-              showCreator="never"
-              hideDiscoverableButton={true}
-              isDiscoverFeed={false}
-              HeaderComponent={() => (
-                <UserProfileHeader
-                  user={targetUser}
-                  eventCount={filteredEvents.length}
-                />
-              )}
+        <UserEventsList
+          events={filteredEvents}
+          onEndReached={handleLoadMore}
+          isFetchingNextPage={status === "LoadingMore"}
+          isLoadingFirstPage={status === "LoadingFirstPage"}
+          showCreator="never"
+          hideDiscoverableButton={true}
+          isDiscoverFeed={false}
+          ActionButton={ProfileSaveShareButtonWrapper}
+          savedEventIds={savedEventIds}
+          HeaderComponent={() => (
+            <UserProfileHeader
+              user={targetUser}
+              eventCount={filteredEvents.length}
             />
-            {/* Don't show follow button on own profile */}
-            {!isOwnProfile && (
-              <FollowButton
-                isFollowing={isFollowing ?? false}
-                isLoading={isFollowLoading || isFollowing === undefined}
-                onPress={handleFollow}
-              />
-            )}
-          </>
+          )}
+        />
+        {/* Don't show follow button on own profile */}
+        {!isOwnProfile && (
+          <FollowButton
+            isFollowing={isFollowing ?? false}
+            isLoading={isFollowLoading || isFollowing === undefined}
+            onPress={handleFollow}
+          />
         )}
       </View>
     </>
@@ -225,7 +250,7 @@ function UserProfileHeader({ user, eventCount }: UserProfileHeaderProps) {
   if (!user) return null;
 
   return (
-    <View className="mb-4 items-center px-4 py-6">
+    <View className="items-center px-4 pb-2">
       {/* Avatar */}
       <UserProfileFlair username={user.username} size="xl">
         {user.userImage ? (
@@ -243,23 +268,21 @@ function UserProfileHeader({ user, eventCount }: UserProfileHeaderProps) {
       </UserProfileFlair>
 
       {/* Name */}
-      <Text className="mt-3 text-xl font-bold text-neutral-1">
+      <Text className="mt-2 text-xl font-bold text-neutral-1">
         {user.displayName || user.username}
       </Text>
 
       {/* Bio */}
       {user.bio && (
-        <Text className="mt-2 text-center text-sm text-neutral-2">
+        <Text className="mt-1 text-center text-sm text-neutral-2">
           {user.bio}
         </Text>
       )}
 
       {/* Event count */}
-      <View className="mt-4 flex-row items-center gap-2">
-        <Text className="text-sm text-neutral-2">
-          {eventCount} upcoming {eventCount === 1 ? "event" : "events"}
-        </Text>
-      </View>
+      <Text className="mt-1 text-sm text-neutral-2">
+        {eventCount} upcoming {eventCount === 1 ? "event" : "events"}
+      </Text>
     </View>
   );
 }
@@ -290,26 +313,30 @@ function FollowButton({
       <TouchableOpacity
         onPress={onPress}
         disabled={isLoading}
-        accessibilityLabel={isFollowing ? "Unfollow" : "Follow"}
+        accessibilityLabel={isFollowing ? "Unfollow" : "Get Updates"}
         accessibilityRole="button"
         activeOpacity={0.8}
       >
         <View
-          className={`flex-row items-center gap-4 rounded-full px-8 py-5 ${
-            isFollowing ? "bg-neutral-2" : "bg-interactive-1"
+          className={`flex-row items-center rounded-full px-8 py-5 ${
+            isFollowing
+              ? "gap-3 bg-neutral-2"
+              : isLoading
+                ? "gap-3 bg-interactive-1"
+                : "bg-interactive-1"
           }`}
         >
           {isLoading ? (
             <ActivityIndicator size="small" color="#FFFFFF" />
-          ) : (
-            <Heart
-              size={28}
-              color="#FFFFFF"
-              fill={isFollowing ? "#FFFFFF" : "none"}
-            />
-          )}
+          ) : isFollowing ? (
+            <Check size={24} color="#FFFFFF" strokeWidth={3} />
+          ) : null}
           <Text className="text-xl font-bold text-white">
-            {isLoading ? "Loading..." : isFollowing ? "Following" : "Follow"}
+            {isLoading
+              ? "Loading..."
+              : isFollowing
+                ? "Following"
+                : "Get Updates"}
           </Text>
         </View>
       </TouchableOpacity>

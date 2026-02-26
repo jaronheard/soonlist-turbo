@@ -19,13 +19,17 @@ interface SaveShareButtonProps {
   eventId: string;
   isSaved: boolean;
   source: string;
+  isOwnEvent?: boolean;
 }
 
 export default function SaveShareButton({
   eventId,
   isSaved,
   source = "unknown",
+  isOwnEvent = false,
 }: SaveShareButtonProps) {
+  // Own events should always show Share, never Save
+  const effectiveIsSaved = isOwnEvent || isSaved;
   const { isLoaded } = useUser();
   const scaleAnim = React.useRef(new Animated.Value(1)).current;
   const { fontScale } = useWindowDimensions();
@@ -81,8 +85,8 @@ export default function SaveShareButton({
   const handlePress = () => {
     if (!isLoaded) return;
 
-    if (isSaved) {
-      // If already saved, share the event
+    if (effectiveIsSaved) {
+      // If already saved (or own event), share the event
       void handleShare();
     } else {
       // If not saved, save the event
@@ -96,19 +100,19 @@ export default function SaveShareButton({
       style={{ borderRadius: 16 }}
       onPress={handlePress}
       disabled={!isLoaded}
-      accessibilityLabel={isSaved ? "Share" : "Save"}
+      accessibilityLabel={effectiveIsSaved ? "Share" : "Save"}
       accessibilityRole="button"
       hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
     >
       <Animated.View style={{ transform: [{ scale: scaleAnim }] }}>
-        {isSaved ? (
+        {effectiveIsSaved ? (
           <ShareIcon size={iconSize * 1.1} color="#5A32FB" />
         ) : (
           <Heart color="#5A32FB" size={iconSize * 1.1} fill="white" />
         )}
       </Animated.View>
       <Text className="text-base font-bold text-interactive-1">
-        {isSaved ? "Share" : "Save"}
+        {effectiveIsSaved ? "Share" : "Save"}
       </Text>
     </TouchableOpacity>
   );

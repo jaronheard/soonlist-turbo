@@ -5,6 +5,7 @@ import { Image as ExpoImage } from "expo-image";
 import { router, Stack } from "expo-router";
 
 import { CodeEntryModal } from "~/components/CodeEntryModal";
+import { FollowContextBanner } from "~/components/FollowContextBanner";
 import { Logo } from "~/components/Logo";
 import { useSetHasSeenOnboarding } from "~/store";
 
@@ -60,6 +61,8 @@ export default function WelcomeScreen() {
               </Text>
             </AnimatedView>
           </View>
+
+          <FollowContextBanner />
 
           <AnimatedView
             layout={Layout.duration(400)}

@@ -9,7 +9,6 @@ import {
   Dimensions,
   Linking,
   Pressable,
-  Image as RNImage,
   ScrollView,
   Text,
   TouchableOpacity,
@@ -33,7 +32,6 @@ import { api } from "@soonlist/backend/convex/_generated/api";
 import { getTimezoneAbbreviation } from "@soonlist/cal";
 
 import { EventMenu } from "~/components/EventMenu";
-import { GlassPill } from "~/components/GlassButton";
 import { HeaderLogo } from "~/components/HeaderLogo";
 import {
   CalendarPlus,
@@ -55,9 +53,10 @@ import {
   useShouldShowViewPaywall,
   useUserTimezone,
 } from "~/store";
+import { AF_EVENTS, trackAFEvent } from "~/utils/appsflyerEvents";
 import { formatEventDateRange } from "~/utils/dates";
+import { getEventCache } from "~/utils/eventCache";
 import { getPlanStatusFromUser } from "~/utils/plan";
-import { logError } from "../../../utils/errorLogging";
 import { formatUrlForDisplay } from "../../../utils/links";
 
 // Helper to get platform URL for mentions
@@ -98,6 +97,13 @@ function getPlatformUrl(
 
 export default function Page() {
   const { id } = useLocalSearchParams<{ id: string }>();
+
+  // key={id} ensures React unmounts/remounts EventDetail when id changes,
+  // automatically resetting all state and refs without a useEffect.
+  return <EventDetail key={id} id={id} />;
+}
+
+function EventDetail({ id }: { id: string }) {
   const { width } = Dimensions.get("window");
   const insets = useSafeAreaInsets();
   const { user: currentUser } = useUser();
@@ -111,23 +117,21 @@ export default function Page() {
 
   // Store the aspect ratio for the main event image
   const [imageAspectRatio, setImageAspectRatio] = useState<number | null>(null);
-  // Track whether the image is fully loaded (for a fade-in)
-  const [isImageLoaded, setIsImageLoaded] = useState(false);
   // Track if we've already counted this event view to prevent multiple increments
   const hasCountedViewRef = useRef(false);
 
-  const event = useQuery(api.events.get, { eventId: id });
+  const queryEvent = useQuery(api.events.get, { eventId: id });
+  // Use cached event data from the list for instant rendering while Convex loads
+  const cachedEvent = useMemo(() => (id ? getEventCache(id) : undefined), [id]);
+  // Only fall back to cache while query is loading (undefined), not when query
+  // returned null (event not found)
+  const event = queryEvent !== undefined ? queryEvent : cachedEvent;
   const userTimezone = useUserTimezone();
 
   // Event view tracking
   const { customerInfo, showProPaywallIfNeeded } = useRevenueCat();
   const hasUnlimited =
     customerInfo?.entitlements.active.unlimited?.isActive ?? false;
-
-  // Reset view count tracking when event ID changes
-  useEffect(() => {
-    hasCountedViewRef.current = false;
-  }, [id]);
 
   const incrementEventView = useIncrementEventView();
   const shouldShowViewPaywall = useShouldShowViewPaywall();
@@ -139,6 +143,10 @@ export default function Page() {
       hasCountedViewRef.current = true;
 
       incrementEventView();
+      trackAFEvent(AF_EVENTS.CONTENT_VIEW, {
+        af_content_id: id,
+        af_content_type: "event",
+      });
 
       if (shouldShowViewPaywall()) {
         void showProPaywallIfNeeded()
@@ -170,7 +178,7 @@ export default function Page() {
     router.replace("/");
   }, [handleDelete]);
 
-  // Pre-calculate the aspect ratio of the event image, if it exists
+  // Pre-calculate the image URI for the event image
   const imageUri = useMemo(() => {
     if (!event?.event) return null;
 
@@ -179,34 +187,18 @@ export default function Page() {
     if (!eventImage) {
       return null;
     }
-    return `${eventImage}?max-w=1284&fit=cover&f=webp&q=80`;
+    return `${eventImage}?max-w=1284&fit=contain&f=webp&q=80`;
   }, [event?.event?.images]);
 
-  useEffect(() => {
-    if (!imageUri) {
-      setImageAspectRatio(null);
-      return;
-    }
+  // Thumbnail URI matching what the list items cache (used as a placeholder)
+  const thumbnailUri = useMemo(() => {
+    if (!event?.event) return null;
 
-    let cancelled = false;
-
-    // Use RNImage to get actual width/height of the remote image
-    RNImage.getSize(
-      imageUri,
-      (naturalWidth, naturalHeight) => {
-        if (cancelled) return;
-        setImageAspectRatio(naturalWidth / naturalHeight);
-      },
-      (err) => {
-        if (cancelled) return;
-        logError("Failed to get image size", err);
-      },
-    );
-
-    return () => {
-      cancelled = true;
-    };
-  }, [imageUri]);
+    const eventData = event.event as AddToCalendarButtonPropsRestricted;
+    const eventImage = eventData?.images?.[3];
+    if (!eventImage) return null;
+    return `${eventImage}?w=160&h=160&fit=cover&f=webp&q=80`;
+  }, [event?.event?.images]);
 
   // Build the header-left UI if we can't go back
   const HeaderLeft = useCallback(() => {
@@ -240,7 +232,17 @@ export default function Page() {
   if (!id || typeof id !== "string") {
     return (
       <>
-        <Stack.Screen options={{ headerRight: () => null }} />
+        <Stack.Screen
+          options={{
+            headerTransparent: false,
+            headerBackground: () => (
+              <View style={{ flex: 1, backgroundColor: "#E0D9FF" }} />
+            ),
+            headerTintColor: "#5A32FB",
+            headerTitleStyle: { color: "#5A32FB" },
+            headerRight: () => null,
+          }}
+        />
         <View className="flex-1 bg-white">
           <Text>Invalid or missing event id</Text>
         </View>
@@ -252,7 +254,17 @@ export default function Page() {
   if (event === undefined) {
     return (
       <>
-        <Stack.Screen options={{ headerRight: () => null }} />
+        <Stack.Screen
+          options={{
+            headerTransparent: false,
+            headerBackground: () => (
+              <View style={{ flex: 1, backgroundColor: "#E0D9FF" }} />
+            ),
+            headerTintColor: "#5A32FB",
+            headerTitleStyle: { color: "#5A32FB" },
+            headerRight: () => null,
+          }}
+        />
         <View className="flex-1 bg-white">
           <LoadingSpinner />
         </View>
@@ -264,7 +276,17 @@ export default function Page() {
   if (event === null) {
     return (
       <>
-        <Stack.Screen options={{ headerRight: () => null }} />
+        <Stack.Screen
+          options={{
+            headerTransparent: false,
+            headerBackground: () => (
+              <View style={{ flex: 1, backgroundColor: "#E0D9FF" }} />
+            ),
+            headerTintColor: "#5A32FB",
+            headerTitleStyle: { color: "#5A32FB" },
+            headerRight: () => null,
+          }}
+        />
         <View className="flex-1 bg-white">
           <Text>Event not found</Text>
         </View>
@@ -315,6 +337,12 @@ export default function Page() {
         options={{
           headerRight: HeaderRight,
           headerLeft: !canGoBack ? HeaderLeft : undefined,
+          headerTransparent: false,
+          headerBackground: () => (
+            <View style={{ flex: 1, backgroundColor: "#E0D9FF" }} />
+          ),
+          headerTintColor: "#5A32FB",
+          headerTitleStyle: { color: "#5A32FB" },
         }}
       />
       <ScrollView
@@ -378,7 +406,11 @@ export default function Page() {
                     </Text>
                   </View>
                 ) : (
-                  <View className="flex-row items-center gap-2">
+                  <Pressable
+                    onPress={() => router.push(`/${event.user?.username}`)}
+                    className="-my-2 flex-row items-center gap-2 py-2"
+                    hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+                  >
                     <UserProfileFlair
                       username={event.user?.username || ""}
                       size="xs"
@@ -401,7 +433,7 @@ export default function Page() {
                         event.user?.username ||
                         "unknown"}
                     </Text>
-                  </View>
+                  </Pressable>
                 )}
               </>
             )}
@@ -536,27 +568,45 @@ export default function Page() {
             </>
           )}
 
-          {/* Main Event Image if it exists and aspect ratio is known */}
-          {eventData.images?.[3] && imageAspectRatio && (
+          {/* Hidden probe to detect image dimensions without layout shift */}
+          {imageUri && !imageAspectRatio && (
+            <ExpoImage
+              source={{ uri: imageUri }}
+              style={{ position: "absolute", width: 1, height: 1, opacity: 0 }}
+              onLoad={(e) => {
+                setImageAspectRatio(
+                  e.source.height > 0
+                    ? e.source.width / e.source.height
+                    : 4 / 3,
+                );
+              }}
+              onError={() => {
+                setImageAspectRatio(4 / 3);
+              }}
+              cachePolicy="memory-disk"
+              priority="high"
+            />
+          )}
+
+          {/* Main Event Image - only rendered once we know the real aspect ratio */}
+          {imageUri && imageAspectRatio && (
             <View
-              className="mb-4 overflow-hidden bg-muted/10"
+              className="mb-4 overflow-hidden"
               style={{
                 width: width - 32,
-                // Maintain the original aspect ratio at the full width
                 aspectRatio: imageAspectRatio,
               }}
             >
               <ExpoImage
-                source={{
-                  uri: `${eventData.images[3]}?max-w=1284&fit=contain&f=webp&q=80`,
-                }}
+                source={{ uri: imageUri }}
+                placeholder={thumbnailUri ? { uri: thumbnailUri } : undefined}
+                placeholderContentFit="cover"
                 style={{ width: "100%", height: "100%" }}
                 contentFit="contain"
                 contentPosition="center"
                 transition={200}
                 cachePolicy="memory-disk"
-                onLoadEnd={() => setIsImageLoaded(true)}
-                className={isImageLoaded ? "opacity-100" : "opacity-0"}
+                priority="high"
               />
             </View>
           )}
@@ -564,17 +614,26 @@ export default function Page() {
       </ScrollView>
 
       {/* Floating Action Buttons */}
-      <View className="absolute bottom-8 flex-row items-center justify-center gap-4 self-center">
+      <View
+        className="absolute bottom-8 flex-row items-center justify-center gap-4 self-center"
+        style={{
+          shadowColor: "#5A32FB",
+          shadowOffset: { width: 0, height: 3 },
+          shadowOpacity: 0.3,
+          shadowRadius: 6,
+          elevation: 8,
+        }}
+      >
         <TouchableOpacity
           onPress={handleAddToCal}
           accessibilityLabel="Add to Calendar"
           accessibilityRole="button"
           activeOpacity={0.8}
         >
-          <GlassPill tintColor="#E0D9FF">
+          <View className="flex-row items-center gap-4 rounded-full bg-interactive-2 px-8 py-5">
             <CalendarPlus size={28} color="#5A32FB" />
             <Text className="text-xl font-bold text-interactive-1">Add</Text>
-          </GlassPill>
+          </View>
         </TouchableOpacity>
 
         {showSaveButton && (
@@ -584,10 +643,10 @@ export default function Page() {
             accessibilityRole="button"
             activeOpacity={0.8}
           >
-            <GlassPill>
+            <View className="flex-row items-center gap-4 rounded-full bg-interactive-1 px-8 py-5">
               <Heart size={28} color="#FFFFFF" />
               <Text className="text-xl font-bold text-white">Save</Text>
-            </GlassPill>
+            </View>
           </TouchableOpacity>
         )}
 
@@ -598,10 +657,10 @@ export default function Page() {
             accessibilityRole="button"
             activeOpacity={0.8}
           >
-            <GlassPill>
+            <View className="flex-row items-center gap-4 rounded-full bg-interactive-1 px-8 py-5">
               <ShareIcon size={28} color="#FFFFFF" />
               <Text className="text-xl font-bold text-white">Share</Text>
-            </GlassPill>
+            </View>
           </TouchableOpacity>
         )}
       </View>

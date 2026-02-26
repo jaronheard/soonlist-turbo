@@ -13,25 +13,26 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
+import * as Clipboard from "expo-clipboard";
 import * as ImagePicker from "expo-image-picker";
-import { Redirect, router, Stack } from "expo-router";
+import { Redirect, router } from "expo-router";
 import { useUser } from "@clerk/clerk-expo";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useConvexAuth, useMutation, useQuery } from "convex/react";
 import { Controller, useForm } from "react-hook-form";
-import { toast } from "sonner-native";
 import { z } from "zod";
 
 import { api } from "@soonlist/backend/convex/_generated/api";
 
 import { Button } from "~/components/Button";
-import { ShareIcon } from "~/components/icons";
+import { Copy, ShareIcon } from "~/components/icons";
 import { TimezoneSelectNative } from "~/components/TimezoneSelectNative";
 import { UserProfileFlair } from "~/components/UserProfileFlair";
 import { useSignOut } from "~/hooks/useSignOut";
 import { useRevenueCat } from "~/providers/RevenueCatProvider";
 import { useAppStore } from "~/store";
 import Config from "~/utils/config";
+import { hapticSuccess, toast } from "~/utils/feedback";
 import { logError } from "../../utils/errorLogging";
 import { getPlanStatusFromUser } from "../../utils/plan";
 
@@ -156,7 +157,6 @@ export default function EditProfileScreen() {
 
   const onSubmit = useCallback(
     async (data: ProfileFormData) => {
-      const loadingToastId = toast.loading("Updating profile...");
       setIsSubmitting(true);
       try {
         if (data.username !== user?.username) {
@@ -168,8 +168,7 @@ export default function EditProfileScreen() {
             displayName: data.displayName,
           });
         }
-        toast.dismiss(loadingToastId);
-        toast.success("Profile updated successfully");
+        void hapticSuccess();
         if (router.canGoBack()) {
           router.back();
         } else {
@@ -177,7 +176,6 @@ export default function EditProfileScreen() {
         }
       } catch (error) {
         logError("Error updating profile", error);
-        toast.dismiss(loadingToastId);
         toast.error("An unexpected error occurred");
       } finally {
         setIsSubmitting(false);
@@ -187,7 +185,6 @@ export default function EditProfileScreen() {
   );
 
   const pickImage = useCallback(async () => {
-    const loadingToastId = toast.loading("Updating profile image...");
     try {
       const result = await ImagePicker.launchImageLibraryAsync({
         mediaTypes: ImagePicker.MediaTypeOptions.Images,
@@ -198,13 +195,11 @@ export default function EditProfileScreen() {
       });
 
       if (result.canceled) {
-        toast.dismiss(loadingToastId);
         return;
       }
 
       const asset = result.assets[0];
       if (!asset) {
-        toast.dismiss(loadingToastId);
         throw new Error("No image asset selected");
       }
 
@@ -212,7 +207,6 @@ export default function EditProfileScreen() {
       const base64 = asset.base64;
       const mimeType = asset.mimeType;
       if (!base64 || !mimeType) {
-        toast.dismiss(loadingToastId);
         throw new Error("Image data is incomplete");
       }
 
@@ -221,12 +215,10 @@ export default function EditProfileScreen() {
       await user?.setProfileImage({
         file: image,
       });
-      toast.dismiss(loadingToastId);
-      toast.success("Profile image updated successfully");
+      void hapticSuccess();
     } catch (error) {
-      toast.dismiss(loadingToastId);
       logError("Error in pickImage", error);
-      toast.error("Failed to pick image");
+      toast.error("Failed to update image");
       // Revert to the previous image if the update fails
       setProfileImage(user?.imageUrl ?? null);
     }
@@ -245,16 +237,13 @@ export default function EditProfileScreen() {
           text: "Delete Account",
           style: "destructive",
           onPress: () => {
-            const loadingToastId = toast.loading("Deleting account...");
             void (async () => {
               try {
                 await signOut({ shouldDeleteAccount: true });
-                toast.dismiss(loadingToastId);
-                toast.success("Account deleted successfully");
+                void hapticSuccess();
                 // No manual navigation needed - Convex auth components will handle the transition
               } catch (error) {
                 logError("Error deleting account", error);
-                toast.dismiss(loadingToastId);
                 toast.error("Failed to delete account");
               }
             })();
@@ -277,7 +266,6 @@ export default function EditProfileScreen() {
           text: "Restart",
           style: "destructive",
           onPress: () => {
-            const loadingToastId = toast.loading("Restarting onboarding...");
             void (async () => {
               try {
                 if (user?.id) {
@@ -289,12 +277,9 @@ export default function EditProfileScreen() {
                 // Sign out the user to land on the welcome screen
                 await signOut();
 
-                // Only show success toast after signOut completes successfully
-                toast.dismiss(loadingToastId);
-                toast.success("Onboarding reset successfully");
+                void hapticSuccess();
               } catch (error) {
                 logError("Error restarting onboarding", error);
-                toast.dismiss(loadingToastId);
                 toast.error("Failed to restart onboarding");
               }
             })();
@@ -317,9 +302,7 @@ export default function EditProfileScreen() {
         publicListEnabled: newEnabled,
         publicListName: newEnabled ? publicListName || defaultName : undefined,
       });
-      toast.success(
-        newEnabled ? "Public list enabled" : "Public list disabled",
-      );
+      void hapticSuccess();
     } catch (error) {
       logError("Error toggling public list", error);
       toast.error("Failed to update public list settings");
@@ -344,7 +327,7 @@ export default function EditProfileScreen() {
         userId: user.id,
         publicListName: publicListNameInput.trim() || undefined,
       });
-      toast.success("List name updated");
+      void hapticSuccess();
     } catch (error) {
       logError("Error updating list name", error);
       toast.error("Failed to update list name");
@@ -368,12 +351,22 @@ export default function EditProfileScreen() {
     if (!url) return;
 
     try {
-      await Share.share({
-        message: "Check out my events on Soonlist:",
-        url,
-      });
+      await Share.share(Platform.OS === "ios" ? { url } : { message: url });
     } catch {
       // Share can be cancelled, so don't show error toast
+    }
+  }, [getPublicListUrl]);
+
+  const handleCopyLink = useCallback(async () => {
+    const url = getPublicListUrl();
+    if (!url) return;
+
+    try {
+      await Clipboard.setStringAsync(url);
+      void hapticSuccess();
+      toast.success("Link copied");
+    } catch {
+      toast.error("Failed to copy link");
     }
   }, [getPublicListUrl]);
 
@@ -393,14 +386,6 @@ export default function EditProfileScreen() {
         contentContainerStyle={{ padding: 16, paddingBottom: 100 }}
         keyboardShouldPersistTaps="handled"
       >
-        <Stack.Screen
-          options={{
-            title: "Account",
-            headerBackTitle: "Back",
-            headerBackButtonMenuEnabled: true,
-          }}
-        />
-
         <View className="flex-col gap-4 space-y-6">
           <UserProfileFlair
             className="mx-auto h-24 w-24 items-center"
@@ -525,25 +510,38 @@ export default function EditProfileScreen() {
                     <Text className="mb-2 text-sm font-medium text-gray-700">
                       Your public link
                     </Text>
-                    <TouchableOpacity
-                      onPress={handleSharePublicList}
-                      className="flex-row items-center justify-between rounded-lg border border-interactive-1 bg-interactive-1/5 px-4 py-3"
-                      activeOpacity={0.7}
-                      accessible={true}
-                      accessibilityRole="button"
-                      accessibilityLabel="Share public list link"
-                      accessibilityHint="Opens share sheet to copy or share your public list URL"
-                    >
-                      <Text
-                        className="flex-1 text-base font-medium text-interactive-1"
-                        numberOfLines={1}
-                      >
-                        {getPublicListUrl().replace("https://", "")}
-                      </Text>
-                      <View accessible={false}>
-                        <ShareIcon size={20} color="#5A32FB" />
+                    <View className="flex-row items-center gap-2">
+                      <View className="min-w-0 flex-1 rounded-lg border border-gray-200 bg-gray-50 px-4 py-3">
+                        <Text
+                          className="text-base text-gray-700"
+                          numberOfLines={1}
+                        >
+                          {(getPublicListUrl() || "").replace("https://", "")}
+                        </Text>
                       </View>
-                    </TouchableOpacity>
+                      <TouchableOpacity
+                        onPress={handleCopyLink}
+                        className="items-center justify-center rounded-lg border border-interactive-1 bg-interactive-1/5 p-3"
+                        activeOpacity={0.7}
+                        accessible={true}
+                        accessibilityRole="button"
+                        accessibilityLabel="Copy link"
+                        accessibilityHint="Copies your public list URL to the clipboard"
+                      >
+                        <Copy size={20} color="#5A32FB" />
+                      </TouchableOpacity>
+                      <TouchableOpacity
+                        onPress={handleSharePublicList}
+                        className="items-center justify-center rounded-lg border border-interactive-1 bg-interactive-1/5 p-3"
+                        activeOpacity={0.7}
+                        accessible={true}
+                        accessibilityRole="button"
+                        accessibilityLabel="Share link"
+                        accessibilityHint="Opens share sheet to share your public list URL"
+                      >
+                        <ShareIcon size={20} color="#5A32FB" />
+                      </TouchableOpacity>
+                    </View>
                   </View>
                 )}
               </View>

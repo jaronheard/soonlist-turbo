@@ -1,9 +1,7 @@
 import { useCallback } from "react";
-import * as Haptics from "expo-haptics";
 import * as ImageManipulator from "expo-image-manipulator";
 import * as MediaLibrary from "expo-media-library";
 import { useMutation } from "convex/react";
-import { toast } from "sonner-native";
 
 import { api } from "@soonlist/backend/convex/_generated/api";
 
@@ -12,6 +10,7 @@ import { useOneSignal } from "~/providers/OneSignalProvider";
 import { useAppStore, useUserTimezone } from "~/store";
 import { useInFlightEventStore } from "~/store/useInFlightEventStore";
 import { logError } from "~/utils/errorLogging";
+import { hapticError } from "~/utils/feedback";
 
 // Generate a simple batch ID without external dependencies
 function generateBatchId(): string {
@@ -56,14 +55,12 @@ async function optimizeImage(uri: string): Promise<string> {
 
 export function useCreateEvent() {
   const { setIsImageLoading, addWorkflowId } = useAppStore();
-  const { setIsCapturing } = useInFlightEventStore();
+  const setIsCapturing = useInFlightEventStore((s) => s.setIsCapturing);
+  const addPendingBatchId = useInFlightEventStore((s) => s.addPendingBatchId);
   const { hasNotificationPermission } = useOneSignal();
   const userTimezone = useUserTimezone();
 
-  // New direct mutations (faster, no workflow overhead)
-  const eventFromImageBase64Direct = useMutation(
-    api.ai.eventFromImageBase64Direct,
-  );
+  // Batch mutations for all image events (single and multiple)
   const createEventBatch = useMutation(api.ai.createEventBatch);
   const addImagesToBatch = useMutation(api.ai.addImagesToBatch);
 
@@ -97,7 +94,7 @@ export function useCreateEvent() {
           // Convert photo library URI to file URI if needed
           let fileUri = imageUri;
           if (imageUri.startsWith("ph://")) {
-            const assetId = imageUri.replace("ph://", "").split("/")[0];
+            const assetId = imageUri.replace("ph://", "");
             if (!assetId) {
               throw new Error("Invalid photo library asset ID");
             }
@@ -115,12 +112,14 @@ export function useCreateEvent() {
             throw new Error("Invalid image URI format");
           }
 
-          // 1. Optimize image and get base64
-          const base64 = await optimizeImage(fileUri);
+          // Route single images through batch system for unified tracking
+          const batchId = generateBatchId();
 
-          // 2. Create event directly (no workflow overhead)
-          const result = await eventFromImageBase64Direct({
-            base64Image: base64,
+          // 1. Create the batch with totalCount of 1
+          await createEventBatch({
+            batchId,
+            images: [],
+            totalCount: 1,
             userId,
             username,
             lists: [],
@@ -129,11 +128,21 @@ export function useCreateEvent() {
             sendNotification,
           });
 
-          if (!result.success) {
-            throw new Error(result.error || "Failed to create event");
+          // 2. Optimize image and get base64
+          const base64 = await optimizeImage(fileUri);
+
+          // 3. Add the image to the batch
+          await addImagesToBatch({
+            batchId,
+            images: [{ base64Image: base64, tempId: `${batchId}-0` }],
+          });
+
+          // 4. Track batch for completion feedback if user doesn't have notifications
+          if (!hasNotificationPermission || !sendNotification) {
+            addPendingBatchId(batchId);
           }
 
-          return result.jobId;
+          return batchId;
         }
 
         // Handle URL events with workflow
@@ -176,7 +185,7 @@ export function useCreateEvent() {
         throw new Error("No image, URL, or text provided for event creation");
       } catch (error) {
         logError("Error processing event", error);
-        void Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
+        void hapticError();
         throw error; // Rethrow to trigger mutation's onError
       } finally {
         // Reset loading state for both routes
@@ -191,7 +200,10 @@ export function useCreateEvent() {
     [
       setIsCapturing,
       setIsImageLoading,
-      eventFromImageBase64Direct,
+      createEventBatch,
+      addImagesToBatch,
+      hasNotificationPermission,
+      addPendingBatchId,
       userTimezone,
       addWorkflowId,
       eventFromUrl,
@@ -199,17 +211,18 @@ export function useCreateEvent() {
     ],
   );
 
-  // New batch creation with smart notifications
+  // Batch creation with smart notifications
   const createMultipleEvents = useCallback(
-    async (tasks: CreateEventOptions[]): Promise<void> => {
-      if (!tasks.length) return;
+    async (tasks: CreateEventOptions[]): Promise<string | undefined> => {
+      if (!tasks.length) return undefined;
+
+      const batchId = generateBatchId();
 
       try {
         setIsCapturing(true);
         setIsImageLoading(true, "add");
         setIsImageLoading(true, "new");
 
-        const batchId = generateBatchId();
         const { userId, username, sendNotification = true } = tasks[0]!;
 
         // Step 1: Create the batch immediately (with 0 images)
@@ -234,7 +247,7 @@ export function useCreateEvent() {
           // Convert photo library URI to file URI if needed
           let fileUri = task.imageUri;
           if (task.imageUri.startsWith("ph://")) {
-            const assetId = task.imageUri.replace("ph://", "").split("/")[0];
+            const assetId = task.imageUri.replace("ph://", "");
             if (!assetId) {
               throw new Error("Invalid photo library asset ID");
             }
@@ -272,18 +285,16 @@ export function useCreateEvent() {
         // Wait for all images to be processed and sent
         await Promise.all(imagePromises);
 
-        // The batch is now processing asynchronously
-        // Provide immediate feedback to user
+        // Track batch for completion feedback if user doesn't have notifications
         if (!hasNotificationPermission || !sendNotification) {
-          toast.success(
-            `Processing ${tasks.length} image${tasks.length > 1 ? "s" : ""}...`,
-          );
+          addPendingBatchId(batchId);
         }
-        // Note: Actual success/failure will be communicated via push notification
+
+        return batchId;
       } catch (error) {
         logError("Error creating events batch", error);
-        toast.error("Failed to process images. Please try again.");
-        void Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
+        void hapticError();
+        throw error;
       } finally {
         setIsCapturing(false);
         setIsImageLoading(false, "add");
@@ -294,6 +305,7 @@ export function useCreateEvent() {
       createEventBatch,
       addImagesToBatch,
       hasNotificationPermission,
+      addPendingBatchId,
       userTimezone,
       setIsCapturing,
       setIsImageLoading,

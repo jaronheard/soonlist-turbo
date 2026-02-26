@@ -20,20 +20,26 @@ import { useUser } from "@clerk/clerk-expo";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation, useQuery } from "convex/react";
 import { Controller, useForm } from "react-hook-form";
-import { toast } from "sonner-native";
 import { z } from "zod";
 
 import { api } from "@soonlist/backend/convex/_generated/api";
 
 import { Button } from "~/components/Button";
 import { DatePickerField, TimePickerField } from "~/components/date-picker";
-import { EyeOff, Globe2, Image as ImageIcon } from "~/components/icons";
+import {
+  Check,
+  EyeOff,
+  Globe2,
+  Image as ImageIcon,
+  X,
+} from "~/components/icons";
 import ImageUploadSpinner from "~/components/ImageUploadSpinner";
 import { InputTags } from "~/components/InputTags";
 import LoadingSpinner from "~/components/LoadingSpinner";
 import { PlatformSelectNative } from "~/components/PlatformSelectNative";
 import { TimezoneSelectNative } from "~/components/TimezoneSelectNative";
 import { DEFAULT_VISIBILITY } from "~/constants";
+import { hapticSuccess, toast } from "~/utils/feedback";
 import { normalizeUrlForStorage } from "~/utils/links";
 import { getPlanStatusFromUser } from "~/utils/plan";
 import { logError } from "../../../utils/errorLogging";
@@ -180,7 +186,7 @@ export default function EditEventScreen() {
     try {
       let fileUri = localUri;
       if (localUri.startsWith("ph://")) {
-        const assetId = localUri.replace("ph://", "").split("/")[0];
+        const assetId = localUri.replace("ph://", "");
         if (!assetId) {
           throw new Error("Invalid photo library asset ID");
         }
@@ -280,20 +286,15 @@ export default function EditEventScreen() {
         setSelectedImage(localUri);
 
         try {
-          const loadingToastId = toast.loading("Uploading image...");
-
           const remoteUrl = await uploadImage(localUri);
-
           setUploadedImageUrl(remoteUrl);
-
-          toast.dismiss(loadingToastId);
-          toast.success("Image uploaded successfully");
+          void hapticSuccess();
         } catch (error) {
           logError("Error uploading image", error);
-          toast.error("Failed to upload image", {
-            description:
-              error instanceof Error ? error.message : "Unknown error",
-          });
+          toast.error(
+            "Failed to upload image",
+            error instanceof Error ? error.message : "Unknown error",
+          );
 
           if (selectedImage !== originalImage) {
             setSelectedImage(originalImage);
@@ -315,13 +316,12 @@ export default function EditEventScreen() {
         (selectedImage !== originalImage && selectedImage !== null);
 
       if (!isDirty && !hasImageChanges) {
-        toast.error("No changes detected");
+        toast.warning("No changes detected");
         return;
       }
 
       try {
         setIsSubmitting(true);
-        const loadingToastId = toast.loading("Updating event...");
 
         let imageToUse = null;
 
@@ -377,14 +377,14 @@ export default function EditEventScreen() {
 
         await updateEventMutation(updatedData);
 
-        toast.dismiss(loadingToastId);
-        toast.success("Event updated successfully");
+        void hapticSuccess();
         router.back();
       } catch (error) {
         logError("Error updating event", error);
-        toast.error("Failed to update event", {
-          description: error instanceof Error ? error.message : "Unknown error",
-        });
+        toast.error(
+          "Failed to update event",
+          error instanceof Error ? error.message : "Unknown error",
+        );
       } finally {
         setIsSubmitting(false);
       }
@@ -427,52 +427,32 @@ export default function EditEventScreen() {
     <>
       <Stack.Screen
         options={{
-          headerRight: () => (
-            <TouchableOpacity
-              onPress={() => void handleSubmit(onSubmit)()}
-              disabled={
-                isSubmitting ||
-                isUploadingImage ||
-                (!isDirty &&
-                  !uploadedImageUrl &&
-                  selectedImage === originalImage) ||
-                !isValid
-              }
-              style={{ marginRight: 8 }}
-            >
-              <Text
-                style={{
-                  fontSize: 17,
-                  fontWeight: "600",
-                  color:
-                    isSubmitting ||
-                    isUploadingImage ||
-                    (!isDirty &&
-                      !uploadedImageUrl &&
-                      selectedImage === originalImage) ||
-                    !isValid
-                      ? "rgba(255, 255, 255, 0.5)"
-                      : "#FFFFFF",
-                }}
+          headerRight: () => {
+            const isDisabled =
+              isSubmitting ||
+              isUploadingImage ||
+              (!isDirty &&
+                !uploadedImageUrl &&
+                selectedImage === originalImage) ||
+              !isValid;
+            return (
+              <TouchableOpacity
+                onPress={() => void handleSubmit(onSubmit)()}
+                disabled={isDisabled}
+                activeOpacity={0.6}
+                style={{ opacity: isDisabled ? 0.4 : 1 }}
               >
-                {isSubmitting ? "Saving..." : "Save"}
-              </Text>
-            </TouchableOpacity>
-          ),
+                <View className="rounded-full p-1">
+                  <Check size={20} color="#5A32FB" strokeWidth={2.5} />
+                </View>
+              </TouchableOpacity>
+            );
+          },
           headerLeft: () => (
-            <TouchableOpacity
-              onPress={() => router.back()}
-              style={{ marginLeft: 8 }}
-            >
-              <Text
-                style={{
-                  fontSize: 17,
-                  fontWeight: "600",
-                  color: "#FFFFFF",
-                }}
-              >
-                Cancel
-              </Text>
+            <TouchableOpacity onPress={() => router.back()} activeOpacity={0.6}>
+              <View className="rounded-full p-1">
+                <X size={20} color="#5A32FB" strokeWidth={2.5} />
+              </View>
             </TouchableOpacity>
           ),
         }}
@@ -488,6 +468,7 @@ export default function EditEventScreen() {
             padding: 16,
             paddingBottom: insets.bottom + 36,
           }}
+          contentInsetAdjustmentBehavior="automatic"
           keyboardShouldPersistTaps="handled"
         >
           <View className="flex-col gap-4 space-y-6">
@@ -679,7 +660,7 @@ export default function EditEventScreen() {
                         onPress={() => {
                           setSelectedImage(null);
                           setUploadedImageUrl(null);
-                          toast.success("Image removed");
+                          void hapticSuccess();
                         }}
                         variant="destructive"
                         className="flex-1"

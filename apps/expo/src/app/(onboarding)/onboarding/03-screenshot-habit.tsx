@@ -1,12 +1,12 @@
 import React, { useState } from "react";
 import { View } from "react-native";
-import { toast } from "sonner-native";
 
 import { QuestionContainer } from "~/components/QuestionContainer";
 import { QuestionOption } from "~/components/QuestionOption";
 import { useOnboarding } from "~/hooks/useOnboarding";
 import { useAppStore } from "~/store";
 import { logError } from "~/utils/errorLogging";
+import { toast } from "~/utils/feedback";
 import { TOTAL_ONBOARDING_STEPS } from "../_layout";
 
 const options = ["Yes", "Not yet"] as const;
@@ -17,7 +17,7 @@ export default function ScreenshotScreen() {
   const { saveStep } = useOnboarding();
   const { onboardingData } = useAppStore();
 
-  const handleOptionSelect = async (option: Option) => {
+  const handleOptionSelect = (option: Option) => {
     if (isLoading) return;
     setIsLoading(true);
 
@@ -29,9 +29,7 @@ export default function ScreenshotScreen() {
       );
     } catch (error) {
       logError("Failed to save screenshot", error);
-      toast.error("Something went wrong", {
-        description: "Please try again",
-      });
+      toast.error("Something went wrong", "Please try again");
     } finally {
       setIsLoading(false);
     }

@@ -49,7 +49,8 @@ function transformConvexEvents(
     visibility: event.visibility,
     createdAt: new Date(event._creationTime),
     user: transformConvexUser(event.user!),
-    eventFollows: [],
+    // Preserve follow state so save/unsave UI reflects current user state.
+    eventFollows: event.eventFollows,
     comments: [],
     eventToLists: [],
   }));

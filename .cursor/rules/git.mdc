@@ -1,0 +1,38 @@
+---
+description: Git workflow and branch management rules
+globs:
+alwaysApply: false
+---
+# Git Workflow
+
+## Branch Rules
+
+- Never commit to main
+- Never push to origin/main
+- Never rebase or force push
+- Create descriptive branch names (e.g., `add-event-sharing`, `fix-screenshot-parsing`)
+- Pull latest main before creating a new branch
+
+## Commit Process
+
+1. Run checks: `pnpm lint:fix && pnpm format:fix && pnpm check`
+2. Commit with clear messages describing what changed
+3. Commit often as you work
+
+## Creating PRs
+
+1. Push branch to GitHub
+2. Create PR using `gh pr create`
+3. Use descriptive titles
+
+## Terminal Commands
+
+Always quote file paths - they may contain special characters:
+
+```bash
+# Correct
+git diff "apps/expo/src/app/(auth)/sign-in.tsx"
+
+# Wrong - will fail on parentheses
+git diff apps/expo/src/app/(auth)/sign-in.tsx
+```

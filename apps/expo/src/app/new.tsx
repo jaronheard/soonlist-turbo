@@ -3,7 +3,6 @@ import { InteractionManager, Pressable, View } from "react-native";
 import Animated from "react-native-reanimated";
 import { router, Stack, useLocalSearchParams } from "expo-router";
 import { useUser } from "@clerk/clerk-expo";
-import { toast } from "sonner-native";
 
 import { CaptureEventButton } from "~/components/CaptureEventButton";
 import { EventPreview } from "~/components/EventPreview";
@@ -13,6 +12,7 @@ import { useCreateEvent } from "~/hooks/useCreateEvent";
 import { useInitializeInput } from "~/hooks/useInitializeInput";
 import { useKeyboardHeight } from "~/hooks/useKeyboardHeight";
 import { useAppStore } from "~/store";
+import { toast } from "~/utils/feedback";
 import { logError } from "../utils/errorLogging";
 
 /**
@@ -107,7 +107,7 @@ export default function NewShareScreen() {
       void createEvent(eventData).catch((error) => {
         logError("Error creating event in background", error);
         // Notify user of background failure
-        toast.error("Failed to save event in background.");
+        toast.error("Failed to save event");
       });
     });
   };

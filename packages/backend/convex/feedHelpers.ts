@@ -2,7 +2,7 @@ import { v } from "convex/values";
 
 import type { MutationCtx } from "./_generated/server";
 import { internal } from "./_generated/api";
-import { internalMutation } from "./_generated/server";
+import { internalAction, internalMutation } from "./_generated/server";
 import { userFeedsAggregate } from "./aggregates";
 
 // Helper to add an event to feeds when it's created or updated
@@ -56,6 +56,7 @@ export const updateEventInFeeds = internalMutation({
       eventEndTime,
       currentTime,
       similarityGroupId,
+      visibility,
     );
 
     // 2. Add to discover feed if public AND user has showDiscover enabled
@@ -69,6 +70,7 @@ export const updateEventInFeeds = internalMutation({
         eventEndTime,
         currentTime,
         similarityGroupId,
+        visibility,
       );
     } else if (visibility === "private" || !userShowDiscover) {
       // Remove from discover feed if event is now private or user no longer has showDiscover
@@ -102,6 +104,7 @@ export const updateEventInFeeds = internalMutation({
         eventEndTime,
         currentTime,
         similarityGroupId,
+        visibility,
       );
     }
 
@@ -152,6 +155,7 @@ export const addEventToUserFeed = internalMutation({
         addedAt: currentTime,
         hasEnded: eventEndTime < currentTime,
         similarityGroupId,
+        eventVisibility: event.visibility,
       };
       const id = await ctx.db.insert("userFeeds", doc);
       const insertedDoc = (await ctx.db.get(id))!;
@@ -165,6 +169,51 @@ export const addEventToUserFeed = internalMutation({
         );
       }
     }
+  },
+});
+
+// Helper to update event visibility across all feed entries for an event
+export const updateEventVisibilityInFeeds = internalMutation({
+  args: {
+    eventId: v.string(),
+    visibility: v.union(v.literal("public"), v.literal("private")),
+  },
+  returns: v.null(),
+  handler: async (ctx, { eventId, visibility }) => {
+    const feedEntries = await ctx.db
+      .query("userFeeds")
+      .withIndex("by_event", (q) => q.eq("eventId", eventId))
+      .collect();
+
+    // Track affected (feedId, similarityGroupId) pairs for grouped feed updates
+    const affectedGroups: { feedId: string; similarityGroupId: string }[] = [];
+
+    for (const entry of feedEntries) {
+      if (entry.eventVisibility !== visibility) {
+        const oldDoc = entry;
+        await ctx.db.patch(entry._id, { eventVisibility: visibility });
+        const updatedDoc = (await ctx.db.get(entry._id))!;
+        await userFeedsAggregate.replaceOrInsert(ctx, oldDoc, updatedDoc);
+
+        // Track the group for later update
+        if (entry.similarityGroupId) {
+          affectedGroups.push({
+            feedId: entry.feedId,
+            similarityGroupId: entry.similarityGroupId,
+          });
+        }
+      }
+    }
+
+    // Update grouped feed entries for affected groups
+    for (const { feedId, similarityGroupId } of affectedGroups) {
+      await ctx.runMutation(internal.feedGroupHelpers.upsertGroupedFeedEntry, {
+        feedId,
+        similarityGroupId,
+      });
+    }
+
+    return null;
   },
 });
 
@@ -319,6 +368,7 @@ async function upsertFeedEntry(
   eventEndTime: number,
   addedAt: number,
   similarityGroupId?: string,
+  eventVisibility?: "public" | "private",
 ): Promise<void> {
   const existingEntry = await ctx.db
     .query("userFeeds")
@@ -339,6 +389,7 @@ async function upsertFeedEntry(
       addedAt,
       hasEnded,
       similarityGroupId,
+      eventVisibility,
     };
     const id = await ctx.db.insert("userFeeds", doc);
     const insertedDoc = (await ctx.db.get(id))!;
@@ -353,12 +404,13 @@ async function upsertFeedEntry(
     }
   } else {
     const oldDoc = existingEntry;
-    // Also update similarityGroupId if provided (for migration scenarios)
+    // Also update similarityGroupId and eventVisibility if provided (for migration scenarios)
     await ctx.db.patch(existingEntry._id, {
       eventStartTime,
       eventEndTime,
       hasEnded,
       ...(similarityGroupId && { similarityGroupId }),
+      ...(eventVisibility && { eventVisibility }),
     });
     const updatedDoc = (await ctx.db.get(existingEntry._id))!;
     await userFeedsAggregate.replaceOrInsert(ctx, oldDoc, updatedDoc);
@@ -422,6 +474,7 @@ export const addListEventsToUserFeed = internalMutation({
         eventEndTime,
         currentTime,
         similarityGroupId,
+        event.visibility,
       );
 
       // Upsert into personal feed
@@ -434,6 +487,7 @@ export const addListEventsToUserFeed = internalMutation({
         eventEndTime,
         currentTime,
         similarityGroupId,
+        event.visibility,
       );
     }
   },
@@ -628,6 +682,7 @@ export const addEventToListFollowersFeeds = internalMutation({
         eventEndTime,
         currentTime,
         similarityGroupId,
+        event.visibility,
       );
 
       // Upsert into personal feed
@@ -639,6 +694,7 @@ export const addEventToListFollowersFeeds = internalMutation({
         eventEndTime,
         currentTime,
         similarityGroupId,
+        event.visibility,
       );
     }
   },
@@ -767,7 +823,146 @@ export const removeEventFromListFollowersFeeds = internalMutation({
   },
 });
 
-// Helper to add all public events from a followed user to the follower's "Following" feed
+// Helper to add all public upcoming events from a followed user to the follower's "Following" feed
+// This is the batch mutation that processes a page of events at a time
+export const addUserEventsToUserFeedBatch = internalMutation({
+  args: {
+    userId: v.string(),
+    followedUserId: v.string(),
+    cursor: v.union(v.string(), v.null()),
+    batchSize: v.number(),
+  },
+  returns: v.object({
+    processed: v.number(),
+    added: v.number(),
+    nextCursor: v.union(v.string(), v.null()),
+    isDone: v.boolean(),
+  }),
+  handler: async (ctx, { userId, followedUserId, cursor, batchSize }) => {
+    const currentTime = Date.now();
+    const followedUsersFeedId = `followedUsers_${userId}`;
+
+    // Query events with pagination
+    const result = await ctx.db
+      .query("events")
+      .withIndex("by_user", (q) => q.eq("userId", followedUserId))
+      .paginate({ numItems: batchSize, cursor });
+
+    let added = 0;
+
+    for (const event of result.page) {
+      // Only add public upcoming events
+      if (event.visibility !== "public") {
+        continue;
+      }
+
+      const eventStartTime = new Date(event.startDateTime).getTime();
+      const eventEndTime = new Date(event.endDateTime).getTime();
+
+      // Skip past events (endDateTime < now)
+      if (eventEndTime < currentTime) {
+        continue;
+      }
+
+      const similarityGroupId = event.similarityGroupId;
+
+      // Check if already in feed
+      const existing = await ctx.db
+        .query("userFeeds")
+        .withIndex("by_feed_event", (q) =>
+          q.eq("feedId", followedUsersFeedId).eq("eventId", event.id),
+        )
+        .first();
+
+      if (!existing) {
+        const doc = {
+          feedId: followedUsersFeedId,
+          eventId: event.id,
+          eventStartTime,
+          eventEndTime,
+          addedAt: currentTime,
+          hasEnded: eventEndTime < currentTime,
+          similarityGroupId,
+          eventVisibility: event.visibility,
+        };
+        const id = await ctx.db.insert("userFeeds", doc);
+        const insertedDoc = (await ctx.db.get(id))!;
+        await userFeedsAggregate.replaceOrInsert(ctx, insertedDoc, insertedDoc);
+
+        // Update grouped feed entry if similarityGroupId exists
+        if (similarityGroupId) {
+          await ctx.runMutation(
+            internal.feedGroupHelpers.upsertGroupedFeedEntry,
+            { feedId: followedUsersFeedId, similarityGroupId },
+          );
+        }
+        added++;
+      }
+    }
+
+    return {
+      processed: result.page.length,
+      added,
+      nextCursor: result.continueCursor,
+      isDone: result.isDone,
+    };
+  },
+});
+
+// Action to orchestrate adding user events to feed in batches
+export const addUserEventsToUserFeedAction = internalAction({
+  args: {
+    userId: v.string(),
+    followedUserId: v.string(),
+  },
+  returns: v.object({
+    totalProcessed: v.number(),
+    totalAdded: v.number(),
+  }),
+  handler: async (ctx, { userId, followedUserId }) => {
+    let totalProcessed = 0;
+    let totalAdded = 0;
+    let cursor: string | null = null;
+    const batchSize = 100; // Process 100 events per batch
+
+    // Process batches until no more data
+    while (true) {
+      const result: {
+        processed: number;
+        added: number;
+        nextCursor: string | null;
+        isDone: boolean;
+      } = await ctx.runMutation(
+        internal.feedHelpers.addUserEventsToUserFeedBatch,
+        {
+          userId,
+          followedUserId,
+          cursor,
+          batchSize,
+        },
+      );
+
+      totalProcessed += result.processed;
+      totalAdded += result.added;
+
+      if (result.isDone) {
+        break;
+      }
+      cursor = result.nextCursor;
+    }
+
+    console.log(
+      `Added ${totalAdded} events to feed for user ${userId} from followed user ${followedUserId} (processed ${totalProcessed})`,
+    );
+
+    return {
+      totalProcessed,
+      totalAdded,
+    };
+  },
+});
+
+// Legacy mutation kept for backwards compatibility - schedules the action
 export const addUserEventsToUserFeed = internalMutation({
   args: {
     userId: v.string(),
@@ -775,37 +970,15 @@ export const addUserEventsToUserFeed = internalMutation({
   },
   returns: v.null(),
   handler: async (ctx, { userId, followedUserId }) => {
-    // Get all public events from the followed user
-    const events = await ctx.db
-      .query("events")
-      .withIndex("by_user", (q) => q.eq("userId", followedUserId))
-      .collect();
-
-    const currentTime = Date.now();
-    const followedUsersFeedId = `followedUsers_${userId}`;
-
-    for (const event of events) {
-      // Only add public events
-      if (event.visibility !== "public") {
-        continue;
-      }
-
-      const eventStartTime = new Date(event.startDateTime).getTime();
-      const eventEndTime = new Date(event.endDateTime).getTime();
-      const similarityGroupId = event.similarityGroupId;
-
-      // Upsert into followedUsers feed (Following tab only)
-      await upsertFeedEntry(
-        ctx,
-        followedUsersFeedId,
-        event.id,
-        eventStartTime,
-        eventEndTime,
-        currentTime,
-        similarityGroupId,
-      );
-    }
-
+    // Schedule the action to run immediately
+    await ctx.scheduler.runAfter(
+      0,
+      internal.feedHelpers.addUserEventsToUserFeedAction,
+      {
+        userId,
+        followedUserId,
+      },
+    );
     return null;
   },
 });

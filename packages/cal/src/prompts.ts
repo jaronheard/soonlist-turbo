@@ -290,7 +290,19 @@ export const systemMessage = (schema?: string) =>
       : ``
   }`;
 
-export const getText = (date: string, timezone: string) => `# CONTEXT
+/**
+ * Generates the main event extraction prompt text.
+ * @param date - Current date in YYYY-MM-DD format (e.g., "2026-01-20")
+ * @param timezone - IANA timezone identifier (e.g., "America/Los_Angeles")
+ * @param minDate - Earliest valid date in YYYY-MM-DD format (e.g., "2025-11-20")
+ * @param maxDate - Latest valid date in YYYY-MM-DD format (e.g., "2026-11-20")
+ */
+export const getText = (
+  date: string,
+  timezone: string,
+  minDate: string,
+  maxDate: string,
+) => `# CONTEXT
 The current date is ${date}, and the default timezone is ${timezone} unless specified otherwise.
 
 ## YOUR JOB
@@ -299,7 +311,7 @@ Below, I pasted a text or image from which to extract calendar event details.
 You will
 1. Identify details of the primary event mentioned in the text or image. Only the first event from multi-day events should be captured.
 2. Remove the perspective or opinion from the input, focusing only on factual details.
-3. Extract and format these details into a valid JSON response, strictly following the schema below. 
+3. Extract and format these details into a valid JSON response, strictly following the schema below.
 4. Infer any missing information based on event context, type, or general conventions.
 5. Write your JSON response by summarizing the event details from the provided data or your own inferred knowledge. Your response must be detailed, specific, and directly relevant to the JSON schema requirements.
 6. Limit event to a single time within a <24 hour period. Late night events can extend into the next day.
@@ -322,14 +334,19 @@ The system using the output requires specific date and time formatting.
 - Times MUST be in 24-hour format HH:MM:SS (e.g., 14:30:00 for 2:30 PM).
 - Always include seconds in the time, even if they're 00.
 - Always provide both startTime and endTime.
-- When interpreting dates without an explicit year, use the CURRENT YEAR from the context date provided above. Only use the NEXT year if the month/day has already passed in the current year. For example: if today is 2026-01-11 and the input says "January 18" or "01/18", output 2026-01-18 (same year, date is upcoming). If the input says "January 5", output 2027-01-05 (next year, because January 5, 2026 already passed).
+
+**Year Inference (when no year is specified):**
+- Valid date window: ${minDate} to ${maxDate}
+- Choose the year that places the date within this window.
+- Only allow dates outside this window when the year is EXPLICITLY specified (e.g., "March 15, 2027").
+
+** Time Inference (when a start or end time is not explicitly stated):**
 - If start time is not explicitly stated, infer a reasonable start time based on the event type and context (e.g., 19:00:00 for an evening concert, 10:00:00 for a morning workshop).
 - If end time is not explicitly stated, infer a reasonable duration based on the event type and context (e.g., 2 hours for a movie, 3 hours for a concert, etc.).
 - Ensure the endDate is always provided and is either the same as or later than the startDate.
 `;
 
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
-export const getTextMetadata = (date: string, timezone: string) => `
+export const getTextMetadata = () => `
 # YOUR TASK
 Extract social media attribution metadata.
 Return JSON with exactly: platform, mentions, sourceUrls.
@@ -382,25 +399,28 @@ export const getPrompt = (
 ) => {
   const timezoneIANA = formatOffsetAsIANASoft(timezone);
   const now = Temporal.Now.instant().toZonedDateTimeISO(timezoneIANA);
-  const date = now.toString();
+  const currentDate = now.toPlainDate();
+  const date = currentDate.toString();
+  const minDate = currentDate.subtract({ months: 2 }).toString();
+  const maxDate = currentDate.add({ months: 10 }).toString();
 
   return {
-    text: getText(date, timezoneIANA),
-    textMetadata: getTextMetadata(date, timezoneIANA),
-    version: "v2026.01.11.1", // Fix year interpretation for dates without explicit year
+    text: getText(date, timezoneIANA, minDate, maxDate),
+    textMetadata: getTextMetadata(),
+    version: "v2026.01.19.1", // specified year inference more clearly, reformatted time inference to be more clear
   };
 };
 
 export const getSystemMessage = () => {
   return {
     text: systemMessage(),
-    version: "v2026.01.11.1", // Fix year interpretation for dates without explicit year
+    version: "v2026.01.19.1", // Add 1-year future date limit unless year explicitly stated
   };
 };
 
 export const getSystemMessageMetadata = () => {
   return {
     text: systemMessage(eventMetadataSchemaAsText),
-    version: "v2026.01.11.1", // Fix year interpretation for dates without explicit year
+    version: "v2026.01.19.1", // Add 1-year future date limit unless year explicitly stated
   };
 };

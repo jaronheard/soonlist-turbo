@@ -1,6 +1,5 @@
 import type { FunctionReturnType } from "convex/server";
 import { Linking, Share } from "react-native";
-import * as Haptics from "expo-haptics";
 import { router } from "expo-router";
 import { useUser } from "@clerk/clerk-expo";
 import {
@@ -8,14 +7,15 @@ import {
   useMutation,
 } from "convex/react";
 import { usePostHog } from "posthog-react-native";
-import { toast } from "sonner-native";
 
 import type { AddToCalendarButtonPropsRestricted } from "@soonlist/cal/types";
 import { api } from "@soonlist/backend/convex/_generated/api";
 
 import { useStableTimestamp } from "~/store";
+import { AF_EVENTS, trackAFEvent } from "~/utils/appsflyerEvents";
 import Config from "~/utils/config";
 import { logError } from "~/utils/errorLogging";
+import { hapticSuccess, toast } from "~/utils/feedback";
 import { getPlanStatusFromUser } from "~/utils/plan";
 import { useCalendar } from "./useCalendar";
 
@@ -145,13 +145,9 @@ export function useEventActions({
     }
   });
 
-  const triggerHaptic = () => {
-    void Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-  };
-
   const checkDemoMode = () => {
     if (demoMode) {
-      toast("Demo mode: action disabled");
+      toast.warning("Demo mode: action disabled");
       return true;
     }
     return false;
@@ -159,7 +155,7 @@ export function useEventActions({
 
   const handleShare = async () => {
     if (!event || checkDemoMode()) return;
-    triggerHaptic();
+    void hapticSuccess();
 
     const eventData = event.event as AddToCalendarButtonPropsRestricted;
 
@@ -187,6 +183,10 @@ export function useEventActions({
           is_owner: Boolean(isOwner),
           is_saved: Boolean(isSaved),
         });
+        trackAFEvent(AF_EVENTS.SHARE, {
+          af_content_id: event.id,
+          af_content_type: "event",
+        });
       } else if (result.action === Share.dismissedAction) {
         posthog.capture("share_event_dismissed", {
           event_id: event.id,
@@ -208,7 +208,7 @@ export function useEventActions({
 
   const handleDirections = () => {
     if (!event || checkDemoMode()) return;
-    triggerHaptic();
+    void hapticSuccess();
     const eventData = event.event as AddToCalendarButtonPropsRestricted;
     if (eventData.location) {
       const url = `https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(
@@ -225,7 +225,7 @@ export function useEventActions({
 
   const handleAddToCal = async () => {
     if (!event || checkDemoMode()) return;
-    triggerHaptic();
+    void hapticSuccess();
     await addToCalendar(event);
   };
 
@@ -233,68 +233,60 @@ export function useEventActions({
     newVisibility: "public" | "private",
   ) => {
     if (!event || checkDemoMode() || !isOwner) return;
-    triggerHaptic();
+    void hapticSuccess();
     try {
       await toggleVisibilityMutation({
         id: event.id,
         visibility: newVisibility,
       });
     } catch (error) {
-      toast.error(
-        `Failed to update event visibility: ${(error as Error).message}`,
-      );
+      toast.error("Failed to update visibility", (error as Error).message);
     }
   };
 
   const handleEdit = () => {
     if (!event || checkDemoMode() || !isOwner) return;
-    triggerHaptic();
+    void hapticSuccess();
     router.navigate(`/event/${event.id}/edit`);
   };
 
   const handleDelete = async () => {
     if (!event || checkDemoMode() || !isOwner) return;
-    triggerHaptic();
-    const loadingToastId = toast.loading("Deleting event...");
+    void hapticSuccess();
     try {
       if (onDelete) {
         await onDelete();
       } else {
         await deleteEventMutation({ id: event.id });
       }
-      toast.dismiss(loadingToastId);
-      toast.success("Event deleted successfully");
     } catch (error) {
-      toast.dismiss(loadingToastId);
-      toast.error(`Failed to delete event: ${(error as Error).message}`);
+      toast.error("Failed to delete event", (error as Error).message);
     }
   };
 
   const handleFollow = async () => {
     if (!event || checkDemoMode() || isOwner || isSaved) return;
-    triggerHaptic();
+    void hapticSuccess();
     try {
       await followEventMutation({ id: event.id });
-      toast.success("Event saved");
     } catch (error) {
-      toast.error(`Failed to save event: ${(error as Error).message}`);
+      toast.error("Failed to save event", (error as Error).message);
     }
   };
 
   const handleUnfollow = async () => {
     if (!event || checkDemoMode() || isOwner || !isSaved) return;
-    triggerHaptic();
+    void hapticSuccess();
     try {
       await unfollowEventMutation({ id: event.id });
-      toast.success("Event unsaved");
     } catch (error) {
-      toast.error(`Failed to unsave event: ${(error as Error).message}`);
+      toast.error("Failed to unsave event", (error as Error).message);
     }
   };
 
   const handleShowQR = () => {
     if (!event || checkDemoMode()) return;
-    triggerHaptic();
+    void hapticSuccess();
     router.navigate(`/event/${event.id}/qr`);
   };
 
@@ -374,13 +366,9 @@ export function useEventSaveActions(
     }
   });
 
-  const triggerHaptic = () => {
-    void Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-  };
-
   const checkDemoMode = () => {
     if (demoMode) {
-      toast("Demo mode: action disabled");
+      toast.warning("Demo mode: action disabled");
       return true;
     }
     return false;
@@ -388,23 +376,21 @@ export function useEventSaveActions(
 
   const handleFollow = async () => {
     if (checkDemoMode() || isSaved) return;
-    triggerHaptic();
+    void hapticSuccess();
     try {
       await followEventMutation({ id: eventId });
-      toast.success("Event saved");
     } catch (error) {
-      toast.error(`Failed to save event: ${(error as Error).message}`);
+      toast.error("Failed to save event", (error as Error).message);
     }
   };
 
   const handleUnfollow = async () => {
     if (checkDemoMode() || !isSaved) return;
-    triggerHaptic();
+    void hapticSuccess();
     try {
       await unfollowEventMutation({ id: eventId });
-      toast.success("Event unsaved");
     } catch (error) {
-      toast.error(`Failed to unsave event: ${(error as Error).message}`);
+      toast.error("Failed to unsave event", (error as Error).message);
     }
   };
 

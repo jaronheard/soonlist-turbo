@@ -47,6 +47,7 @@ import {
 } from "~/context/NewEventProgressContext";
 import { TimezoneContext } from "~/context/TimezoneContext";
 import { useWorkflowStore } from "~/hooks/useWorkflowStore";
+import { DEFAULT_VISIBILITY } from "~/lib/constants";
 import {
   UploadImageForProcessingButton,
   UploadImageForProcessingDropzone,
@@ -151,7 +152,7 @@ export function ProgressStages({
     resolver: zodResolver(organizeFormSchema),
     defaultValues: {
       notes: notes || "",
-      visibility: visibility || "public",
+      visibility: visibility || DEFAULT_VISIBILITY,
       lists: eventLists,
     },
   });
@@ -367,7 +368,7 @@ function AddEvent() {
         userId: currentUser.id,
         username: currentUser.username || currentUser.id,
         sendNotification: false,
-        visibility: "public",
+        visibility: DEFAULT_VISIBILITY,
         lists: [],
       });
 
@@ -395,7 +396,7 @@ function AddEvent() {
         userId: currentUser.id,
         username: currentUser.username || currentUser.id,
         sendNotification: false,
-        visibility: "public",
+        visibility: DEFAULT_VISIBILITY,
         lists: [],
       });
 

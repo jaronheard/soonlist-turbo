@@ -1,6 +1,6 @@
 import React, { useCallback, useEffect, useMemo, useState } from "react";
 import { Platform, Share, Text, TouchableOpacity, View } from "react-native";
-import { Redirect, useRouter } from "expo-router";
+import { Redirect } from "expo-router";
 import { Host, Picker } from "@expo/ui/swift-ui";
 import { useUser } from "@clerk/clerk-expo";
 import {
@@ -18,6 +18,7 @@ import LoadingSpinner from "~/components/LoadingSpinner";
 import UserEventsList from "~/components/UserEventsList";
 import { useStablePaginatedQuery } from "~/hooks/useStableQuery";
 import { useAppStore, useStableTimestamp } from "~/store";
+import { hapticSuccess, toast } from "~/utils/feedback";
 
 type Segment = "upcoming" | "past";
 
@@ -60,31 +61,6 @@ function SegmentedControlFallback({
           }
         >
           Past
-        </Text>
-      </TouchableOpacity>
-    </View>
-  );
-}
-
-function EmptyFollowingState() {
-  const router = useRouter();
-
-  return (
-    <View className="flex-1 items-center justify-center bg-white px-6">
-      <Text className="mb-2 text-center text-xl font-bold text-neutral-1">
-        You&apos;re not following anyone yet
-      </Text>
-      <Text className="mb-6 text-center text-base text-neutral-2">
-        Follow users to see their events here. Discover interesting people in
-        the Discover feed.
-      </Text>
-      <TouchableOpacity
-        onPress={() => router.push("/discover")}
-        className="rounded-full bg-interactive-1 px-6 py-3"
-        activeOpacity={0.7}
-      >
-        <Text className="text-base font-semibold text-white">
-          Explore Discover
         </Text>
       </TouchableOpacity>
     </View>
@@ -233,9 +209,9 @@ function FollowingFeedContent() {
     );
   }, [selectedSegment, handleSegmentChange, handleShare, user?.fullName, user?.username, enrichedEvents.length]);
 
-  // Show empty state if not following anyone
+  // Redirect to feed if not following anyone
   if (followingUsers !== undefined && !hasFollowings) {
-    return <EmptyFollowingState />;
+    return <Redirect href="/feed" />;
   }
 
   return (
@@ -263,7 +239,8 @@ function FollowingFeed() {
   return (
     <>
       <AuthLoading>
-        <View className="flex-1 bg-white">
+        <View className="flex-1 bg-interactive-3">
+          <View className="h-[100px]" />
           <LoadingSpinner />
         </View>
       </AuthLoading>

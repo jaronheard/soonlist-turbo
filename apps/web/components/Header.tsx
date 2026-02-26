@@ -53,51 +53,77 @@ export function Header() {
 
   if (hideMenu) {
     return (
-      <div className="sticky top-0 z-50 bg-interactive-3">
-        <header className="mx-auto flex w-full max-w-7xl items-center justify-between pb-4 pl-2 pt-3 sm:px-4 sm:pb-7 sm:pt-5">
-          <div className="flex items-center sm:grow sm:gap-0">
-            <NavigationMenu>
-              <Link href="/" className="relative flex items-center">
-                <Logo variant="hidePreview" className="block sm:hidden" />
-                <Logo variant="hidePreview" className="hidden sm:block" />
-              </Link>
-            </NavigationMenu>
-          </div>
+      <div className="fixed inset-x-0 top-0 z-50 border-b border-white/20 bg-white/70 shadow-[0_1px_0_0_rgba(255,255,255,0.5)_inset] backdrop-blur-xl backdrop-saturate-150">
+        <header className="mx-auto flex h-14 w-full max-w-7xl items-center justify-center px-4">
+          <Link
+            href="/"
+            className="relative flex items-center"
+            aria-label="Soonlist"
+          >
+            <Logo variant="mark" className="size-7 sm:hidden" />
+            <Logo variant="hidePreview" className="hidden scale-75 sm:block" />
+          </Link>
         </header>
       </div>
     );
   }
 
   return (
-    <div className="sticky top-0 z-50 bg-interactive-3">
-      <header className="mx-auto flex w-full max-w-7xl items-center justify-between pb-4 pl-2 pt-3 sm:px-4 sm:pb-7 sm:pt-5">
+    <div className="fixed inset-x-0 top-0 z-50 border-b border-white/20 bg-white/70 shadow-[0_1px_0_0_rgba(255,255,255,0.5)_inset] backdrop-blur-xl backdrop-saturate-150">
+      <header className="mx-auto flex h-14 w-full max-w-7xl items-center justify-between px-4">
         <div className="flex items-center sm:grow sm:gap-0">
           <NavigationMenu>
             <SignedIn>
               <Link
-                href={`/${user?.username}/upcoming`}
+                href={user?.username ? `/${user.username}/upcoming` : "/"}
                 className="relative flex items-center"
+                aria-label="Soonlist"
               >
-                <Logo variant="hidePreview" className="block sm:hidden" />
-                <Logo variant="hidePreview" className="hidden sm:block" />
+                <Logo variant="mark" className="size-7 sm:hidden" />
+                <Logo
+                  variant="hidePreview"
+                  className="hidden scale-75 sm:block"
+                />
               </Link>
             </SignedIn>
             <SignedOut>
-              <Link href="/" className="relative flex items-center">
-                <Logo variant="hidePreview" className="block sm:hidden" />
-                <Logo variant="hidePreview" className="hidden sm:block" />
+              <Link
+                href="/"
+                className="relative flex items-center"
+                aria-label="Soonlist"
+              >
+                <Logo variant="mark" className="size-7 sm:hidden" />
+                <Logo
+                  variant="hidePreview"
+                  className="hidden scale-75 sm:block"
+                />
               </Link>
             </SignedOut>
           </NavigationMenu>
         </div>
-        <div className="flex shrink-0 sm:gap-5">
-          <Nav />
-          <NavigationMenu>
-            <SignedIn>
+        <div className="flex shrink-0 items-center gap-3">
+          <SignedIn>
+            <Nav />
+            <NavigationMenu>
               <UserMenu />
-            </SignedIn>
+            </NavigationMenu>
             <MobileNav />
-          </NavigationMenu>
+          </SignedIn>
+          <SignedOut>
+            <Link
+              href="/sign-in"
+              className="text-base font-medium text-neutral-2 transition-colors hover:text-neutral-1"
+            >
+              Log in
+            </Link>
+            {pathname !== "/join" && (
+              <Button asChild size="sm" className="text-base">
+                <Link href="https://apps.apple.com/us/app/soonlist-save-events-instantly/id6670222216">
+                  Get the app
+                </Link>
+              </Button>
+            )}
+          </SignedOut>
         </div>
       </header>
     </div>
@@ -108,13 +134,20 @@ export function Nav() {
   const { user } = useUser();
   const pathname = usePathname();
   const isJoinPage = pathname === "/join";
+  const showDiscover = (
+    user?.publicMetadata as { showDiscover?: boolean } | undefined
+  )?.showDiscover;
 
   return (
     <NavigationMenu>
-      <NavigationMenuList className="flex gap-3">
+      <NavigationMenuList className="flex gap-2">
         <SignedIn>
           <NavigationMenuItem className="hidden lg:block">
-            <Link href={`/${user?.username}/upcoming`} legacyBehavior passHref>
+            <Link
+              href={user?.username ? `/${user.username}/upcoming` : "/"}
+              legacyBehavior
+              passHref
+            >
               <NavigationMenuLink className={navigationMenuTriggerStyle()}>
                 <CalendarHeart className="mr-2 size-4" />
                 My Feed
@@ -122,16 +155,18 @@ export function Nav() {
             </Link>
           </NavigationMenuItem>
         </SignedIn>
-        <SignedIn>
-          <NavigationMenuItem className="hidden lg:block">
-            <Link href={`/explore`} legacyBehavior passHref>
-              <NavigationMenuLink className={navigationMenuTriggerStyle()}>
-                <Globe2Icon className="mr-2 size-4" />
-                Discover
-              </NavigationMenuLink>
-            </Link>
-          </NavigationMenuItem>
-        </SignedIn>
+        {showDiscover && (
+          <SignedIn>
+            <NavigationMenuItem className="hidden lg:block">
+              <Link href={`/explore`} legacyBehavior passHref>
+                <NavigationMenuLink className={navigationMenuTriggerStyle()}>
+                  <Globe2Icon className="mr-2 size-4" />
+                  Discover
+                </NavigationMenuLink>
+              </Link>
+            </NavigationMenuItem>
+          </SignedIn>
+        )}
         <SignedOut>
           <NavigationMenuItem className="hidden lg:block">
             <Link href="/sign-in" legacyBehavior passHref>
@@ -145,7 +180,7 @@ export function Nav() {
           <SignedIn>
             <Link href="/new" legacyBehavior passHref scroll={false}>
               <NavigationMenuLink
-                className={buttonVariants({ variant: "default" })}
+                className={buttonVariants({ variant: "default", size: "sm" })}
               >
                 <CalendarPlus className="mr-2 size-4"></CalendarPlus>
                 Add<span className="inline">&nbsp;event</span>
@@ -154,7 +189,7 @@ export function Nav() {
           </SignedIn>
           <SignedOut>
             {!isJoinPage && (
-              <Button asChild>
+              <Button asChild size="sm">
                 <Link href="https://apps.apple.com/us/app/soonlist-save-events-instantly/id6670222216">
                   Get the app
                 </Link>
@@ -323,20 +358,19 @@ export function MobileNav() {
 
   const plan = user?.publicMetadata.plan as { name?: string } | undefined;
   const planName = plan?.name;
+  const showDiscover = (
+    user?.publicMetadata as { showDiscover?: boolean } | undefined
+  )?.showDiscover;
 
   return (
     <Sheet open={open} onOpenChange={setOpen}>
       <SheetTrigger asChild>
-        <Button variant="ghost" className="block lg:hidden">
-          <Menu className="size-6 text-interactive-1" />
+        <Button variant="ghost" className="block text-neutral-1 lg:hidden">
+          <Menu className="size-6" />
           <span className="sr-only">Toggle Menu</span>
         </Button>
       </SheetTrigger>
-      <SheetContent
-        size="xl"
-        position="right"
-        className="bg-interactive-3 pl-0 pt-2"
-      >
+      <SheetContent size="xl" position="right" className="bg-white pl-0 pt-2">
         <VisuallyHidden>
           <SheetTitle>Navigation Menu</SheetTitle>
         </VisuallyHidden>
@@ -397,7 +431,7 @@ export function MobileNav() {
           <div className="flex flex-col space-y-3">
             <MobileLink
               key="user-nav-my-feed"
-              href={`/${user?.username}/upcoming`}
+              href={user?.username ? `/${user.username}/upcoming` : "/"}
               onOpenChange={setOpen}
               signedInOnly
               className="flex items-center gap-2 text-interactive-1"
@@ -405,16 +439,18 @@ export function MobileNav() {
               <CalendarHeart className="size-4" />
               My Feed
             </MobileLink>
-            <MobileLink
-              key={"user-nav-explore"}
-              href={"/explore"}
-              onOpenChange={setOpen}
-              signedInOnly
-              className="flex items-center gap-2 text-interactive-1"
-            >
-              <Globe2Icon className="size-4" />
-              Discover
-            </MobileLink>
+            {showDiscover && (
+              <MobileLink
+                key={"user-nav-explore"}
+                href={"/explore"}
+                onOpenChange={setOpen}
+                signedInOnly
+                className="flex items-center gap-2 text-interactive-1"
+              >
+                <Globe2Icon className="size-4" />
+                Discover
+              </MobileLink>
+            )}
           </div>
           <SignedIn>
             <div className="p-1.5"></div>

@@ -225,6 +225,7 @@ export const getDiscoverFeed = query({
 });
 
 // Helper query to get a user's public feed (when publicListEnabled is true)
+// Uses the visibility index to filter at database level BEFORE pagination
 export const getPublicUserFeed = query({
   args: {
     username: v.string(),
@@ -242,15 +243,29 @@ export const getPublicUserFeed = query({
       throw new ConvexError("User not found");
     }
 
-    // Check if the user has enabled public list sharing
-    if (!user.publicListEnabled) {
-      throw new ConvexError("User has not enabled public list sharing");
-    }
-
     const feedId = `user_${user.id}`;
+    const hasEnded = filter === "past";
+    const order = filter === "upcoming" ? "asc" : "desc";
 
-    // Use the common query function
-    return queryFeed(ctx, feedId, paginationOpts, filter);
+    // Filter visibility at index level BEFORE pagination
+    const feedQuery = ctx.db
+      .query("userFeeds")
+      .withIndex("by_feed_visibility_hasEnded_startTime", (q) =>
+        q
+          .eq("feedId", feedId)
+          .eq("eventVisibility", "public")
+          .eq("hasEnded", hasEnded),
+      )
+      .order(order);
+
+    const feedResults = await feedQuery.paginate(paginationOpts);
+
+    // Map feed entries to full events with users and eventFollows
+    const events = await Promise.all(
+      feedResults.page.map((entry) => getEventById(ctx, entry.eventId)),
+    );
+
+    return { ...feedResults, page: events.filter((e) => e !== null) };
   },
 });
 

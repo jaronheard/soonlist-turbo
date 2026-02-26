@@ -24,15 +24,16 @@ import "../styles.css";
 import { useEffect } from "react";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { KeyboardProvider } from "react-native-keyboard-controller";
+import { NotifierWrapper } from "react-native-notifier";
 import Constants, { AppOwnership } from "expo-constants";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { Toaster } from "sonner-native";
 
 import AuthAndTokenSync from "~/components/AuthAndTokenSync";
 import { ForceUpdateScreen } from "~/components/ForceUpdateScreen";
 import { LiquidGlassHeader } from "~/components/LiquidGlassHeader";
 import { PostHogIdentityTracker } from "~/components/PostHogIdentityTracker";
 import { useAppsFlyerDeepLink } from "~/hooks/useAppsFlyerDeepLink";
+import { useCaptureCompletionFeedback } from "~/hooks/useCaptureCompletionFeedback";
 import { useForceUpdate } from "~/hooks/useForceUpdate";
 import { useMediaPermissions } from "~/hooks/useMediaPermissions";
 import { useOTAUpdates } from "~/hooks/useOTAUpdates";
@@ -148,45 +149,47 @@ function RootLayout() {
 
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
-      <KeyboardProvider>
-        <ClerkProvider
-          publishableKey={clerkPublishableKey}
-          tokenCache={tokenCache}
-          __experimental_resourceCache={resourceCache}
-        >
-          {/* eslint-disable-next-line react-compiler/react-compiler */}
-          <ConvexProviderWithClerk client={convex} useAuth={useAuth}>
-            <QueryClientProvider client={queryClient}>
-              <SafeAreaProvider>
-                <PostHogProvider
-                  apiKey={Config.posthogApiKey}
-                  options={{
-                    host: "https://us.i.posthog.com",
-                    disabled: isDev,
-                    enableSessionReplay: !isDev,
-                    sessionReplayConfig: {
-                      maskAllTextInputs: false,
-                      maskAllImages: false,
-                      captureLog: false,
-                      captureNetworkTelemetry: true,
-                      androidDebouncerDelayMs: 500,
-                      iOSdebouncerDelayMs: 1000,
-                    },
-                  }}
-                >
-                  <PostHogIdentityTracker />
-                  <OneSignalProvider>
-                    <RevenueCatProvider>
-                      <AuthAndTokenSync />
-                      <RootLayoutContent />
-                    </RevenueCatProvider>
-                  </OneSignalProvider>
-                </PostHogProvider>
-              </SafeAreaProvider>
-            </QueryClientProvider>
-          </ConvexProviderWithClerk>
-        </ClerkProvider>
-      </KeyboardProvider>
+      <NotifierWrapper>
+        <KeyboardProvider>
+          <ClerkProvider
+            publishableKey={clerkPublishableKey}
+            tokenCache={tokenCache}
+            __experimental_resourceCache={resourceCache}
+          >
+            {/* eslint-disable-next-line react-compiler/react-compiler */}
+            <ConvexProviderWithClerk client={convex} useAuth={useAuth}>
+              <QueryClientProvider client={queryClient}>
+                <SafeAreaProvider>
+                  <PostHogProvider
+                    apiKey={Config.posthogApiKey}
+                    options={{
+                      host: "https://us.i.posthog.com",
+                      disabled: isDev,
+                      enableSessionReplay: !isDev,
+                      sessionReplayConfig: {
+                        maskAllTextInputs: false,
+                        maskAllImages: false,
+                        captureLog: false,
+                        captureNetworkTelemetry: true,
+                        androidDebouncerDelayMs: 500,
+                        iOSdebouncerDelayMs: 1000,
+                      },
+                    }}
+                  >
+                    <PostHogIdentityTracker />
+                    <OneSignalProvider>
+                      <RevenueCatProvider>
+                        <AuthAndTokenSync />
+                        <RootLayoutContent />
+                      </RevenueCatProvider>
+                    </OneSignalProvider>
+                  </PostHogProvider>
+                </SafeAreaProvider>
+              </QueryClientProvider>
+            </ConvexProviderWithClerk>
+          </ClerkProvider>
+        </KeyboardProvider>
+      </NotifierWrapper>
     </GestureHandlerRootView>
   );
 }
@@ -238,9 +241,17 @@ const InitialLayout = () => {
           title: "Event Details",
           headerShown: true,
           headerTransparent: false,
-          headerBackground: undefined,
-          headerStyle: { backgroundColor: "#E0D9FF" }, // interactive-2
-          headerTintColor: "#5A32FB", // interactive-1
+          headerBackground: () => <LiquidGlassHeader />,
+        }}
+      />
+      <Stack.Screen
+        name="[username]/index"
+        options={{
+          presentation: "modal",
+          title: "",
+          headerShown: true,
+          headerTransparent: false,
+          headerBackground: () => <LiquidGlassHeader />,
         }}
       />
       <Stack.Screen
@@ -255,6 +266,11 @@ const InitialLayout = () => {
         options={{
           presentation: "modal",
           title: "Edit Event",
+          headerShown: true,
+          headerTransparent: false,
+          headerBackground: undefined,
+          headerStyle: { backgroundColor: "#E0D9FF" }, // interactive-2
+          headerTintColor: "#5A32FB", // interactive-1
         }}
       />
       <Stack.Screen
@@ -289,6 +305,30 @@ const InitialLayout = () => {
           presentation: "containedModal",
         }}
       />
+      <Stack.Screen
+        name="settings/account"
+        options={{
+          title: "Account",
+          headerShown: true,
+          headerTransparent: false,
+          headerBackground: undefined,
+          headerStyle: { backgroundColor: "#F4F1FF" },
+          headerTintColor: "#5A32FB",
+          headerBackTitle: "Back",
+        }}
+      />
+      <Stack.Screen
+        name="settings/calendar"
+        options={{
+          title: "Calendar Settings",
+          headerShown: true,
+          headerTransparent: false,
+          headerBackground: undefined,
+          headerStyle: { backgroundColor: "#F4F1FF" },
+          headerTintColor: "#5A32FB",
+          headerBackTitle: "Back",
+        }}
+      />
     </Stack>
   );
 };
@@ -298,6 +338,7 @@ function RootLayoutContent() {
   useQuickActions();
   useAppsFlyerDeepLink();
   usePendingFollow();
+  useCaptureCompletionFeedback();
   const ref = useNavigationContainerRef();
   const pathname = usePathname();
   const params = useGlobalSearchParams();
@@ -324,17 +365,7 @@ function RootLayoutContent() {
   return (
     <View style={{ flex: 1 }}>
       <InitialLayout />
-      <StatusBar style="dark" />
-      <Toaster
-        position="top-center"
-        offset={100}
-        visibleToasts={1}
-        toastOptions={{
-          style: {
-            borderRadius: 16,
-          },
-        }}
-      />
+      <StatusBar style={Platform.OS === "ios" ? "light" : "auto"} />
     </View>
   );
 }

@@ -11,6 +11,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
     <div>
       <ResetNewEventContext />
       <Header />
+      <div className="h-14" aria-hidden />
       <Toaster />
       <main className="min-h-screen">{children}</main>
       <Footer />
