@@ -43,6 +43,8 @@ export default function FollowingLayout() {
     <Stack
       screenOptions={{
         headerLargeTitle: true,
+        headerLargeTitleStyle: { color: "#5A32FB" },
+        headerTintColor: "#5A32FB",
         headerShadowVisible: false,
         headerTransparent: true,
       }}
