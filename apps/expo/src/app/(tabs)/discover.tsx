@@ -125,8 +125,8 @@ function DiscoverContent() {
       isLoadingFirstPage={status === "LoadingFirstPage"}
       ActionButton={SaveShareButtonWrapper}
       showCreator="always"
-      hideDiscoverableButton={true}
       isDiscoverFeed={true}
+      primaryAction="save"
       savedEventIds={savedEventIds}
       HeaderComponent={DiscoverShareBanner}
     />

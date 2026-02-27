@@ -31,7 +31,6 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 
 import AuthAndTokenSync from "~/components/AuthAndTokenSync";
 import { ForceUpdateScreen } from "~/components/ForceUpdateScreen";
-import { LiquidGlassHeader } from "~/components/LiquidGlassHeader";
 import { PostHogIdentityTracker } from "~/components/PostHogIdentityTracker";
 import { useAppsFlyerDeepLink } from "~/hooks/useAppsFlyerDeepLink";
 import { useCaptureCompletionFeedback } from "~/hooks/useCaptureCompletionFeedback";
@@ -204,8 +203,7 @@ const InitialLayout = () => {
     <Stack
       screenOptions={{
         headerTransparent: true,
-        headerBackground: () => <LiquidGlassHeader />,
-        headerTintColor: "#fff",
+        headerTintColor: "#5A32FB",
         headerTitleStyle: {
           fontWeight: "bold",
         },
@@ -242,8 +240,6 @@ const InitialLayout = () => {
           presentation: "modal",
           title: "Event Details",
           headerShown: true,
-          headerTransparent: false,
-          headerBackground: () => <LiquidGlassHeader />,
         }}
       />
       <Stack.Screen
@@ -252,8 +248,6 @@ const InitialLayout = () => {
           presentation: "modal",
           title: "",
           headerShown: true,
-          headerTransparent: false,
-          headerBackground: () => <LiquidGlassHeader />,
         }}
       />
       <Stack.Screen

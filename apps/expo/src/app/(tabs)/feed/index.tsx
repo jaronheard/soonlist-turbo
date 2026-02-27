@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useMemo, useState } from "react";
-import { Platform, Share, Text, TouchableOpacity, View } from "react-native";
+import { Platform, Text, TouchableOpacity, View } from "react-native";
 import { Redirect } from "expo-router";
 import { useUser } from "@clerk/clerk-expo";
 import { Host, Picker, Text as SwiftUIText } from "@expo/ui/swift-ui";
@@ -13,15 +13,11 @@ import {
 
 import { api } from "@soonlist/backend/convex/_generated/api";
 
-import { LinkIcon, ShareIcon } from "~/components/icons";
 import LoadingSpinner from "~/components/LoadingSpinner";
-import { ProfileMenu } from "~/components/ProfileMenu";
 import UserEventsList from "~/components/UserEventsList";
 import { useRatingPrompt } from "~/hooks/useRatingPrompt";
 import { useStablePaginatedQuery } from "~/hooks/useStableQuery";
 import { useAppStore, useStableTimestamp } from "~/store";
-import Config from "~/utils/config";
-import { logError } from "~/utils/errorLogging";
 
 type Segment = "upcoming" | "past";
 
@@ -159,104 +155,31 @@ function MyFeedContent() {
     setSelectedSegment(segment);
   }, []);
 
-  const handleShareEvents = useCallback(async () => {
-    const shareUrl = `${Config.apiBaseUrl}/${user?.username ?? ""}`;
-    try {
-      await Share.share({ url: shareUrl });
-    } catch (error) {
-      logError("Error sharing events", error);
-    }
-  }, [user?.username]);
-
-  const myListLabel = useAppStore((s) => s.myListLabel);
-  const headerStyle = useAppStore((s) => s.headerStyle);
-
-  // Strip "My " prefix to get the base noun: "My List" → "List", "My Soonlist" → "Soonlist"
-  const baseNoun = myListLabel.replace(/^My\s+/, "");
-
-  const headerTitle = (() => {
-    switch (headerStyle) {
-      case "possessive":
-        return user?.firstName
-          ? `${user.firstName}'s ${baseNoun}`
-          : `My ${baseNoun}`;
-      case "your":
-        return `Your ${baseNoun}`;
-      case "plain":
-        return baseNoun;
-    }
-  })();
-
   const HeaderComponent = useCallback(() => {
     return (
-      <View className="pb-2 pl-3 pr-2 pt-3">
-        {/* Top row: Avatar, Name, Share */}
-        <View className="flex-row items-center justify-between">
-          <View className="flex-row items-center gap-2">
-            <ProfileMenu />
-            <View>
-              <Text className="text-2xl font-semibold text-gray-900">
-                {headerTitle}
-              </Text>
-              <View className="-mt-1 flex-row items-center gap-1">
-                <LinkIcon size={10} color="#9CA3AF" />
-                <Text className="text-xs text-gray-400">
-                  {`soonlist.com/${user?.username ?? ""}`}
-                </Text>
-              </View>
-            </View>
-          </View>
-          <TouchableOpacity
-            onPress={handleShareEvents}
-            className={`flex-row items-center rounded-full px-4 py-2 ${enrichedEvents.length > 0 ? "bg-interactive-1" : "bg-neutral-3"}`}
-            activeOpacity={0.8}
-            disabled={enrichedEvents.length === 0}
-          >
-            <ShareIcon
-              size={18}
-              color={enrichedEvents.length > 0 ? "#FFF" : "rgb(98, 116, 150)"}
-            />
-            <Text
-              className={`ml-2 text-base font-semibold ${enrichedEvents.length > 0 ? "text-white" : "text-neutral-2"}`}
+      <View className="px-3 pb-2 pt-3" style={{ width: 260 }}>
+        {Platform.OS === "ios" ? (
+          <Host matchContents>
+            <Picker
+              selection={selectedSegment}
+              onSelectionChange={(value) => {
+                handleSegmentChange(value as Segment);
+              }}
+              modifiers={[pickerStyle("segmented")]}
             >
-              Share
-            </Text>
-          </TouchableOpacity>
-        </View>
-        {/* Second row: Filter */}
-        <View className="mt-3" style={{ width: 260 }}>
-          {Platform.OS === "ios" ? (
-            <Host matchContents>
-              <Picker
-                selection={selectedSegment}
-                onSelectionChange={(value) => {
-                  handleSegmentChange(value as Segment);
-                }}
-                modifiers={[pickerStyle("segmented")]}
-              >
-                <SwiftUIText modifiers={[tag("upcoming")]}>
-                  Upcoming
-                </SwiftUIText>
-                <SwiftUIText modifiers={[tag("past")]}>Past</SwiftUIText>
-              </Picker>
-            </Host>
-          ) : (
-            <SegmentedControlFallback
-              selectedSegment={selectedSegment}
-              onSegmentChange={handleSegmentChange}
-            />
-          )}
-        </View>
+              <SwiftUIText modifiers={[tag("upcoming")]}>Upcoming</SwiftUIText>
+              <SwiftUIText modifiers={[tag("past")]}>Past</SwiftUIText>
+            </Picker>
+          </Host>
+        ) : (
+          <SegmentedControlFallback
+            selectedSegment={selectedSegment}
+            onSegmentChange={handleSegmentChange}
+          />
+        )}
       </View>
     );
-  }, [
-    selectedSegment,
-    handleSegmentChange,
-    handleShareEvents,
-    headerTitle,
-    user?.username,
-    enrichedEvents.length,
-  ]);
+  }, [selectedSegment, handleSegmentChange]);
 
   return (
     <UserEventsList

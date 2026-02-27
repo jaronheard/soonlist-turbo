@@ -700,6 +700,7 @@ export default function EditProfileScreen() {
               description="How the header above each tab renders"
               options={[
                 { value: "possessive", label: "Jaron's Board" },
+                { value: "my", label: "My Board" },
                 { value: "your", label: "Your Board" },
                 { value: "plain", label: "Board" },
               ]}

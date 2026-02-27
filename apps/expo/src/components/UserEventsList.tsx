@@ -25,8 +25,7 @@ import type { EventWithSimilarity } from "~/utils/similarEvents";
 import {
   CalendarPlus,
   Copy,
-  EyeOff,
-  Globe2,
+  Heart,
   MoreVertical,
   ShareIcon,
   User,
@@ -290,8 +289,8 @@ interface UserEventListItemProps {
   similarEventsCount?: number;
   demoMode?: boolean;
   index: number;
-  hideDiscoverableButton?: boolean;
   isDiscoverFeed?: boolean;
+  primaryAction?: "addToCalendar" | "save";
   source?: string;
 }
 
@@ -305,13 +304,17 @@ export function UserEventListItem(props: UserEventListItemProps) {
     similarEventsCount,
     demoMode,
     index,
-    hideDiscoverableButton = false,
     isDiscoverFeed = false,
+    primaryAction = "addToCalendar",
     source,
   } = props;
   const { fontScale } = useWindowDimensions();
-  const { handleAddToCal, handleToggleVisibility, handleShare, showDiscover } =
-    useEventActions({ event, isSaved, demoMode, source });
+  const { handleAddToCal, handleShare, handleFollow } = useEventActions({
+    event,
+    isSaved,
+    demoMode,
+    source,
+  });
   const id = event.id;
   const e = event.event as AddToCalendarButtonPropsRestricted;
   const userTimezone = useUserTimezone();
@@ -582,16 +585,36 @@ export function UserEventListItem(props: UserEventListItemProps) {
             <View className="-mb-2 mt-1.5 flex-row items-center justify-start gap-3">
               {ActionButton && <ActionButton event={event} />}
 
-              <TouchableOpacity
-                className="-mb-0.5 -ml-2.5 flex-row items-center gap-1 py-2.5 pl-4 pr-1"
-                onPress={handleAddToCal}
-                hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
-              >
-                <CalendarPlus size={iconSize * 1.1} color="#5A32FB" />
-                <Text className="text-base font-bold text-interactive-1">
-                  Add
-                </Text>
-              </TouchableOpacity>
+              {primaryAction === "addToCalendar" ? (
+                <TouchableOpacity
+                  className="-mb-0.5 -ml-2.5 flex-row items-center gap-1 py-2.5 pl-4 pr-1"
+                  onPress={handleAddToCal}
+                  hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+                >
+                  <CalendarPlus size={iconSize * 1.1} color="#5A32FB" />
+                  <Text className="text-base font-bold text-interactive-1">
+                    Add
+                  </Text>
+                </TouchableOpacity>
+              ) : isSaved || isOwner ? (
+                <View className="-mb-0.5 -ml-2.5 flex-row items-center gap-1 py-2.5 pl-4 pr-1 opacity-60">
+                  <Heart size={iconSize * 1.1} color="#5A32FB" fill="#5A32FB" />
+                  <Text className="text-base font-bold text-interactive-1">
+                    Saved
+                  </Text>
+                </View>
+              ) : (
+                <TouchableOpacity
+                  className="-mb-0.5 -ml-2.5 flex-row items-center gap-1 py-2.5 pl-4 pr-1"
+                  onPress={() => void handleFollow()}
+                  hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+                >
+                  <Heart size={iconSize * 1.1} color="#5A32FB" />
+                  <Text className="text-base font-bold text-interactive-1">
+                    Save
+                  </Text>
+                </TouchableOpacity>
+              )}
 
               {!isDiscoverFeed && (
                 <TouchableOpacity
@@ -602,32 +625,6 @@ export function UserEventListItem(props: UserEventListItemProps) {
                   hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
                 >
                   <ShareIcon size={iconSize * 1.1} color="#5A32FB" />
-                </TouchableOpacity>
-              )}
-
-              {/* <TouchableOpacity
-                className="rounded-full p-2.5"
-                onPress={handleDirections}
-                hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
-              >
-                <MapPinned size={iconSize} color="#5A32FB" />
-              </TouchableOpacity> */}
-
-              {showDiscover && !hideDiscoverableButton && (
-                <TouchableOpacity
-                  className="rounded-full p-2.5"
-                  onPress={() => {
-                    const nextVisibility =
-                      event.visibility === "public" ? "private" : "public";
-                    void handleToggleVisibility(nextVisibility);
-                  }}
-                  hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
-                >
-                  {event.visibility === "public" ? (
-                    <Globe2 size={iconSize * 1.1} color="#5A32FB" />
-                  ) : (
-                    <EyeOff size={iconSize * 1.1} color="#5A32FB" />
-                  )}
                 </TouchableOpacity>
               )}
 
@@ -894,7 +891,7 @@ const GhostEventCard = ({ index }: { index: number }) => {
 
 const EmptyStateHeader = () => {
   const { fontScale } = useWindowDimensions();
-  const iconSize = 14 * fontScale;
+  const iconSize = 11.2 * fontScale;
   const { triggerAddEventFlow } = useAddEventFlow();
   const fontSize = 24 * fontScale;
 
@@ -917,73 +914,86 @@ const EmptyStateHeader = () => {
 
   return (
     <TouchableOpacity
-      className="mb-6 items-center px-4"
+      className="mb-6 px-4"
       onPress={() => void triggerAddEventFlow()}
       activeOpacity={0.7}
     >
-      <Text
-        className="text-center text-2xl font-bold text-neutral-1"
-        style={{ fontSize }}
-      >
-        Turn screenshots
-      </Text>
-      {/* App source icons in mini 9:16 dashed containers */}
       <View
+        className="items-center rounded-2xl p-3"
         style={{
-          flexDirection: "row",
-          alignItems: "center",
-          gap: 6,
-          marginVertical: 8,
+          borderWidth: 3,
+          borderColor: "#E0D9FF",
+          borderStyle: "dashed",
+          backgroundColor: "transparent",
+          borderRadius: 20,
         }}
       >
-        {sources.map((s, i) => {
-          const rotation = i % 2 === 0 ? "10deg" : "-10deg";
-          const containerWidth = iconSize * 1.6;
-          const containerHeight = containerWidth * (16 / 9);
-          return (
-            <View
-              key={i}
-              style={{
-                width: containerWidth,
-                height: containerHeight,
-                borderRadius: 6,
-                borderWidth: 1.5,
-                borderColor: "#E0D9FF",
-                borderStyle: "dashed",
-                backgroundColor: "#FAFAFF",
-                transform: [{ rotate: rotation }],
-                justifyContent: "center",
-                alignItems: "center",
-              }}
-            >
-              <Image
-                // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
-                source={s.source}
-                style={{
-                  width: iconSize,
-                  height: iconSize,
-                  borderRadius: 5,
-                  opacity: 0.6,
-                  transform: [
-                    { rotate: rotation === "10deg" ? "-10deg" : "10deg" },
-                  ],
-                }}
-              />
-            </View>
-          );
-        })}
-      </View>
-      <Animated.View entering={FadeInDown.delay(300).duration(500).springify()}>
         <Text
           className="text-center text-2xl font-bold text-neutral-1"
-          style={{ fontSize, lineHeight: fontSize * 1.4 }}
+          style={{ fontSize }}
         >
-          into{" "}
-          <Text style={{ color: "#5A32FB", fontFamily: "Kalam_700Bold" }}>
-            possibilities
-          </Text>
+          Turn screenshots
         </Text>
-      </Animated.View>
+        {/* App source icons in mini 9:16 dashed containers */}
+        <View
+          style={{
+            flexDirection: "row",
+            alignItems: "center",
+            gap: 6,
+            marginVertical: 8,
+          }}
+        >
+          {sources.map((s, i) => {
+            const rotation = i % 2 === 0 ? "10deg" : "-10deg";
+            const containerWidth = iconSize * 1.6;
+            const containerHeight = containerWidth * (16 / 9);
+            return (
+              <View
+                key={i}
+                style={{
+                  width: containerWidth,
+                  height: containerHeight,
+                  borderRadius: 6,
+                  borderWidth: 1.5,
+                  borderColor: "#E0D9FF",
+                  borderStyle: "dashed",
+                  backgroundColor: "#FAFAFF",
+                  transform: [{ rotate: rotation }],
+                  justifyContent: "center",
+                  alignItems: "center",
+                }}
+              >
+                <Image
+                  // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+                  source={s.source}
+                  style={{
+                    width: iconSize,
+                    height: iconSize,
+                    borderRadius: 5,
+                    opacity: 0.6,
+                    transform: [
+                      { rotate: rotation === "10deg" ? "-10deg" : "10deg" },
+                    ],
+                  }}
+                />
+              </View>
+            );
+          })}
+        </View>
+        <Animated.View
+          entering={FadeInDown.delay(300).duration(500).springify()}
+        >
+          <Text
+            className="text-center text-2xl font-bold text-neutral-1"
+            style={{ fontSize, lineHeight: fontSize * 1.4 }}
+          >
+            into{" "}
+            <Text style={{ color: "#5A32FB", fontFamily: "Kalam_700Bold" }}>
+              possibilities
+            </Text>
+          </Text>
+        </Animated.View>
+      </View>
     </TouchableOpacity>
   );
 };
@@ -1001,8 +1011,8 @@ interface UserEventsListProps {
   showSourceStickers?: boolean;
   demoMode?: boolean;
   stats?: EventStatsData;
-  hideDiscoverableButton?: boolean;
   isDiscoverFeed?: boolean;
+  primaryAction?: "addToCalendar" | "save";
   savedEventIds?: Set<string>;
   HeaderComponent?: React.ComponentType<Record<string, never>>;
   EmptyStateComponent?: React.ComponentType<Record<string, never>>;
@@ -1021,8 +1031,8 @@ export default function UserEventsList(props: UserEventsListProps) {
     showSourceStickers = false,
     demoMode,
     stats,
-    hideDiscoverableButton = false,
     isDiscoverFeed = false,
+    primaryAction = "addToCalendar",
     savedEventIds,
     HeaderComponent,
     EmptyStateComponent,
@@ -1152,8 +1162,8 @@ export default function UserEventsList(props: UserEventsListProps) {
             }
             demoMode={demoMode}
             index={index}
-            hideDiscoverableButton={hideDiscoverableButton}
             isDiscoverFeed={isDiscoverFeed}
+            primaryAction={primaryAction}
             source={source}
           />
         );

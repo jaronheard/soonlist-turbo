@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useMemo, useState } from "react";
-import { Platform, Share, Text, TouchableOpacity, View } from "react-native";
+import { Platform, Text, TouchableOpacity, View } from "react-native";
 import { Redirect } from "expo-router";
 import { useUser } from "@clerk/clerk-expo";
 import { Host, Picker, Text as SwiftUIText } from "@expo/ui/swift-ui";
@@ -13,9 +13,7 @@ import {
 
 import { api } from "@soonlist/backend/convex/_generated/api";
 
-import { LinkIcon, ShareIcon } from "~/components/icons";
 import LoadingSpinner from "~/components/LoadingSpinner";
-import { ProfileMenu } from "~/components/ProfileMenu";
 import UserEventsList from "~/components/UserEventsList";
 import { useStablePaginatedQuery } from "~/hooks/useStableQuery";
 import { useAppStore, useStableTimestamp } from "~/store";
@@ -76,25 +74,9 @@ function FollowingFeedContent() {
   const followingUsers = useQuery(api.users.getFollowingUsers);
   const hasFollowings = (followingUsers?.length ?? 0) > 0;
 
-  const boardLabel = useAppStore((s) => s.boardLabel);
-  const headerStyle = useAppStore((s) => s.headerStyle);
-
-  // URL path matches the board label
-  const boardUrlPath = boardLabel.toLowerCase().replace(/\s+/g, "-");
-
   const handleSegmentChange = useCallback((segment: Segment) => {
     setSelectedSegment(segment);
   }, []);
-
-  const handleShare = useCallback(async () => {
-    try {
-      await Share.share({
-        url: `https://soonlist.com/${user?.username ?? ""}/${boardUrlPath}`,
-      });
-    } catch {
-      // ignore
-    }
-  }, [user?.username, boardUrlPath]);
 
   // Memoize query args
   const queryArgs = useMemo(() => {
@@ -163,81 +145,33 @@ function FollowingFeedContent() {
     }
   }, [enrichedEvents.length, selectedSegment, setCommunityBadgeCount]);
 
-  const headerTitle = (() => {
-    switch (headerStyle) {
-      case "possessive":
-        return user?.firstName
-          ? `${user.firstName}'s ${boardLabel}`
-          : `My ${boardLabel}`;
-      case "your":
-        return `Your ${boardLabel}`;
-      case "plain":
-        return boardLabel;
-    }
-  })();
-
   const HeaderComponent = useCallback(() => {
     return (
-      <View className="pb-2 pl-3 pr-2 pt-3">
-        <View className="flex-row items-center justify-between">
-          <View className="flex-row items-center gap-2">
-            <ProfileMenu />
-            <View>
-              <Text className="text-2xl font-semibold text-gray-900">
-                {headerTitle}
-              </Text>
-              <View className="-mt-1 flex-row items-center gap-1">
-                <LinkIcon size={10} color="#9CA3AF" />
-                <Text className="text-xs text-gray-400">
-                  {`soonlist.com/${user?.username ?? ""}/${boardUrlPath}`}
-                </Text>
-              </View>
-            </View>
-          </View>
-          <TouchableOpacity
-            onPress={handleShare}
-            className="flex-row items-center rounded-full bg-interactive-1 px-4 py-2"
-            activeOpacity={0.8}
-          >
-            <ShareIcon size={18} color="#FFF" />
-            <Text className="ml-2 text-base font-semibold text-white">
-              Share
-            </Text>
-          </TouchableOpacity>
-        </View>
-        <View className="mt-3" style={{ width: 260 }}>
-          {Platform.OS === "ios" ? (
-            <Host matchContents>
-              <Picker
-                selection={selectedSegment}
-                onSelectionChange={(value) => {
-                  handleSegmentChange(value as Segment);
-                }}
-                modifiers={[pickerStyle("segmented")]}
-              >
-                <SwiftUIText modifiers={[tag("upcoming")]}>
-                  {`Upcoming · ${enrichedEvents.length}`}
-                </SwiftUIText>
-                <SwiftUIText modifiers={[tag("past")]}>Past</SwiftUIText>
-              </Picker>
-            </Host>
-          ) : (
-            <SegmentedControlFallback
-              selectedSegment={selectedSegment}
-              onSegmentChange={handleSegmentChange}
-            />
-          )}
-        </View>
+      <View className="px-3 pb-2 pt-3" style={{ width: 260 }}>
+        {Platform.OS === "ios" ? (
+          <Host matchContents>
+            <Picker
+              selection={selectedSegment}
+              onSelectionChange={(value) => {
+                handleSegmentChange(value as Segment);
+              }}
+              modifiers={[pickerStyle("segmented")]}
+            >
+              <SwiftUIText modifiers={[tag("upcoming")]}>
+                {`Upcoming · ${enrichedEvents.length}`}
+              </SwiftUIText>
+              <SwiftUIText modifiers={[tag("past")]}>Past</SwiftUIText>
+            </Picker>
+          </Host>
+        ) : (
+          <SegmentedControlFallback
+            selectedSegment={selectedSegment}
+            onSegmentChange={handleSegmentChange}
+          />
+        )}
       </View>
     );
-  }, [
-    selectedSegment,
-    handleSegmentChange,
-    handleShare,
-    headerTitle,
-    user?.username,
-    enrichedEvents.length,
-  ]);
+  }, [selectedSegment, handleSegmentChange, enrichedEvents.length]);
 
   // Redirect to feed if not following anyone
   if (followingUsers !== undefined && !hasFollowings) {
@@ -251,6 +185,7 @@ function FollowingFeedContent() {
       isFetchingNextPage={status === "LoadingMore"}
       isLoadingFirstPage={followingUsers === undefined}
       showCreator="always"
+      primaryAction="save"
       showSourceStickers
       savedEventIds={savedEventIds}
       source="following"

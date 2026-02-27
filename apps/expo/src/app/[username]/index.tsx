@@ -8,7 +8,6 @@ import { useConvexAuth, useMutation, useQuery } from "convex/react";
 import { api } from "@soonlist/backend/convex/_generated/api";
 
 import { Check, User } from "~/components/icons";
-import { LiquidGlassHeader } from "~/components/LiquidGlassHeader";
 import SaveShareButton from "~/components/SaveShareButton";
 import UserEventsList from "~/components/UserEventsList";
 import { UserProfileFlair } from "~/components/UserProfileFlair";
@@ -131,7 +130,7 @@ export default function UserProfilePage() {
         <Stack.Screen
           options={{
             headerTransparent: true,
-            headerBackground: () => <LiquidGlassHeader />,
+            headerBackground: undefined,
             headerRight: () => null,
           }}
         />
@@ -149,7 +148,7 @@ export default function UserProfilePage() {
         <Stack.Screen
           options={{
             headerTransparent: true,
-            headerBackground: () => <LiquidGlassHeader />,
+            headerBackground: undefined,
             headerRight: () => null,
           }}
         />
@@ -186,14 +185,6 @@ export default function UserProfilePage() {
         options={{
           title: "Public List",
           headerTransparent: true,
-          headerBackground: () => (
-            <View
-              style={{
-                flex: 1,
-                backgroundColor: "#E0D9FF", // interactive-2
-              }}
-            />
-          ),
           headerTintColor: "#5A32FB", // interactive-1
           headerTitleStyle: {
             color: "#5A32FB", // interactive-1
@@ -208,8 +199,8 @@ export default function UserProfilePage() {
           isFetchingNextPage={status === "LoadingMore"}
           isLoadingFirstPage={status === "LoadingFirstPage"}
           showCreator="never"
-          hideDiscoverableButton={true}
           isDiscoverFeed={false}
+          primaryAction={isOwnProfile ? "addToCalendar" : "save"}
           ActionButton={ProfileSaveShareButtonWrapper}
           savedEventIds={savedEventIds}
           HeaderComponent={() => (
