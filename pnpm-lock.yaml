@@ -594,6 +594,9 @@ importers:
       '@clerk/clerk-expo':
         specifier: 'catalog:'
         version: 2.19.17(xxet56npmss6npapsvl4vyhime)
+      '@expo-google-fonts/kalam':
+        specifier: ^0.4.1
+        version: 0.4.1
       '@expo/metro-runtime':
         specifier: 'catalog:'
         version: 55.0.6(@expo/dom-webview@55.0.3)(expo@55.0.0-preview.12)(react-dom@19.2.0(react@19.2.0))(react-native@0.83.2(@babel/core@7.28.5)(@types/react@19.2.14)(bufferutil@4.1.0)(react@19.2.0)(utf-8-validate@5.0.10))(react@19.2.0)
@@ -702,6 +705,9 @@ importers:
       expo-file-system:
         specifier: 'catalog:'
         version: 55.0.8(expo@55.0.0-preview.12)(react-native@0.83.2(@babel/core@7.28.5)(@types/react@19.2.14)(bufferutil@4.1.0)(react@19.2.0)(utf-8-validate@5.0.10))
+      expo-font:
+        specifier: ^55.0.4
+        version: 55.0.4(expo@55.0.0-preview.12)(react-native@0.83.2(@babel/core@7.28.5)(@types/react@19.2.14)(bufferutil@4.1.0)(react@19.2.0)(utf-8-validate@5.0.10))(react@19.2.0)
       expo-haptics:
         specifier: 'catalog:'
         version: 55.0.7(expo@55.0.0-preview.12)
@@ -3049,6 +3055,9 @@ packages:
   '@eslint/plugin-kit@0.4.1':
     resolution: {integrity: sha512-43/qtrDUokr7LJqoF2c3+RInu/t4zfrpYdoSDfYyhg52rwLV6TnOvdG4fXm7IkSB3wErkcmJS9iEhjVtOSEjjA==}
     engines: {node: ^18.18.0 || ^20.9.0 || >=21.1.0}
+
+  '@expo-google-fonts/kalam@0.4.1':
+    resolution: {integrity: sha512-A5LZoojqb9OCzOI/2WDRofaIQGGzC5zzmKxqxCFIx1jSYOO8g7q+5fZdd+QfJ6pY6VLzO4j5xoJq0ptcHFpQSg==}
 
   '@expo-google-fonts/material-symbols@0.4.23':
     resolution: {integrity: sha512-bxKaz8l+vLwSvl/hT9anLt32l4lSocqnDoDhPrpLF+FS0imJ+Kuw+2wtXSVMJqYm4fkVF19fDJo6OwmSJY1wvg==}
@@ -12883,6 +12892,8 @@ snapshots:
     dependencies:
       '@eslint/core': 0.17.0
       levn: 0.4.1
+
+  '@expo-google-fonts/kalam@0.4.1': {}
 
   '@expo-google-fonts/material-symbols@0.4.23': {}
 

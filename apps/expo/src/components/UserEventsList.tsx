@@ -4,7 +4,6 @@ import React, { useEffect, useMemo, useState } from "react";
 import {
   ActivityIndicator,
   Image,
-  Linking,
   Pressable,
   ScrollView,
   Text,
@@ -13,6 +12,7 @@ import {
   View,
 } from "react-native";
 import { FlatList } from "react-native-gesture-handler";
+import Animated, { FadeInDown, FadeInLeft } from "react-native-reanimated";
 import { Image as ExpoImage } from "expo-image";
 import { router } from "expo-router";
 import { useUser } from "@clerk/clerk-expo";
@@ -28,7 +28,6 @@ import {
   EyeOff,
   Globe2,
   MoreVertical,
-  PlusViewfinder,
   ShareIcon,
   User,
 } from "~/components/icons";
@@ -714,228 +713,72 @@ export function UserEventListItem(props: UserEventListItemProps) {
   );
 }
 
-interface SourceStickerProps {
-  icon: React.ReactNode;
-  label: string;
-  index: number;
-  deepLink?: string;
-}
-
-const SourceSticker = ({
-  icon,
-  label,
-  index,
-  deepLink,
-}: SourceStickerProps) => {
+const SourceStickersRow = () => {
   const { fontScale } = useWindowDimensions();
-  const rotation = index % 2 === 0 ? "8deg" : "-8deg";
+  const iconSize = 25 * fontScale;
+  const { triggerAddEventFlow } = useAddEventFlow();
 
-  const handlePress = async () => {
-    if (!deepLink) return;
-
-    try {
-      const canOpen = await Linking.canOpenURL(deepLink);
-      if (canOpen) {
-        await Linking.openURL(deepLink);
-      }
-    } catch {
-      // Silently fail if app can't be opened
-    }
-  };
-
-  const content = (
-    <View
-      style={{
-        transform: [{ rotate: rotation }],
-      }}
-    >
-      <View
-        className="items-center rounded-xl bg-white px-3 py-2"
-        style={{
-          borderWidth: 2,
-          borderColor: "#E0D9FF",
-          minWidth: 70 * fontScale,
-        }}
-      >
-        <View
-          style={{
-            width: 24 * fontScale,
-            height: 24 * fontScale,
-            alignItems: "center",
-            justifyContent: "center",
-          }}
+  return (
+    <View className="mb-6 items-center px-4">
+      <Animated.View entering={FadeInLeft.delay(550).duration(500).springify()}>
+        <TouchableOpacity
+          className="mb-2 flex-row items-center justify-center gap-2.5 rounded-full bg-interactive-2 px-6 py-3.5"
+          onPress={() => void triggerAddEventFlow()}
+          activeOpacity={0.7}
         >
-          {icon}
-        </View>
+          <Text
+            className="font-semibold text-neutral-1"
+            style={{ fontSize: 20 * fontScale }}
+          >
+            Screenshot events →
+          </Text>
+          <Image
+            // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-require-imports
+            source={require("../assets/capture-cta.png")}
+            style={{ width: iconSize, height: iconSize, marginRight: -4 }}
+          />
+          <Text
+            className="font-semibold"
+            style={{ fontSize: 20 * fontScale, color: "#5A32FB" }}
+          >
+            Add
+          </Text>
+        </TouchableOpacity>
+      </Animated.View>
+    </View>
+  );
+};
+
+const ScreenshotCta = () => {
+  const { fontScale } = useWindowDimensions();
+  const iconSize = 16 * fontScale;
+  const { triggerAddEventFlow } = useAddEventFlow();
+
+  return (
+    <View className="mb-6 items-center py-4">
+      <TouchableOpacity
+        className="flex-row items-center justify-center gap-1.5 rounded-full bg-interactive-2 px-4 py-3"
+        onPress={() => void triggerAddEventFlow()}
+        activeOpacity={0.7}
+      >
         <Text
-          className="mt-1 text-center text-xs font-medium text-neutral-2"
-          style={{ fontSize: 11 * fontScale }}
+          className="text-center font-semibold text-neutral-1"
+          style={{ fontSize: 14 * fontScale }}
         >
-          {label}
+          Screenshot events →
         </Text>
-      </View>
-    </View>
-  );
-
-  if (deepLink) {
-    return (
-      <TouchableOpacity onPress={() => void handlePress()} activeOpacity={0.7}>
-        {content}
+        <Image
+          // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-require-imports
+          source={require("../assets/capture-cta.png")}
+          style={{ width: iconSize, height: iconSize }}
+        />
+        <Text
+          className="text-center font-semibold text-neutral-1"
+          style={{ fontSize: 14 * fontScale }}
+        >
+          Add
+        </Text>
       </TouchableOpacity>
-    );
-  }
-
-  return content;
-};
-
-const SourceStickersRow = ({ hideText = false }: { hideText?: boolean }) => {
-  const { fontScale } = useWindowDimensions();
-  const iconSize = 24 * fontScale;
-
-  const row1 = [
-    {
-      icon: (
-        <Image
-          // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-require-imports
-          source={require("../assets/app-icons/instagram.png")}
-          style={{ width: iconSize, height: iconSize, borderRadius: 5 }}
-        />
-      ),
-      label: "Instagram",
-      deepLink: "instagram://",
-    },
-    {
-      icon: (
-        <Image
-          // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-require-imports
-          source={require("../assets/app-icons/tiktok.png")}
-          style={{ width: iconSize, height: iconSize, borderRadius: 5 }}
-        />
-      ),
-      label: "TikTok",
-      deepLink: "tiktok://",
-    },
-    {
-      icon: (
-        <Image
-          // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-require-imports
-          source={require("../assets/app-icons/messages.png")}
-          style={{ width: iconSize, height: iconSize, borderRadius: 5 }}
-        />
-      ),
-      label: "Messages",
-      deepLink: "sms:",
-    },
-    {
-      icon: (
-        <Image
-          // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-require-imports
-          source={require("../assets/app-icons/partiful.png")}
-          style={{ width: iconSize, height: iconSize, borderRadius: 5 }}
-        />
-      ),
-      label: "Partiful",
-      deepLink: "partiful://",
-    },
-  ];
-
-  const row2 = [
-    {
-      icon: (
-        <Image
-          // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-require-imports
-          source={require("../assets/app-icons/mail.png")}
-          style={{ width: iconSize, height: iconSize, borderRadius: 5 }}
-        />
-      ),
-      label: "Email",
-      deepLink: "mailto:",
-    },
-    {
-      icon: (
-        <Image
-          // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-require-imports
-          source={require("../assets/app-icons/safari.png")}
-          style={{ width: iconSize, height: iconSize, borderRadius: 5 }}
-        />
-      ),
-      label: "Safari",
-      deepLink: "https://soonlist.com",
-    },
-    {
-      icon: (
-        <Image
-          // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-require-imports
-          source={require("../assets/app-icons/posters.png")}
-          style={{ width: iconSize, height: iconSize, borderRadius: 5 }}
-        />
-      ),
-      label: "Posters",
-      // No deep link for physical posters
-    },
-  ];
-
-  return (
-    <View className="mb-6 px-4">
-      {!hideText && (
-        <View className="mb-4">
-          <TapToAddText textSize={16} />
-        </View>
-      )}
-      <View className="flex-row flex-wrap items-center justify-center gap-3">
-        {row1.map((source, index) => (
-          <SourceSticker
-            key={source.label}
-            icon={source.icon}
-            label={source.label}
-            index={index}
-            deepLink={source.deepLink}
-          />
-        ))}
-      </View>
-      <View className="mt-3 flex-row flex-wrap items-center justify-center gap-3">
-        {row2.map((source, index) => (
-          <SourceSticker
-            key={source.label}
-            icon={source.icon}
-            label={source.label}
-            index={index + 1}
-            deepLink={source.deepLink}
-          />
-        ))}
-      </View>
-    </View>
-  );
-};
-
-const TapToAddText = ({ textSize = 16 }: { textSize?: number }) => {
-  const { fontScale } = useWindowDimensions();
-  const fontSize = textSize * fontScale;
-  const iconSize = 20 * fontScale;
-
-  return (
-    <View className="flex-row items-center justify-center">
-      <Text className="text-center text-neutral-2" style={{ fontSize }}>
-        Tap{" "}
-      </Text>
-      <View
-        className="items-center justify-center rounded-full bg-white"
-        style={{
-          width: iconSize + 14,
-          height: iconSize + 14,
-          shadowColor: "#000",
-          shadowOffset: { width: 0, height: 1 },
-          shadowOpacity: 0.08,
-          shadowRadius: 4,
-          elevation: 2,
-        }}
-      >
-        <PlusViewfinder size={iconSize} color="#1C1C1E" />
-      </View>
-      <Text className="text-center text-neutral-2" style={{ fontSize }}>
-        {" "}
-        to add from screenshots or photos
-      </Text>
     </View>
   );
 };
@@ -948,7 +791,7 @@ const GhostEventCard = ({ index }: { index: number }) => {
   const imageRotation = index % 2 === 0 ? "10deg" : "-10deg";
 
   return (
-    <View className="relative mb-6 px-4">
+    <View className="relative mb-6 px-4 opacity-50">
       {/* Ghost image placeholder with dashed border - matching exact positioning */}
       <View
         style={{
@@ -968,7 +811,7 @@ const GhostEventCard = ({ index }: { index: number }) => {
             borderWidth: 3,
             borderColor: "#E0D9FF",
             borderStyle: "dashed",
-            backgroundColor: "#FAFAFF",
+            backgroundColor: "#F4F1FF",
           }}
         />
       </View>
@@ -982,7 +825,7 @@ const GhostEventCard = ({ index }: { index: number }) => {
           borderWidth: 3,
           borderColor: "#E0D9FF",
           borderStyle: "dashed",
-          backgroundColor: "#FAFAFF",
+          backgroundColor: "#F4F1FF",
         }}
       >
         {/* Gray lines representing text content */}
@@ -993,7 +836,7 @@ const GhostEventCard = ({ index }: { index: number }) => {
             style={{
               height: 14 * fontScale,
               width: 120 * fontScale,
-              backgroundColor: "#F4F1FF",
+              backgroundColor: "#EDE8FF",
             }}
           />
 
@@ -1003,7 +846,7 @@ const GhostEventCard = ({ index }: { index: number }) => {
             style={{
               height: 20 * fontScale,
               width: "85%",
-              backgroundColor: "#F4F1FF",
+              backgroundColor: "#EDE8FF",
             }}
           />
 
@@ -1013,7 +856,7 @@ const GhostEventCard = ({ index }: { index: number }) => {
             style={{
               height: 14 * fontScale,
               width: 160 * fontScale,
-              backgroundColor: "#F4F1FF",
+              backgroundColor: "#EDE8FF",
             }}
           />
 
@@ -1024,7 +867,7 @@ const GhostEventCard = ({ index }: { index: number }) => {
               className="-ml-2 rounded"
               style={{
                 borderRadius: 16,
-                backgroundColor: "#F4F1FF",
+                backgroundColor: "#EDE8FF",
                 height: 36 * fontScale,
                 width: 96 * fontScale,
               }}
@@ -1034,11 +877,11 @@ const GhostEventCard = ({ index }: { index: number }) => {
             {[0, 1].map((i) => (
               <View
                 key={i}
-                className="rounded-full p-2.5"
+                className="rounded-full"
                 style={{
                   width: 24 * fontScale,
                   height: 24 * fontScale,
-                  backgroundColor: "#F4F1FF",
+                  backgroundColor: "#EDE8FF",
                 }}
               />
             ))}
@@ -1051,21 +894,96 @@ const GhostEventCard = ({ index }: { index: number }) => {
 
 const EmptyStateHeader = () => {
   const { fontScale } = useWindowDimensions();
+  const iconSize = 14 * fontScale;
   const { triggerAddEventFlow } = useAddEventFlow();
+  const fontSize = 24 * fontScale;
+
+  const sources = [
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-require-imports
+    { source: require("../assets/app-icons/instagram-gray.png") },
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-require-imports
+    { source: require("../assets/app-icons/tiktok-gray.png") },
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-require-imports
+    { source: require("../assets/app-icons/messages-gray.png") },
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-require-imports
+    { source: require("../assets/app-icons/mail-gray.png") },
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-require-imports
+    { source: require("../assets/app-icons/safari-gray.png") },
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-require-imports
+    { source: require("../assets/app-icons/partiful-gray.png") },
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-require-imports
+    { source: require("../assets/app-icons/posters-gray.png") },
+  ];
 
   return (
     <TouchableOpacity
-      className="my-6 items-center px-4"
+      className="mb-6 items-center px-4"
       onPress={() => void triggerAddEventFlow()}
       activeOpacity={0.7}
     >
       <Text
-        className="mb-2 text-center text-2xl font-bold text-neutral-1"
-        style={{ fontSize: 24 * fontScale }}
+        className="text-center text-2xl font-bold text-neutral-1"
+        style={{ fontSize }}
       >
-        Your events, <Text style={{ color: "#5A32FB" }}>all in one place</Text>
+        Turn screenshots
       </Text>
-      <TapToAddText textSize={16} />
+      {/* App source icons in mini 9:16 dashed containers */}
+      <View
+        style={{
+          flexDirection: "row",
+          alignItems: "center",
+          gap: 6,
+          marginVertical: 8,
+        }}
+      >
+        {sources.map((s, i) => {
+          const rotation = i % 2 === 0 ? "10deg" : "-10deg";
+          const containerWidth = iconSize * 1.6;
+          const containerHeight = containerWidth * (16 / 9);
+          return (
+            <View
+              key={i}
+              style={{
+                width: containerWidth,
+                height: containerHeight,
+                borderRadius: 6,
+                borderWidth: 1.5,
+                borderColor: "#E0D9FF",
+                borderStyle: "dashed",
+                backgroundColor: "#FAFAFF",
+                transform: [{ rotate: rotation }],
+                justifyContent: "center",
+                alignItems: "center",
+              }}
+            >
+              <Image
+                // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+                source={s.source}
+                style={{
+                  width: iconSize,
+                  height: iconSize,
+                  borderRadius: 5,
+                  opacity: 0.6,
+                  transform: [
+                    { rotate: rotation === "10deg" ? "-10deg" : "10deg" },
+                  ],
+                }}
+              />
+            </View>
+          );
+        })}
+      </View>
+      <Animated.View entering={FadeInDown.delay(300).duration(500).springify()}>
+        <Text
+          className="text-center text-2xl font-bold text-neutral-1"
+          style={{ fontSize, lineHeight: fontSize * 1.4 }}
+        >
+          into{" "}
+          <Text style={{ color: "#5A32FB", fontFamily: "Kalam_700Bold" }}>
+            possibilities
+          </Text>
+        </Text>
+      </Animated.View>
     </TouchableOpacity>
   );
 };
@@ -1135,7 +1053,7 @@ export default function UserEventsList(props: UserEventsListProps) {
         showsVerticalScrollIndicator={false}
       >
         <EmptyStateHeader />
-        {showSourceStickers && <SourceStickersRow hideText />}
+        {showSourceStickers && <SourceStickersRow />}
         <GhostEventCard index={0} />
         <GhostEventCard index={1} />
         <GhostEventCard index={2} />
@@ -1179,7 +1097,7 @@ export default function UserEventsList(props: UserEventsListProps) {
             <ActivityIndicator size="large" color="#5A32FB" />
           </View>
         ) : null}
-        {showSourceStickers ? <SourceStickersRow /> : null}
+        {showSourceStickers ? <ScreenshotCta /> : null}
       </>
     );
   };

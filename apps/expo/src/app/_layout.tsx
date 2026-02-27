@@ -26,6 +26,7 @@ import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { KeyboardProvider } from "react-native-keyboard-controller";
 import { NotifierWrapper } from "react-native-notifier";
 import Constants, { AppOwnership } from "expo-constants";
+import { Kalam_700Bold, useFonts } from "@expo-google-fonts/kalam";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 
 import AuthAndTokenSync from "~/components/AuthAndTokenSync";
@@ -129,6 +130,7 @@ appsFlyer.initSdk(
 );
 
 function RootLayout() {
+  useFonts({ Kalam_700Bold });
   const clerkPublishableKey = Config.clerkPublishableKey;
   const { setUserTimezone } = useAppStore();
 

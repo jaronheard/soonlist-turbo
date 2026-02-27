@@ -208,11 +208,17 @@ function MyFeedContent() {
           </View>
           <TouchableOpacity
             onPress={handleShareEvents}
-            className="flex-row items-center rounded-full bg-interactive-1 px-4 py-2"
+            className={`flex-row items-center rounded-full px-4 py-2 ${enrichedEvents.length > 0 ? "bg-interactive-1" : "bg-neutral-3"}`}
             activeOpacity={0.8}
+            disabled={enrichedEvents.length === 0}
           >
-            <ShareIcon size={18} color="#FFF" />
-            <Text className="ml-2 text-base font-semibold text-white">
+            <ShareIcon
+              size={18}
+              color={enrichedEvents.length > 0 ? "#FFF" : "rgb(98, 116, 150)"}
+            />
+            <Text
+              className={`ml-2 text-base font-semibold ${enrichedEvents.length > 0 ? "text-white" : "text-neutral-2"}`}
+            >
               Share
             </Text>
           </TouchableOpacity>
@@ -249,6 +255,7 @@ function MyFeedContent() {
     handleShareEvents,
     headerTitle,
     user?.username,
+    enrichedEvents.length,
   ]);
 
   return (
