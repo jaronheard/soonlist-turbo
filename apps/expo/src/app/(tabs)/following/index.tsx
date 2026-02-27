@@ -158,7 +158,7 @@ function FollowingFeedContent() {
               modifiers={[pickerStyle("segmented")]}
             >
               <SwiftUIText modifiers={[tag("upcoming")]}>
-                {`Upcoming · ${enrichedEvents.length}`}
+                Upcoming
               </SwiftUIText>
               <SwiftUIText modifiers={[tag("past")]}>Past</SwiftUIText>
             </Picker>
