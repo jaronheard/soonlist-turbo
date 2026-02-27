@@ -1,4 +1,4 @@
-import { Platform, StyleSheet, Text, View } from "react-native";
+import { StyleSheet, Text, View } from "react-native";
 import appsFlyer from "react-native-appsflyer";
 import { SafeAreaProvider } from "react-native-safe-area-context";
 import {
@@ -26,11 +26,11 @@ import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { KeyboardProvider } from "react-native-keyboard-controller";
 import { NotifierWrapper } from "react-native-notifier";
 import Constants, { AppOwnership } from "expo-constants";
+import { Kalam_700Bold, useFonts } from "@expo-google-fonts/kalam";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 
 import AuthAndTokenSync from "~/components/AuthAndTokenSync";
 import { ForceUpdateScreen } from "~/components/ForceUpdateScreen";
-import { LiquidGlassHeader } from "~/components/LiquidGlassHeader";
 import { PostHogIdentityTracker } from "~/components/PostHogIdentityTracker";
 import { useAppsFlyerDeepLink } from "~/hooks/useAppsFlyerDeepLink";
 import { useCaptureCompletionFeedback } from "~/hooks/useCaptureCompletionFeedback";
@@ -129,6 +129,7 @@ appsFlyer.initSdk(
 );
 
 function RootLayout() {
+  useFonts({ Kalam_700Bold });
   const clerkPublishableKey = Config.clerkPublishableKey;
   const { setUserTimezone } = useAppStore();
 
@@ -202,8 +203,7 @@ const InitialLayout = () => {
     <Stack
       screenOptions={{
         headerTransparent: true,
-        headerBackground: () => <LiquidGlassHeader />,
-        headerTintColor: "#fff",
+        headerTintColor: "#5A32FB",
         headerTitleStyle: {
           fontWeight: "bold",
         },
@@ -240,8 +240,6 @@ const InitialLayout = () => {
           presentation: "modal",
           title: "Event Details",
           headerShown: true,
-          headerTransparent: false,
-          headerBackground: () => <LiquidGlassHeader />,
         }}
       />
       <Stack.Screen
@@ -250,8 +248,6 @@ const InitialLayout = () => {
           presentation: "modal",
           title: "",
           headerShown: true,
-          headerTransparent: false,
-          headerBackground: () => <LiquidGlassHeader />,
         }}
       />
       <Stack.Screen
@@ -365,7 +361,7 @@ function RootLayoutContent() {
   return (
     <View style={{ flex: 1 }}>
       <InitialLayout />
-      <StatusBar style={Platform.OS === "ios" ? "light" : "auto"} />
+      <StatusBar style="dark" />
     </View>
   );
 }

@@ -11,7 +11,6 @@ import {
 
 import { api } from "@soonlist/backend/convex/_generated/api";
 
-import AddEventButton from "~/components/AddEventButton";
 import DiscoverShareBanner from "~/components/DiscoverShareBanner";
 import LoadingSpinner from "~/components/LoadingSpinner";
 import SaveShareButton from "~/components/SaveShareButton";
@@ -27,12 +26,6 @@ function DiscoverContent() {
   // Compute access early to skip queries if denied
   const showDiscover = user ? getPlanStatusFromUser(user).showDiscover : false;
   const canAccessDiscover = discoverAccessOverride || showDiscover;
-
-  // Fetch user stats (skip when access is denied or user missing)
-  const stats = useQuery(
-    api.events.getStats,
-    canAccessDiscover && user?.username ? { userName: user.username } : "skip",
-  );
 
   // Use the stable timestamp from the store that updates every 15 minutes
   // This prevents InvalidCursor errors while still filtering for upcoming events
@@ -125,21 +118,18 @@ function DiscoverContent() {
   }
 
   return (
-    <View className="flex-1 bg-white">
-      <UserEventsList
-        events={enrichedEvents}
-        onEndReached={handleLoadMore}
-        isFetchingNextPage={status === "LoadingMore"}
-        isLoadingFirstPage={status === "LoadingFirstPage"}
-        ActionButton={SaveShareButtonWrapper}
-        showCreator="always"
-        hideDiscoverableButton={true}
-        isDiscoverFeed={true}
-        savedEventIds={savedEventIds}
-        HeaderComponent={DiscoverShareBanner}
-      />
-      {user && <AddEventButton showChevron={false} stats={stats} />}
-    </View>
+    <UserEventsList
+      events={enrichedEvents}
+      onEndReached={handleLoadMore}
+      isFetchingNextPage={status === "LoadingMore"}
+      isLoadingFirstPage={status === "LoadingFirstPage"}
+      ActionButton={SaveShareButtonWrapper}
+      showCreator="always"
+      isDiscoverFeed={true}
+      primaryAction="save"
+      savedEventIds={savedEventIds}
+      HeaderComponent={DiscoverShareBanner}
+    />
   );
 }
 

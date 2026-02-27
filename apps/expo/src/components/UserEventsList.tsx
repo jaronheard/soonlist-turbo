@@ -4,7 +4,6 @@ import React, { useEffect, useMemo, useState } from "react";
 import {
   ActivityIndicator,
   Image,
-  Linking,
   Pressable,
   ScrollView,
   Text,
@@ -12,10 +11,11 @@ import {
   useWindowDimensions,
   View,
 } from "react-native";
+import { FlatList } from "react-native-gesture-handler";
+import Animated, { FadeInDown, FadeInLeft } from "react-native-reanimated";
 import { Image as ExpoImage } from "expo-image";
 import { router } from "expo-router";
 import { useUser } from "@clerk/clerk-expo";
-import { LegendList } from "@legendapp/list";
 
 import type { api } from "@soonlist/backend/convex/_generated/api";
 import type { AddToCalendarButtonPropsRestricted } from "@soonlist/cal/types";
@@ -25,10 +25,8 @@ import type { EventWithSimilarity } from "~/utils/similarEvents";
 import {
   CalendarPlus,
   Copy,
-  EyeOff,
-  Globe2,
+  Heart,
   MoreVertical,
-  PlusIcon,
   ShareIcon,
   User,
 } from "~/components/icons";
@@ -48,8 +46,6 @@ import { collapseSimilarEvents } from "~/utils/similarEvents";
 import { EventMenu } from "./EventMenu";
 import { EventStats } from "./EventStats";
 import { UserProfileFlair } from "./UserProfileFlair";
-
-const HEADER_HEIGHT_DEFAULT = 100;
 
 type ShowCreatorOption = "always" | "otherUsers" | "never" | "savedFromOthers";
 
@@ -293,8 +289,8 @@ interface UserEventListItemProps {
   similarEventsCount?: number;
   demoMode?: boolean;
   index: number;
-  hideDiscoverableButton?: boolean;
   isDiscoverFeed?: boolean;
+  primaryAction?: "addToCalendar" | "save";
   source?: string;
 }
 
@@ -308,13 +304,17 @@ export function UserEventListItem(props: UserEventListItemProps) {
     similarEventsCount,
     demoMode,
     index,
-    hideDiscoverableButton = false,
     isDiscoverFeed = false,
+    primaryAction = "addToCalendar",
     source,
   } = props;
   const { fontScale } = useWindowDimensions();
-  const { handleAddToCal, handleToggleVisibility, handleShare, showDiscover } =
-    useEventActions({ event, isSaved, demoMode, source });
+  const { handleAddToCal, handleShare, handleFollow } = useEventActions({
+    event,
+    isSaved,
+    demoMode,
+    source,
+  });
   const id = event.id;
   const e = event.event as AddToCalendarButtonPropsRestricted;
   const userTimezone = useUserTimezone();
@@ -422,25 +422,16 @@ export function UserEventListItem(props: UserEventListItemProps) {
       currentBorderColor = "#FEEA9F";
     }
 
-    // Base style properties
+    // Base style properties - flat design with minimal shadows
     const style: ViewStyle = {
       paddingRight: imageWidth * 1.1,
       borderWidth: 3,
       borderColor: currentBorderColor,
-      shadowColor: "#5A32FB",
-      shadowOffset: { width: 0, height: 1 },
-      shadowOpacity: 0.15,
-      shadowRadius: 2.5,
-      elevation: 2,
       backgroundColor: "white",
     };
 
     if (isRecent) {
       style.borderColor = "#E0D9FF"; // Glow border color
-      style.shadowColor = "#5A32FB"; // Glow shadow color
-      style.shadowOpacity = 0.45; // Increased opacity for glow
-      style.shadowRadius = 8; // Increased radius for glow
-      style.elevation = 6; // Increased elevation for Android glow
     }
     return style;
   }, [isRecent, isHappeningNow, imageWidth]);
@@ -490,11 +481,6 @@ export function UserEventListItem(props: UserEventListItemProps) {
               right: 10,
               top: -5,
               zIndex: 10,
-              shadowColor: "#5A32FB",
-              shadowOffset: { width: 0, height: 1 },
-              shadowOpacity: 0.3,
-              shadowRadius: 1.5,
-              elevation: 3,
               transform: [{ rotate: imageRotation }],
               backgroundColor: "transparent",
             }}
@@ -599,54 +585,48 @@ export function UserEventListItem(props: UserEventListItemProps) {
             <View className="-mb-2 mt-1.5 flex-row items-center justify-start gap-3">
               {ActionButton && <ActionButton event={event} />}
 
-              {!isDiscoverFeed && !ActionButton && (
+              {primaryAction === "addToCalendar" ? (
                 <TouchableOpacity
-                  className="-mb-0.5 -ml-2.5 flex-row items-center gap-2 bg-interactive-2 px-4 py-2.5"
-                  style={{ borderRadius: 16 }}
+                  className="-mb-0.5 -ml-2.5 flex-row items-center gap-1 py-2.5 pl-4 pr-1"
+                  onPress={handleAddToCal}
+                  hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+                >
+                  <CalendarPlus size={iconSize * 1.1} color="#5A32FB" />
+                  <Text className="text-base font-bold text-interactive-1">
+                    Add
+                  </Text>
+                </TouchableOpacity>
+              ) : isSaved || isOwner ? (
+                <View className="-mb-0.5 -ml-2.5 flex-row items-center gap-1 py-2.5 pl-4 pr-1 opacity-60">
+                  <Heart size={iconSize * 1.1} color="#5A32FB" fill="#5A32FB" />
+                  <Text className="text-base font-bold text-interactive-1">
+                    Saved
+                  </Text>
+                </View>
+              ) : (
+                <TouchableOpacity
+                  className="-mb-0.5 -ml-2.5 flex-row items-center gap-1 py-2.5 pl-4 pr-1"
+                  onPress={() => void handleFollow()}
+                  hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+                >
+                  <Heart size={iconSize * 1.1} color="#5A32FB" />
+                  <Text className="text-base font-bold text-interactive-1">
+                    Save
+                  </Text>
+                </TouchableOpacity>
+              )}
+
+              {!isDiscoverFeed && (
+                <TouchableOpacity
+                  className="rounded-full p-2.5"
                   onPress={handleShare}
                   accessibilityLabel="Share"
                   accessibilityRole="button"
                   hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
                 >
                   <ShareIcon size={iconSize * 1.1} color="#5A32FB" />
-                  <Text className="text-base font-bold text-interactive-1">
-                    Share
-                  </Text>
                 </TouchableOpacity>
               )}
-
-              {/* <TouchableOpacity
-                className="rounded-full p-2.5"
-                onPress={handleDirections}
-                hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
-              >
-                <MapPinned size={iconSize} color="#5A32FB" />
-              </TouchableOpacity> */}
-              {showDiscover && !hideDiscoverableButton && (
-                <TouchableOpacity
-                  className="rounded-full p-2.5"
-                  onPress={() => {
-                    const nextVisibility =
-                      event.visibility === "public" ? "private" : "public";
-                    void handleToggleVisibility(nextVisibility);
-                  }}
-                  hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
-                >
-                  {event.visibility === "public" ? (
-                    <Globe2 size={iconSize * 1.1} color="#5A32FB" />
-                  ) : (
-                    <EyeOff size={iconSize * 1.1} color="#5A32FB" />
-                  )}
-                </TouchableOpacity>
-              )}
-
-              <TouchableOpacity
-                className="rounded-full p-2.5"
-                onPress={handleAddToCal}
-                hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
-              >
-                <CalendarPlus size={iconSize * 1.1} color="#5A32FB" />
-              </TouchableOpacity>
 
               <EventMenu
                 event={event}
@@ -703,11 +683,6 @@ export function UserEventListItem(props: UserEventListItemProps) {
                 style={{
                   borderWidth: 2,
                   borderColor: "white",
-                  shadowColor: "#5A32FB",
-                  shadowOffset: { width: 0, height: 1 },
-                  shadowOpacity: 0.15,
-                  shadowRadius: 1,
-                  elevation: 1,
                   backgroundColor: "#E0D9FF",
                 }}
               >
@@ -720,11 +695,6 @@ export function UserEventListItem(props: UserEventListItemProps) {
                 style={{
                   borderWidth: 2,
                   borderColor: "white",
-                  shadowColor: "#5A32FB",
-                  shadowOffset: { width: 0, height: 1 },
-                  shadowOpacity: 0.15,
-                  shadowRadius: 1,
-                  elevation: 1,
                   backgroundColor: "#FEEA9F",
                 }}
               >
@@ -740,228 +710,72 @@ export function UserEventListItem(props: UserEventListItemProps) {
   );
 }
 
-interface SourceStickerProps {
-  icon: React.ReactNode;
-  label: string;
-  index: number;
-  deepLink?: string;
-}
-
-const SourceSticker = ({
-  icon,
-  label,
-  index,
-  deepLink,
-}: SourceStickerProps) => {
+const SourceStickersRow = () => {
   const { fontScale } = useWindowDimensions();
-  const rotation = index % 2 === 0 ? "8deg" : "-8deg";
+  const iconSize = 25 * fontScale;
+  const { triggerAddEventFlow } = useAddEventFlow();
 
-  const handlePress = async () => {
-    if (!deepLink) return;
-
-    try {
-      const canOpen = await Linking.canOpenURL(deepLink);
-      if (canOpen) {
-        await Linking.openURL(deepLink);
-      }
-    } catch {
-      // Silently fail if app can't be opened
-    }
-  };
-
-  const content = (
-    <View
-      style={{
-        transform: [{ rotate: rotation }],
-        shadowColor: "#5A32FB",
-        shadowOffset: { width: 0, height: 2 },
-        shadowOpacity: 0.1,
-        shadowRadius: 4,
-        elevation: 2,
-      }}
-    >
-      <View
-        className="items-center rounded-xl bg-white px-3 py-2"
-        style={{
-          borderWidth: 2,
-          borderColor: "#E0D9FF",
-          minWidth: 70 * fontScale,
-        }}
-      >
-        <View
-          style={{
-            width: 24 * fontScale,
-            height: 24 * fontScale,
-            alignItems: "center",
-            justifyContent: "center",
-          }}
+  return (
+    <View className="mb-6 items-center px-4">
+      <Animated.View entering={FadeInLeft.delay(550).duration(500).springify()}>
+        <TouchableOpacity
+          className="mb-2 flex-row items-center justify-center gap-2.5 rounded-full bg-interactive-2 px-6 py-3.5"
+          onPress={() => void triggerAddEventFlow()}
+          activeOpacity={0.7}
         >
-          {icon}
-        </View>
+          <Text
+            className="font-semibold text-neutral-1"
+            style={{ fontSize: 20 * fontScale }}
+          >
+            Screenshot events →
+          </Text>
+          <Image
+            // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-require-imports
+            source={require("../assets/capture-cta.png")}
+            style={{ width: iconSize, height: iconSize, marginRight: -4 }}
+          />
+          <Text
+            className="font-semibold"
+            style={{ fontSize: 20 * fontScale, color: "#5A32FB" }}
+          >
+            Add
+          </Text>
+        </TouchableOpacity>
+      </Animated.View>
+    </View>
+  );
+};
+
+const ScreenshotCta = () => {
+  const { fontScale } = useWindowDimensions();
+  const iconSize = 16 * fontScale;
+  const { triggerAddEventFlow } = useAddEventFlow();
+
+  return (
+    <View className="mb-6 items-center py-4">
+      <TouchableOpacity
+        className="flex-row items-center justify-center gap-1.5 rounded-full bg-interactive-2 px-4 py-3"
+        onPress={() => void triggerAddEventFlow()}
+        activeOpacity={0.7}
+      >
         <Text
-          className="mt-1 text-center text-xs font-medium text-neutral-2"
-          style={{ fontSize: 11 * fontScale }}
+          className="text-center font-semibold text-neutral-1"
+          style={{ fontSize: 14 * fontScale }}
         >
-          {label}
+          Screenshot events →
         </Text>
-      </View>
-    </View>
-  );
-
-  if (deepLink) {
-    return (
-      <TouchableOpacity onPress={() => void handlePress()} activeOpacity={0.7}>
-        {content}
+        <Image
+          // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-require-imports
+          source={require("../assets/capture-cta.png")}
+          style={{ width: iconSize, height: iconSize }}
+        />
+        <Text
+          className="text-center font-semibold text-neutral-1"
+          style={{ fontSize: 14 * fontScale }}
+        >
+          Add
+        </Text>
       </TouchableOpacity>
-    );
-  }
-
-  return content;
-};
-
-const SourceStickersRow = ({ hideText = false }: { hideText?: boolean }) => {
-  const { fontScale } = useWindowDimensions();
-  const iconSize = 24 * fontScale;
-
-  const row1 = [
-    {
-      icon: (
-        <Image
-          // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-require-imports
-          source={require("../assets/app-icons/instagram.png")}
-          style={{ width: iconSize, height: iconSize, borderRadius: 5 }}
-        />
-      ),
-      label: "Instagram",
-      deepLink: "instagram://",
-    },
-    {
-      icon: (
-        <Image
-          // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-require-imports
-          source={require("../assets/app-icons/tiktok.png")}
-          style={{ width: iconSize, height: iconSize, borderRadius: 5 }}
-        />
-      ),
-      label: "TikTok",
-      deepLink: "tiktok://",
-    },
-    {
-      icon: (
-        <Image
-          // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-require-imports
-          source={require("../assets/app-icons/messages.png")}
-          style={{ width: iconSize, height: iconSize, borderRadius: 5 }}
-        />
-      ),
-      label: "Messages",
-      deepLink: "sms:",
-    },
-    {
-      icon: (
-        <Image
-          // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-require-imports
-          source={require("../assets/app-icons/partiful.png")}
-          style={{ width: iconSize, height: iconSize, borderRadius: 5 }}
-        />
-      ),
-      label: "Partiful",
-      deepLink: "partiful://",
-    },
-  ];
-
-  const row2 = [
-    {
-      icon: (
-        <Image
-          // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-require-imports
-          source={require("../assets/app-icons/mail.png")}
-          style={{ width: iconSize, height: iconSize, borderRadius: 5 }}
-        />
-      ),
-      label: "Email",
-      deepLink: "mailto:",
-    },
-    {
-      icon: (
-        <Image
-          // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-require-imports
-          source={require("../assets/app-icons/safari.png")}
-          style={{ width: iconSize, height: iconSize, borderRadius: 5 }}
-        />
-      ),
-      label: "Safari",
-      deepLink: "https://soonlist.com",
-    },
-    {
-      icon: (
-        <Image
-          // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-require-imports
-          source={require("../assets/app-icons/posters.png")}
-          style={{ width: iconSize, height: iconSize, borderRadius: 5 }}
-        />
-      ),
-      label: "Posters",
-      // No deep link for physical posters
-    },
-  ];
-
-  return (
-    <View className="mb-6 px-4">
-      {!hideText && (
-        <View className="mb-4">
-          <TapToAddText textSize={16} />
-        </View>
-      )}
-      <View className="flex-row flex-wrap items-center justify-center gap-3">
-        {row1.map((source, index) => (
-          <SourceSticker
-            key={source.label}
-            icon={source.icon}
-            label={source.label}
-            index={index}
-            deepLink={source.deepLink}
-          />
-        ))}
-      </View>
-      <View className="mt-3 flex-row flex-wrap items-center justify-center gap-3">
-        {row2.map((source, index) => (
-          <SourceSticker
-            key={source.label}
-            icon={source.icon}
-            label={source.label}
-            index={index + 1}
-            deepLink={source.deepLink}
-          />
-        ))}
-      </View>
-    </View>
-  );
-};
-
-const TapToAddText = ({ textSize = 16 }: { textSize?: number }) => {
-  const { fontScale } = useWindowDimensions();
-  const fontSize = textSize * fontScale;
-  const iconSize = 20 * fontScale;
-  const plusIconSize = 12 * fontScale;
-
-  return (
-    <View className="flex-row items-center justify-center">
-      <Text className="text-center text-neutral-2" style={{ fontSize }}>
-        Tap
-      </Text>
-      <View
-        className="mx-1.5 items-center justify-center rounded-full bg-interactive-1"
-        style={{
-          width: iconSize,
-          height: iconSize,
-        }}
-      >
-        <PlusIcon size={plusIconSize} color="#FFF" strokeWidth={3} />
-      </View>
-      <Text className="text-center text-neutral-2" style={{ fontSize }}>
-        to add from screenshots or photos
-      </Text>
     </View>
   );
 };
@@ -974,7 +788,7 @@ const GhostEventCard = ({ index }: { index: number }) => {
   const imageRotation = index % 2 === 0 ? "10deg" : "-10deg";
 
   return (
-    <View className="relative mb-6 px-4">
+    <View className="relative mb-6 px-4 opacity-50">
       {/* Ghost image placeholder with dashed border - matching exact positioning */}
       <View
         style={{
@@ -994,7 +808,7 @@ const GhostEventCard = ({ index }: { index: number }) => {
             borderWidth: 3,
             borderColor: "#E0D9FF",
             borderStyle: "dashed",
-            backgroundColor: "#FAFAFF",
+            backgroundColor: "#F4F1FF",
           }}
         />
       </View>
@@ -1008,7 +822,7 @@ const GhostEventCard = ({ index }: { index: number }) => {
           borderWidth: 3,
           borderColor: "#E0D9FF",
           borderStyle: "dashed",
-          backgroundColor: "#FAFAFF",
+          backgroundColor: "#F4F1FF",
         }}
       >
         {/* Gray lines representing text content */}
@@ -1019,7 +833,7 @@ const GhostEventCard = ({ index }: { index: number }) => {
             style={{
               height: 14 * fontScale,
               width: 120 * fontScale,
-              backgroundColor: "#F4F1FF",
+              backgroundColor: "#EDE8FF",
             }}
           />
 
@@ -1029,7 +843,7 @@ const GhostEventCard = ({ index }: { index: number }) => {
             style={{
               height: 20 * fontScale,
               width: "85%",
-              backgroundColor: "#F4F1FF",
+              backgroundColor: "#EDE8FF",
             }}
           />
 
@@ -1039,7 +853,7 @@ const GhostEventCard = ({ index }: { index: number }) => {
             style={{
               height: 14 * fontScale,
               width: 160 * fontScale,
-              backgroundColor: "#F4F1FF",
+              backgroundColor: "#EDE8FF",
             }}
           />
 
@@ -1050,7 +864,7 @@ const GhostEventCard = ({ index }: { index: number }) => {
               className="-ml-2 rounded"
               style={{
                 borderRadius: 16,
-                backgroundColor: "#F4F1FF",
+                backgroundColor: "#EDE8FF",
                 height: 36 * fontScale,
                 width: 96 * fontScale,
               }}
@@ -1060,11 +874,11 @@ const GhostEventCard = ({ index }: { index: number }) => {
             {[0, 1].map((i) => (
               <View
                 key={i}
-                className="rounded-full p-2.5"
+                className="rounded-full"
                 style={{
                   width: 24 * fontScale,
                   height: 24 * fontScale,
-                  backgroundColor: "#F4F1FF",
+                  backgroundColor: "#EDE8FF",
                 }}
               />
             ))}
@@ -1077,21 +891,109 @@ const GhostEventCard = ({ index }: { index: number }) => {
 
 const EmptyStateHeader = () => {
   const { fontScale } = useWindowDimensions();
+  const iconSize = 11.2 * fontScale;
   const { triggerAddEventFlow } = useAddEventFlow();
+  const fontSize = 24 * fontScale;
+
+  const sources = [
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-require-imports
+    { source: require("../assets/app-icons/instagram-gray.png") },
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-require-imports
+    { source: require("../assets/app-icons/tiktok-gray.png") },
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-require-imports
+    { source: require("../assets/app-icons/messages-gray.png") },
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-require-imports
+    { source: require("../assets/app-icons/mail-gray.png") },
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-require-imports
+    { source: require("../assets/app-icons/safari-gray.png") },
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-require-imports
+    { source: require("../assets/app-icons/partiful-gray.png") },
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-require-imports
+    { source: require("../assets/app-icons/posters-gray.png") },
+  ];
 
   return (
     <TouchableOpacity
-      className="my-6 items-center px-4"
+      className="mb-6 px-4"
       onPress={() => void triggerAddEventFlow()}
       activeOpacity={0.7}
     >
-      <Text
-        className="mb-2 text-center text-2xl font-bold text-neutral-1"
-        style={{ fontSize: 24 * fontScale }}
+      <View
+        className="items-center rounded-2xl p-3"
+        style={{
+          borderWidth: 3,
+          borderColor: "#E0D9FF",
+          borderStyle: "dashed",
+          backgroundColor: "transparent",
+          borderRadius: 20,
+        }}
       >
-        Your events, <Text style={{ color: "#5A32FB" }}>all in one place</Text>
-      </Text>
-      <TapToAddText textSize={16} />
+        <Text
+          className="text-center text-2xl font-bold text-neutral-1"
+          style={{ fontSize }}
+        >
+          Turn screenshots
+        </Text>
+        {/* App source icons in mini 9:16 dashed containers */}
+        <View
+          style={{
+            flexDirection: "row",
+            alignItems: "center",
+            gap: 6,
+            marginVertical: 8,
+          }}
+        >
+          {sources.map((s, i) => {
+            const rotation = i % 2 === 0 ? "10deg" : "-10deg";
+            const containerWidth = iconSize * 1.6;
+            const containerHeight = containerWidth * (16 / 9);
+            return (
+              <View
+                key={i}
+                style={{
+                  width: containerWidth,
+                  height: containerHeight,
+                  borderRadius: 6,
+                  borderWidth: 1.5,
+                  borderColor: "#E0D9FF",
+                  borderStyle: "dashed",
+                  backgroundColor: "#FAFAFF",
+                  transform: [{ rotate: rotation }],
+                  justifyContent: "center",
+                  alignItems: "center",
+                }}
+              >
+                <Image
+                  // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+                  source={s.source}
+                  style={{
+                    width: iconSize,
+                    height: iconSize,
+                    borderRadius: 5,
+                    opacity: 0.6,
+                    transform: [
+                      { rotate: rotation === "10deg" ? "-10deg" : "10deg" },
+                    ],
+                  }}
+                />
+              </View>
+            );
+          })}
+        </View>
+        <Animated.View
+          entering={FadeInDown.delay(300).duration(500).springify()}
+        >
+          <Text
+            className="text-center text-2xl font-bold text-neutral-1"
+            style={{ fontSize, lineHeight: fontSize * 1.4 }}
+          >
+            into{" "}
+            <Text style={{ color: "#5A32FB", fontFamily: "Kalam_700Bold" }}>
+              possibilities
+            </Text>
+          </Text>
+        </Animated.View>
+      </View>
     </TouchableOpacity>
   );
 };
@@ -1109,8 +1011,8 @@ interface UserEventsListProps {
   showSourceStickers?: boolean;
   demoMode?: boolean;
   stats?: EventStatsData;
-  hideDiscoverableButton?: boolean;
   isDiscoverFeed?: boolean;
+  primaryAction?: "addToCalendar" | "save";
   savedEventIds?: Set<string>;
   HeaderComponent?: React.ComponentType<Record<string, never>>;
   EmptyStateComponent?: React.ComponentType<Record<string, never>>;
@@ -1129,15 +1031,14 @@ export default function UserEventsList(props: UserEventsListProps) {
     showSourceStickers = false,
     demoMode,
     stats,
-    hideDiscoverableButton = false,
     isDiscoverFeed = false,
+    primaryAction = "addToCalendar",
     savedEventIds,
     HeaderComponent,
     EmptyStateComponent,
     source,
   } = props;
   const { user } = useUser();
-
   // Use pre-grouped events if provided, otherwise collapse client-side
   const collapsedEvents = useMemo(() => {
     if (groupedEvents) {
@@ -1148,12 +1049,13 @@ export default function UserEventsList(props: UserEventsListProps) {
     return events ? collapseSimilarEvents(events, user?.id) : [];
   }, [groupedEvents, events, user?.id]);
 
-  const renderEmptyState = () => {
+  const renderEmptyState = (inline = false) => {
     return (
       <ScrollView
+        contentInsetAdjustmentBehavior="automatic"
         style={{ backgroundColor: "#F4F1FF" }}
         contentContainerStyle={{
-          paddingTop: HEADER_HEIGHT_DEFAULT,
+          paddingTop: inline ? 8 : 16,
           paddingBottom: 120,
           flexGrow: 1,
           backgroundColor: "#F4F1FF",
@@ -1161,7 +1063,7 @@ export default function UserEventsList(props: UserEventsListProps) {
         showsVerticalScrollIndicator={false}
       >
         <EmptyStateHeader />
-        {showSourceStickers && <SourceStickersRow hideText />}
+        {showSourceStickers && <SourceStickersRow />}
         <GhostEventCard index={0} />
         <GhostEventCard index={1} />
         <GhostEventCard index={2} />
@@ -1172,15 +1074,18 @@ export default function UserEventsList(props: UserEventsListProps) {
   };
 
   if (isLoadingFirstPage) {
-    // Calculate header height to match the loaded state
-    const headerHeight = HEADER_HEIGHT_DEFAULT;
     return (
-      <View style={{ flex: 1, backgroundColor: "#F4F1FF" }}>
-        <View style={{ height: headerHeight }} />
-        <View className="flex-1 items-center justify-center">
-          <ActivityIndicator size="large" color="#5A32FB" />
-        </View>
-      </View>
+      <ScrollView
+        contentInsetAdjustmentBehavior="automatic"
+        style={{ flex: 1, backgroundColor: "#F4F1FF" }}
+        contentContainerStyle={{
+          flexGrow: 1,
+          justifyContent: "center",
+          alignItems: "center",
+        }}
+      >
+        <ActivityIndicator size="large" color="#5A32FB" />
+      </ScrollView>
     );
   }
 
@@ -1188,29 +1093,28 @@ export default function UserEventsList(props: UserEventsListProps) {
     if (EmptyStateComponent) {
       return <EmptyStateComponent />;
     }
-    return renderEmptyState();
+    if (!HeaderComponent) {
+      return renderEmptyState();
+    }
   }
 
-  const renderFooter = () => (
-    <>
-      {isFetchingNextPage ? (
-        <View className="py-4">
-          <ActivityIndicator size="large" color="#5A32FB" />
-        </View>
-      ) : null}
-      {showSourceStickers ? <SourceStickersRow /> : null}
-    </>
-  );
+  const renderFooter = () => {
+    if (collapsedEvents.length === 0) return null;
+    return (
+      <>
+        {isFetchingNextPage ? (
+          <View className="py-4">
+            <ActivityIndicator size="large" color="#5A32FB" />
+          </View>
+        ) : null}
+        {showSourceStickers ? <ScreenshotCta /> : null}
+      </>
+    );
+  };
 
   const renderHeader = () => {
     return (
       <>
-        <View
-          style={{
-            height: HEADER_HEIGHT_DEFAULT,
-          }}
-        />
-        {(HeaderComponent || stats) && <View style={{ height: 8 }} />}
         {HeaderComponent && <HeaderComponent />}
         {stats && (
           <EventStats
@@ -1227,11 +1131,12 @@ export default function UserEventsList(props: UserEventsListProps) {
   };
 
   return (
-    <LegendList
+    <FlatList
+      contentInsetAdjustmentBehavior="automatic"
       data={collapsedEvents}
       keyExtractor={(item) => item.event.id}
       ListHeaderComponent={renderHeader}
-      ListEmptyComponent={renderEmptyState}
+      ListEmptyComponent={() => renderEmptyState(true)}
       renderItem={({ item, index }) => {
         const eventData = item.event;
         // Use savedEventIds if provided, otherwise check eventFollows
@@ -1257,8 +1162,8 @@ export default function UserEventsList(props: UserEventsListProps) {
             }
             demoMode={demoMode}
             index={index}
-            hideDiscoverableButton={hideDiscoverableButton}
             isDiscoverFeed={isDiscoverFeed}
+            primaryAction={primaryAction}
             source={source}
           />
         );
@@ -1268,11 +1173,10 @@ export default function UserEventsList(props: UserEventsListProps) {
       style={{ backgroundColor: "#F4F1FF" }}
       contentContainerStyle={{
         paddingBottom: 120,
+        flexGrow: 1,
         backgroundColor: "#F4F1FF",
       }}
       ListFooterComponent={renderFooter()}
-      recycleItems
-      estimatedItemSize={200}
     />
   );
 }
