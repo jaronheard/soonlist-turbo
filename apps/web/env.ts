@@ -18,7 +18,6 @@ export const env = createEnv({
     CLERK_SECRET_KEY_PROD: z.string(),
     CLERK_SECRET_KEY: z.string(),
     CLERK_WEBHOOK_SECRET: z.string(),
-    DATABASE_URL: z.string(),
     LANGFUSE_HOST: z.string().url(),
     LANGFUSE_PUBLIC_KEY: z.string(),
     LANGFUSE_SECRET_KEY: z.string(),

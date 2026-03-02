@@ -4,7 +4,6 @@ import type { AddToCalendarButtonPropsRestricted } from "@soonlist/cal/types";
 import { api } from "@soonlist/backend/convex/_generated/api";
 
 import { getAuthenticatedConvex } from "~/lib/convex-server";
-import { api as trpcApiServer } from "~/trpc/server";
 import EventPageClient from "./EventPageClient";
 
 interface Props {
@@ -20,19 +19,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     // Get an authenticated Convex client for server-side fetching
     const convex = await getAuthenticatedConvex();
 
-    // First, try to fetch from Convex
-    let event = await convex.query(api.events.get, { eventId });
-
-    // If not found in Convex, fallback to TRPC
-    if (!event) {
-      const trpcEvent = await trpcApiServer.event.get({ eventId });
-
-      if (trpcEvent) {
-        // Use the tRPC event as-is since we handle differences in the client
-        // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/consistent-type-assertions, @typescript-eslint/no-explicit-any
-        event = trpcEvent as any;
-      }
-    }
+    const event = await convex.query(api.events.get, { eventId });
 
     if (!event) {
       return {

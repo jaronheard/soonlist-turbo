@@ -51,7 +51,6 @@
     "@soonlist/api": "workspace:*",
     "@soonlist/backend": "workspace:*",
     "@soonlist/cal": "workspace:*",
-    "@soonlist/db": "workspace:*",
     "@tanstack/query-async-storage-persister": "catalog:",
     "@tanstack/react-query": "catalog:",
     "@tanstack/react-query-persist-client": "catalog:",

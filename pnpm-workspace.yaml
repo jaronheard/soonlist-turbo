@@ -37,13 +37,6 @@ catalog:
   next: 15.1.9
   "server-only": ^0.0.1
 
-  # Database
-  "drizzle-orm": ^0.30.10
-  "drizzle-kit": ^0.21.1
-  "drizzle-zod": ^0.5.1
-  "@planetscale/database": ^1.18.0
-  mysql2: ^3.9.7
-
   # Authentication & Security
   "@clerk/nextjs": ^6.20.0
   "@clerk/clerk-expo": ^2.11.8

@@ -41,7 +41,6 @@ import type * as model_posthog from "../model/posthog.js";
 import type * as model_similarityHelpers from "../model/similarityHelpers.js";
 import type * as model_utils_urlScheme from "../model/utils/urlScheme.js";
 import type * as notifications from "../notifications.js";
-import type * as planetscaleSync from "../planetscaleSync.js";
 import type * as posthog from "../posthog.js";
 import type * as shareTokens from "../shareTokens.js";
 import type * as users from "../users.js";
@@ -90,7 +89,6 @@ declare const fullApi: ApiFromModules<{
   "model/similarityHelpers": typeof model_similarityHelpers;
   "model/utils/urlScheme": typeof model_utils_urlScheme;
   notifications: typeof notifications;
-  planetscaleSync: typeof planetscaleSync;
   posthog: typeof posthog;
   shareTokens: typeof shareTokens;
   users: typeof users;

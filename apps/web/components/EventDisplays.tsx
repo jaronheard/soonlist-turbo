@@ -8,11 +8,11 @@ import { atcb_action } from "add-to-calendar-button-react";
 import { Copy, Earth, EyeOff, Instagram, MapPin } from "lucide-react";
 
 import type { DateInfo, EventMetadata, SimilarityDetails } from "@soonlist/cal";
+import type { Comment, EventFollow, List, User } from "@soonlist/cal/dbTypes";
 import type {
   AddToCalendarButtonPropsRestricted,
   ATCBActionEventConfig,
 } from "@soonlist/cal/types";
-import type { Comment, EventFollow, List, User } from "@soonlist/db/types";
 import {
   eventTimesAreDefined,
   formatRelativeTime,

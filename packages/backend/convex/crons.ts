@@ -28,14 +28,6 @@ crons.cron(
   {},
 );
 
-// Sync data from PlanetScale every 15 minutes
-crons.cron(
-  "planetscale sync",
-  "*/15 * * * *", // Every 15 minutes
-  internal.planetscaleSync.syncAll,
-  {},
-);
-
 // Update hasEnded flags for userFeeds every 15 minutes
 crons.cron(
   "update hasEnded flags",
