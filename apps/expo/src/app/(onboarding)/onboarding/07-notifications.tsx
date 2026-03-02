@@ -53,7 +53,7 @@ export default function NotificationsScreen() {
     try {
       if (hasNotificationPermission) {
         // Already has permission, just continue
-        router.navigate("/(onboarding)/onboarding/08-demo-intro");
+        router.navigate("/(onboarding)/onboarding/08-share-demo");
         return;
       }
 
@@ -66,7 +66,7 @@ export default function NotificationsScreen() {
         {
           notificationsEnabled: isPermissionGranted,
         },
-        "/(onboarding)/onboarding/08-demo-intro",
+        "/(onboarding)/onboarding/08-share-demo",
       );
     } catch (error) {
       logError("Failed to save notifications", error);
@@ -78,8 +78,8 @@ export default function NotificationsScreen() {
 
   return (
     <QuestionContainer
-      question="Let's get started!"
-      subtitle="Turn on notifications to save events, get reminders, and never miss what's coming up"
+      question="Never miss an event"
+      subtitle="Get notified when events are saved so you can stay on top of your plans"
       currentStep={7}
       totalSteps={TOTAL_ONBOARDING_STEPS}
     >

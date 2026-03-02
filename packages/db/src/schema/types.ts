@@ -99,4 +99,5 @@ export interface OnboardingData {
   subscriptionPlan?: string;
   trialMode?: boolean;
   trialStartedAt?: string; // ISO string date
+  completedShareDemo?: boolean;
 }

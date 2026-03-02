@@ -1,5 +1,12 @@
 import React, { useCallback, useEffect, useMemo, useState } from "react";
-import { Platform, ScrollView, Share, Text, TouchableOpacity, View } from "react-native";
+import {
+  Platform,
+  ScrollView,
+  Share,
+  Text,
+  TouchableOpacity,
+  View,
+} from "react-native";
 import * as Haptics from "expo-haptics";
 import { Redirect } from "expo-router";
 import { useUser } from "@clerk/clerk-expo";
@@ -252,9 +259,7 @@ function FollowingFeedContent() {
               }}
               modifiers={[pickerStyle("segmented")]}
             >
-              <SwiftUIText modifiers={[tag("upcoming")]}>
-                Upcoming
-              </SwiftUIText>
+              <SwiftUIText modifiers={[tag("upcoming")]}>Upcoming</SwiftUIText>
               <SwiftUIText modifiers={[tag("past")]}>Past</SwiftUIText>
             </Picker>
           </Host>
