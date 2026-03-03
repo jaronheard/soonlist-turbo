@@ -234,10 +234,7 @@ function EventDetail({ id }: { id: string }) {
       <>
         <Stack.Screen
           options={{
-            headerTransparent: false,
-            headerBackground: () => (
-              <View style={{ flex: 1, backgroundColor: "#E0D9FF" }} />
-            ),
+            headerTransparent: true,
             headerTintColor: "#5A32FB",
             headerTitleStyle: { color: "#5A32FB" },
             headerRight: () => null,
@@ -256,10 +253,7 @@ function EventDetail({ id }: { id: string }) {
       <>
         <Stack.Screen
           options={{
-            headerTransparent: false,
-            headerBackground: () => (
-              <View style={{ flex: 1, backgroundColor: "#E0D9FF" }} />
-            ),
+            headerTransparent: true,
             headerTintColor: "#5A32FB",
             headerTitleStyle: { color: "#5A32FB" },
             headerRight: () => null,
@@ -278,10 +272,7 @@ function EventDetail({ id }: { id: string }) {
       <>
         <Stack.Screen
           options={{
-            headerTransparent: false,
-            headerBackground: () => (
-              <View style={{ flex: 1, backgroundColor: "#E0D9FF" }} />
-            ),
+            headerTransparent: true,
             headerTintColor: "#5A32FB",
             headerTitleStyle: { color: "#5A32FB" },
             headerRight: () => null,
@@ -337,16 +328,14 @@ function EventDetail({ id }: { id: string }) {
         options={{
           headerRight: HeaderRight,
           headerLeft: !canGoBack ? HeaderLeft : undefined,
-          headerTransparent: false,
-          headerBackground: () => (
-            <View style={{ flex: 1, backgroundColor: "#E0D9FF" }} />
-          ),
+          headerTransparent: true,
           headerTintColor: "#5A32FB",
           headerTitleStyle: { color: "#5A32FB" },
         }}
       />
       <ScrollView
         className="flex-1 bg-white"
+        contentInsetAdjustmentBehavior="automatic"
         contentContainerStyle={{
           paddingBottom: insets.bottom + 36,
         }}
