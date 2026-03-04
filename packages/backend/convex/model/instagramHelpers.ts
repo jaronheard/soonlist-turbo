@@ -92,7 +92,12 @@ Return ONLY pure JSON, no markdown.`,
 }
 
 /**
- * Fetch an Instagram profile's recent posts using Apify.
+ * Fetch an Instagram profile's recent posts using the apidojo/instagram-scraper
+ * Apify actor (pay-per-result pricing: ~$0.50/1K posts).
+ *
+ * Pricing: $0.005/query + $0.0005/post, first 10 posts free per user query.
+ * For 12 posts: $0.005 + (2 × $0.0005) = ~$0.006 per check.
+ *
  * Requires APIFY_API_TOKEN environment variable.
  */
 export async function fetchInstagramPosts(
@@ -106,16 +111,16 @@ export async function fetchInstagramPosts(
     );
   }
 
-  // Use Apify's Instagram Profile Scraper actor
+  // Use apidojo's Instagram Scraper (pay-per-result, ~5x cheaper than official actor)
   const response = await fetch(
-    `https://api.apify.com/v2/acts/apify~instagram-profile-scraper/run-sync-get-dataset-items?token=${encodeURIComponent(apiToken)}`,
+    `https://api.apify.com/v2/acts/apidojo~instagram-scraper/run-sync-get-dataset-items?token=${encodeURIComponent(apiToken)}`,
     {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
-        usernames: [username],
+        directUrls: [`https://www.instagram.com/${username}/`],
         resultsLimit: maxPosts,
-        resultsType: "posts",
+        searchType: "user",
       }),
     },
   );
@@ -127,14 +132,14 @@ export async function fetchInstagramPosts(
     );
   }
 
-  const rawItems = (await response.json()) as ApifyInstagramPost[];
+  const rawItems = (await response.json()) as ApidojoInstagramPost[];
 
   return rawItems
     .map((item) => ({
       url: item.url || `https://www.instagram.com/p/${item.shortCode || ""}`,
       caption: item.caption || "",
       timestamp: item.timestamp || new Date().toISOString(),
-      imageUrl: item.displayUrl || item.imageUrl,
+      imageUrl: item.displayUrl,
       type: mapPostType(item.type),
     }))
     .sort(
@@ -143,14 +148,13 @@ export async function fetchInstagramPosts(
     );
 }
 
-// Apify response shape (subset of fields we use)
-interface ApifyInstagramPost {
+// apidojo/instagram-scraper response shape (subset of fields we use)
+interface ApidojoInstagramPost {
   url?: string;
   shortCode?: string;
   caption?: string;
   timestamp?: string;
   displayUrl?: string;
-  imageUrl?: string;
   type?: string;
 }
 
@@ -159,32 +163,14 @@ function mapPostType(
 ): "image" | "video" | "carousel" | "unknown" {
   switch (type) {
     case "Image":
+      return "image";
     case "Sidecar":
-      return type === "Image" ? "image" : "carousel";
+      return "carousel";
     case "Video":
       return "video";
     default:
       return "unknown";
   }
-}
-
-/**
- * Fetch a single Instagram post's content by URL.
- * Uses Jina Reader API (already integrated in the codebase) as a fallback
- * when Apify is not available.
- */
-export async function fetchSinglePostViaJina(
-  url: string,
-): Promise<string | null> {
-  const response = await fetch(`https://r.jina.ai/${url}`, {
-    method: "GET",
-  });
-
-  if (!response.ok) {
-    return null;
-  }
-
-  return response.text();
 }
 
 /**

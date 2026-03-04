@@ -34,12 +34,14 @@ The system uses a pluggable fetcher approach to decouple post retrieval from pro
 
 #### Tier 1: Prototype (Current Implementation)
 
-**Apify Instagram Scraper** - Most reliable for public profiles
-- Uses Apify's `apify/instagram-profile-scraper` actor
+**Apify Instagram Scraper (apidojo/instagram-scraper)** - Most reliable for public profiles
+- Uses the `apidojo/instagram-scraper` community actor (pay-per-result)
 - Returns structured post data (caption, images, timestamps, URLs)
-- Rate: ~$0.25-0.50 per 1000 posts
+- Pricing: $0.005/query + $0.0005/post, first 10 posts free per user query
+- Effective rate: ~$0.006 per check (12 posts), ~$0.50 per 1,000 posts
 - No Instagram credentials needed for public profiles
-- API key stored as Convex environment variable
+- API key stored as Convex environment variable (`APIFY_API_TOKEN`)
+- Note: Requires a paid Apify plan (~$39/mo) for API access; free plan is demo-only
 
 **Manual URL Input** (Fallback)
 - User pastes individual Instagram post URLs
@@ -171,9 +173,20 @@ Each source has its own `checkIntervalHours` (default: 4). The hourly cron only 
 
 - **Per-user limit**: Max 10 Instagram sources per user
 - **Check interval**: Minimum 4 hours between checks per source
-- **Posts per check**: Only fetch last 12 posts (Instagram's default page)
+- **Posts per check**: Only fetch last 12 posts (first 10 free, 2 billed)
+- **Cost per check**: ~$0.006 (query fee + 2 paid posts)
+- **Cost estimate**: 10 sources × 6 checks/day × 30 days = ~$10.80/month per heavy user
 - **Apify budget**: Set monthly budget cap via Apify dashboard
 - **Backoff on errors**: Double interval on consecutive errors (4h → 8h → 16h)
+
+#### Cost Comparison (per 1,000 posts)
+
+| Actor | Cost | Status |
+|-------|------|--------|
+| apidojo/instagram-scraper (current) | ~$0.50 | Active |
+| apify/instagram-profile-scraper | ~$2.70 | Official, more expensive |
+| Bright Data Web Scraper API | ~$1.50 | Enterprise alternative |
+| Self-hosted (instaloader + proxies) | ~$1-2 | High maintenance |
 
 ### API Endpoints
 
