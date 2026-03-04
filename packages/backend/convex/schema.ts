@@ -300,4 +300,40 @@ export default defineSchema({
   })
     .index("by_token", ["token"]) // For quick token lookup
     .index("by_user", ["userId"]),
+
+  instagramSources: defineTable({
+    userId: v.string(), // Soonlist user who added this source
+    username: v.string(), // Instagram username (without @)
+    displayName: v.optional(v.string()), // Instagram display name
+    profileUrl: v.string(), // https://instagram.com/{username}
+    lastCheckedAt: v.optional(v.number()), // Timestamp of last check
+    lastPostTimestamp: v.optional(v.string()), // Timestamp of most recent post seen
+    status: v.union(
+      v.literal("active"),
+      v.literal("paused"),
+      v.literal("error"),
+    ),
+    errorMessage: v.optional(v.string()),
+    checkIntervalHours: v.number(), // How often to check (default: 4)
+    postsChecked: v.number(), // Total posts checked
+    eventsFound: v.number(), // Total events found
+    createdAt: v.number(), // Timestamp
+  })
+    .index("by_user", ["userId"])
+    .index("by_username", ["username"])
+    .index("by_user_and_username", ["userId", "username"])
+    .index("by_status", ["status"]),
+
+  // Tracks which Instagram post URLs have already been processed to avoid re-processing
+  instagramProcessedPosts: defineTable({
+    sourceId: v.id("instagramSources"), // Reference to the source
+    postUrl: v.string(), // Instagram post URL
+    postTimestamp: v.optional(v.string()), // When the post was made
+    isEvent: v.boolean(), // Whether AI classified this as an event
+    eventId: v.optional(v.string()), // If event was created, its ID
+    processedAt: v.number(), // When we processed this post
+  })
+    .index("by_source", ["sourceId"])
+    .index("by_post_url", ["postUrl"])
+    .index("by_source_and_url", ["sourceId", "postUrl"]),
 });

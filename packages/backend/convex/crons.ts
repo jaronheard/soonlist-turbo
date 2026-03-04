@@ -52,4 +52,11 @@ crons.cron(
   {},
 );
 
+// Check Instagram sources for new event posts every hour
+crons.interval(
+  "check instagram sources",
+  { hours: 1 },
+  internal.instagramScraper.checkDueSources,
+);
+
 export default crons;

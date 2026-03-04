@@ -3,7 +3,12 @@ import { ConvexError, v } from "convex/values";
 
 import type { DatabaseReader } from "./_generated/server";
 import { internal } from "./_generated/api";
-import { internalMutation, mutation, query } from "./_generated/server";
+import {
+  internalMutation,
+  internalQuery,
+  mutation,
+  query,
+} from "./_generated/server";
 import { onboardingDataValidator, userAdditionalInfoValidator } from "./schema";
 
 const MAX_USERNAME_LENGTH = 64;
@@ -737,6 +742,33 @@ export const setOnboardingCompletedAt = mutation({
     });
 
     return null;
+  },
+});
+
+/**
+ * Internal query to get a user by custom ID (for backend operations)
+ */
+export const getByCustomId = internalQuery({
+  args: { id: v.string() },
+  returns: v.union(
+    v.object({
+      id: v.string(),
+      username: v.string(),
+      displayName: v.string(),
+    }),
+    v.null(),
+  ),
+  handler: async (ctx, args) => {
+    const user = await ctx.db
+      .query("users")
+      .withIndex("by_custom_id", (q) => q.eq("id", args.id))
+      .first();
+    if (!user) return null;
+    return {
+      id: user.id,
+      username: user.username,
+      displayName: user.displayName,
+    };
   },
 });
 
