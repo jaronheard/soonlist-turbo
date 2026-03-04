@@ -140,6 +140,10 @@ export default defineSchema({
     ),
     created_at: v.string(), // ISO date string
     updatedAt: v.union(v.string(), v.null()), // ISO date string or null
+    // Instagram source integration
+    sourceType: v.optional(v.literal("instagram")),
+    sourceId: v.optional(v.string()), // Reference to instagramSources._id
+    claimedByUserId: v.optional(v.string()), // Future: real account owner takes over
   })
     .index("by_user", ["userId"])
     .index("by_custom_id", ["id"]),
@@ -300,4 +304,41 @@ export default defineSchema({
   })
     .index("by_token", ["token"]) // For quick token lookup
     .index("by_user", ["userId"]),
+
+  // Instagram scraper sources - one row per Instagram account, globally shared
+  instagramSources: defineTable({
+    username: v.string(), // Instagram username (without @)
+    listId: v.string(), // ID of the system-managed list for this source
+    displayName: v.optional(v.string()), // Instagram display name
+    profileUrl: v.string(), // https://instagram.com/{username}
+    lastCheckedAt: v.optional(v.number()), // Timestamp of last check
+    lastPostId: v.optional(v.string()), // ID of most recent post seen
+    status: v.union(
+      v.literal("active"),
+      v.literal("inactive"), // No followers, deactivated
+      v.literal("error"),
+    ),
+    errorMessage: v.optional(v.string()),
+    followerCount: v.number(), // Number of list followers (denormalized)
+    checkIntervalHours: v.number(), // How often to check (default: 4)
+    postsChecked: v.number(), // Total posts checked
+    eventsFound: v.number(), // Total events found
+    createdAt: v.number(), // Timestamp
+  })
+    .index("by_username", ["username"])
+    .index("by_list", ["listId"])
+    .index("by_status", ["status"]),
+
+  // Tracks which Instagram posts have already been processed
+  instagramProcessedPosts: defineTable({
+    sourceId: v.id("instagramSources"), // Reference to the source
+    postUrl: v.string(), // Instagram post URL
+    postId: v.string(), // Instagram post ID
+    isEvent: v.boolean(), // Whether the post was classified as an event
+    eventId: v.optional(v.string()), // Created event ID (if isEvent)
+    processedAt: v.number(), // Timestamp
+  })
+    .index("by_source", ["sourceId"])
+    .index("by_post_url", ["postUrl"])
+    .index("by_source_and_post", ["sourceId", "postId"]),
 });

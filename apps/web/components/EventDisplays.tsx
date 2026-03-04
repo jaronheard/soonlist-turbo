@@ -32,6 +32,7 @@ import { EditButton } from "./EditButton";
 import EventCard from "./EventCard";
 import { FollowEventButton } from "./FollowButtons";
 import { buildDefaultUrl } from "./ImageUpload";
+import { Logo } from "./Logo";
 import { SaveButton } from "./SaveButton";
 import { ShareButton } from "./ShareButton";
 import { UserAvatarMini } from "./UserAvatarMini";
@@ -120,17 +121,28 @@ export function EventMetadataDisplay({
               firstMentionCandidate,
             );
             return platformUrl ? (
-              <Link
-                href={platformUrl}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="flex items-center gap-0.5 text-interactive-1 hover:underline"
-              >
+              <span className="flex items-center gap-0.5">
+                <Link
+                  href={platformUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex items-center gap-0.5 text-interactive-1 hover:underline"
+                >
+                  {isInstagram && (
+                    <Instagram className="mt-[3px] size-3 flex-shrink-0" />
+                  )}
+                  {firstMentionCandidate}
+                </Link>
                 {isInstagram && (
-                  <Instagram className="mt-[3px] size-3 flex-shrink-0" />
+                  <Link
+                    href={`/instagram/${firstMentionCandidate.replace(/^@/, "")}`}
+                    className="ml-0.5 inline-flex"
+                    title={`View @${firstMentionCandidate.replace(/^@/, "")} events on Soonlist`}
+                  >
+                    <Logo variant="mark" className="size-3" />
+                  </Link>
                 )}
-                {firstMentionCandidate}
-              </Link>
+              </span>
             ) : (
               <span className="text-neutral-1">{firstMentionCandidate}</span>
             );
@@ -146,17 +158,28 @@ export function EventMetadataDisplay({
                       mention,
                     );
                     return platformUrl ? (
-                      <Link
-                        href={platformUrl}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="flex items-center gap-0.5 text-interactive-1 hover:underline"
-                      >
+                      <span className="flex items-center gap-0.5">
+                        <Link
+                          href={platformUrl}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="flex items-center gap-0.5 text-interactive-1 hover:underline"
+                        >
+                          {isInstagram && (
+                            <Instagram className="mt-[3px] size-3 flex-shrink-0" />
+                          )}
+                          {mention}
+                        </Link>
                         {isInstagram && (
-                          <Instagram className="mt-[3px] size-3 flex-shrink-0" />
+                          <Link
+                            href={`/instagram/${mention.replace(/^@/, "")}`}
+                            className="ml-0.5 inline-flex"
+                            title={`View @${mention.replace(/^@/, "")} events on Soonlist`}
+                          >
+                            <Logo variant="mark" className="size-3" />
+                          </Link>
                         )}
-                        {mention}
-                      </Link>
+                      </span>
                     ) : (
                       <span className="text-neutral-1">{mention}</span>
                     );
