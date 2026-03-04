@@ -140,9 +140,47 @@ export default defineSchema({
     ),
     created_at: v.string(), // ISO date string
     updatedAt: v.union(v.string(), v.null()), // ISO date string or null
+    // Instagram source integration
+    sourceType: v.optional(v.literal("instagram")),
+    sourceId: v.optional(v.string()), // Reference to instagramSources._id
+    claimedByUserId: v.optional(v.string()), // Future: real account owner takes over
   })
     .index("by_user", ["userId"])
     .index("by_custom_id", ["id"]),
+
+  instagramSources: defineTable({
+    username: v.string(), // Instagram username (without @)
+    listId: v.string(), // ID of the system-managed list for this source
+    displayName: v.optional(v.string()), // Instagram display name
+    profileUrl: v.string(), // https://instagram.com/{username}
+    lastCheckedAt: v.optional(v.number()), // Timestamp of last check
+    lastPostId: v.optional(v.string()), // ID of most recent post seen
+    status: v.union(
+      v.literal("active"),
+      v.literal("inactive"),
+      v.literal("error"),
+    ),
+    errorMessage: v.optional(v.string()),
+    followerCount: v.number(), // Number of list followers (denormalized)
+    checkIntervalHours: v.number(), // How often to check (default: 4)
+    postsChecked: v.number(), // Total posts checked
+    eventsFound: v.number(), // Total events found
+    createdAt: v.number(), // Timestamp
+  })
+    .index("by_username", ["username"])
+    .index("by_list", ["listId"])
+    .index("by_status", ["status"]),
+
+  instagramProcessedPosts: defineTable({
+    sourceId: v.id("instagramSources"), // Reference to instagramSources
+    postId: v.string(), // Instagram post ID
+    postUrl: v.string(), // Full post URL
+    isEvent: v.boolean(), // Whether AI classified this as an event
+    eventId: v.optional(v.string()), // Reference to events.id if event was created
+    processedAt: v.number(), // Timestamp
+  })
+    .index("by_source", ["sourceId"])
+    .index("by_post_url", ["postUrl"]),
 
   listMembers: defineTable({
     listId: v.string(),

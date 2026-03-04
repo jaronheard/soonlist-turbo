@@ -44,6 +44,7 @@ import {
   User,
 } from "~/components/icons";
 import LoadingSpinner from "~/components/LoadingSpinner";
+import { Logo } from "~/components/Logo";
 import { UserProfileFlair } from "~/components/UserProfileFlair";
 import { useEventActions } from "~/hooks/useEventActions";
 import { useRevenueCat } from "~/providers/RevenueCatProvider";
@@ -494,30 +495,39 @@ function EventDetail({ id }: { id: string }) {
                     {hasMentions && firstMentionCandidate && (
                       <>
                         <Text className="text-sm text-neutral-2">via</Text>
-                        <Pressable
-                          onPress={() => {
-                            const url = getPlatformUrl(
-                              eventMetadata.platform,
-                              firstMentionCandidate,
-                            );
-                            if (url) {
-                              void Linking.openURL(url);
-                            }
-                          }}
-                        >
-                          <View className="flex-row items-center gap-0.5">
-                            {isInstagram && (
-                              <Instagram
-                                className="mt-[3px] flex-shrink-0"
-                                color="#5A32FB"
-                                size={12}
-                              />
-                            )}
-                            <Text className="text-sm text-interactive-1">
-                              {firstMentionCandidate}
-                            </Text>
-                          </View>
-                        </Pressable>
+                        <View className="flex-row items-center gap-1">
+                          <Pressable
+                            onPress={() => {
+                              const url = getPlatformUrl(
+                                eventMetadata.platform,
+                                firstMentionCandidate,
+                              );
+                              if (url) {
+                                void Linking.openURL(url);
+                              }
+                            }}
+                          >
+                            <View className="flex-row items-center gap-0.5">
+                              {isInstagram && (
+                                <Instagram
+                                  className="mt-[3px] flex-shrink-0"
+                                  color="#5A32FB"
+                                  size={12}
+                                />
+                              )}
+                              <Text className="text-sm text-interactive-1">
+                                {firstMentionCandidate}
+                              </Text>
+                            </View>
+                          </Pressable>
+                          {isInstagram && (
+                            <Link
+                              href={`/instagram/${firstMentionCandidate.replace(/^@/, "")}`}
+                            >
+                              <Logo variant="icon" className="h-4 w-3" />
+                            </Link>
+                          )}
+                        </View>
                         {mentions.length > 1 && (
                           <>
                             <Text className="text-sm text-neutral-2">with</Text>
@@ -526,30 +536,42 @@ function EventDetail({ id }: { id: string }) {
                                 key={mention}
                                 className="flex-row items-center"
                               >
-                                <Pressable
-                                  onPress={() => {
-                                    const url = getPlatformUrl(
-                                      eventMetadata.platform,
-                                      mention,
-                                    );
-                                    if (url) {
-                                      void Linking.openURL(url);
-                                    }
-                                  }}
-                                >
-                                  <View className="flex-row items-center gap-0.5">
-                                    {isInstagram && (
-                                      <Instagram
-                                        className="mt-[3px] flex-shrink-0"
-                                        color="#5A32FB"
-                                        size={12}
+                                <View className="flex-row items-center gap-1">
+                                  <Pressable
+                                    onPress={() => {
+                                      const url = getPlatformUrl(
+                                        eventMetadata.platform,
+                                        mention,
+                                      );
+                                      if (url) {
+                                        void Linking.openURL(url);
+                                      }
+                                    }}
+                                  >
+                                    <View className="flex-row items-center gap-0.5">
+                                      {isInstagram && (
+                                        <Instagram
+                                          className="mt-[3px] flex-shrink-0"
+                                          color="#5A32FB"
+                                          size={12}
+                                        />
+                                      )}
+                                      <Text className="text-sm text-interactive-1">
+                                        {mention}
+                                      </Text>
+                                    </View>
+                                  </Pressable>
+                                  {isInstagram && (
+                                    <Link
+                                      href={`/instagram/${mention.replace(/^@/, "")}`}
+                                    >
+                                      <Logo
+                                        variant="icon"
+                                        className="h-4 w-3"
                                       />
-                                    )}
-                                    <Text className="text-sm text-interactive-1">
-                                      {mention}
-                                    </Text>
-                                  </View>
-                                </Pressable>
+                                    </Link>
+                                  )}
+                                </View>
                                 {index <
                                   (eventMetadata.mentions || []).length - 2 && (
                                   <Text className="text-sm text-neutral-2">
