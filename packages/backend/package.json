@@ -20,10 +20,13 @@
     "build": "echo 'Using committed generated files'",
     "dev": "convex dev",
     "setup": "convex dev --until-success",
+    "codegen": "convex codegen",
     "clean": "git clean -xdf .cache .turbo node_modules",
     "format": "prettier --check .",
     "format:fix": "prettier --write .",
+    "prelint": "convex codegen",
     "lint": "eslint .",
+    "pretypecheck": "convex codegen",
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
