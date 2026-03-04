@@ -85,11 +85,9 @@ export const add = mutation({
     });
 
     // Schedule an immediate first check
-    await ctx.scheduler.runAfter(
-      0,
-      internal.instagramScraper.processSource,
-      { sourceId },
-    );
+    await ctx.scheduler.runAfter(0, internal.instagramScraper.processSource, {
+      sourceId,
+    });
 
     return { sourceId, username };
   },
@@ -119,14 +117,15 @@ export const remove = mutation({
     }
 
     // Delete all processed post records for this source
+    // NOTE: For a prototype this is fine, but at scale (hundreds+ of posts)
+    // this could exceed Convex mutation time/write limits. Consider paginated
+    // deletion via scheduled mutations if this becomes an issue.
     const processedPosts = await ctx.db
       .query("instagramProcessedPosts")
       .withIndex("by_source", (q) => q.eq("sourceId", args.sourceId))
       .collect();
 
-    for (const post of processedPosts) {
-      await ctx.db.delete(post._id);
-    }
+    await Promise.all(processedPosts.map((post) => ctx.db.delete(post._id)));
 
     await ctx.db.delete(args.sourceId);
     return null;
@@ -215,11 +214,9 @@ export const checkNow = mutation({
       });
     }
 
-    await ctx.scheduler.runAfter(
-      0,
-      internal.instagramScraper.processSource,
-      { sourceId: args.sourceId },
-    );
+    await ctx.scheduler.runAfter(0, internal.instagramScraper.processSource, {
+      sourceId: args.sourceId,
+    });
 
     return { scheduled: true };
   },
@@ -370,6 +367,60 @@ export const isPostProcessed = internalQuery({
 });
 
 /**
+ * Atomically claim a batch of unprocessed posts so concurrent scrapes don't
+ * duplicate work. Because this is a single Convex mutation the read+write is
+ * transactional: the first concurrent run to reach a post wins the claim,
+ * and subsequent runs will see it as already processed.
+ *
+ * Claimed posts are inserted with `isEvent: false` as a placeholder. After
+ * AI extraction the caller updates the record via `updateProcessedPost`.
+ * If extraction fails, the placeholder stays (the post won't be retried,
+ * which is acceptable for this prototype).
+ */
+export const claimUnprocessedPosts = internalMutation({
+  args: {
+    sourceId: v.id("instagramSources"),
+    postUrls: v.array(
+      v.object({
+        url: v.string(),
+        timestamp: v.optional(v.string()),
+      }),
+    ),
+  },
+  returns: v.array(v.string()),
+  handler: async (ctx, args) => {
+    const claimedUrls: string[] = [];
+
+    for (const post of args.postUrls) {
+      const existing = await ctx.db
+        .query("instagramProcessedPosts")
+        .withIndex("by_source_and_url", (q) =>
+          q.eq("sourceId", args.sourceId).eq("postUrl", post.url),
+        )
+        .first();
+
+      if (existing) {
+        // Already claimed by another run (or a previous run) – skip
+        continue;
+      }
+
+      // Claim this post by inserting a placeholder record
+      await ctx.db.insert("instagramProcessedPosts", {
+        sourceId: args.sourceId,
+        postUrl: post.url,
+        postTimestamp: post.timestamp,
+        isEvent: false,
+        processedAt: Date.now(),
+      });
+
+      claimedUrls.push(post.url);
+    }
+
+    return claimedUrls;
+  },
+});
+
+/**
  * Record a processed post (internal)
  */
 export const recordProcessedPost = internalMutation({
@@ -390,6 +441,37 @@ export const recordProcessedPost = internalMutation({
       eventId: args.eventId,
       processedAt: Date.now(),
     });
+    return null;
+  },
+});
+
+/**
+ * Update an already-claimed processed post record with final results (internal).
+ * Used after AI extraction to mark a claimed post as an event.
+ */
+export const updateProcessedPost = internalMutation({
+  args: {
+    sourceId: v.id("instagramSources"),
+    postUrl: v.string(),
+    isEvent: v.boolean(),
+    eventId: v.optional(v.string()),
+  },
+  returns: v.null(),
+  handler: async (ctx, args) => {
+    const existing = await ctx.db
+      .query("instagramProcessedPosts")
+      .withIndex("by_source_and_url", (q) =>
+        q.eq("sourceId", args.sourceId).eq("postUrl", args.postUrl),
+      )
+      .first();
+
+    if (existing) {
+      await ctx.db.patch(existing._id, {
+        isEvent: args.isEvent,
+        eventId: args.eventId,
+        processedAt: Date.now(),
+      });
+    }
     return null;
   },
 });

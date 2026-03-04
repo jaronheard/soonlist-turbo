@@ -24,21 +24,13 @@ export interface ClassificationResult {
 }
 
 // AI config for event classification (lightweight, fast)
-const openrouter = createOpenAI({
-  apiKey: process.env.OPENROUTER_API_KEY || "",
-  baseURL: process.env.OPENROUTER_BASE_URL || "",
-});
 const CLASSIFICATION_MODEL = "google/gemini-2.5-flash:nitro";
 
 const ClassificationSchema = z.object({
   isEvent: z
     .boolean()
     .describe("Whether this post is about a specific, attendable event"),
-  confidence: z
-    .number()
-    .min(0)
-    .max(1)
-    .describe("Confidence score from 0 to 1"),
+  confidence: z.number().min(0).max(1).describe("Confidence score from 0 to 1"),
   reason: z
     .string()
     .describe("Brief explanation of why this is or isn't an event"),
@@ -48,10 +40,26 @@ const ClassificationSchema = z.object({
  * Classify whether an Instagram post caption describes an event.
  * This is a lightweight AI call (short prompt, boolean output) to avoid
  * wasting tokens on non-event posts.
+ * Requires OPENROUTER_API_KEY and OPENROUTER_BASE_URL environment variables.
  */
 export async function classifyPostAsEvent(
   caption: string,
 ): Promise<ClassificationResult> {
+  const apiKey = process.env.OPENROUTER_API_KEY;
+  if (!apiKey) {
+    throw new Error(
+      "OPENROUTER_API_KEY environment variable is required for event classification",
+    );
+  }
+  const baseURL = process.env.OPENROUTER_BASE_URL;
+  if (!baseURL) {
+    throw new Error(
+      "OPENROUTER_BASE_URL environment variable is required for event classification",
+    );
+  }
+
+  const openrouter = createOpenAI({ apiKey, baseURL });
+
   const messages: CoreMessage[] = [
     {
       role: "system",
@@ -121,13 +129,18 @@ export async function fetchInstagramPosts(
 
   const rawItems = (await response.json()) as ApifyInstagramPost[];
 
-  return rawItems.map((item) => ({
-    url: item.url || `https://www.instagram.com/p/${item.shortCode || ""}`,
-    caption: item.caption || "",
-    timestamp: item.timestamp || new Date().toISOString(),
-    imageUrl: item.displayUrl || item.imageUrl,
-    type: mapPostType(item.type),
-  }));
+  return rawItems
+    .map((item) => ({
+      url: item.url || `https://www.instagram.com/p/${item.shortCode || ""}`,
+      caption: item.caption || "",
+      timestamp: item.timestamp || new Date().toISOString(),
+      imageUrl: item.displayUrl || item.imageUrl,
+      type: mapPostType(item.type),
+    }))
+    .sort(
+      (a, b) =>
+        new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime(),
+    );
 }
 
 // Apify response shape (subset of fields we use)
@@ -179,10 +192,8 @@ export async function fetchSinglePostViaJina(
  * Returns usernames without the @ symbol.
  */
 export function extractMentionsFromCaption(caption: string): string[] {
-  const mentionRegex = /@([a-zA-Z0-9._]+)/g;
   const mentions: string[] = [];
-  let match;
-  while ((match = mentionRegex.exec(caption)) !== null) {
+  for (const match of caption.matchAll(/@([a-zA-Z0-9._]+)/g)) {
     const username = match[1];
     if (username && !mentions.includes(username)) {
       mentions.push(username);
