@@ -1,5 +1,5 @@
 import React from "react";
-import { StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import { Pressable, StyleSheet, Text, View } from "react-native";
 
 import { Mail } from "~/components/icons";
 
@@ -9,10 +9,9 @@ interface EmailSignInButtonProps {
 
 export function EmailSignInButton({ onPress }: EmailSignInButtonProps) {
   return (
-    <TouchableOpacity
-      style={styles.button}
+    <Pressable
+      style={({ pressed }) => [styles.button, pressed && styles.buttonPressed]}
       onPress={onPress}
-      activeOpacity={0.7}
     >
       <View style={styles.contentContainer}>
         <View style={styles.iconContainer}>
@@ -20,7 +19,7 @@ export function EmailSignInButton({ onPress }: EmailSignInButtonProps) {
         </View>
         <Text style={styles.text}>Continue with Email</Text>
       </View>
-    </TouchableOpacity>
+    </Pressable>
   );
 }
 
@@ -31,6 +30,10 @@ const styles = StyleSheet.create({
     borderColor: "#DCE0E8",
     borderRadius: 100,
     paddingVertical: 12,
+  },
+  buttonPressed: {
+    transform: [{ scale: 0.98 }],
+    backgroundColor: "#CDD1D9",
   },
   contentContainer: {
     flexDirection: "row",

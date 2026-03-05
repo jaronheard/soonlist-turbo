@@ -1,6 +1,6 @@
 import type { ImageSourcePropType } from "react-native";
 import React from "react";
-import { StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import { Pressable, StyleSheet, Text, View } from "react-native";
 import { Image } from "expo-image";
 
 interface GoogleSignInButtonProps {
@@ -11,10 +11,9 @@ export const GoogleSignInButton: React.FC<GoogleSignInButtonProps> = ({
   onPress,
 }) => {
   return (
-    <TouchableOpacity
-      style={styles.button}
+    <Pressable
+      style={({ pressed }) => [styles.button, pressed && styles.buttonPressed]}
       onPress={onPress}
-      activeOpacity={0.7}
     >
       <View style={styles.contentContainer}>
         <Image
@@ -27,7 +26,7 @@ export const GoogleSignInButton: React.FC<GoogleSignInButtonProps> = ({
         />
         <Text style={styles.text}>Continue with Google</Text>
       </View>
-    </TouchableOpacity>
+    </Pressable>
   );
 };
 
@@ -38,6 +37,10 @@ const styles = StyleSheet.create({
     borderColor: "#ddd",
     borderRadius: 100,
     paddingVertical: 12,
+  },
+  buttonPressed: {
+    transform: [{ scale: 0.98 }],
+    backgroundColor: "#f5f5f5",
   },
   contentContainer: {
     flexDirection: "row",
