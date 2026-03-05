@@ -97,7 +97,11 @@ function DiscoverContent() {
   function SaveShareButtonWrapper({
     event,
   }: {
-    event: { id: string; userId: string };
+    event: {
+      id: string;
+      userId: string;
+      visibility?: "public" | "private";
+    };
   }) {
     // Only show save/share button for authenticated users
     if (!user) {
@@ -112,6 +116,7 @@ function DiscoverContent() {
         eventId={event.id}
         isSaved={isSaved}
         isOwnEvent={isOwnEvent}
+        visibility={event.visibility}
         source="discover_list"
       />
     );

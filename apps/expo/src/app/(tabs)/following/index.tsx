@@ -1,5 +1,18 @@
-import React, { useCallback, useEffect, useMemo, useState } from "react";
-import { Platform, ScrollView, Share, Text, TouchableOpacity, View } from "react-native";
+import React, {
+  useCallback,
+  useDeferredValue,
+  useEffect,
+  useMemo,
+  useState,
+} from "react";
+import {
+  Platform,
+  ScrollView,
+  Share,
+  Text,
+  TouchableOpacity,
+  View,
+} from "react-native";
 import * as Haptics from "expo-haptics";
 import { Redirect } from "expo-router";
 import { useUser } from "@clerk/clerk-expo";
@@ -104,15 +117,13 @@ function FollowingEmptyState() {
   };
 
   return (
-    <ScrollView
-      contentInsetAdjustmentBehavior="automatic"
-      style={{ flex: 1, backgroundColor: "#F4F1FF" }}
-      contentContainerStyle={{
-        flexGrow: 1,
+    <View
+      style={{
+        flex: 1,
+        backgroundColor: "#F4F1FF",
         justifyContent: "center",
         alignItems: "center",
         paddingHorizontal: 32,
-        paddingBottom: 120,
       }}
     >
       <Text
@@ -156,13 +167,16 @@ function FollowingEmptyState() {
           </Text>
         </View>
       </TouchableOpacity>
-    </ScrollView>
+    </View>
   );
 }
 
 function FollowingFeedContent() {
   const { user } = useUser();
   const [selectedSegment, setSelectedSegment] = useState<Segment>("upcoming");
+  // Defer the segment value used for filtering so stale data isn't filtered
+  // with the new segment before fresh data arrives from the server
+  const deferredSegment = useDeferredValue(selectedSegment);
   const stableTimestamp = useStableTimestamp();
 
   // Check if user is following anyone
@@ -213,13 +227,14 @@ function FollowingFeedContent() {
     savedEventIdsQuery?.map((event) => event.id) ?? [],
   );
 
-  // Filter events client-side
+  // Filter events client-side using deferredSegment so stale data from the
+  // previous query isn't immediately filtered with the new segment value
   const enrichedEvents = useMemo(() => {
     const currentTime = new Date(stableTimestamp).getTime();
     return events
       .filter((event) => {
         const eventEndTime = new Date(event.endDateTime).getTime();
-        return selectedSegment === "upcoming"
+        return deferredSegment === "upcoming"
           ? eventEndTime >= currentTime
           : eventEndTime < currentTime;
       })
@@ -230,7 +245,7 @@ function FollowingFeedContent() {
         eventToLists: [],
         lists: [],
       }));
-  }, [events, stableTimestamp, selectedSegment]);
+  }, [events, stableTimestamp, deferredSegment]);
 
   // Update tab badge count based on upcoming events
   const setCommunityBadgeCount = useAppStore((s) => s.setCommunityBadgeCount);
@@ -252,9 +267,7 @@ function FollowingFeedContent() {
               }}
               modifiers={[pickerStyle("segmented")]}
             >
-              <SwiftUIText modifiers={[tag("upcoming")]}>
-                Upcoming
-              </SwiftUIText>
+              <SwiftUIText modifiers={[tag("upcoming")]}>Upcoming</SwiftUIText>
               <SwiftUIText modifiers={[tag("past")]}>Past</SwiftUIText>
             </Picker>
           </Host>

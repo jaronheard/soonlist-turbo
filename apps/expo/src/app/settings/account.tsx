@@ -27,6 +27,7 @@ import { api } from "@soonlist/backend/convex/_generated/api";
 import type {
   BoardIcon,
   BoardLabel,
+  FollowingIcon,
   HeaderStyle,
   MyListIcon,
   MyListLabel,
@@ -170,6 +171,8 @@ export default function EditProfileScreen() {
     setMyListIcon,
     boardIcon,
     setBoardIcon,
+    followingIcon,
+    setFollowingIcon,
     shortenMyListTab,
     setShortenMyListTab,
   } = useAppStore();
@@ -694,6 +697,22 @@ export default function EditProfileScreen() {
               ]}
               value={boardIcon}
               onChange={setBoardIcon}
+            />
+            <PreferenceRadioGroup<FollowingIcon>
+              label="Following Header Icon"
+              options={[
+                { value: "person.2", label: "People" },
+                { value: "person.3", label: "Group" },
+                {
+                  value: "dot.radiowaves.left.and.right",
+                  label: "Radar",
+                },
+                { value: "list.star", label: "List Star" },
+                { value: "heart", label: "Heart" },
+                { value: "sparkles", label: "Sparkles" },
+              ]}
+              value={followingIcon}
+              onChange={setFollowingIcon}
             />
             <PreferenceRadioGroup<HeaderStyle>
               label="Header Title Style"

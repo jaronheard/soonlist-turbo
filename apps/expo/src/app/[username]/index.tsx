@@ -162,7 +162,11 @@ export default function UserProfilePage() {
   function ProfileSaveShareButtonWrapper({
     event,
   }: {
-    event: { id: string; userId: string };
+    event: {
+      id: string;
+      userId: string;
+      visibility?: "public" | "private";
+    };
   }) {
     if (!isAuthenticated || !currentUser) {
       return null;
@@ -174,6 +178,7 @@ export default function UserProfilePage() {
         eventId={event.id}
         isSaved={isSaved}
         isOwnEvent={isOwnEvent}
+        visibility={event.visibility}
         source="user_profile"
       />
     );

@@ -88,6 +88,13 @@ export type BoardIcon =
   | "theatermasks"
   | "globe"
   | "sparkles";
+export type FollowingIcon =
+  | "person.2"
+  | "person.3"
+  | "dot.radiowaves.left.and.right"
+  | "list.star"
+  | "heart"
+  | "sparkles";
 
 interface AppState {
   filter: "upcoming" | "past";
@@ -103,6 +110,7 @@ interface AppState {
   headerStyle: HeaderStyle;
   myListIcon: MyListIcon;
   boardIcon: BoardIcon;
+  followingIcon: FollowingIcon;
   shortenMyListTab: boolean;
   setShortenMyListTab: (shorten: boolean) => void;
   setMyListLabel: (label: MyListLabel) => void;
@@ -110,6 +118,7 @@ interface AppState {
   setHeaderStyle: (style: HeaderStyle) => void;
   setMyListIcon: (icon: MyListIcon) => void;
   setBoardIcon: (icon: BoardIcon) => void;
+  setFollowingIcon: (icon: FollowingIcon) => void;
 
   // Calendar preferences
   preferredCalendarApp: CalendarApp | null;
@@ -226,6 +235,7 @@ export const useAppStore = create<AppState>()(
       headerStyle: "possessive",
       myListIcon: "list.bullet",
       boardIcon: "person.2",
+      followingIcon: "person.2",
       shortenMyListTab: false,
       setShortenMyListTab: (shorten) => set({ shortenMyListTab: shorten }),
       setMyListLabel: (label) => set({ myListLabel: label }),
@@ -233,6 +243,7 @@ export const useAppStore = create<AppState>()(
       setHeaderStyle: (style) => set({ headerStyle: style }),
       setMyListIcon: (icon) => set({ myListIcon: icon }),
       setBoardIcon: (icon) => set({ boardIcon: icon }),
+      setFollowingIcon: (icon) => set({ followingIcon: icon }),
 
       // Calendar preferences
       preferredCalendarApp: null,
@@ -416,6 +427,7 @@ export const useAppStore = create<AppState>()(
           headerStyle: "possessive",
           myListIcon: "list.bullet",
           boardIcon: "person.2",
+          followingIcon: "person.2",
           shortenMyListTab: false,
           // Ensure discover override never persists across global reset
           discoverAccessOverride: false,

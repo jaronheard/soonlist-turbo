@@ -1,6 +1,6 @@
 import React, { useCallback } from "react";
 import { Share } from "react-native";
-import { Stack } from "expo-router";
+import { Stack, useRouter } from "expo-router";
 import { useUser } from "@clerk/clerk-expo";
 
 import { ProfileMenu } from "~/components/ProfileMenu";
@@ -8,7 +8,9 @@ import { useAppStore } from "~/store";
 
 export default function FollowingLayout() {
   const { user } = useUser();
+  const router = useRouter();
   const boardLabel = useAppStore((s) => s.boardLabel);
+  const followingIcon = useAppStore((s) => s.followingIcon);
   const headerStyle = useAppStore((s) => s.headerStyle);
 
   // URL path matches the board label
@@ -57,6 +59,15 @@ export default function FollowingLayout() {
             {
               type: "button",
               label: "",
+              icon: { type: "sfSymbol", name: followingIcon },
+              onPress: () => router.push("/(tabs)/following/manage"),
+              accessibilityLabel: "Manage following",
+              tintColor: "#5A32FB",
+              hidesSharedBackground: true,
+            },
+            {
+              type: "button",
+              label: "",
               icon: { type: "sfSymbol", name: "square.and.arrow.up" },
               onPress: () => void handleShare(),
               accessibilityLabel: "Share",
@@ -68,6 +79,14 @@ export default function FollowingLayout() {
               hidesSharedBackground: true,
             },
           ],
+        }}
+      />
+      <Stack.Screen
+        name="manage"
+        options={{
+          title: "Following",
+          headerLargeTitle: false,
+          headerBackTitle: "Back",
         }}
       />
     </Stack>

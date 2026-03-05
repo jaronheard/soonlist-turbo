@@ -1,4 +1,10 @@
-import React, { useCallback, useEffect, useMemo, useState } from "react";
+import React, {
+  useCallback,
+  useDeferredValue,
+  useEffect,
+  useMemo,
+  useState,
+} from "react";
 import { Platform, Text, TouchableOpacity, View } from "react-native";
 import { Redirect } from "expo-router";
 import { useUser } from "@clerk/clerk-expo";
@@ -69,6 +75,9 @@ function SegmentedControlFallback({
 function MyFeedContent() {
   const { user } = useUser();
   const [selectedSegment, setSelectedSegment] = useState<Segment>("upcoming");
+  // Defer the segment value used for filtering so stale data isn't filtered
+  // with the new segment before fresh data arrives from the server
+  const deferredSegment = useDeferredValue(selectedSegment);
 
   // Use the stable timestamp from the store that updates every 15 minutes
   // This prevents InvalidCursor errors while still filtering for upcoming events
@@ -129,7 +138,9 @@ function MyFeedContent() {
     }));
 
     // Client-side safety filter: hide events that have ended (upcoming only)
-    if (selectedSegment === "upcoming") {
+    // Uses deferredSegment so stale data from the previous query isn't
+    // immediately filtered with the new segment value
+    if (deferredSegment === "upcoming") {
       const currentTime = new Date(stableTimestamp).getTime();
       return events.filter((item) => {
         const eventEndTime = new Date(item.event.endDateTime).getTime();
@@ -138,7 +149,7 @@ function MyFeedContent() {
     }
 
     return events;
-  }, [groupedEvents, stableTimestamp, selectedSegment]);
+  }, [groupedEvents, stableTimestamp, deferredSegment]);
 
   // Trigger rating prompt when user has 3+ upcoming events
   useRatingPrompt(selectedSegment === "upcoming" ? enrichedEvents.length : 0);
