@@ -16,16 +16,14 @@ export const GoogleSignInButton: React.FC<GoogleSignInButtonProps> = ({
       onPress={onPress}
     >
       <View className="flex-row items-center justify-center">
-        <View className="mr-3 h-6 w-6">
-          <Image
-            // eslint-disable-next-line @typescript-eslint/consistent-type-assertions, @typescript-eslint/no-require-imports
-            source={require("../assets/google-logo.png") as ImageSourcePropType}
-            style={{ width: 24, height: 24 }}
-            contentFit="contain"
-            cachePolicy="disk"
-            transition={100}
-          />
-        </View>
+        <Image
+          // eslint-disable-next-line @typescript-eslint/consistent-type-assertions, @typescript-eslint/no-require-imports
+          source={require("../assets/google-logo.png") as ImageSourcePropType}
+          style={{ width: 24, height: 24, marginRight: 12 }}
+          contentFit="contain"
+          cachePolicy="disk"
+          transition={100}
+        />
         <Text className="text-base font-medium text-neutral-500">
           Continue with Google
         </Text>
