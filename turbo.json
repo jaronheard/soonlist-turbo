@@ -72,13 +72,17 @@
       "outputs": [".cache/.prettiercache"],
       "outputLogs": "errors-only"
     },
+    "codegen": {
+      "dependsOn": ["^topo"],
+      "outputs": ["convex/_generated/**"]
+    },
     "lint": {
-      "dependsOn": ["^topo", "^build"],
+      "dependsOn": ["codegen", "^topo", "^build"],
       "outputs": [".cache/.eslintcache"],
       "outputLogs": "errors-only"
     },
     "typecheck": {
-      "dependsOn": ["^topo", "^build"],
+      "dependsOn": ["codegen", "^topo", "^build"],
       "outputLogs": "errors-only"
     },
     "clean": {
