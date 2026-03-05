@@ -14,7 +14,7 @@ export function EmailSignInButton({ onPress }: EmailSignInButtonProps) {
       onPress={onPress}
     >
       <View className="flex-row items-center justify-center">
-        <View className="mr-2 h-6 w-6">
+        <View className="mr-2.5 h-6 w-6">
           <Mail size={24} color="#162135" />
         </View>
         <Text className="text-base font-medium text-[#162135]">

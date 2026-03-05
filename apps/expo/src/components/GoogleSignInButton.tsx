@@ -16,7 +16,7 @@ export const GoogleSignInButton: React.FC<GoogleSignInButtonProps> = ({
       onPress={onPress}
     >
       <View className="flex-row items-center justify-center">
-        <View className="mr-2 h-6 w-6">
+        <View className="mr-2.5 h-6 w-6">
           <Image
             // eslint-disable-next-line @typescript-eslint/consistent-type-assertions, @typescript-eslint/no-require-imports
             source={require("../assets/google-logo.png") as ImageSourcePropType}
