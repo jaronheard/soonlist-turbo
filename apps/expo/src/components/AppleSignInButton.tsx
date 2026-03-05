@@ -14,7 +14,9 @@ export const AppleSignInButton: React.FC<AppleSignInButtonProps> = ({
     onPress={onPress}
   >
     <View className="flex-row items-center justify-center">
-      <Ionicons name="logo-apple" size={24} color="white" className="mr-2.5" />
+      <View className="mr-3 h-6 w-6 items-center justify-center">
+        <Ionicons name="logo-apple" size={24} color="white" />
+      </View>
       <Text className="text-base font-semibold text-white">
         Continue with Apple
       </Text>
