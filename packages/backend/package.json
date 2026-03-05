@@ -20,7 +20,7 @@
     "build": "echo 'Using committed generated files'",
     "dev": "convex dev",
     "setup": "convex dev --until-success",
-    "codegen": "[ -z \"$CONVEX_DEPLOYMENT\" ] && echo 'Skipping codegen: CONVEX_DEPLOYMENT not set' || convex codegen",
+    "codegen": "convex codegen",
     "clean": "git clean -xdf .cache .turbo node_modules",
     "format": "prettier --check .",
     "format:fix": "prettier --write .",
