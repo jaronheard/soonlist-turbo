@@ -1,6 +1,6 @@
 import type { ImageSourcePropType } from "react-native";
 import React from "react";
-import { Pressable, StyleSheet, Text, View } from "react-native";
+import { Pressable, Text, View } from "react-native";
 import { Image } from "expo-image";
 
 interface GoogleSignInButtonProps {
@@ -12,49 +12,23 @@ export const GoogleSignInButton: React.FC<GoogleSignInButtonProps> = ({
 }) => {
   return (
     <Pressable
-      style={({ pressed }) => [styles.button, pressed && styles.buttonPressed]}
+      className="rounded-full border border-gray-300 bg-white py-3 active:scale-[0.98] active:bg-neutral-100"
       onPress={onPress}
     >
-      <View style={styles.contentContainer}>
+      <View className="flex-row items-center justify-center">
         <Image
           // eslint-disable-next-line @typescript-eslint/consistent-type-assertions, @typescript-eslint/no-require-imports
           source={require("../assets/google-logo.png") as ImageSourcePropType}
-          style={styles.logo}
+          style={{ width: 24, height: 24 }}
+          className="mr-2"
           contentFit="contain"
           cachePolicy="disk"
           transition={100}
         />
-        <Text style={styles.text}>Continue with Google</Text>
+        <Text className="text-base font-medium text-neutral-500">
+          Continue with Google
+        </Text>
       </View>
     </Pressable>
   );
 };
-
-const styles = StyleSheet.create({
-  button: {
-    backgroundColor: "#fff",
-    borderWidth: 1,
-    borderColor: "#ddd",
-    borderRadius: 100,
-    paddingVertical: 12,
-  },
-  buttonPressed: {
-    transform: [{ scale: 0.98 }],
-    backgroundColor: "#f5f5f5",
-  },
-  contentContainer: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  logo: {
-    width: 24,
-    height: 24,
-    marginRight: 8,
-  },
-  text: {
-    color: "#757575",
-    fontSize: 16,
-    fontWeight: "500",
-  },
-});
