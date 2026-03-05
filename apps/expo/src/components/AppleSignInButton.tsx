@@ -18,7 +18,7 @@ export const AppleSignInButton: React.FC<AppleSignInButtonProps> = ({
         name="logo-apple"
         size={24}
         color="white"
-        style={{ marginRight: 12 }}
+        style={{ marginRight: 10 }}
       />
       <Text className="text-base font-semibold text-white">
         Continue with Apple
