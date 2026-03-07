@@ -7,8 +7,7 @@ import type {
   EventToLists,
   List,
   User,
-} from "@soonlist/db/types";
-
+} from "./dbTypes";
 import type { AddToCalendarButtonProps } from "./types";
 
 type EventToListsWithList = EventToLists & {

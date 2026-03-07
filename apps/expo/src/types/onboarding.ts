@@ -1,4 +1,4 @@
-import type { OnboardingData } from "@soonlist/db/types";
+import type { OnboardingData } from "@soonlist/cal/dbTypes";
 
 export type OnboardingStep =
   | "welcome"

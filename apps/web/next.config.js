@@ -13,7 +13,6 @@ const nextConfig = {
   transpilePackages: [
     "@soonlist/api",
     "@soonlist/cal",
-    "@soonlist/db",
     "@soonlist/ui",
     "@soonlist/validators",
   ],

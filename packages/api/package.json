@@ -27,7 +27,6 @@
     "@sentry/nextjs": "catalog:",
     "@sentry/node": "catalog:",
     "@soonlist/cal": "workspace:*",
-    "@soonlist/db": "workspace:*",
     "@soonlist/validators": "workspace:*",
     "@trpc/server": "catalog:",
     "@vercel/functions": "catalog:",

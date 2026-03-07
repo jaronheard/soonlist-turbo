@@ -194,16 +194,6 @@ export default defineSchema({
     why: v.string(),
   }).index("by_email", ["email"]),
 
-  syncState: defineTable({
-    key: v.string(),
-    lastSyncedAt: v.string(), // ISO date string for timestamp-based syncs
-    status: v.union(v.literal("success"), v.literal("failed")),
-    error: v.optional(v.string()),
-    // Additional fields for different sync strategies
-    offset: v.optional(v.number()), // For offset-based pagination
-    metadata: v.optional(v.any()), // For any additional sync metadata
-  }).index("by_key", ["key"]),
-
   userFeeds: defineTable({
     feedId: v.string(), // Feed identifier (user_${userId}, discover, curated_${topic}, etc.)
     eventId: v.string(), // Event in the feed

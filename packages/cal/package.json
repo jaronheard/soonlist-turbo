@@ -10,6 +10,10 @@
     },
     "./types": {
       "types": "./src/types/index.d.ts"
+    },
+    "./dbTypes": {
+      "types": "./dist/dbTypes.d.ts",
+      "default": "./src/dbTypes.ts"
     }
   },
   "license": "MIT",
@@ -24,7 +28,6 @@
   },
   "dependencies": {
     "@js-temporal/polyfill": "catalog:",
-    "@soonlist/db": "workspace:*",
     "date-fns": "catalog:",
     "timezone-soft": "catalog:",
     "zod": "catalog:",

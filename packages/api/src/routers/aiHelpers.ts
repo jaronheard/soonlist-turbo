@@ -1,7 +1,6 @@
 import { Buffer } from "buffer";
 import type { CoreMessage } from "ai";
 import { createOpenAI } from "@ai-sdk/openai";
-import { Temporal } from "@js-temporal/polyfill";
 import { TRPCError } from "@trpc/server";
 import { waitUntil } from "@vercel/functions";
 import { generateObject } from "ai";
@@ -17,22 +16,8 @@ import {
   getSystemMessage,
   getSystemMessageMetadata,
 } from "@soonlist/cal";
-import { eq } from "@soonlist/db";
-import {
-  comments,
-  events,
-  events as eventsSchema,
-  eventToLists,
-} from "@soonlist/db/schema";
 
-import type { RouterOutputs } from "..";
 import type { Context } from "../trpc";
-import { generatePublicId } from "../utils";
-import {
-  getNotificationContent,
-  sendNotification,
-} from "../utils/notificationHelpers";
-import { createDeepLink } from "../utils/urlScheme";
 
 const langfuse = new Langfuse({
   publicKey: process.env.LANGFUSE_PUBLIC_KEY || "",
@@ -230,22 +215,6 @@ function constructMessagesBase64Image({
   ];
 }
 
-export interface AIEventResponse {
-  success: boolean;
-  ticket?: unknown;
-  id?: string;
-  eventId?: string;
-  event?: RouterOutputs["event"]["get"];
-  error?: string;
-}
-
-export interface AIErrorResponse {
-  success: boolean;
-  ticket?: unknown;
-  id?: string;
-  error?: string;
-}
-
 export interface ProcessedEventResponse {
   events: EventWithMetadata[];
   response: string;
@@ -383,340 +352,6 @@ export async function fetchAndProcessEvent({
   return { events, response };
 }
 
-export interface CreateEventParams {
-  ctx: Context;
-  input: {
-    timezone: string;
-    comment?: string;
-    lists: { value: string }[];
-    visibility?: "public" | "private";
-    userId: string;
-    username: string;
-    imageUrl?: string;
-    sendNotification?: boolean;
-  };
-  firstEvent: EventWithMetadata;
-  dailyEventsPromise: Promise<{ id: string }[]>;
-  source: "rawText" | "url" | "image";
-  uploadedImageUrl?: string | null;
-}
-
-export async function createEventAndNotify(
-  params: CreateEventParams,
-): Promise<AIEventResponse> {
-  const {
-    ctx,
-    input,
-    firstEvent,
-    dailyEventsPromise,
-    source,
-    uploadedImageUrl,
-  } = params;
-  const { userId, username } = input;
-
-  const shouldNotify = input.sendNotification !== false;
-
-  if (!userId) {
-    throw new TRPCError({
-      code: "INTERNAL_SERVER_ERROR",
-      message: "No user id found in session",
-    });
-  }
-
-  if (!username) {
-    throw new TRPCError({
-      code: "INTERNAL_SERVER_ERROR",
-      message: "No username found in session",
-    });
-  }
-
-  const hasComment = input.comment && input.comment.length > 0;
-  const hasLists = input.lists.length > 0;
-  const hasVisibility = input.visibility && input.visibility.length > 0;
-
-  let { startTime, endTime, timeZone } = firstEvent;
-  if (!timeZone) {
-    timeZone = input.timezone;
-  }
-  if (!startTime) {
-    startTime = "00:00";
-  }
-  if (!endTime) {
-    endTime = "23:59";
-  }
-
-  const start = Temporal.ZonedDateTime.from(
-    `${firstEvent.startDate}T${startTime}[${timeZone}]`,
-  );
-  const end = Temporal.ZonedDateTime.from(
-    `${firstEvent.endDate}T${endTime}[${timeZone}]`,
-  );
-  const startUtcDate = new Date(start.epochMilliseconds);
-  const endUtcDate = new Date(end.epochMilliseconds);
-
-  const eventid = generatePublicId();
-
-  const imageToUse = uploadedImageUrl ?? input.imageUrl;
-
-  const values = {
-    id: eventid,
-    userId,
-    userName: username,
-    event: {
-      ...firstEvent,
-      ...(imageToUse && {
-        images: [imageToUse, imageToUse, imageToUse, imageToUse],
-      }),
-    },
-    eventMetadata: firstEvent.eventMetadata,
-    startDateTime: startUtcDate,
-    endDateTime: endUtcDate,
-    ...(hasVisibility && {
-      visibility: input.visibility,
-    }),
-  };
-
-  await ctx.db.transaction(async (tx: Context["db"]) => {
-    // Insert event
-    await tx.insert(eventsSchema).values(values);
-
-    // Insert comment, if any
-    if (hasComment) {
-      await tx.insert(comments).values({
-        eventId: eventid,
-        content: input.comment ?? "",
-        userId,
-      });
-    }
-
-    // Insert event-to-lists, if any
-    if (hasLists) {
-      await tx.delete(eventToLists).where(eq(eventToLists.eventId, eventid));
-      await tx.insert(eventToLists).values(
-        input.lists.map((list) => ({
-          eventId: eventid,
-          listId: list.value,
-        })),
-      );
-    }
-
-    return eventid;
-  });
-
-  const createdEvent = await ctx.db.query.events
-    .findMany({
-      where: eq(events.id, eventid),
-      with: {
-        user: {
-          with: {
-            lists: true,
-          },
-        },
-        eventFollows: true,
-        comments: true,
-        eventToLists: {
-          with: {
-            list: true,
-          },
-        },
-      },
-    })
-    .then((events) => events[0] || null);
-
-  if (!createdEvent) {
-    throw new TRPCError({
-      code: "INTERNAL_SERVER_ERROR",
-      message: "Failed to create event",
-    });
-  }
-
-  // Resolve daily events
-  const dailyEvents = await dailyEventsPromise;
-  const eventCount = dailyEvents.length;
-
-  // Create push notification using the extracted helper
-  const { title, subtitle, body } = getNotificationContent(
-    firstEvent.name,
-    eventCount,
-  );
-
-  if (shouldNotify) {
-    waitUntil(
-      (async () => {
-        try {
-          const notificationResult = await sendNotification({
-            userId,
-            title,
-            subtitle,
-            body,
-            url: createDeepLink(`event/${eventid}`),
-            eventId: eventid,
-            source: "ai_router",
-            method: source,
-          });
-          if (!notificationResult.success) {
-            console.error(
-              "Background notification sending failed:",
-              notificationResult.error,
-              "ID:",
-              notificationResult.id,
-            );
-            // Log this error more formally (Sentry, Langfuse, etc.)
-          } else {
-            console.log(
-              "Background notification sent successfully:",
-              notificationResult.id,
-            );
-          }
-        } catch (notificationError) {
-          console.error(
-            "Error in background notification task:",
-            notificationError,
-          );
-          // Log this error more formally
-        }
-      })(),
-    );
-  }
-
-  return {
-    success: true, // Event creation was successful
-    eventId: eventid,
-    event: createdEvent,
-    // id and error fields related to notification are not part of this main success response
-  };
-}
-
-export async function createEvent(
-  params: CreateEventParams,
-): Promise<AIEventResponse> {
-  const { ctx, input, firstEvent, uploadedImageUrl } = params;
-  const { userId, username } = input;
-
-  if (!userId) {
-    throw new TRPCError({
-      code: "INTERNAL_SERVER_ERROR",
-      message: "No user id found in session",
-    });
-  }
-
-  if (!username) {
-    throw new TRPCError({
-      code: "INTERNAL_SERVER_ERROR",
-      message: "No username found in session",
-    });
-  }
-
-  const hasComment = input.comment && input.comment.length > 0;
-  const hasLists = input.lists.length > 0;
-  const hasVisibility = input.visibility && input.visibility.length > 0;
-
-  let { startTime, endTime, timeZone } = firstEvent;
-  if (!timeZone) {
-    timeZone = input.timezone;
-  }
-  if (!startTime) {
-    startTime = "00:00";
-  }
-  if (!endTime) {
-    endTime = "23:59";
-  }
-
-  const start = Temporal.ZonedDateTime.from(
-    `${firstEvent.startDate}T${startTime}[${timeZone}]`,
-  );
-  const end = Temporal.ZonedDateTime.from(
-    `${firstEvent.endDate}T${endTime}[${timeZone}]`,
-  );
-  const startUtcDate = new Date(start.epochMilliseconds);
-  const endUtcDate = new Date(end.epochMilliseconds);
-
-  const eventid = generatePublicId();
-
-  const values = {
-    id: eventid,
-    userId,
-    userName: username,
-    event: {
-      ...firstEvent,
-      ...(uploadedImageUrl && {
-        images: [
-          uploadedImageUrl,
-          uploadedImageUrl,
-          uploadedImageUrl,
-          uploadedImageUrl,
-        ],
-      }),
-    },
-    eventMetadata: firstEvent.eventMetadata,
-    startDateTime: startUtcDate,
-    endDateTime: endUtcDate,
-    ...(hasVisibility && {
-      visibility: input.visibility,
-    }),
-  };
-
-  await ctx.db.transaction(async (tx: Context["db"]) => {
-    // Insert event
-    await tx.insert(eventsSchema).values(values);
-
-    // Insert comment, if any
-    if (hasComment) {
-      await tx.insert(comments).values({
-        eventId: eventid,
-        content: input.comment ?? "",
-        userId,
-      });
-    }
-
-    // Insert event-to-lists, if any
-    if (hasLists) {
-      await tx.delete(eventToLists).where(eq(eventToLists.eventId, eventid));
-      await tx.insert(eventToLists).values(
-        input.lists.map((list) => ({
-          eventId: eventid,
-          listId: list.value,
-        })),
-      );
-    }
-
-    return eventid;
-  });
-
-  const createdEvent = await ctx.db.query.events
-    .findMany({
-      where: eq(events.id, eventid),
-      with: {
-        user: {
-          with: {
-            lists: true,
-          },
-        },
-        eventFollows: true,
-        comments: true,
-        eventToLists: {
-          with: {
-            list: true,
-          },
-        },
-      },
-    })
-    .then((events) => events[0] || null);
-
-  if (!createdEvent) {
-    throw new TRPCError({
-      code: "INTERNAL_SERVER_ERROR",
-      message: "Failed to create event",
-    });
-  }
-
-  return {
-    success: true,
-    eventId: eventid,
-    event: createdEvent,
-  };
-}
-
 export function validateFirstEvent(events: unknown[]) {
   if (!events.length) {
     throw new TRPCError({
@@ -726,7 +361,6 @@ export function validateFirstEvent(events: unknown[]) {
   }
 
   try {
-    // This will throw if validation fails
     const validatedEvent = EventWithMetadataSchema.parse(events[0]);
     return validatedEvent;
   } catch (error) {
@@ -753,7 +387,6 @@ export async function uploadImageToCDNFromBase64(
 
     const base64Data = base64Image.replace(/^data:image\/\w+;base64,/, "");
 
-    // Convert base64 string to Uint8Array (BodyInit-compatible)
     const imageBuffer = Buffer.from(base64Data, "base64");
     const imageBytes = new Uint8Array(imageBuffer);
 
@@ -762,7 +395,7 @@ export async function uploadImageToCDNFromBase64(
       {
         method: "POST",
         headers: {
-          "Content-Type": "image/webp", // Assuming optimizeImage always produces webp
+          "Content-Type": "image/webp",
           Authorization: "Bearer public_12a1yekATNiLj4VVnREZ8c7LM8V8",
         },
         body: imageBytes,
@@ -774,15 +407,13 @@ export async function uploadImageToCDNFromBase64(
       console.error(
         `Upload failed with status ${response.status}: ${errorBody}`,
       );
-      // Optionally log this error more formally
-      return null; // Return null on failure, don't throw to avoid failing the whole event creation
+      return null;
     }
 
     const parsedResponse = (await response.json()) as UploadResponse;
     return parsedResponse.fileUrl;
   } catch (error) {
     console.error("Error uploading image to CDN:", error);
-    // Optionally log this error more formally (e.g., using Sentry or Langfuse)
-    return null; // Return null on error
+    return null;
   }
 }

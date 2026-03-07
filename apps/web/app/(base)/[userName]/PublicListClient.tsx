@@ -7,7 +7,7 @@ import { Globe, Lock, Pencil, Share, Share2 } from "lucide-react";
 import { toast } from "sonner";
 
 import type { Doc } from "@soonlist/backend/convex/_generated/dataModel";
-import type { User } from "@soonlist/db/types";
+import type { User } from "@soonlist/cal/dbTypes";
 import { api } from "@soonlist/backend/convex/_generated/api";
 import { Button } from "@soonlist/ui/button";
 import {

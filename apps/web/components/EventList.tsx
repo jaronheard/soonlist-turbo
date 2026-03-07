@@ -3,7 +3,6 @@
 import { clsx } from "clsx";
 import { useQuery } from "convex/react";
 
-import type { AddToCalendarButtonPropsRestricted } from "@soonlist/cal/types";
 import type {
   Comment,
   Event,
@@ -11,7 +10,8 @@ import type {
   EventToLists,
   List,
   User,
-} from "@soonlist/db/types";
+} from "@soonlist/cal/dbTypes";
+import type { AddToCalendarButtonPropsRestricted } from "@soonlist/cal/types";
 import { api } from "@soonlist/backend/convex/_generated/api";
 import { collapseSimilarEvents } from "@soonlist/cal";
 

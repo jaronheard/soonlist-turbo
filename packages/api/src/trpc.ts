@@ -17,8 +17,6 @@ import { initTRPC, TRPCError } from "@trpc/server";
 import superjson from "superjson";
 import { ZodError } from "zod";
 
-import { db } from "@soonlist/db";
-
 /**
  * 1. CONTEXT
  *
@@ -41,7 +39,6 @@ export type Context = Awaited<ReturnType<typeof createContextInner>>;
 
 export const createContextInner = ({ auth, user }: AuthContextProps) => {
   return {
-    db,
     auth,
     currentUser: user,
   };
