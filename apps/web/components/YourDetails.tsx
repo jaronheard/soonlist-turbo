@@ -7,7 +7,7 @@ import { EyeOff, Globe2, PenSquare } from "lucide-react";
 import { useForm } from "react-hook-form";
 import * as z from "zod";
 
-import type { List } from "@soonlist/db/types";
+import type { List } from "@soonlist/validators";
 import { Card, CardContent, CardHeader, CardTitle } from "@soonlist/ui/card";
 import {
   Form,

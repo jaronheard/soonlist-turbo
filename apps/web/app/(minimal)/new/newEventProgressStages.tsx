@@ -11,7 +11,7 @@ import { useMutation, useQuery } from "convex/react";
 import { Camera, EyeOff, Globe2, LinkIcon, Sparkles, Text } from "lucide-react";
 import { useForm } from "react-hook-form";
 
-import type { List } from "@soonlist/db/types";
+import type { List } from "@soonlist/validators";
 import { api } from "@soonlist/backend/convex/_generated/api";
 import { Button } from "@soonlist/ui/button";
 import {

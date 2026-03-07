@@ -24,25 +24,15 @@ catalog:
   clsx: ^2.1.0
   uuid: ^9.0.1
 
-  # Tanstack & tRPC
+  # Tanstack
   "@tanstack/react-query": ^5.74.7
   "@tanstack/react-query-devtools": ^5.74.7
   "@tanstack/query-async-storage-persister": ^5.74.7
   "@tanstack/react-query-persist-client": ^5.74.7
-  "@trpc/client": 11.0.0-rc.364
-  "@trpc/react-query": 11.0.0-rc.364
-  "@trpc/server": 11.0.0-rc.364
 
   # React & Next.js
   next: 15.1.9
   "server-only": ^0.0.1
-
-  # Database
-  "drizzle-orm": ^0.30.10
-  "drizzle-kit": ^0.21.1
-  "drizzle-zod": ^0.5.1
-  "@planetscale/database": ^1.18.0
-  mysql2: ^3.9.7
 
   # Authentication & Security
   "@clerk/nextjs": ^6.20.0

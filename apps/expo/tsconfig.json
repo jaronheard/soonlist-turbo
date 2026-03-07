@@ -3,7 +3,8 @@
   "compilerOptions": {
     "baseUrl": ".",
     "paths": {
-      "~/*": ["./src/*"]
+      "~/*": ["./src/*"],
+      "@soonlist/validators": ["../../packages/validators/src/index.ts"]
     },
     "jsx": "react-native",
     "types": ["nativewind/types"],

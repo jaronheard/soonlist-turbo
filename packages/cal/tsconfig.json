@@ -1,7 +1,10 @@
 {
   "extends": "@soonlist/tsconfig/internal-package.json",
   "compilerOptions": {
-    "outDir": "dist"
+    "outDir": "dist",
+    "paths": {
+      "@soonlist/validators": ["../validators/src/index.ts"]
+    }
   },
   "include": ["*.ts", "src"],
   "exclude": ["node_modules"]

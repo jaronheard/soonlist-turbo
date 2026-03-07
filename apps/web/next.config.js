@@ -10,13 +10,7 @@ const nextConfig = {
   /** T3 defaults */
   reactStrictMode: true,
   /** Enables hot reloading for local packages without a build step */
-  transpilePackages: [
-    "@soonlist/api",
-    "@soonlist/cal",
-    "@soonlist/db",
-    "@soonlist/ui",
-    "@soonlist/validators",
-  ],
+  transpilePackages: ["@soonlist/cal", "@soonlist/ui", "@soonlist/validators"],
   /** We already do linting and typechecking as separate tasks in CI */
   eslint: { ignoreDuringBuilds: true },
   typescript: { ignoreBuildErrors: true },

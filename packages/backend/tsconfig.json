@@ -16,6 +16,9 @@
     "allowSyntheticDefaultImports": true,
     "module": "ESNext",
     "moduleResolution": "Bundler",
+    "paths": {
+      "@soonlist/validators": ["../validators/src/index.ts"]
+    },
     "isolatedModules": true,
     "skipLibCheck": true,
     "noEmit": true

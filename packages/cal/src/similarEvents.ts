@@ -7,7 +7,7 @@ import type {
   EventToLists,
   List,
   User,
-} from "@soonlist/db/types";
+} from "@soonlist/validators";
 
 import type { AddToCalendarButtonProps } from "./types";
 

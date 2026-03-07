@@ -20,19 +20,25 @@ crons.cron(
   {},
 );
 
+crons.cron(
+  "marketing notification",
+  "0 0 31 12 *",
+  internal.notifications.sendMarketingNotification,
+  {
+    title: "📸 Soonlist Just Got Better!",
+    body: "Tap to explore our streamlined capture flow, event stats & more. Not seeing it? Update in TestFlight.",
+    url: "soonlist://feed",
+    data: {
+      url: "soonlist://feed",
+    },
+  },
+);
+
 // Sync user properties to PostHog daily at 6 AM UTC
 crons.cron(
   "posthog user sync",
   "0 6 * * *", // Every day at 6:00 AM UTC
   internal.posthog.syncUserPropertiesToPostHog,
-  {},
-);
-
-// Sync data from PlanetScale every 15 minutes
-crons.cron(
-  "planetscale sync",
-  "*/15 * * * *", // Every 15 minutes
-  internal.planetscaleSync.syncAll,
   {},
 );
 

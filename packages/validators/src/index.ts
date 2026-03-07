@@ -1,5 +1,7 @@
 import { z } from "zod";
 
+export * from "./db";
+
 export const userAdditionalInfoSchema = z.object({
   bio: z.string().max(150, "Bio must be 150 characters or less").optional(),
   publicEmail: z.string().email("Enter a valid email address").optional(),

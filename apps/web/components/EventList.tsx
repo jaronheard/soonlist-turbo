@@ -1,8 +1,10 @@
 "use client";
 
+/* eslint-disable @typescript-eslint/no-unnecessary-type-assertion, @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access */
 import { clsx } from "clsx";
 import { useQuery } from "convex/react";
 
+import type { EventWithSimilarity } from "@soonlist/cal";
 import type { AddToCalendarButtonPropsRestricted } from "@soonlist/cal/types";
 import type {
   Comment,
@@ -11,7 +13,7 @@ import type {
   EventToLists,
   List,
   User,
-} from "@soonlist/db/types";
+} from "@soonlist/validators";
 import { api } from "@soonlist/backend/convex/_generated/api";
 import { collapseSimilarEvents } from "@soonlist/cal";
 
@@ -101,15 +103,15 @@ export function EventList({
   const currentEventsToUse = collapseSimilarEvents(
     getVisibleEvents(currentEvents),
     currentUser?.id,
-  );
+  ) as EventWithSimilarity[];
   const pastEventsToUse = collapseSimilarEvents(
     getVisibleEvents(pastEvents),
     currentUser?.id,
-  );
+  ) as EventWithSimilarity[];
   const futureEventsToUse = collapseSimilarEvents(
     getVisibleEvents(futureEvents),
     currentUser?.id,
-  );
+  ) as EventWithSimilarity[];
   const showPastEvents =
     variant !== "future-minimal" && pastEventsToUse.length > 0;
   const showCurrentEvents = true;
@@ -152,7 +154,9 @@ export function EventList({
                       id={item.id}
                       event={item.event as AddToCalendarButtonPropsRestricted}
                       visibility={item.visibility}
-                      lists={item.eventToLists?.map((list) => list.list)}
+                      lists={item.eventToLists?.map(
+                        (list: EventToListsWithList) => list.list,
+                      )}
                       createdAt={item.createdAt}
                       hideCurator={hideCurator}
                       showOtherCurators={showOtherCurators}
@@ -202,7 +206,9 @@ export function EventList({
                       id={item.id}
                       event={item.event as AddToCalendarButtonPropsRestricted}
                       visibility={item.visibility}
-                      lists={item.eventToLists?.map((list) => list.list)}
+                      lists={item.eventToLists?.map(
+                        (list: EventToListsWithList) => list.list,
+                      )}
                       createdAt={item.createdAt}
                       hideCurator={hideCurator}
                       showOtherCurators={showOtherCurators}
@@ -253,7 +259,9 @@ export function EventList({
                     id={item.id}
                     event={item.event as AddToCalendarButtonPropsRestricted}
                     visibility={item.visibility}
-                    lists={item.eventToLists?.map((list) => list.list)}
+                    lists={item.eventToLists?.map(
+                      (list: EventToListsWithList) => list.list,
+                    )}
                     createdAt={item.createdAt}
                     hideCurator={hideCurator}
                     showOtherCurators={showOtherCurators}
