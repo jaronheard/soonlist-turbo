@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-redundant-type-constituents, @typescript-eslint/no-unsafe-argument, @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-return */
 import type { NextRequest } from "next/server";
 import { NextResponse } from "next/server";
 import { clerkClient } from "@clerk/nextjs/server";
@@ -18,7 +19,9 @@ type HandledStripeEvent =
   | Stripe.CustomerSubscriptionUpdatedEvent
   | Stripe.CustomerSubscriptionDeletedEvent;
 
-function isHandledStripeEvent(event: Stripe.Event): event is HandledStripeEvent {
+function isHandledStripeEvent(
+  event: Stripe.Event,
+): event is HandledStripeEvent {
   return (
     event.type === "checkout.session.completed" ||
     event.type === "customer.subscription.created" ||
@@ -38,7 +41,9 @@ function getSubscriptionPlanMetadata(subscription: Stripe.Subscription) {
   const firstItem = subscription.items.data[0];
   const plan = firstItem?.plan;
   const productId =
-    typeof plan?.product === "string" ? plan.product : plan?.product?.id ?? null;
+    typeof plan?.product === "string"
+      ? plan.product
+      : (plan?.product?.id ?? null);
 
   return {
     id: plan?.id ?? null,
@@ -63,7 +68,9 @@ export async function POST(req: NextRequest) {
   } catch (error) {
     console.error("Error constructing event:", error);
     const message =
-      error instanceof Error ? error.message : "Failed to construct Stripe event";
+      error instanceof Error
+        ? error.message
+        : "Failed to construct Stripe event";
 
     return NextResponse.json(
       {
@@ -97,16 +104,13 @@ export async function POST(req: NextRequest) {
       }
 
       const clerk = await clerkClient();
-      const updatedUser = await clerk.users.updateUserMetadata(
-        userId,
-        {
-          publicMetadata: {
-            stripe: {
-              customerId: getCustomerId(session.customer),
-            },
+      const updatedUser = await clerk.users.updateUserMetadata(userId, {
+        publicMetadata: {
+          stripe: {
+            customerId: getCustomerId(session.customer),
           },
         },
-      );
+      });
       console.log("checkout.session.completed", updatedUser.publicMetadata);
       break;
     }
@@ -126,14 +130,11 @@ export async function POST(req: NextRequest) {
       }
 
       const clerk = await clerkClient();
-      const updatedUser = await clerk.users.updateUserMetadata(
-        userId,
-        {
-          publicMetadata: {
-            plan: getSubscriptionPlanMetadata(subscription),
-          },
+      const updatedUser = await clerk.users.updateUserMetadata(userId, {
+        publicMetadata: {
+          plan: getSubscriptionPlanMetadata(subscription),
         },
-      );
+      });
 
       console.log("customer.subscription.created", updatedUser.publicMetadata);
       break;
@@ -155,14 +156,11 @@ export async function POST(req: NextRequest) {
       }
 
       const clerk = await clerkClient();
-      const updatedUser = await clerk.users.updateUserMetadata(
-        userId,
-        {
-          publicMetadata: {
-            plan: getSubscriptionPlanMetadata(subscription),
-          },
+      const updatedUser = await clerk.users.updateUserMetadata(userId, {
+        publicMetadata: {
+          plan: getSubscriptionPlanMetadata(subscription),
         },
-      );
+      });
       console.log("customer.subscription.updated", updatedUser.publicMetadata);
       break;
     }
@@ -183,17 +181,14 @@ export async function POST(req: NextRequest) {
       }
 
       const clerk = await clerkClient();
-      const updatedUser = await clerk.users.updateUserMetadata(
-        userId,
-        {
-          publicMetadata: {
-            stripe: {
-              customerId: getCustomerId(subscription.customer),
-            },
-            plan: getSubscriptionPlanMetadata(subscription),
+      const updatedUser = await clerk.users.updateUserMetadata(userId, {
+        publicMetadata: {
+          stripe: {
+            customerId: getCustomerId(subscription.customer),
           },
+          plan: getSubscriptionPlanMetadata(subscription),
         },
-      );
+      });
       console.log("customer.subscription.deleted", updatedUser.publicMetadata);
       break;
     }

@@ -129,6 +129,9 @@ catalogs:
     '@types/uuid':
       specifier: ^9.0.8
       version: 9.0.8
+    '@vercel/functions':
+      specifier: ^1.0.2
+      version: 1.6.0
     add-to-calendar-button-react:
       specifier: ^2.6.13
       version: 2.13.5
@@ -423,6 +426,9 @@ catalogs:
     sonner:
       specifier: ^1.4.41
       version: 1.7.4
+    stripe:
+      specifier: ^15.9.0
+      version: 15.12.0
     superjson:
       specifier: 2.2.1
       version: 2.2.1
@@ -931,6 +937,9 @@ importers:
       server-only:
         specifier: 'catalog:'
         version: 0.0.1
+      stripe:
+        specifier: 'catalog:'
+        version: 15.12.0
       superjson:
         specifier: 'catalog:'
         version: 2.2.1
@@ -1037,6 +1046,9 @@ importers:
       '@soonlist/validators':
         specifier: workspace:*
         version: link:../validators
+      '@vercel/functions':
+        specifier: 'catalog:'
+        version: 1.6.0
       ai:
         specifier: 3.1.22
         version: 3.1.22(react@19.2.0)(solid-js@1.9.10)(svelte@4.2.20)(vue@3.5.26(typescript@5.9.3))(zod@3.25.76)
@@ -4869,9 +4881,6 @@ packages:
   '@types/node@20.12.7':
     resolution: {integrity: sha512-wq0cICSkRLVaf3UGLMGItu/PtdY7oaXaI/RVU+xliKVOtRna3PRY57ZDfztpDL0n11vfymMUnXv8QwYCO7L1wg==}
 
-  '@types/node@25.0.5':
-    resolution: {integrity: sha512-FuLxeLuSVOqHPxSN1fkcD8DLU21gAP7nCKqGRJ/FglbCUBs0NYN6TpHcdmyLeh8C0KwGIaZQJSv+OYG+KZz+Gw==}
-
   '@types/node@25.1.0':
     resolution: {integrity: sha512-t7frlewr6+cbx+9Ohpl0NOTKXZNV9xHRmNOvql47BFJKcEG1CxtxlPEEe+gR9uhVWM4DwhnvTF110mIL4yP9RA==}
 
@@ -4997,6 +5006,15 @@ packages:
 
   '@ungap/structured-clone@1.3.0':
     resolution: {integrity: sha512-WmoN8qaIAo7WTYWbAZuG8PYEhn5fkz7dZrqTBZ7dtt//lL2Gwms1IcnQ5yHqjDfX8Ft5j4YzDM23f87zBfDe9g==}
+
+  '@vercel/functions@1.6.0':
+    resolution: {integrity: sha512-R6FKQrYT5MZs5IE1SqeCJWxMuBdHawFcCZboKKw8p7s+6/mcd55Gx6tWmyKnQTyrSEA04NH73Tc9CbqpEle8RA==}
+    engines: {node: '>= 16'}
+    peerDependencies:
+      '@aws-sdk/credential-provider-web-identity': '*'
+    peerDependenciesMeta:
+      '@aws-sdk/credential-provider-web-identity':
+        optional: true
 
   '@vue/compiler-core@3.5.26':
     resolution: {integrity: sha512-vXyI5GMfuoBCnv5ucIT7jhHKl55Y477yxP6fc4eUswjP8FG3FFVFd41eNDArR+Uk3QKn2Z85NavjaxLxOC19/w==}
@@ -9589,6 +9607,10 @@ packages:
     resolution: {integrity: sha512-6fPc+R4ihwqP6N/aIv2f1gMH8lOVtWQHoqC4yK6oSDVVocumAsfCqjkXnqiYMhmMwS/mEHLp7Vehlt3ql6lEig==}
     engines: {node: '>=8'}
 
+  stripe@15.12.0:
+    resolution: {integrity: sha512-slTbYS1WhRJXVB8YXU8fgHizkUrM9KJyrw4Dd8pLEwzKHYyQTIE46EePC2MVbSDZdE24o1GdNtzmJV4PrPpmJA==}
+    engines: {node: '>=12.*'}
+
   structured-headers@0.4.1:
     resolution: {integrity: sha512-0MP/Cxx5SzeeZ10p/bZI0S6MpgD+yxAhi1BOQ34jgnMXsCq3j1t6tQnZu+KdlL7dvJTLT3g9xN8tl10TqgFMcg==}
 
@@ -13810,7 +13832,7 @@ snapshots:
       debug: 4.4.3
       invariant: 2.2.4
       metro: 0.83.3(bufferutil@4.1.0)(utf-8-validate@5.0.10)
-      metro-config: 0.83.3(bufferutil@4.1.0)(utf-8-validate@5.0.10)
+      metro-config: 0.83.3
       metro-core: 0.83.3
       semver: 7.7.3
     transitivePeerDependencies:
@@ -14616,7 +14638,7 @@ snapshots:
 
   '@types/connect@3.4.36':
     dependencies:
-      '@types/node': 25.0.5
+      '@types/node': 25.1.0
 
   '@types/connect@3.4.38':
     dependencies:
@@ -14704,17 +14726,13 @@ snapshots:
 
   '@types/mysql@2.15.26':
     dependencies:
-      '@types/node': 25.0.5
+      '@types/node': 25.1.0
 
   '@types/node@12.20.55': {}
 
   '@types/node@20.12.7':
     dependencies:
       undici-types: 5.26.5
-
-  '@types/node@25.0.5':
-    dependencies:
-      undici-types: 7.16.0
 
   '@types/node@25.1.0':
     dependencies:
@@ -14728,7 +14746,7 @@ snapshots:
 
   '@types/pg@8.6.1':
     dependencies:
-      '@types/node': 25.0.5
+      '@types/node': 25.1.0
       pg-protocol: 1.10.3
       pg-types: 2.2.0
 
@@ -14754,7 +14772,7 @@ snapshots:
 
   '@types/tedious@4.0.14':
     dependencies:
-      '@types/node': 25.0.5
+      '@types/node': 25.1.0
 
   '@types/through@0.0.33':
     dependencies:
@@ -14875,6 +14893,8 @@ snapshots:
       eslint-visitor-keys: 4.2.1
 
   '@ungap/structured-clone@1.3.0': {}
+
+  '@vercel/functions@1.6.0': {}
 
   '@vue/compiler-core@3.5.26':
     dependencies:
@@ -18256,6 +18276,19 @@ snapshots:
     transitivePeerDependencies:
       - supports-color
 
+  metro-config@0.83.3:
+    dependencies:
+      connect: 3.7.0
+      flow-enums-runtime: 0.0.6
+      jest-validate: 29.7.0
+      metro: 0.83.3(bufferutil@4.1.0)(utf-8-validate@5.0.10)
+      metro-cache: 0.83.3
+      metro-core: 0.83.3
+      metro-runtime: 0.83.3
+      yaml: 2.8.2
+    transitivePeerDependencies:
+      - supports-color
+
   metro-config@0.83.3(bufferutil@4.1.0)(utf-8-validate@5.0.10):
     dependencies:
       connect: 3.7.0
@@ -20066,6 +20099,11 @@ snapshots:
   strip-json-comments@2.0.1: {}
 
   strip-json-comments@3.1.1: {}
+
+  stripe@15.12.0:
+    dependencies:
+      '@types/node': 25.1.0
+      qs: 6.14.1
 
   structured-headers@0.4.1: {}
 

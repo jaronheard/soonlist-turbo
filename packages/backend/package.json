@@ -35,6 +35,7 @@
     "@convex-dev/workpool": "catalog:",
     "@soonlist/cal": "workspace:*",
     "@soonlist/validators": "workspace:*",
+    "@vercel/functions": "catalog:",
     "ai": "catalog:",
     "convex": "catalog:",
     "langfuse": "catalog:",
