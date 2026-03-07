@@ -1,0 +1,38 @@
+#!/usr/bin/env bash
+# Fetches all review comments for a given PR number
+# Usage: bin/get-pr-comments PR_NUMBER
+
+set -euo pipefail
+
+PR_NUMBER="${1:?Usage: bin/get-pr-comments PR_NUMBER}"
+
+# Get the repo from git remote
+REPO=$(gh repo view --json nameWithOwner -q '.nameWithOwner')
+
+echo "## PR #${PR_NUMBER} Review Comments"
+echo ""
+
+# Get review comments (inline code comments)
+gh api "repos/${REPO}/pulls/${PR_NUMBER}/comments" --paginate --jq '
+  .[] | select(.position != null or .line != null) |
+  "### Thread ID: \(.id)\n" +
+  "**File:** \(.path)\n" +
+  "**Line:** \(.line // .original_line // "N/A")\n" +
+  "**Author:** \(.user.login)\n" +
+  "**Created:** \(.created_at)\n" +
+  "**In reply to:** \(.in_reply_to_id // "top-level")\n\n" +
+  "\(.body)\n\n---\n"
+'
+
+echo ""
+echo "## PR #${PR_NUMBER} Issue Comments"
+echo ""
+
+# Get issue-level comments (general PR comments)
+gh api "repos/${REPO}/issues/${PR_NUMBER}/comments" --paginate --jq '
+  .[] |
+  "### Comment ID: \(.id)\n" +
+  "**Author:** \(.user.login)\n" +
+  "**Created:** \(.created_at)\n\n" +
+  "\(.body)\n\n---\n"
+'

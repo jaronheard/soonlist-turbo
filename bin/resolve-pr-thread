@@ -1,0 +1,73 @@
+#!/usr/bin/env bash
+# Resolves a PR review thread by marking it as resolved
+# Usage: bin/resolve-pr-thread THREAD_ID
+#
+# Note: THREAD_ID here is the GraphQL node ID of the review thread.
+# This script uses the GitHub GraphQL API to resolve the thread.
+
+set -euo pipefail
+
+THREAD_ID="${1:?Usage: bin/resolve-pr-thread THREAD_ID}"
+
+# First, we need to find the GraphQL thread node ID from the REST comment ID
+REPO=$(gh repo view --json nameWithOwner -q '.nameWithOwner')
+OWNER=$(echo "$REPO" | cut -d'/' -f1)
+NAME=$(echo "$REPO" | cut -d'/' -f2)
+
+# Try to resolve using the node_id from the comment
+NODE_ID=$(gh api "repos/${REPO}/pulls/comments/${THREAD_ID}" --jq '.node_id' 2>/dev/null || echo "")
+
+if [ -z "$NODE_ID" ]; then
+  echo "Could not find comment with ID ${THREAD_ID}. It may already be resolved or the ID is invalid."
+  exit 1
+fi
+
+# Get the pull request review thread ID from the comment
+THREAD_NODE_ID=$(gh api graphql -f query='
+  query($nodeId: ID!) {
+    node(id: $nodeId) {
+      ... on PullRequestReviewComment {
+        pullRequestReviewThread {
+          id
+          isResolved
+        }
+      }
+    }
+  }
+' -f nodeId="$NODE_ID" --jq '.data.node.pullRequestReviewThread.id' 2>/dev/null || echo "")
+
+if [ -z "$THREAD_NODE_ID" ]; then
+  echo "Could not find review thread for comment ${THREAD_ID}."
+  exit 1
+fi
+
+# Check if already resolved
+IS_RESOLVED=$(gh api graphql -f query='
+  query($nodeId: ID!) {
+    node(id: $nodeId) {
+      ... on PullRequestReviewComment {
+        pullRequestReviewThread {
+          isResolved
+        }
+      }
+    }
+  }
+' -f nodeId="$NODE_ID" --jq '.data.node.pullRequestReviewThread.isResolved' 2>/dev/null || echo "false")
+
+if [ "$IS_RESOLVED" = "true" ]; then
+  echo "Thread ${THREAD_ID} is already resolved."
+  exit 0
+fi
+
+# Resolve the thread
+gh api graphql -f query='
+  mutation($threadId: ID!) {
+    resolveReviewThread(input: {threadId: $threadId}) {
+      thread {
+        isResolved
+      }
+    }
+  }
+' -f threadId="$THREAD_NODE_ID" --jq '.data.resolveReviewThread.thread.isResolved' > /dev/null
+
+echo "Thread ${THREAD_ID} has been resolved."
