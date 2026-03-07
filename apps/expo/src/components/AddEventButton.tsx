@@ -28,6 +28,8 @@ interface EventStats {
 interface AddEventButtonProps {
   showChevron?: boolean;
   stats?: EventStats;
+  /** Additional bottom offset to account for tab bar */
+  bottomOffset?: number;
 }
 
 /**
@@ -42,6 +44,7 @@ interface AddEventButtonProps {
 export default function AddEventButton({
   showChevron = true,
   stats,
+  bottomOffset = 100,
 }: AddEventButtonProps) {
   const { isCapturing } = useInFlightEventStore();
   const isOnline = useNetworkStatus();
@@ -138,8 +141,8 @@ export default function AddEventButton({
         <TouchableOpacity
           onPress={handlePress}
           disabled={!isOnline}
-          style={{ bottom: insets.bottom }}
           className="absolute self-center"
+          style={{ bottom: bottomOffset + insets.bottom }}
         >
           {!isOnline ? (
             // Offline indicator - replaces button when offline
