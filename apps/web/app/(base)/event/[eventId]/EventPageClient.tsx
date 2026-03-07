@@ -13,9 +13,7 @@ import { Skeleton } from "@soonlist/ui/skeleton";
 import { EventPage } from "~/components/EventDisplays";
 import { OpenInAppBanner } from "./OpenInAppBanner";
 
-function normalizePublicMetadata(
-  value: unknown,
-): User["publicMetadata"] {
+function normalizePublicMetadata(value: unknown): User["publicMetadata"] {
   return (value ?? null) as User["publicMetadata"];
 }
 

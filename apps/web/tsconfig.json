@@ -1,17 +1,12 @@
 {
   "extends": "@soonlist/tsconfig/base.json",
   "compilerOptions": {
-    "lib": [
-      "es2022",
-      "dom",
-      "dom.iterable"
-    ],
+    "lib": ["es2022", "dom", "dom.iterable"],
     "jsx": "preserve",
     "baseUrl": ".",
     "paths": {
-      "~/*": [
-        "./*"
-      ]
+      "~/*": ["./*"],
+      "@soonlist/validators": ["../../packages/validators/src/index.ts"]
     },
     "plugins": [
       {
@@ -21,12 +16,6 @@
     "module": "esnext",
     "strictNullChecks": true // Next.js really wants this event though it's in the base tsconfig
   },
-  "include": [
-    ".",
-    ".next/types/**/*.ts"
-  ],
-  "exclude": [
-    "node_modules",
-    ".next"
-  ]
+  "include": [".", ".next/types/**/*.ts"],
+  "exclude": ["node_modules", ".next"]
 }

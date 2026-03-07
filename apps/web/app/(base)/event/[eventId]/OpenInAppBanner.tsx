@@ -7,6 +7,7 @@ import { toast } from "sonner";
 import { Button } from "@soonlist/ui/button";
 
 import { createDeepLink } from "~/lib/urlScheme";
+
 interface OpenInAppBannerProps {
   eventId: string;
 }

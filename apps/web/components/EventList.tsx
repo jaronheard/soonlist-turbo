@@ -1,12 +1,11 @@
 "use client";
 
 /* eslint-disable @typescript-eslint/no-unnecessary-type-assertion, @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access */
-
 import { clsx } from "clsx";
 import { useQuery } from "convex/react";
 
-import type { AddToCalendarButtonPropsRestricted } from "@soonlist/cal/types";
 import type { EventWithSimilarity } from "@soonlist/cal";
+import type { AddToCalendarButtonPropsRestricted } from "@soonlist/cal/types";
 import type {
   Comment,
   Event,

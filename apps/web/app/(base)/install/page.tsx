@@ -1,4 +1,5 @@
 import { redirect } from "next/navigation";
+
 import { TestFlightInstall } from "../get-started/GetStartedClient";
 
 export default async function InstallTestFlightPage(props: {
