@@ -53,7 +53,7 @@ for (const chunk of chunks) {
 
 ### 5. Early Query Initialization 🔄
 
-The PlanetScale implementation starts the daily events query early:
+The legacy implementation started the daily events query early:
 
 ```typescript
 // Start this query early, await results later

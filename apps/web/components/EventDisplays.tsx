@@ -12,7 +12,7 @@ import type {
   AddToCalendarButtonPropsRestricted,
   ATCBActionEventConfig,
 } from "@soonlist/cal/types";
-import type { Comment, EventFollow, List, User } from "@soonlist/db/types";
+import type { Comment, EventFollow, List, User } from "@soonlist/validators";
 import {
   eventTimesAreDefined,
   formatRelativeTime,

@@ -1,4 +1,4 @@
-import type { User, UserPublicMetadata } from "@soonlist/db/types";
+import type { User, UserPublicMetadata } from "@soonlist/validators";
 
 export const getPlanStatusFromUser = (user: User) => {
   const publicMetadata = user.publicMetadata as UserPublicMetadata | null;
