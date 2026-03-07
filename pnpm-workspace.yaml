@@ -1,6 +1,8 @@
 packages:
   - apps/*
   - packages/*
+  - "!packages/api"
+  - "!packages/db"
   - tooling/*
 
 catalog:
