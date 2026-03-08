@@ -33,7 +33,7 @@ export default function DiscoveryScreen() {
       saveStep(
         "discovery",
         { discoveryMethod: method },
-        "/(onboarding)/onboarding/05-age",
+        "/(onboarding)/onboarding/06-try-it",
       );
     } catch (error) {
       logError("Failed to save discovery method", error);

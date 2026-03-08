@@ -47,7 +47,7 @@ export default function GoalsScreen() {
       saveStep(
         "goals",
         { goals: selectedGoals },
-        "/(onboarding)/onboarding/03-screenshot-habit",
+        "/(onboarding)/onboarding/04-screenshot-habit",
       );
     } catch (error) {
       logError("Failed to save goals", error);
