@@ -181,7 +181,7 @@ interface EventListItemProps {
   eventFollows: EventFollow[];
   comments: Comment[];
   id: string;
-  createdAt?: Date;
+  createdAt?: Date | string;
   event: AddToCalendarCardProps;
   visibility: "public" | "private";
   hideCurator?: boolean;
@@ -201,7 +201,7 @@ interface EventPageProps {
   eventFollows: EventFollow[];
   comments: Comment[];
   id: string;
-  createdAt?: Date;
+  createdAt?: Date | string;
   event: AddToCalendarButtonPropsRestricted;
   image?: string | null;
   visibility: "public" | "private";

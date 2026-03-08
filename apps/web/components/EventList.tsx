@@ -1,10 +1,8 @@
 "use client";
 
-/* eslint-disable @typescript-eslint/no-unnecessary-type-assertion, @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access */
 import { clsx } from "clsx";
 import { useQuery } from "convex/react";
 
-import type { EventWithSimilarity } from "@soonlist/cal";
 import type { AddToCalendarButtonPropsRestricted } from "@soonlist/cal/types";
 import type {
   Comment,
@@ -103,15 +101,15 @@ export function EventList({
   const currentEventsToUse = collapseSimilarEvents(
     getVisibleEvents(currentEvents),
     currentUser?.id,
-  ) as EventWithSimilarity[];
+  );
   const pastEventsToUse = collapseSimilarEvents(
     getVisibleEvents(pastEvents),
     currentUser?.id,
-  ) as EventWithSimilarity[];
+  );
   const futureEventsToUse = collapseSimilarEvents(
     getVisibleEvents(futureEvents),
     currentUser?.id,
-  ) as EventWithSimilarity[];
+  );
   const showPastEvents =
     variant !== "future-minimal" && pastEventsToUse.length > 0;
   const showCurrentEvents = true;

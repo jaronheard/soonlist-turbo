@@ -13,12 +13,13 @@ export interface Event {
   id: string;
   userId: string;
   userName: string;
-  createdAt: Date;
-  updatedAt: Date | null;
+  createdAt: Date | string;
+  created_at?: string;
+  updatedAt?: Date | string | null;
   event: unknown;
   eventMetadata?: unknown;
-  endDateTime: Date;
-  startDateTime: Date;
+  endDateTime: Date | string;
+  startDateTime: Date | string;
   visibility: "public" | "private";
 }
 

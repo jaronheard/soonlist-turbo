@@ -20,19 +20,8 @@ crons.cron(
   {},
 );
 
-crons.cron(
-  "marketing notification",
-  "0 0 31 12 *",
-  internal.notifications.sendMarketingNotification,
-  {
-    title: "📸 Soonlist Just Got Better!",
-    body: "Tap to explore our streamlined capture flow, event stats & more. Not seeing it? Update in TestFlight.",
-    url: "soonlist://feed",
-    data: {
-      url: "soonlist://feed",
-    },
-  },
-);
+// Marketing notification cron removed — the launch-specific message was stale.
+// Re-add with evergreen copy if an annual notification is desired.
 
 // Sync user properties to PostHog daily at 6 AM UTC
 crons.cron(

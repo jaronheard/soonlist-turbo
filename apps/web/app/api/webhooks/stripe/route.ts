@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-redundant-type-constituents, @typescript-eslint/no-unsafe-argument, @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-return */
 import type { NextRequest } from "next/server";
 import { NextResponse } from "next/server";
 import { clerkClient } from "@clerk/nextjs/server";
@@ -84,7 +83,7 @@ export async function POST(req: NextRequest) {
 
   if (!isHandledStripeEvent(event)) {
     console.warn(`Unhandled event type: ${event.type}`);
-    return NextResponse.json({ status: 200, message: "unhandled event" });
+    return NextResponse.json({ message: "unhandled event" }, { status: 200 });
   }
 
   switch (event.type) {
