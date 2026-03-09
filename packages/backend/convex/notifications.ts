@@ -222,6 +222,61 @@ export const sendTrialExpirationReminders = internalAction({
   },
 });
 
+export const sendMarketingNotification = internalAction({
+  args: {
+    title: v.string(),
+    body: v.string(),
+    url: v.optional(v.string()),
+    data: v.optional(v.record(v.string(), v.any())),
+  },
+  returns: v.object({
+    success: v.boolean(),
+    totalProcessed: v.number(),
+    successfulNotifications: v.number(),
+    errors: v.array(
+      v.object({
+        error: v.string(),
+      }),
+    ),
+  }),
+  handler: async (ctx, args) => {
+    const allUsers: {
+      id: string;
+      username: string;
+      email: string;
+      displayName: string;
+    }[] = await ctx.runQuery(internal.notifications.getAllUsersQuery);
+
+    const userIds = allUsers.map((user) => user.id);
+
+    if (userIds.length === 0) {
+      return {
+        success: true,
+        totalProcessed: 0,
+        successfulNotifications: 0,
+        errors: [],
+      };
+    }
+
+    const result = await OneSignal.sendBatchNotifications({
+      userIds,
+      title: args.title,
+      body: args.body,
+      url: args.url,
+      data: args.data,
+    });
+
+    return {
+      success: result.success,
+      totalProcessed: userIds.length,
+      successfulNotifications: result.success ? result.recipients || 0 : 0,
+      errors: result.success
+        ? []
+        : [{ error: result.error || "Unknown error" }],
+    };
+  },
+});
+
 /**
  * Internal action to process a single user's weekly notification
  */

@@ -4,9 +4,8 @@ import { useEffect, useState } from "react";
 import { Bookmark, Share } from "lucide-react";
 import { toast } from "sonner";
 
-import { createDeepLink } from "@soonlist/api/utils/urlScheme";
-
 import { env } from "~/env";
+import { createDeepLink } from "~/lib/urlScheme";
 
 interface EventData {
   name?: string;

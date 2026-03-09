@@ -7,11 +7,14 @@
     "paths": {
       "~/*": ["./*"]
     },
-    "plugins": [{ "name": "next" }],
-
+    "plugins": [
+      {
+        "name": "next"
+      }
+    ],
     "module": "esnext",
     "strictNullChecks": true // Next.js really wants this event though it's in the base tsconfig
   },
   "include": [".", ".next/types/**/*.ts"],
-  "exclude": ["node_modules"]
+  "exclude": ["node_modules", ".next"]
 }
