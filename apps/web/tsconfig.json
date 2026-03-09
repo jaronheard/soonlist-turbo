@@ -5,8 +5,7 @@
     "jsx": "preserve",
     "baseUrl": ".",
     "paths": {
-      "~/*": ["./*"],
-      "@soonlist/validators": ["../../packages/validators/src/index.ts"]
+      "~/*": ["./*"]
     },
     "plugins": [
       {
