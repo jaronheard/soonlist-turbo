@@ -13,6 +13,8 @@ import {
 import { userFeedsAggregate } from "./aggregates";
 import { enrichEventsAndFilterNulls, getEventById } from "./model/events";
 
+const PDX_DISCOVER_SLUG = "pdx-discover";
+
 // Helper function to get the current user ID from auth
 async function getUserId(ctx: QueryCtx): Promise<string | null> {
   const identity = await ctx.auth.getUserIdentity();
@@ -57,6 +59,100 @@ async function queryFeed(
   return {
     ...feedResults,
     page: validEvents,
+  };
+}
+
+function paginateEntries<T>(
+  entries: T[],
+  paginationOpts: PaginationOptions,
+): {
+  page: T[];
+  isDone: boolean;
+  continueCursor: string | null;
+} {
+  const parsedCursor = paginationOpts.cursor
+    ? Number.parseInt(paginationOpts.cursor, 10)
+    : 0;
+  const startIndex =
+    Number.isFinite(parsedCursor) && parsedCursor >= 0 ? parsedCursor : 0;
+  const endIndex = startIndex + paginationOpts.numItems;
+
+  return {
+    page: entries.slice(startIndex, endIndex),
+    isDone: endIndex >= entries.length,
+    continueCursor: endIndex >= entries.length ? null : String(endIndex),
+  };
+}
+
+async function getPdxDiscoverListId(ctx: QueryCtx): Promise<string | null> {
+  const list = await ctx.db
+    .query("lists")
+    .withIndex("by_slug", (q) => q.eq("slug", PDX_DISCOVER_SLUG))
+    .first();
+
+  return list?.id ?? null;
+}
+
+async function getSortedPublicListEntries(
+  ctx: QueryCtx,
+  listId: string,
+  filter: "upcoming" | "past",
+): Promise<{ eventId: string; eventStartTime: number }[]> {
+  const eventToLists = await ctx.db
+    .query("eventToLists")
+    .withIndex("by_list", (q) => q.eq("listId", listId))
+    .collect();
+
+  const now = Date.now();
+  const entries = await Promise.all(
+    eventToLists.map(async (entry) => {
+      const event = await ctx.db
+        .query("events")
+        .withIndex("by_custom_id", (q) => q.eq("id", entry.eventId))
+        .first();
+
+      if (event?.visibility !== "public") {
+        return null;
+      }
+
+      const eventEndTime = new Date(event.endDateTime).getTime();
+      const hasEnded = eventEndTime < now;
+      if (filter === "upcoming" ? hasEnded : !hasEnded) {
+        return null;
+      }
+
+      return {
+        eventId: event.id,
+        eventStartTime: new Date(event.startDateTime).getTime(),
+      };
+    }),
+  );
+
+  return entries
+    .filter((entry): entry is NonNullable<typeof entry> => entry !== null)
+    .sort((a, b) =>
+      filter === "upcoming"
+        ? a.eventStartTime - b.eventStartTime
+        : b.eventStartTime - a.eventStartTime,
+    );
+}
+
+async function queryListFeed(
+  ctx: QueryCtx,
+  listId: string,
+  paginationOpts: PaginationOptions,
+  filter: "upcoming" | "past" = "upcoming",
+) {
+  const sortedEntries = await getSortedPublicListEntries(ctx, listId, filter);
+  const paginated = paginateEntries(sortedEntries, paginationOpts);
+
+  const events = await Promise.all(
+    paginated.page.map((entry) => getEventById(ctx, entry.eventId)),
+  );
+
+  return {
+    ...paginated,
+    page: events.filter((event) => event !== null),
   };
 }
 
@@ -213,14 +309,98 @@ export const getFollowedUsersFeed = query({
   },
 });
 
+// Query events for a list (by slug or listId)
+export const getListEvents = query({
+  args: {
+    slug: v.optional(v.string()),
+    listId: v.optional(v.string()),
+    paginationOpts: paginationOptsValidator,
+    filter: v.optional(v.union(v.literal("upcoming"), v.literal("past"))),
+  },
+  handler: async (
+    ctx,
+    { slug, listId, paginationOpts, filter = "upcoming" },
+  ) => {
+    const list = slug
+      ? await ctx.db
+          .query("lists")
+          .withIndex("by_slug", (q) => q.eq("slug", slug))
+          .first()
+      : listId
+        ? await ctx.db
+            .query("lists")
+            .withIndex("by_custom_id", (q) => q.eq("id", listId))
+            .first()
+        : null;
+
+    if (!list) {
+      return { page: [], isDone: true, continueCursor: "" };
+    }
+
+    // Only allow public/unlisted lists
+    if (list.visibility === "private") {
+      const userId = await getUserId(ctx);
+      if (!userId || list.userId !== userId) {
+        return { page: [], isDone: true, continueCursor: "" };
+      }
+    }
+
+    // Get events in this list via eventToLists, then fetch and sort
+    const eventToLists = await ctx.db
+      .query("eventToLists")
+      .withIndex("by_list", (q) => q.eq("listId", list.id))
+      .collect();
+
+    const eventIds = eventToLists.map((etl) => etl.eventId);
+
+    // Fetch all events
+    const events = await Promise.all(
+      eventIds.map((eventId) => getEventById(ctx, eventId)),
+    );
+
+    const now = new Date();
+    const validEvents = events
+      .filter((e) => e !== null)
+      .filter((e) => e.visibility === "public")
+      .filter((e) => {
+        const endDateTime = new Date(e.endDateTime);
+        return filter === "upcoming" ? endDateTime >= now : endDateTime < now;
+      })
+      .sort((a, b) => {
+        const aTime = new Date(a.startDateTime).getTime();
+        const bTime = new Date(b.startDateTime).getTime();
+        return filter === "upcoming" ? aTime - bTime : bTime - aTime;
+      });
+
+    // Manual pagination
+    const cursor = paginationOpts.cursor;
+    const numItems = paginationOpts.numItems;
+    const startIndex = cursor ? parseInt(cursor, 10) : 0;
+    const endIndex = startIndex + numItems;
+    const page = validEvents.slice(startIndex, endIndex);
+    const isDone = endIndex >= validEvents.length;
+
+    return {
+      page,
+      isDone,
+      continueCursor: isDone ? "" : String(endIndex),
+    };
+  },
+});
+
 export const getDiscoverFeed = query({
   args: {
     paginationOpts: paginationOptsValidator,
     filter: v.optional(v.union(v.literal("upcoming"), v.literal("past"))),
   },
   handler: async (ctx, { paginationOpts, filter = "upcoming" }) => {
-    const feedId = "discover";
-    return queryFeed(ctx, feedId, paginationOpts, filter);
+    const discoverListId = await getPdxDiscoverListId(ctx);
+
+    if (!discoverListId) {
+      return queryFeed(ctx, "discover", paginationOpts, filter);
+    }
+
+    return queryListFeed(ctx, discoverListId, paginationOpts, filter);
   },
 });
 
@@ -365,38 +545,73 @@ export const getDiscoverEventsForIntegration = internalQuery({
     limit: v.optional(v.number()),
   },
   handler: async (ctx, { limit = 100 }) => {
-    const feedId = "discover";
-    const hasEnded = false;
+    const discoverListId = await getPdxDiscoverListId(ctx);
 
-    const feedQuery = ctx.db
-      .query("userFeeds")
-      .withIndex("by_feed_hasEnded_startTime", (q) =>
-        q.eq("feedId", feedId).eq("hasEnded", hasEnded),
-      )
-      .order("asc");
+    if (!discoverListId) {
+      const feedId = "discover";
+      const hasEnded = false;
 
-    const feedEntries: {
-      eventId: string;
-      eventStartTime: number;
-    }[] = [];
-    for await (const entry of feedQuery) {
-      feedEntries.push({
-        eventId: entry.eventId,
-        eventStartTime: entry.eventStartTime,
-      });
-      if (feedEntries.length >= limit) {
-        break;
+      const feedQuery = ctx.db
+        .query("userFeeds")
+        .withIndex("by_feed_hasEnded_startTime", (q) =>
+          q.eq("feedId", feedId).eq("hasEnded", hasEnded),
+        )
+        .order("asc");
+
+      const feedEntries: {
+        eventId: string;
+        eventStartTime: number;
+      }[] = [];
+      for await (const entry of feedQuery) {
+        feedEntries.push({
+          eventId: entry.eventId,
+          eventStartTime: entry.eventStartTime,
+        });
+        if (feedEntries.length >= limit) {
+          break;
+        }
       }
+
+      const events = await Promise.all(
+        feedEntries.map(async (entry) => {
+          const event = await ctx.db
+            .query("events")
+            .withIndex("by_custom_id", (q) => q.eq("id", entry.eventId))
+            .first();
+
+          if (!event) return null;
+
+          const user = await ctx.db
+            .query("users")
+            .withIndex("by_custom_id", (q) => q.eq("id", event.userId))
+            .first();
+
+          return {
+            ...event,
+            userDisplayName: user?.displayName || event.userName,
+          };
+        }),
+      );
+
+      return events.filter((event) => event !== null);
     }
 
+    const discoverEntries = await getSortedPublicListEntries(
+      ctx,
+      discoverListId,
+      "upcoming",
+    );
+
     const events = await Promise.all(
-      feedEntries.map(async (entry) => {
+      discoverEntries.slice(0, limit).map(async (entry) => {
         const event = await ctx.db
           .query("events")
           .withIndex("by_custom_id", (q) => q.eq("id", entry.eventId))
           .first();
 
-        if (!event) return null;
+        if (!event) {
+          return null;
+        }
 
         const user = await ctx.db
           .query("users")
@@ -410,7 +625,6 @@ export const getDiscoverEventsForIntegration = internalQuery({
       }),
     );
 
-    // Filter out null events and return valid events
     return events.filter((event) => event !== null);
   },
 });

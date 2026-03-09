@@ -36,16 +36,6 @@ export const updateEventInFeeds = internalMutation({
     const eventEndTime = new Date(endDateTime).getTime();
     const currentTime = Date.now();
 
-    // Get user to check showDiscover setting
-    const user = await ctx.db
-      .query("users")
-      .withIndex("by_custom_id", (q) => q.eq("id", userId))
-      .first();
-
-    const userShowDiscover =
-      (user?.publicMetadata as { showDiscover?: boolean } | null)
-        ?.showDiscover ?? false;
-
     // 1. Always add to creator's personal feed
     const creatorFeedId = `user_${userId}`;
     await upsertFeedEntry(
@@ -59,36 +49,7 @@ export const updateEventInFeeds = internalMutation({
       visibility,
     );
 
-    // 2. Add to discover feed if public AND user has showDiscover enabled
-    if (visibility === "public" && userShowDiscover) {
-      const discoverFeedId = "discover";
-      await upsertFeedEntry(
-        ctx,
-        discoverFeedId,
-        eventId,
-        eventStartTime,
-        eventEndTime,
-        currentTime,
-        similarityGroupId,
-        visibility,
-      );
-    } else if (visibility === "private" || !userShowDiscover) {
-      // Remove from discover feed if event is now private or user no longer has showDiscover
-      const discoverFeedId = "discover";
-      const existingDiscoverEntry = await ctx.db
-        .query("userFeeds")
-        .withIndex("by_feed_event", (q) =>
-          q.eq("feedId", discoverFeedId).eq("eventId", eventId),
-        )
-        .first();
-
-      if (existingDiscoverEntry) {
-        await userFeedsAggregate.deleteIfExists(ctx, existingDiscoverEntry);
-        await ctx.db.delete(existingDiscoverEntry._id);
-      }
-    }
-
-    // 3. Add to feeds of users who follow this event
+    // 2. Add to feeds of users who follow this event
     const eventFollows = await ctx.db
       .query("eventFollows")
       .withIndex("by_event", (q) => q.eq("eventId", eventId))
@@ -108,7 +69,7 @@ export const updateEventInFeeds = internalMutation({
       );
     }
 
-    // 4. Auto-populate contributor lists for this user
+    // 3. Auto-populate contributor lists for this user
     if (visibility === "public") {
       await ctx.runMutation(internal.feedHelpers.addEventToContributorLists, {
         eventId,

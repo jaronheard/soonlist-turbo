@@ -1,12 +1,38 @@
 import { v } from "convex/values";
 
+import type { Doc } from "../_generated/dataModel.js";
+import type { MutationCtx } from "../_generated/server.js";
 import { internal } from "../_generated/api.js";
 import { internalAction, internalMutation } from "../_generated/server.js";
+import { userFeedsAggregate } from "../aggregates.js";
 import { generatePublicId } from "../utils.js";
 
 // Clerk user ID for the Soonlist system user
 const SYSTEM_USER_CLERK_ID = "user_3Aj06gNbZFN6UvIdklcPxLOt8v4";
 const PDX_DISCOVER_SLUG = "pdx-discover";
+
+function hasShowDiscoverFlag(publicMetadata: unknown): boolean {
+  if (!publicMetadata || typeof publicMetadata !== "object") {
+    return false;
+  }
+
+  return Reflect.get(publicMetadata, "showDiscover") === true;
+}
+
+async function deleteLegacyDiscoverFeedEntry(
+  ctx: MutationCtx,
+  entry: Doc<"userFeeds">,
+): Promise<void> {
+  await userFeedsAggregate.deleteIfExists(ctx, entry);
+  await ctx.db.delete(entry._id);
+
+  if (entry.similarityGroupId) {
+    await ctx.runMutation(internal.feedGroupHelpers.upsertGroupedFeedEntry, {
+      feedId: entry.feedId,
+      similarityGroupId: entry.similarityGroupId,
+    });
+  }
+}
 
 /**
  * Step 1: Create the PDX Discover system list
@@ -40,7 +66,7 @@ export const createPdxDiscoverList = internalMutation({
     const listId = generatePublicId();
     await ctx.db.insert("lists", {
       id: listId,
-      userId: SYSTEM_USER_CLERK_ID,
+      userId: systemUser.id,
       name: "PDX Discover",
       description:
         "A community-curated list of events in Portland. Contributors' public events automatically appear here.",
@@ -84,11 +110,7 @@ export const migrateDiscoverUsersBatch = internalMutation({
     let migrated = 0;
 
     for (const user of result.page) {
-      const showDiscover =
-        (user.publicMetadata as { showDiscover?: boolean } | null)
-          ?.showDiscover ?? false;
-
-      if (!showDiscover) {
+      if (!hasShowDiscoverFlag(user.publicMetadata)) {
         continue;
       }
 
@@ -111,19 +133,10 @@ export const migrateDiscoverUsersBatch = internalMutation({
       }
 
       // Add as follower
-      const existingFollow = await ctx.db
-        .query("listFollows")
-        .withIndex("by_user_and_list", (q) =>
-          q.eq("userId", user.id).eq("listId", listId),
-        )
-        .first();
-
-      if (!existingFollow) {
-        await ctx.db.insert("listFollows", {
-          userId: user.id,
-          listId,
-        });
-      }
+      await ctx.runMutation(internal.lists.followSystemList, {
+        userId: user.id,
+        listId,
+      });
 
       migrated++;
     }
@@ -213,7 +226,7 @@ export const cleanupDiscoverFeedEntriesBatch = internalMutation({
       .paginate({ numItems: batchSize, cursor });
 
     for (const entry of result.page) {
-      await ctx.db.delete(entry._id);
+      await deleteLegacyDiscoverFeedEntry(ctx, entry);
     }
 
     return {

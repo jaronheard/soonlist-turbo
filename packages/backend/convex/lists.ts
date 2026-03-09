@@ -342,6 +342,7 @@ export const addListMember = mutation({
     await ctx.db.insert("listMembers", {
       listId,
       userId: memberUserId,
+      role: "member",
     });
 
     return { success: true };
@@ -396,7 +397,7 @@ export const removeListMember = mutation({
 /**
  * Get a list by its slug
  */
-export const getBySlug = query({
+export const getListBySlug = query({
   args: { slug: v.string() },
   handler: async (ctx, { slug }) => {
     const list = await ctx.db
