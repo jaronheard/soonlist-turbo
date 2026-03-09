@@ -49,6 +49,9 @@ function getSubscriptionPlanMetadata(subscription: Stripe.Subscription) {
     name: subscription.metadata.plan ?? null,
     productId,
     status: subscription.status,
+    trialStartDate: subscription.trial_start
+      ? new Date(subscription.trial_start * 1000).toISOString()
+      : null,
   };
 }
 
