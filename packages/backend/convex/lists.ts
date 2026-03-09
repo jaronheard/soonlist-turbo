@@ -3,7 +3,7 @@ import { ConvexError, v } from "convex/values";
 import type { Doc } from "./_generated/dataModel";
 import type { QueryCtx } from "./_generated/server";
 import { internal } from "./_generated/api";
-import { mutation, query } from "./_generated/server";
+import { internalMutation, mutation, query } from "./_generated/server";
 
 // Helper function to get the current user ID from auth
 async function getUserId(ctx: QueryCtx): Promise<string | null> {
@@ -390,5 +390,253 @@ export const removeListMember = mutation({
     }
 
     return { success: true };
+  },
+});
+
+/**
+ * Get a list by its slug
+ */
+export const getBySlug = query({
+  args: { slug: v.string() },
+  handler: async (ctx, { slug }) => {
+    const list = await ctx.db
+      .query("lists")
+      .withIndex("by_slug", (q) => q.eq("slug", slug))
+      .first();
+
+    if (!list) {
+      return null;
+    }
+
+    // Public and unlisted lists are viewable by anyone
+    if (list.visibility === "public" || list.visibility === "unlisted") {
+      // Get owner info
+      const owner = await ctx.db
+        .query("users")
+        .withIndex("by_custom_id", (q) => q.eq("id", list.userId))
+        .first();
+
+      // Get contributor count
+      const contributors = await ctx.db
+        .query("listMembers")
+        .withIndex("by_list_and_role", (q) =>
+          q.eq("listId", list.id).eq("role", "contributor"),
+        )
+        .collect();
+
+      // Get follower count
+      const followers = await ctx.db
+        .query("listFollows")
+        .withIndex("by_list", (q) => q.eq("listId", list.id))
+        .collect();
+
+      return {
+        ...list,
+        owner,
+        contributorCount: contributors.length,
+        followerCount: followers.length,
+      };
+    }
+
+    return null;
+  },
+});
+
+/**
+ * Get all system lists
+ */
+export const getSystemLists = query({
+  args: {},
+  handler: async (ctx) => {
+    const lists = await ctx.db
+      .query("lists")
+      .withIndex("by_system_type", (q) => q.eq("isSystemList", true))
+      .collect();
+
+    return lists;
+  },
+});
+
+/**
+ * Add a contributor to a contributor list
+ */
+export const addContributor = mutation({
+  args: {
+    listId: v.string(),
+    contributorUserId: v.string(),
+  },
+  handler: async (ctx, { listId, contributorUserId }) => {
+    const userId = await getUserId(ctx);
+    if (!userId) {
+      throw new ConvexError("Authentication required");
+    }
+
+    const list = await ctx.db
+      .query("lists")
+      .withIndex("by_custom_id", (q) => q.eq("id", listId))
+      .first();
+
+    if (!list) {
+      throw new ConvexError("List not found");
+    }
+
+    if (list.userId !== userId) {
+      throw new ConvexError("Only the list owner can add contributors");
+    }
+
+    if (list.listType !== "contributor") {
+      throw new ConvexError("This list does not support contributors");
+    }
+
+    // Check if already a contributor
+    const existingMember = await ctx.db
+      .query("listMembers")
+      .withIndex("by_list_and_user", (q) =>
+        q.eq("listId", listId).eq("userId", contributorUserId),
+      )
+      .first();
+
+    if (existingMember) {
+      // Update role to contributor if needed
+      if (existingMember.role !== "contributor") {
+        await ctx.db.patch(existingMember._id, { role: "contributor" });
+      }
+      return { success: true };
+    }
+
+    await ctx.db.insert("listMembers", {
+      listId,
+      userId: contributorUserId,
+      role: "contributor",
+    });
+
+    // Backfill: add contributor's existing public events to this list
+    await ctx.runMutation(internal.lists.backfillContributorEvents, {
+      listId,
+      contributorUserId,
+    });
+
+    return { success: true };
+  },
+});
+
+/**
+ * Remove a contributor from a contributor list
+ */
+export const removeContributor = mutation({
+  args: {
+    listId: v.string(),
+    contributorUserId: v.string(),
+  },
+  handler: async (ctx, { listId, contributorUserId }) => {
+    const userId = await getUserId(ctx);
+    if (!userId) {
+      throw new ConvexError("Authentication required");
+    }
+
+    const list = await ctx.db
+      .query("lists")
+      .withIndex("by_custom_id", (q) => q.eq("id", listId))
+      .first();
+
+    if (!list) {
+      throw new ConvexError("List not found");
+    }
+
+    if (list.userId !== userId) {
+      throw new ConvexError("Only the list owner can remove contributors");
+    }
+
+    const existingMember = await ctx.db
+      .query("listMembers")
+      .withIndex("by_list_and_user", (q) =>
+        q.eq("listId", listId).eq("userId", contributorUserId),
+      )
+      .first();
+
+    if (existingMember) {
+      await ctx.db.delete(existingMember._id);
+    }
+
+    return { success: true };
+  },
+});
+
+/**
+ * Internal: Backfill a contributor's existing public events into a list
+ */
+export const backfillContributorEvents = internalMutation({
+  args: {
+    listId: v.string(),
+    contributorUserId: v.string(),
+  },
+  handler: async (ctx, { listId, contributorUserId }) => {
+    const events = await ctx.db
+      .query("events")
+      .withIndex("by_user", (q) => q.eq("userId", contributorUserId))
+      .collect();
+
+    for (const event of events) {
+      if (event.visibility !== "public") {
+        continue;
+      }
+
+      // Check if already in list
+      const existing = await ctx.db
+        .query("eventToLists")
+        .withIndex("by_event_and_list", (q) =>
+          q.eq("eventId", event.id).eq("listId", listId),
+        )
+        .first();
+
+      if (!existing) {
+        await ctx.db.insert("eventToLists", {
+          eventId: event.id,
+          listId,
+        });
+
+        // Fan out to list followers' feeds
+        await ctx.runMutation(
+          internal.feedHelpers.addEventToListFollowersFeeds,
+          {
+            eventId: event.id,
+            listId,
+          },
+        );
+      }
+    }
+  },
+});
+
+/**
+ * Internal: Follow a system list (used by migrations)
+ */
+export const followSystemList = internalMutation({
+  args: {
+    userId: v.string(),
+    listId: v.string(),
+  },
+  handler: async (ctx, { userId, listId }) => {
+    // Check if already following
+    const existingFollow = await ctx.db
+      .query("listFollows")
+      .withIndex("by_user_and_list", (q) =>
+        q.eq("userId", userId).eq("listId", listId),
+      )
+      .first();
+
+    if (existingFollow) {
+      return;
+    }
+
+    await ctx.db.insert("listFollows", {
+      userId,
+      listId,
+    });
+
+    await ctx.runMutation(internal.feedHelpers.addListEventsToUserFeed, {
+      userId,
+      listId,
+    });
   },
 });

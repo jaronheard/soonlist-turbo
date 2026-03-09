@@ -108,6 +108,14 @@ export const updateEventInFeeds = internalMutation({
       );
     }
 
+    // 4. Auto-populate contributor lists for this user
+    if (visibility === "public") {
+      await ctx.runMutation(internal.feedHelpers.addEventToContributorLists, {
+        eventId,
+        userId,
+      });
+    }
+
     // Note: List-based feed fanout is handled at precise call sites:
     // - createEvent: after inserting into eventToLists
     // - addEventToList: when adding event to a list
@@ -980,6 +988,65 @@ export const addUserEventsToUserFeed = internalMutation({
       },
     );
     return null;
+  },
+});
+
+// Helper to auto-add a public event to all contributor lists where the user is a contributor
+export const addEventToContributorLists = internalMutation({
+  args: {
+    eventId: v.string(),
+    userId: v.string(),
+  },
+  handler: async (ctx, { eventId, userId }) => {
+    // Find all listMembers entries where this user has role="contributor"
+    const contributorMemberships = await ctx.db
+      .query("listMembers")
+      .withIndex("by_user", (q) => q.eq("userId", userId))
+      .collect();
+
+    const contributorLists = contributorMemberships.filter(
+      (m) => m.role === "contributor",
+    );
+
+    if (contributorLists.length === 0) {
+      return;
+    }
+
+    for (const membership of contributorLists) {
+      // Check if the list is a contributor-type list
+      const list = await ctx.db
+        .query("lists")
+        .withIndex("by_custom_id", (q) => q.eq("id", membership.listId))
+        .first();
+
+      if (list?.listType !== "contributor") {
+        continue;
+      }
+
+      // Check if event already in list
+      const existing = await ctx.db
+        .query("eventToLists")
+        .withIndex("by_event_and_list", (q) =>
+          q.eq("eventId", eventId).eq("listId", membership.listId),
+        )
+        .first();
+
+      if (!existing) {
+        await ctx.db.insert("eventToLists", {
+          eventId,
+          listId: membership.listId,
+        });
+
+        // Fan out to list followers' feeds
+        await ctx.runMutation(
+          internal.feedHelpers.addEventToListFollowersFeeds,
+          {
+            eventId,
+            listId: membership.listId,
+          },
+        );
+      }
+    }
   },
 });
 
