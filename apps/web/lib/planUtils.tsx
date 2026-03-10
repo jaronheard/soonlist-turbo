@@ -8,12 +8,10 @@ export const getPlanStatusFromUser = (user: User) => {
     currentPlanStatus === "active" || currentPlanStatus === "trialing";
   const paid = name !== "free";
   const activePaid = active && paid;
-  const showDiscover = publicMetadata?.showDiscover ?? false;
   return {
     name,
     active,
     paid,
     activePaid,
-    showDiscover,
   };
 };

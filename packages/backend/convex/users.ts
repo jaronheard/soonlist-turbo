@@ -752,7 +752,6 @@ export const syncFromClerk = internalMutation({
     userImage: v.string(),
     publicMetadata: v.optional(
       v.object({
-        showDiscover: v.optional(v.boolean()),
         stripe: v.optional(
           v.object({
             customerId: v.optional(v.string()),

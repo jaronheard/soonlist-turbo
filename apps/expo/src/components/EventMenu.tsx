@@ -94,7 +94,6 @@ export function EventMenu({
     handleFollow,
     handleUnfollow,
     handleShowQR,
-    showDiscover,
   } = useEventActions({ event, isSaved, demoMode, onDelete });
 
   const presentIntercom = async () => {
@@ -134,7 +133,7 @@ export function EventMenu({
       },
     ];
 
-    if (showDiscover && isOwner) {
+    if (isOwner) {
       baseItems.push({
         title:
           event.visibility === "public"

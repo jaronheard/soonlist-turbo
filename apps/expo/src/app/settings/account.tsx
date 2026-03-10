@@ -34,7 +34,6 @@ import { useAppStore } from "~/store";
 import Config from "~/utils/config";
 import { hapticSuccess, toast } from "~/utils/feedback";
 import { logError } from "../../utils/errorLogging";
-import { getPlanStatusFromUser } from "../../utils/plan";
 
 // Simplified schema - only keeping what we still need for form validation
 const profileSchema = z.object({
@@ -143,7 +142,6 @@ export default function EditProfileScreen() {
   );
 
   // Public list state - read directly from userData, Convex reactivity handles updates
-  const showDiscover = user ? getPlanStatusFromUser(user).showDiscover : false;
   const publicListEnabled = userData?.publicListEnabled ?? false;
   const publicListName = userData?.publicListName ?? "";
   // Local state only for TextInput (controlled component while typing)
@@ -464,89 +462,87 @@ export default function EditProfileScreen() {
             )}
           </View>
 
-          {!showDiscover && (
-            <SettingsSection title="Share Your Events">
-              <View className="mb-4 rounded-lg border border-gray-200 p-4">
-                <View className="mb-4 flex-row items-center justify-between">
-                  <View className="flex-1 pr-4">
-                    <Text className="mb-1 text-base font-semibold">
-                      Public List
-                    </Text>
-                    <Text className="text-sm text-gray-500">
-                      Share all your events with anyone via a public link
-                    </Text>
-                  </View>
-                  <Switch
-                    value={publicListEnabled}
-                    onValueChange={handleTogglePublicList}
-                    disabled={isUpdatingList}
-                    accessibilityLabel="Public list enabled"
-                    accessibilityRole="switch"
-                    accessibilityState={{
-                      checked: publicListEnabled,
-                      disabled: isUpdatingList,
-                    }}
-                    testID="public-list-switch"
-                    accessibilityHint="Toggle to enable or disable sharing your events via a public link"
-                  />
+          <SettingsSection title="Share Your Events">
+            <View className="mb-4 rounded-lg border border-gray-200 p-4">
+              <View className="mb-4 flex-row items-center justify-between">
+                <View className="flex-1 pr-4">
+                  <Text className="mb-1 text-base font-semibold">
+                    Public List
+                  </Text>
+                  <Text className="text-sm text-gray-500">
+                    Share all your events with anyone via a public link
+                  </Text>
                 </View>
-
-                {publicListEnabled && (
-                  <View className="mt-4 border-t border-gray-100 pt-4">
-                    <Text className="mb-2 text-sm font-medium text-gray-700">
-                      List Name
-                    </Text>
-                    <TextInput
-                      className="mb-4 rounded-lg border border-neutral-300 bg-white px-4 py-3 text-base"
-                      placeholder="Enter list name"
-                      value={publicListNameInput}
-                      onChangeText={setPublicListNameInput}
-                      onBlur={handleUpdateListName}
-                      onSubmitEditing={handleUpdateListName}
-                      returnKeyType="done"
-                      maxLength={50}
-                    />
-
-                    <Text className="mb-2 text-sm font-medium text-gray-700">
-                      Your public link
-                    </Text>
-                    <View className="flex-row items-center gap-2">
-                      <View className="min-w-0 flex-1 rounded-lg border border-gray-200 bg-gray-50 px-4 py-3">
-                        <Text
-                          className="text-base text-gray-700"
-                          numberOfLines={1}
-                        >
-                          {(getPublicListUrl() || "").replace("https://", "")}
-                        </Text>
-                      </View>
-                      <TouchableOpacity
-                        onPress={handleCopyLink}
-                        className="items-center justify-center rounded-lg border border-interactive-1 bg-interactive-1/5 p-3"
-                        activeOpacity={0.7}
-                        accessible={true}
-                        accessibilityRole="button"
-                        accessibilityLabel="Copy link"
-                        accessibilityHint="Copies your public list URL to the clipboard"
-                      >
-                        <Copy size={20} color="#5A32FB" />
-                      </TouchableOpacity>
-                      <TouchableOpacity
-                        onPress={handleSharePublicList}
-                        className="items-center justify-center rounded-lg border border-interactive-1 bg-interactive-1/5 p-3"
-                        activeOpacity={0.7}
-                        accessible={true}
-                        accessibilityRole="button"
-                        accessibilityLabel="Share link"
-                        accessibilityHint="Opens share sheet to share your public list URL"
-                      >
-                        <ShareIcon size={20} color="#5A32FB" />
-                      </TouchableOpacity>
-                    </View>
-                  </View>
-                )}
+                <Switch
+                  value={publicListEnabled}
+                  onValueChange={handleTogglePublicList}
+                  disabled={isUpdatingList}
+                  accessibilityLabel="Public list enabled"
+                  accessibilityRole="switch"
+                  accessibilityState={{
+                    checked: publicListEnabled,
+                    disabled: isUpdatingList,
+                  }}
+                  testID="public-list-switch"
+                  accessibilityHint="Toggle to enable or disable sharing your events via a public link"
+                />
               </View>
-            </SettingsSection>
-          )}
+
+              {publicListEnabled && (
+                <View className="mt-4 border-t border-gray-100 pt-4">
+                  <Text className="mb-2 text-sm font-medium text-gray-700">
+                    List Name
+                  </Text>
+                  <TextInput
+                    className="mb-4 rounded-lg border border-neutral-300 bg-white px-4 py-3 text-base"
+                    placeholder="Enter list name"
+                    value={publicListNameInput}
+                    onChangeText={setPublicListNameInput}
+                    onBlur={handleUpdateListName}
+                    onSubmitEditing={handleUpdateListName}
+                    returnKeyType="done"
+                    maxLength={50}
+                  />
+
+                  <Text className="mb-2 text-sm font-medium text-gray-700">
+                    Your public link
+                  </Text>
+                  <View className="flex-row items-center gap-2">
+                    <View className="min-w-0 flex-1 rounded-lg border border-gray-200 bg-gray-50 px-4 py-3">
+                      <Text
+                        className="text-base text-gray-700"
+                        numberOfLines={1}
+                      >
+                        {(getPublicListUrl() || "").replace("https://", "")}
+                      </Text>
+                    </View>
+                    <TouchableOpacity
+                      onPress={handleCopyLink}
+                      className="items-center justify-center rounded-lg border border-interactive-1 bg-interactive-1/5 p-3"
+                      activeOpacity={0.7}
+                      accessible={true}
+                      accessibilityRole="button"
+                      accessibilityLabel="Copy link"
+                      accessibilityHint="Copies your public list URL to the clipboard"
+                    >
+                      <Copy size={20} color="#5A32FB" />
+                    </TouchableOpacity>
+                    <TouchableOpacity
+                      onPress={handleSharePublicList}
+                      className="items-center justify-center rounded-lg border border-interactive-1 bg-interactive-1/5 p-3"
+                      activeOpacity={0.7}
+                      accessible={true}
+                      accessibilityRole="button"
+                      accessibilityLabel="Share link"
+                      accessibilityHint="Opens share sheet to share your public list URL"
+                    >
+                      <ShareIcon size={20} color="#5A32FB" />
+                    </TouchableOpacity>
+                  </View>
+                </View>
+              )}
+            </View>
+          </SettingsSection>
 
           <View className="mt-8">
             <Text className="text-lg font-semibold">Preferences</Text>

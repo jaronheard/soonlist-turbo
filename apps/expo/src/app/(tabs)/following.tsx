@@ -219,7 +219,6 @@ function FollowingFeedContent() {
         }
         showCreator="always"
         showSourceStickers={false}
-        hideDiscoverableButton={true}
         savedEventIds={savedEventIds}
         source="following"
         HeaderComponent={FollowingHeader}

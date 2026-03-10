@@ -61,7 +61,6 @@ export interface UserPublicMetadata {
     id?: string;
     trialStartDate?: string;
   };
-  showDiscover?: boolean;
 }
 
 export interface OnboardingData {
