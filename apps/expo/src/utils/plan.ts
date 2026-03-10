@@ -11,7 +11,6 @@ export const getPlanStatusFromUser = (user: UserResource) => {
       status?: string;
       id?: string;
     };
-    showDiscover?: boolean;
   } | null;
   const name = publicMetadata?.plan?.name || "";
   const currentPlanStatus = publicMetadata?.plan?.status || "";
@@ -19,12 +18,10 @@ export const getPlanStatusFromUser = (user: UserResource) => {
     currentPlanStatus === "active" || currentPlanStatus === "trialing";
   const paid = name !== "free";
   const activePaid = active && paid;
-  const showDiscover = publicMetadata?.showDiscover ?? false;
   return {
     name,
     active,
     paid,
     activePaid,
-    showDiscover,
   };
 };

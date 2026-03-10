@@ -293,8 +293,6 @@ interface UserEventListItemProps {
   similarEventsCount?: number;
   demoMode?: boolean;
   index: number;
-  hideDiscoverableButton?: boolean;
-  isDiscoverFeed?: boolean;
   source?: string;
 }
 
@@ -308,12 +306,10 @@ export function UserEventListItem(props: UserEventListItemProps) {
     similarEventsCount,
     demoMode,
     index,
-    hideDiscoverableButton = false,
-    isDiscoverFeed = false,
     source,
   } = props;
   const { fontScale } = useWindowDimensions();
-  const { handleAddToCal, handleToggleVisibility, handleShare, showDiscover } =
+  const { handleAddToCal, handleToggleVisibility, handleShare } =
     useEventActions({ event, isSaved, demoMode, source });
   const id = event.id;
   const e = event.event as AddToCalendarButtonPropsRestricted;
@@ -599,7 +595,7 @@ export function UserEventListItem(props: UserEventListItemProps) {
             <View className="-mb-2 mt-1.5 flex-row items-center justify-start gap-3">
               {ActionButton && <ActionButton event={event} />}
 
-              {!isDiscoverFeed && !ActionButton && (
+              {!ActionButton && (
                 <TouchableOpacity
                   className="-mb-0.5 -ml-2.5 flex-row items-center gap-2 bg-interactive-2 px-4 py-2.5"
                   style={{ borderRadius: 16 }}
@@ -622,23 +618,21 @@ export function UserEventListItem(props: UserEventListItemProps) {
               >
                 <MapPinned size={iconSize} color="#5A32FB" />
               </TouchableOpacity> */}
-              {showDiscover && !hideDiscoverableButton && (
-                <TouchableOpacity
-                  className="rounded-full p-2.5"
-                  onPress={() => {
-                    const nextVisibility =
-                      event.visibility === "public" ? "private" : "public";
-                    void handleToggleVisibility(nextVisibility);
-                  }}
-                  hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
-                >
-                  {event.visibility === "public" ? (
-                    <Globe2 size={iconSize * 1.1} color="#5A32FB" />
-                  ) : (
-                    <EyeOff size={iconSize * 1.1} color="#5A32FB" />
-                  )}
-                </TouchableOpacity>
-              )}
+              <TouchableOpacity
+                className="rounded-full p-2.5"
+                onPress={() => {
+                  const nextVisibility =
+                    event.visibility === "public" ? "private" : "public";
+                  void handleToggleVisibility(nextVisibility);
+                }}
+                hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+              >
+                {event.visibility === "public" ? (
+                  <Globe2 size={iconSize * 1.1} color="#5A32FB" />
+                ) : (
+                  <EyeOff size={iconSize * 1.1} color="#5A32FB" />
+                )}
+              </TouchableOpacity>
 
               <TouchableOpacity
                 className="rounded-full p-2.5"
@@ -1109,8 +1103,6 @@ interface UserEventsListProps {
   showSourceStickers?: boolean;
   demoMode?: boolean;
   stats?: EventStatsData;
-  hideDiscoverableButton?: boolean;
-  isDiscoverFeed?: boolean;
   savedEventIds?: Set<string>;
   HeaderComponent?: React.ComponentType<Record<string, never>>;
   EmptyStateComponent?: React.ComponentType<Record<string, never>>;
@@ -1129,8 +1121,6 @@ export default function UserEventsList(props: UserEventsListProps) {
     showSourceStickers = false,
     demoMode,
     stats,
-    hideDiscoverableButton = false,
-    isDiscoverFeed = false,
     savedEventIds,
     HeaderComponent,
     EmptyStateComponent,
@@ -1257,8 +1247,6 @@ export default function UserEventsList(props: UserEventsListProps) {
             }
             demoMode={demoMode}
             index={index}
-            hideDiscoverableButton={hideDiscoverableButton}
-            isDiscoverFeed={isDiscoverFeed}
             source={source}
           />
         );

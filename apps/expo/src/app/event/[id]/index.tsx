@@ -56,7 +56,6 @@ import {
 import { AF_EVENTS, trackAFEvent } from "~/utils/appsflyerEvents";
 import { formatEventDateRange } from "~/utils/dates";
 import { getEventCache } from "~/utils/eventCache";
-import { getPlanStatusFromUser } from "~/utils/plan";
 import { formatUrlForDisplay } from "../../../utils/links";
 
 // Helper to get platform URL for mentions
@@ -108,9 +107,6 @@ function EventDetail({ id }: { id: string }) {
   const insets = useSafeAreaInsets();
   const { user: currentUser } = useUser();
   const navigation = useNavigation();
-  const showDiscover = currentUser
-    ? getPlanStatusFromUser(currentUser).showDiscover
-    : false;
 
   // Check if we can go back in the navigation stack
   const canGoBack = navigation.canGoBack();
@@ -390,52 +386,46 @@ function EventDetail({ id }: { id: string }) {
             )}
 
             {/* Visibility or user info */}
-            {showDiscover && (
-              <>
-                {isCurrentUserEvent ? (
-                  <View className="flex-row items-center gap-2">
-                    {event.visibility === "public" ? (
-                      <Globe2 size={16} color="#627496" />
-                    ) : (
-                      <EyeOff size={16} color="#627496" />
-                    )}
-                    <Text className="text-sm text-neutral-2">
-                      {event.visibility === "public"
-                        ? "Discoverable"
-                        : "Not discoverable"}
-                    </Text>
-                  </View>
+            {isCurrentUserEvent ? (
+              <View className="flex-row items-center gap-2">
+                {event.visibility === "public" ? (
+                  <Globe2 size={16} color="#627496" />
                 ) : (
-                  <Pressable
-                    onPress={() => router.push(`/${event.user?.username}`)}
-                    className="-my-2 flex-row items-center gap-2 py-2"
-                    hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
-                  >
-                    <UserProfileFlair
-                      username={event.user?.username || ""}
-                      size="xs"
-                    >
-                      {event.user?.userImage ? (
-                        <ExpoImage
-                          source={{ uri: event.user.userImage }}
-                          style={{ width: 20, height: 20, borderRadius: 10 }}
-                          contentFit="cover"
-                          contentPosition="center"
-                          cachePolicy="disk"
-                          transition={100}
-                        />
-                      ) : (
-                        <User size={20} color="#627496" />
-                      )}
-                    </UserProfileFlair>
-                    <Text className="text-sm text-neutral-2">
-                      {event.user?.displayName ||
-                        event.user?.username ||
-                        "unknown"}
-                    </Text>
-                  </Pressable>
+                  <EyeOff size={16} color="#627496" />
                 )}
-              </>
+                <Text className="text-sm text-neutral-2">
+                  {event.visibility === "public"
+                    ? "Discoverable"
+                    : "Not discoverable"}
+                </Text>
+              </View>
+            ) : (
+              <Pressable
+                onPress={() => router.push(`/${event.user?.username}`)}
+                className="-my-2 flex-row items-center gap-2 py-2"
+                hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+              >
+                <UserProfileFlair
+                  username={event.user?.username || ""}
+                  size="xs"
+                >
+                  {event.user?.userImage ? (
+                    <ExpoImage
+                      source={{ uri: event.user.userImage }}
+                      style={{ width: 20, height: 20, borderRadius: 10 }}
+                      contentFit="cover"
+                      contentPosition="center"
+                      cachePolicy="disk"
+                      transition={100}
+                    />
+                  ) : (
+                    <User size={20} color="#627496" />
+                  )}
+                </UserProfileFlair>
+                <Text className="text-sm text-neutral-2">
+                  {event.user?.displayName || event.user?.username || "unknown"}
+                </Text>
+              </Pressable>
             )}
           </View>
 

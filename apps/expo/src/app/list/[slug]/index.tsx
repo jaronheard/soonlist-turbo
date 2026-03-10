@@ -1,70 +1,61 @@
 import React, { useCallback, useMemo, useState } from "react";
 import { ActivityIndicator, Text, TouchableOpacity, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { Image } from "expo-image";
 import { Stack, useLocalSearchParams, useRouter } from "expo-router";
+import { useUser } from "@clerk/clerk-expo";
 import { useConvexAuth, useMutation, useQuery } from "convex/react";
 
 import { api } from "@soonlist/backend/convex/_generated/api";
 
-import { Check, User } from "~/components/icons";
-import { LiquidGlassHeader } from "~/components/LiquidGlassHeader";
+import { Check, Globe2 } from "~/components/icons";
 import SaveShareButton from "~/components/SaveShareButton";
 import UserEventsList from "~/components/UserEventsList";
-import { UserProfileFlair } from "~/components/UserProfileFlair";
 import { useStablePaginatedQuery } from "~/hooks/useStableQuery";
 import { useStableTimestamp } from "~/store";
 import { logError } from "~/utils/errorLogging";
 import { hapticSuccess, toast } from "~/utils/feedback";
 
-export default function UserProfilePage() {
-  const { username } = useLocalSearchParams<{ username: string }>();
+export default function ListDetailPage() {
+  const { slug } = useLocalSearchParams<{ slug: string }>();
   const stableTimestamp = useStableTimestamp();
   const router = useRouter();
   const { isAuthenticated } = useConvexAuth();
+  const { user } = useUser();
   const [isFollowLoading, setIsFollowLoading] = useState(false);
 
-  // Fetch user data by username
-  const targetUser = useQuery(
-    api.users.getByUsername,
-    username ? { userName: username } : "skip",
-  );
+  // Fetch list data by slug
+  const list = useQuery(api.lists.getListBySlug, slug ? { slug } : "skip");
 
-  // Get current user to check if viewing own profile
-  const currentUser = useQuery(api.users.getCurrentUser);
-
-  // Check if current user is following the target user
+  // Check if current user is following this list
   const isFollowing = useQuery(
-    api.users.isFollowingUser,
-    targetUser?.id ? { followingId: targetUser.id } : "skip",
+    api.lists.isFollowingList,
+    list?.id ? { listId: list.id } : "skip",
   );
 
   // Follow/unfollow mutations
-  const followUserMutation = useMutation(api.users.followUser);
-  const unfollowUserMutation = useMutation(api.users.unfollowUser);
+  const followListMutation = useMutation(api.lists.followList);
+  const unfollowListMutation = useMutation(api.lists.unfollowList);
 
   // Query to get current user's saved event IDs
   const savedEventIdsQuery = useQuery(
     api.events.getSavedIdsForUser,
-    isAuthenticated && currentUser?.username
-      ? { userName: currentUser.username }
-      : "skip",
+    isAuthenticated && user?.username ? { userName: user.username } : "skip",
   );
 
   const savedEventIds = new Set(
     savedEventIdsQuery?.map((event) => event.id) ?? [],
   );
 
-  // Fetch user's public feed (uses visibility index for proper pagination)
+  // Fetch list events
   const {
     results: events,
     status,
     loadMore,
   } = useStablePaginatedQuery(
-    api.feeds.getPublicUserFeed,
-    username
+    api.feeds.getListEvents,
+    slug
       ? {
-          username: username,
+          slug,
           filter: "upcoming" as const,
         }
       : "skip",
@@ -72,7 +63,6 @@ export default function UserProfilePage() {
   );
 
   // Client-side safety filter: hide events that have ended
-  // This prevents showing ended events if the cron job hasn't run recently
   const filteredEvents = useMemo(() => {
     const currentTime = new Date(stableTimestamp).getTime();
     return events.filter((event) => {
@@ -88,7 +78,7 @@ export default function UserProfilePage() {
   };
 
   const handleFollow = useCallback(async () => {
-    if (!targetUser?.id) return;
+    if (!list?.id) return;
 
     // If not authenticated, redirect to sign-in
     if (!isAuthenticated) {
@@ -99,39 +89,45 @@ export default function UserProfilePage() {
     setIsFollowLoading(true);
     try {
       if (isFollowing) {
-        await unfollowUserMutation({ followingId: targetUser.id });
+        await unfollowListMutation({ listId: list.id });
       } else {
-        await followUserMutation({ followingId: targetUser.id });
+        await followListMutation({ listId: list.id });
       }
       void hapticSuccess();
     } catch (error) {
-      logError("Error following/unfollowing user", error);
+      logError("Error following/unfollowing list", error);
       toast.error(isFollowing ? "Failed to unfollow" : "Failed to follow");
     } finally {
       setIsFollowLoading(false);
     }
   }, [
-    targetUser,
+    list,
     isAuthenticated,
     isFollowing,
-    followUserMutation,
-    unfollowUserMutation,
+    followListMutation,
+    unfollowListMutation,
     router,
   ]);
 
-  // targetUser is undefined while loading, null if not found
-  const isUserLoading = targetUser === undefined;
-  const userNotFound = targetUser === null;
-  const isOwnProfile = currentUser?.id === targetUser?.id;
+  // list is undefined while loading, null if not found
+  const isListLoading = list === undefined;
+  const listNotFound = list === null;
 
-  // Show loading state while user data is being fetched
-  if (isUserLoading) {
+  // Show loading state while list data is being fetched
+  if (isListLoading) {
     return (
       <>
         <Stack.Screen
           options={{
-            headerTransparent: true,
-            headerBackground: () => <LiquidGlassHeader />,
+            headerTransparent: false,
+            headerBackground: () => (
+              <View
+                style={{
+                  flex: 1,
+                  backgroundColor: "#E0D9FF",
+                }}
+              />
+            ),
             headerRight: () => null,
           }}
         />
@@ -142,40 +138,47 @@ export default function UserProfilePage() {
     );
   }
 
-  // Show not found state if user doesn't exist
-  if (userNotFound) {
+  // Show not found state if list doesn't exist
+  if (listNotFound) {
     return (
       <>
         <Stack.Screen
           options={{
-            headerTransparent: true,
-            headerBackground: () => <LiquidGlassHeader />,
+            headerTransparent: false,
+            headerBackground: () => (
+              <View
+                style={{
+                  flex: 1,
+                  backgroundColor: "#E0D9FF",
+                }}
+              />
+            ),
             headerRight: () => null,
           }}
         />
         <View className="flex-1 items-center justify-center bg-white">
-          <Text className="text-lg text-neutral-2">User not found</Text>
+          <Text className="text-lg text-neutral-2">List not found</Text>
         </View>
       </>
     );
   }
 
-  function ProfileSaveShareButtonWrapper({
+  function ListSaveShareButtonWrapper({
     event,
   }: {
     event: { id: string; userId: string };
   }) {
-    if (!isAuthenticated || !currentUser) {
+    if (!isAuthenticated || !user) {
       return null;
     }
-    const isOwnEvent = event.userId === currentUser.id;
+    const isOwnEvent = event.userId === user.id;
     const isSaved = savedEventIds.has(event.id);
     return (
       <SaveShareButton
         eventId={event.id}
         isSaved={isSaved}
         isOwnEvent={isOwnEvent}
-        source="user_profile"
+        source="list_detail"
       />
     );
   }
@@ -184,19 +187,19 @@ export default function UserProfilePage() {
     <>
       <Stack.Screen
         options={{
-          title: "Public List",
-          headerTransparent: true,
+          title: list.name,
+          headerTransparent: false,
           headerBackground: () => (
             <View
               style={{
                 flex: 1,
-                backgroundColor: "#E0D9FF", // interactive-2
+                backgroundColor: "#E0D9FF",
               }}
             />
           ),
-          headerTintColor: "#5A32FB", // interactive-1
+          headerTintColor: "#5A32FB",
           headerTitleStyle: {
-            color: "#5A32FB", // interactive-1
+            color: "#5A32FB",
           },
           headerRight: () => null,
         }}
@@ -207,79 +210,53 @@ export default function UserProfilePage() {
           onEndReached={handleLoadMore}
           isFetchingNextPage={status === "LoadingMore"}
           isLoadingFirstPage={status === "LoadingFirstPage"}
-          showCreator="never"
-          ActionButton={ProfileSaveShareButtonWrapper}
+          showCreator="always"
+          ActionButton={ListSaveShareButtonWrapper}
           savedEventIds={savedEventIds}
-          HeaderComponent={() => (
-            <UserProfileHeader
-              user={targetUser}
-              eventCount={filteredEvents.length}
-            />
-          )}
+          HeaderComponent={() => <ListHeader list={list} />}
         />
-        {/* Don't show follow button on own profile */}
-        {!isOwnProfile && (
-          <FollowButton
-            isFollowing={isFollowing ?? false}
-            isLoading={isFollowLoading || isFollowing === undefined}
-            onPress={handleFollow}
-          />
-        )}
+        <FollowButton
+          isFollowing={isFollowing ?? false}
+          isLoading={isFollowLoading || isFollowing === undefined}
+          onPress={handleFollow}
+        />
       </View>
     </>
   );
 }
 
-interface UserProfileHeaderProps {
-  user:
-    | {
-        id: string;
-        username: string;
-        displayName?: string | null;
-        userImage?: string | null;
-        bio?: string | null;
-      }
-    | null
-    | undefined;
-  eventCount: number;
+interface ListHeaderProps {
+  list: {
+    name: string;
+    description?: string | null;
+    contributorCount: number;
+    followerCount: number;
+  };
 }
 
-function UserProfileHeader({ user, eventCount }: UserProfileHeaderProps) {
-  if (!user) return null;
-
+function ListHeader({ list }: ListHeaderProps) {
   return (
     <View className="items-center px-4 pb-2">
-      {/* Avatar */}
-      <UserProfileFlair username={user.username} size="xl">
-        {user.userImage ? (
-          <Image
-            source={{ uri: user.userImage }}
-            style={{ width: 80, height: 80, borderRadius: 40 }}
-            contentFit="cover"
-            cachePolicy="disk"
-          />
-        ) : (
-          <View className="h-20 w-20 items-center justify-center rounded-full bg-neutral-4">
-            <User size={40} color="#627496" />
-          </View>
-        )}
-      </UserProfileFlair>
+      {/* Icon */}
+      <View className="mb-2 h-20 w-20 items-center justify-center rounded-full bg-interactive-2">
+        <Globe2 size={40} color="#5A32FB" />
+      </View>
 
       {/* Name */}
-      <Text className="mt-2 text-xl font-bold text-neutral-1">
-        {user.displayName || user.username}
-      </Text>
+      <Text className="mt-2 text-xl font-bold text-neutral-1">{list.name}</Text>
 
-      {/* Bio */}
-      {user.bio && (
+      {/* Description */}
+      {list.description && (
         <Text className="mt-1 text-center text-sm text-neutral-2">
-          {user.bio}
+          {list.description}
         </Text>
       )}
 
-      {/* Event count */}
+      {/* Stats */}
       <Text className="mt-1 text-sm text-neutral-2">
-        {eventCount} upcoming {eventCount === 1 ? "event" : "events"}
+        {list.contributorCount} contributor
+        {list.contributorCount !== 1 ? "s" : ""} · {list.followerCount} follower
+        {list.followerCount !== 1 ? "s" : ""}
       </Text>
     </View>
   );

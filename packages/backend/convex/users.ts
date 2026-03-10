@@ -752,7 +752,6 @@ export const syncFromClerk = internalMutation({
     userImage: v.string(),
     publicMetadata: v.optional(
       v.object({
-        showDiscover: v.optional(v.boolean()),
         stripe: v.optional(
           v.object({
             customerId: v.optional(v.string()),
@@ -879,17 +878,6 @@ export const updatePublicListSettings = mutation({
 
     if (!user) {
       throw new ConvexError("User not found");
-    }
-
-    // Check if user has showDiscover enabled - prevent enabling public list if they do
-    const userShowDiscover =
-      (user.publicMetadata as { showDiscover?: boolean } | null)
-        ?.showDiscover ?? false;
-
-    if (args.publicListEnabled === true && userShowDiscover) {
-      throw new ConvexError(
-        "Cannot enable public list when showDiscover is enabled. Please contact support if you need both features.",
-      );
     }
 
     const updates: Record<string, boolean | string | undefined> = {

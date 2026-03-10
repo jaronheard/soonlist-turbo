@@ -16,7 +16,6 @@ import * as ImageManipulator from "expo-image-manipulator";
 import * as ImagePicker from "expo-image-picker";
 import * as MediaLibrary from "expo-media-library";
 import { router, Stack, useLocalSearchParams } from "expo-router";
-import { useUser } from "@clerk/clerk-expo";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation, useQuery } from "convex/react";
 import { Controller, useForm } from "react-hook-form";
@@ -41,7 +40,6 @@ import { TimezoneSelectNative } from "~/components/TimezoneSelectNative";
 import { DEFAULT_VISIBILITY } from "~/constants";
 import { hapticSuccess, toast } from "~/utils/feedback";
 import { normalizeUrlForStorage } from "~/utils/links";
-import { getPlanStatusFromUser } from "~/utils/plan";
 import { logError } from "../../../utils/errorLogging";
 
 const formSchema = z.object({
@@ -76,8 +74,6 @@ type FormData = z.infer<typeof formSchema>;
 export default function EditEventScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const insets = useSafeAreaInsets();
-  const { user } = useUser();
-  const showDiscover = user ? getPlanStatusFromUser(user).showDiscover : false;
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
   const [originalImage, setOriginalImage] = useState<string | null>(null);
@@ -755,41 +751,39 @@ export default function EditEventScreen() {
               </View>
             </View>
 
-            {showDiscover && (
-              <Controller
-                control={control}
-                name="visibility"
-                render={({ field: { onChange, value } }) => (
-                  <View className="mt-4">
-                    <Text className="mb-2 text-base font-semibold">
-                      Discoverable
-                    </Text>
-                    <View className="flex-row items-center justify-between rounded-md border border-neutral-300 p-4">
-                      <View className="flex-row items-center">
-                        {value === "public" ? (
-                          <Globe2 size={20} color="#34435F" className="mr-2" />
-                        ) : (
-                          <EyeOff size={20} color="#34435F" className="mr-2" />
-                        )}
-                        <Text className="ml-2 text-neutral-1">
-                          {value === "public"
-                            ? "Discoverable by others"
-                            : "Not discoverable by others"}
-                        </Text>
-                      </View>
-                      <Switch
-                        value={value === "public"}
-                        onValueChange={(isPublic) => {
-                          onChange(isPublic ? "public" : "private");
-                        }}
-                        trackColor={{ false: "#767577", true: "#4F46E5" }}
-                        thumbColor="#f4f3f4"
-                      />
+            <Controller
+              control={control}
+              name="visibility"
+              render={({ field: { onChange, value } }) => (
+                <View className="mt-4">
+                  <Text className="mb-2 text-base font-semibold">
+                    Discoverable
+                  </Text>
+                  <View className="flex-row items-center justify-between rounded-md border border-neutral-300 p-4">
+                    <View className="flex-row items-center">
+                      {value === "public" ? (
+                        <Globe2 size={20} color="#34435F" className="mr-2" />
+                      ) : (
+                        <EyeOff size={20} color="#34435F" className="mr-2" />
+                      )}
+                      <Text className="ml-2 text-neutral-1">
+                        {value === "public"
+                          ? "Discoverable by others"
+                          : "Not discoverable by others"}
+                      </Text>
                     </View>
+                    <Switch
+                      value={value === "public"}
+                      onValueChange={(isPublic) => {
+                        onChange(isPublic ? "public" : "private");
+                      }}
+                      trackColor={{ false: "#767577", true: "#4F46E5" }}
+                      thumbColor="#f4f3f4"
+                    />
                   </View>
-                )}
-              />
-            )}
+                </View>
+              )}
+            />
           </View>
         </ScrollView>
       </KeyboardAvoidingView>

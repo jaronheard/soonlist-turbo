@@ -2,9 +2,9 @@ import React from "react";
 import { Pressable, Text, TextInput, View } from "react-native";
 import { KeyboardAwareScrollView } from "react-native-keyboard-controller";
 import { Redirect, Stack } from "expo-router";
-import { useSignUp, useUser } from "@clerk/clerk-expo";
+import { useSignUp } from "@clerk/clerk-expo";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useAction, useConvexAuth, useMutation } from "convex/react";
+import { useConvexAuth, useMutation } from "convex/react";
 import { usePostHog } from "posthog-react-native";
 import { Controller, useForm } from "react-hook-form";
 import { z } from "zod";
@@ -16,7 +16,6 @@ import { useAppStore } from "~/store";
 import { AF_EVENTS, trackAFEvent } from "~/utils/appsflyerEvents";
 import { logError } from "~/utils/errorLogging";
 import { transferGuestData } from "~/utils/guestDataTransfer";
-import { redeemStoredDiscoverCode } from "~/utils/redeemStoredDiscoverCode";
 
 const verifyEmailSchema = z.object({
   code: z
@@ -28,10 +27,6 @@ const verifyEmailSchema = z.object({
 type VerifyEmailFormData = z.infer<typeof verifyEmailSchema>;
 
 const VerifyEmail = () => {
-  const { user } = useUser();
-  const setDiscoverAccessOverride = useAppStore(
-    (s) => s.setDiscoverAccessOverride,
-  );
   const [isVerifying, setIsVerifying] = React.useState(false);
   const [generalError, setGeneralError] = React.useState("");
   const { signUp, setActive } = useSignUp();
@@ -43,7 +38,6 @@ const VerifyEmail = () => {
   const transferGuestOnboardingData = useMutation(
     api.guestOnboarding.transferGuestOnboardingData,
   );
-  const redeemDiscoverCode = useAction(api.codes.redeemCode);
   const {
     control,
     handleSubmit,
@@ -88,12 +82,6 @@ const VerifyEmail = () => {
             userId,
             transferGuestOnboardingData,
           });
-          await redeemStoredDiscoverCode(redeemDiscoverCode);
-          // Refresh Clerk user to reflect updated publicMetadata immediately
-          await user?.reload?.();
-          if (user?.publicMetadata?.showDiscover) {
-            setDiscoverAccessOverride(false);
-          }
         }
       } else {
         logError("Verification failed", completeSignUp);

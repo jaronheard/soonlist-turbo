@@ -16,7 +16,6 @@ import { AF_EVENTS, trackAFEvent } from "~/utils/appsflyerEvents";
 import Config from "~/utils/config";
 import { logError } from "~/utils/errorLogging";
 import { hapticSuccess, toast } from "~/utils/feedback";
-import { getPlanStatusFromUser } from "~/utils/plan";
 import { useCalendar } from "./useCalendar";
 
 interface UseEventActionsProps {
@@ -37,7 +36,6 @@ export function useEventActions({
   const { handleAddToCal: addToCalendar } = useCalendar();
   const { user } = useUser();
   const isOwner = demoMode || (event && user?.id === event.user?.id);
-  const showDiscover = user ? getPlanStatusFromUser(user).showDiscover : false;
   const stableTimestamp = useStableTimestamp();
   const posthog = usePostHog();
 
@@ -300,7 +298,6 @@ export function useEventActions({
     handleFollow,
     handleUnfollow,
     handleShowQR,
-    showDiscover,
   };
 }
 
