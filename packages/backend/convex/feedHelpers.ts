@@ -69,7 +69,21 @@ export const updateEventInFeeds = internalMutation({
       );
     }
 
-    // 3. Auto-populate contributor lists for this user
+    // 3. Add to discover feed for public events (legacy - kept during migration)
+    if (visibility === "public") {
+      await upsertFeedEntry(
+        ctx,
+        "discover",
+        eventId,
+        eventStartTime,
+        eventEndTime,
+        currentTime,
+        similarityGroupId,
+        visibility,
+      );
+    }
+
+    // 4. Auto-populate contributor lists for this user
     if (visibility === "public") {
       await ctx.runMutation(internal.feedHelpers.addEventToContributorLists, {
         eventId,
@@ -77,7 +91,7 @@ export const updateEventInFeeds = internalMutation({
       });
     }
 
-    // Note: List-based feed fanout is handled at precise call sites:
+    // 5. Note: List-based feed fanout is handled at precise call sites:
     // - createEvent: after inserting into eventToLists
     // - addEventToList: when adding event to a list
     // - toggleEventVisibility/updateEvent: when visibility changes to public

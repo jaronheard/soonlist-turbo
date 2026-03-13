@@ -347,6 +347,14 @@ export const runDiscoverMigration = internalAction({
     console.log(`Total follower feeds populated: ${totalFollowersProcessed}`);
 
     // Step 5: Clean up old discover feed entries
+    // WARNING: Only run this step after all discover feed consumers have been
+    // migrated to use the contributor list system instead. Currently skipped
+    // because web/expo discover surfaces still read from feedId="discover".
+    console.log(
+      "Step 5: SKIPPED - discover feed cleanup deferred until consumers are migrated",
+    );
+    // Uncomment the cleanup loop below once discover consumers are migrated:
+    /*
     let cleanupCursor: string | null = null;
     let totalDeleted = 0;
     while (true) {
@@ -371,6 +379,7 @@ export const runDiscoverMigration = internalAction({
       cleanupCursor = result.nextCursor;
     }
     console.log(`Total discover feed entries cleaned up: ${totalDeleted}`);
+    */
 
     console.log("=== PDX Discover Migration Complete ===");
   },

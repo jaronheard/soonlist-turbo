@@ -455,7 +455,7 @@ export const getBySlug = query({
     const list = await ctx.db
       .query("lists")
       .withIndex("by_slug", (q) => q.eq("slug", slug))
-      .unique();
+      .first();
 
     if (!list) {
       return null;
@@ -588,6 +588,16 @@ export const addContributor = mutation({
 
     if (list.listType !== "contributor") {
       throw new ConvexError("This list does not support contributors");
+    }
+
+    // Validate that contributor user exists
+    const contributorUser = await ctx.db
+      .query("users")
+      .withIndex("by_custom_id", (q) => q.eq("id", contributorUserId))
+      .first();
+
+    if (!contributorUser) {
+      throw new ConvexError("Contributor user not found");
     }
 
     // Check if already a contributor
@@ -760,7 +770,6 @@ export const removeContributorEventsAction = internalAction({
     let totalProcessed = 0;
     let totalRemoved = 0;
     let cursor: string | null = null;
-    let prevCursor: string | null = null;
 
     while (true) {
       const result: {
@@ -782,14 +791,13 @@ export const removeContributorEventsAction = internalAction({
       }
 
       // Cursor stall guard
-      if (result.nextCursor === prevCursor) {
+      if (result.nextCursor === cursor) {
         console.error(
           `removeContributorEventsAction: cursor stalled at ${cursor} for list ${listId}`,
         );
         break;
       }
 
-      prevCursor = cursor;
       cursor = result.nextCursor;
     }
 
