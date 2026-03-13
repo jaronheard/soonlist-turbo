@@ -433,7 +433,6 @@ export const getBySlug = query({
           _creationTime: v.number(),
           id: v.string(),
           username: v.string(),
-          email: v.string(),
           displayName: v.string(),
           userImage: v.string(),
           bio: v.union(v.string(), v.null()),
@@ -441,14 +440,9 @@ export const getBySlug = query({
           publicPhone: v.union(v.string(), v.null()),
           publicInsta: v.union(v.string(), v.null()),
           publicWebsite: v.union(v.string(), v.null()),
-          publicMetadata: v.union(v.any(), v.null()),
           emoji: v.union(v.string(), v.null()),
-          onboardingData: v.union(v.any(), v.null()),
-          onboardingCompletedAt: v.union(v.string(), v.null()),
           publicListEnabled: v.optional(v.boolean()),
           publicListName: v.optional(v.string()),
-          created_at: v.string(),
-          updatedAt: v.union(v.string(), v.null()),
         }),
         v.null(),
       ),
@@ -489,9 +483,29 @@ export const getBySlug = query({
         .withIndex("by_list", (q) => q.eq("listId", list.id))
         .collect();
 
+      // Sanitize owner to only include public-safe fields
+      const sanitizedOwner = owner
+        ? {
+            _id: owner._id,
+            _creationTime: owner._creationTime,
+            id: owner.id,
+            username: owner.username,
+            displayName: owner.displayName,
+            userImage: owner.userImage,
+            bio: owner.bio,
+            publicEmail: owner.publicEmail,
+            publicPhone: owner.publicPhone,
+            publicInsta: owner.publicInsta,
+            publicWebsite: owner.publicWebsite,
+            emoji: owner.emoji,
+            publicListEnabled: owner.publicListEnabled,
+            publicListName: owner.publicListName,
+          }
+        : null;
+
       return {
         ...list,
-        owner,
+        owner: sanitizedOwner,
         contributorCount: contributors.length,
         followerCount: followers.length,
       };
@@ -664,43 +678,126 @@ export const removeContributor = mutation({
     }
 
     // Clean up: remove the contributor's events from this list
-    // Query from eventToLists side (scoped to this list) with pagination
-    // to avoid unbounded collect() on the events table
-    let cursor: string | null = null;
-    let isDone = false;
-
-    while (!isDone) {
-      const result = await ctx.db
-        .query("eventToLists")
-        .withIndex("by_list", (q) => q.eq("listId", listId))
-        .paginate({ numItems: 100, cursor });
-
-      for (const entry of result.page) {
-        // Look up the event to check if it belongs to the contributor
-        const event = await ctx.db
-          .query("events")
-          .withIndex("by_custom_id", (q) => q.eq("id", entry.eventId))
-          .first();
-
-        if (event?.userId === contributorUserId) {
-          await ctx.db.delete(entry._id);
-
-          // Remove from followers' feeds
-          await ctx.runMutation(
-            internal.feedHelpers.removeEventFromListFollowersFeeds,
-            {
-              eventId: entry.eventId,
-              listId,
-            },
-          );
-        }
-      }
-
-      isDone = result.isDone;
-      cursor = result.continueCursor;
-    }
+    // Scheduled as an action to avoid exceeding transaction limits for large lists
+    await ctx.scheduler.runAfter(
+      0,
+      internal.lists.removeContributorEventsAction,
+      {
+        listId,
+        contributorUserId,
+      },
+    );
 
     return { success: true as const };
+  },
+});
+
+/**
+ * Internal: Remove a contributor's events from a list (one batch/page)
+ */
+export const removeContributorEventsBatch = internalMutation({
+  args: {
+    listId: v.string(),
+    contributorUserId: v.string(),
+    cursor: v.union(v.string(), v.null()),
+  },
+  returns: v.object({
+    processed: v.number(),
+    removed: v.number(),
+    nextCursor: v.union(v.string(), v.null()),
+    isDone: v.boolean(),
+  }),
+  handler: async (ctx, { listId, contributorUserId, cursor }) => {
+    const result = await ctx.db
+      .query("eventToLists")
+      .withIndex("by_list", (q) => q.eq("listId", listId))
+      .paginate({ numItems: 100, cursor });
+
+    let removed = 0;
+
+    for (const entry of result.page) {
+      // Look up the event to check if it belongs to the contributor
+      const event = await ctx.db
+        .query("events")
+        .withIndex("by_custom_id", (q) => q.eq("id", entry.eventId))
+        .first();
+
+      if (event?.userId === contributorUserId) {
+        await ctx.db.delete(entry._id);
+
+        // Remove from followers' feeds
+        await ctx.runMutation(
+          internal.feedHelpers.removeEventFromListFollowersFeeds,
+          {
+            eventId: entry.eventId,
+            listId,
+          },
+        );
+        removed++;
+      }
+    }
+
+    return {
+      processed: result.page.length,
+      removed,
+      nextCursor: result.continueCursor,
+      isDone: result.isDone,
+    };
+  },
+});
+
+/**
+ * Internal: Remove a contributor's events from a list.
+ * Orchestrates batch processing to avoid transaction limits.
+ */
+export const removeContributorEventsAction = internalAction({
+  args: {
+    listId: v.string(),
+    contributorUserId: v.string(),
+  },
+  returns: v.null(),
+  handler: async (ctx, { listId, contributorUserId }) => {
+    let totalProcessed = 0;
+    let totalRemoved = 0;
+    let cursor: string | null = null;
+    let prevCursor: string | null = null;
+
+    while (true) {
+      const result: {
+        processed: number;
+        removed: number;
+        nextCursor: string | null;
+        isDone: boolean;
+      } = await ctx.runMutation(internal.lists.removeContributorEventsBatch, {
+        listId,
+        contributorUserId,
+        cursor,
+      });
+
+      totalProcessed += result.processed;
+      totalRemoved += result.removed;
+
+      if (result.isDone) {
+        break;
+      }
+
+      // Cursor stall guard
+      if (result.nextCursor === prevCursor) {
+        console.error(
+          `removeContributorEventsAction: cursor stalled at ${cursor} for list ${listId}`,
+        );
+        break;
+      }
+
+      prevCursor = cursor;
+      cursor = result.nextCursor;
+    }
+
+    console.log(
+      `Removed ${totalRemoved} events from list ${listId} for contributor ${contributorUserId} (processed ${totalProcessed})`,
+    );
+
+    return null;
   },
 });
 
@@ -734,10 +831,8 @@ export const backfillContributorEventsBatch = internalMutation({
       }
 
       // Check if already in list.
-      // NOTE: This check-then-insert can produce duplicate (eventId, listId)
-      // rows under concurrent mutation calls since eventToLists has no unique
-      // constraint. This is harmless because the downstream feed fan-out
-      // (addEventToListFollowersFeeds) uses upsertFeedEntry, which is idempotent.
+      // Convex mutations are serialized (atomic), so this check-then-insert
+      // is safe within a single mutation — no concurrent duplicates can occur here.
       const existing = await ctx.db
         .query("eventToLists")
         .withIndex("by_event_and_list", (q) =>
@@ -805,6 +900,12 @@ export const backfillContributorEvents = internalAction({
       totalAdded += result.added;
 
       if (result.isDone) {
+        break;
+      }
+      if (result.nextCursor === cursor) {
+        console.error(
+          `Cursor did not advance for list ${listId} contributor ${contributorUserId} — aborting to prevent infinite loop`,
+        );
         break;
       }
       cursor = result.nextCursor;

@@ -118,6 +118,13 @@ export const migrateDiscoverUsersBatch = internalMutation({
         await ctx.db.patch(existingMember._id, { role: "contributor" });
       }
 
+      // Schedule backfill of contributor's existing events into the list
+      await ctx.scheduler.runAfter(
+        0,
+        internal.lists.backfillContributorEvents,
+        { listId, contributorUserId: user.id },
+      );
+
       // Add as follower
       const existingFollow = await ctx.db
         .query("listFollows")
@@ -306,24 +313,38 @@ export const runDiscoverMigration = internalAction({
     console.log(`Total events migrated to list: ${totalEventsMigrated}`);
 
     // Step 4: Backfill follower feeds (add list events to each follower's feed)
-    // Process followers in batches to avoid exceeding action runtime limits
-    const listFollows: string[] = await ctx.runQuery(
-      internal.migrations.discoverListMigration.getListFollowerIds,
-      { listId },
-    );
-    console.log(`Populating feeds for ${listFollows.length} followers...`);
-    for (let i = 0; i < listFollows.length; i += FOLLOWER_BATCH_SIZE) {
-      const batch = listFollows.slice(i, i + FOLLOWER_BATCH_SIZE);
-      for (const userId of batch) {
+    // Process followers in paginated batches to avoid loading all follower IDs at once
+    let followerCursor: string | null = null;
+    let totalFollowersProcessed = 0;
+    while (true) {
+      const followerPage: {
+        followerIds: string[];
+        nextCursor: string | null;
+        isDone: boolean;
+      } = await ctx.runQuery(
+        internal.migrations.discoverListMigration.getListFollowerIds,
+        { listId, cursor: followerCursor, batchSize: FOLLOWER_BATCH_SIZE },
+      );
+      for (const userId of followerPage.followerIds) {
         await ctx.runMutation(internal.feedHelpers.addListEventsToUserFeed, {
           userId,
           listId,
         });
       }
+      totalFollowersProcessed += followerPage.followerIds.length;
       console.log(
-        `Follower feed batch: processed ${Math.min(i + FOLLOWER_BATCH_SIZE, listFollows.length)}/${listFollows.length}`,
+        `Follower feed batch: processed ${totalFollowersProcessed} followers so far`,
       );
+      if (followerPage.isDone) break;
+      if (followerPage.nextCursor === followerCursor) {
+        console.error(
+          "Cursor did not advance — aborting follower loop to prevent infinite loop",
+        );
+        break;
+      }
+      followerCursor = followerPage.nextCursor;
     }
+    console.log(`Total follower feeds populated: ${totalFollowersProcessed}`);
 
     // Step 5: Clean up old discover feed entries
     let cleanupCursor: string | null = null;
@@ -356,16 +377,28 @@ export const runDiscoverMigration = internalAction({
 });
 
 /**
- * Helper query for the migration orchestrator
+ * Helper query for the migration orchestrator — returns paginated follower IDs
  */
 export const getListFollowerIds = internalQuery({
-  args: { listId: v.string() },
-  returns: v.array(v.string()),
-  handler: async (ctx, { listId }) => {
-    const follows = await ctx.db
+  args: {
+    listId: v.string(),
+    cursor: v.union(v.string(), v.null()),
+    batchSize: v.number(),
+  },
+  returns: v.object({
+    followerIds: v.array(v.string()),
+    nextCursor: v.union(v.string(), v.null()),
+    isDone: v.boolean(),
+  }),
+  handler: async (ctx, { listId, cursor, batchSize }) => {
+    const result = await ctx.db
       .query("listFollows")
       .withIndex("by_list", (q) => q.eq("listId", listId))
-      .collect();
-    return follows.map((f) => f.userId);
+      .paginate({ numItems: batchSize, cursor });
+    return {
+      followerIds: result.page.map((f) => f.userId),
+      nextCursor: result.continueCursor,
+      isDone: result.isDone,
+    };
   },
 });

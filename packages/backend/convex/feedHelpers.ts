@@ -986,10 +986,8 @@ export const addEventToContributorLists = internalMutation({
       }
 
       // Check if event already in list.
-      // NOTE: This check-then-insert can produce duplicate (eventId, listId)
-      // rows under concurrent mutation calls since eventToLists has no unique
-      // constraint. This is harmless because the downstream feed fan-out
-      // (addEventToListFollowersFeeds) uses upsertFeedEntry, which is idempotent.
+      // Convex mutations are serialized (atomic), so this check-then-insert
+      // is safe within a single mutation — no concurrent duplicates can occur here.
       const existing = await ctx.db
         .query("eventToLists")
         .withIndex("by_event_and_list", (q) =>
