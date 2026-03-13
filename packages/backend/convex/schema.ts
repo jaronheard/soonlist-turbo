@@ -138,19 +138,33 @@ export default defineSchema({
     contribution: v.optional(
       v.union(v.literal("open"), v.literal("restricted"), v.literal("owner")),
     ),
+    // Contributor list fields
+    listType: v.optional(
+      v.union(v.literal("standard"), v.literal("contributor")),
+    ),
+    isSystemList: v.optional(v.boolean()),
+    systemListType: v.optional(v.string()),
+    slug: v.optional(v.string()),
     created_at: v.string(), // ISO date string
     updatedAt: v.union(v.string(), v.null()), // ISO date string or null
   })
     .index("by_user", ["userId"])
-    .index("by_custom_id", ["id"]),
+    .index("by_custom_id", ["id"])
+    .index("by_slug", ["slug"])
+    .index("by_isSystemList_and_systemListType", [
+      "isSystemList",
+      "systemListType",
+    ]),
 
   listMembers: defineTable({
     listId: v.string(),
     userId: v.string(),
+    role: v.optional(v.union(v.literal("member"), v.literal("contributor"))),
   })
     .index("by_list", ["listId"])
     .index("by_user", ["userId"])
-    .index("by_list_and_user", ["listId", "userId"]),
+    .index("by_list_and_user", ["listId", "userId"])
+    .index("by_list_and_role", ["listId", "role"]),
 
   users: defineTable({
     id: v.string(), // keeping the custom id field

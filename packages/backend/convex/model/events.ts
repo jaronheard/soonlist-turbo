@@ -1364,13 +1364,13 @@ export async function addEventToList(
     }
   }
 
-  // Check if already in list
+  // Check if already in list (use .first() to tolerate potential duplicates)
   const existing = await ctx.db
     .query("eventToLists")
     .withIndex("by_event_and_list", (q) =>
       q.eq("eventId", eventId).eq("listId", listId),
     )
-    .unique();
+    .first();
 
   if (!existing) {
     await ctx.db.insert("eventToLists", {
@@ -1431,12 +1431,13 @@ export async function removeEventFromList(
     }
   }
 
+  // Use .first() to tolerate potential duplicates
   const existing = await ctx.db
     .query("eventToLists")
     .withIndex("by_event_and_list", (q) =>
       q.eq("eventId", eventId).eq("listId", listId),
     )
-    .unique();
+    .first();
 
   if (existing) {
     await ctx.db.delete(existing._id);
