@@ -530,7 +530,7 @@ export const getSystemLists = query({
   handler: async (ctx) => {
     const lists = await ctx.db
       .query("lists")
-      .withIndex("by_system_type", (q) => q.eq("isSystemList", true))
+      .withIndex("by_isSystemList_and_systemListType", (q) => q.eq("isSystemList", true))
       .collect();
 
     return lists;
@@ -632,6 +632,10 @@ export const removeContributor = mutation({
 
     if (list.userId !== userId) {
       throw new ConvexError("Only the list owner can remove contributors");
+    }
+
+    if (list.listType !== "contributor") {
+      throw new ConvexError("removeContributor can only be used with contributor-type lists");
     }
 
     const existingMember = await ctx.db

@@ -151,7 +151,7 @@ export default defineSchema({
     .index("by_user", ["userId"])
     .index("by_custom_id", ["id"])
     .index("by_slug", ["slug"])
-    .index("by_system_type", ["isSystemList", "systemListType"]),
+    .index("by_isSystemList_and_systemListType", ["isSystemList", "systemListType"]),
 
   listMembers: defineTable({
     listId: v.string(),

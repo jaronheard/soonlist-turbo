@@ -999,9 +999,14 @@ export const addEventToContributorLists = internalMutation({
           listId: membership.listId,
         });
 
-        // Note: Fan-out to list followers' feeds is handled by the caller
-        // (e.g., createEvent, updateEvent, toggleEventVisibility in events.ts)
-        // to avoid double fan-out.
+        // Fan out to list followers' feeds
+        await ctx.runMutation(
+          internal.feedHelpers.addEventToListFollowersFeeds,
+          {
+            eventId,
+            listId: membership.listId,
+          },
+        );
       }
     }
 
