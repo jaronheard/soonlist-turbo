@@ -36,16 +36,6 @@ export const updateEventInFeeds = internalMutation({
     const eventEndTime = new Date(endDateTime).getTime();
     const currentTime = Date.now();
 
-    // Get user to check showDiscover setting
-    const user = await ctx.db
-      .query("users")
-      .withIndex("by_custom_id", (q) => q.eq("id", userId))
-      .first();
-
-    const userShowDiscover =
-      (user?.publicMetadata as { showDiscover?: boolean } | null)
-        ?.showDiscover ?? false;
-
     // 1. Always add to creator's personal feed
     const creatorFeedId = `user_${userId}`;
     await upsertFeedEntry(
@@ -59,36 +49,7 @@ export const updateEventInFeeds = internalMutation({
       visibility,
     );
 
-    // 2. Add to discover feed if public AND user has showDiscover enabled
-    if (visibility === "public" && userShowDiscover) {
-      const discoverFeedId = "discover";
-      await upsertFeedEntry(
-        ctx,
-        discoverFeedId,
-        eventId,
-        eventStartTime,
-        eventEndTime,
-        currentTime,
-        similarityGroupId,
-        visibility,
-      );
-    } else if (visibility === "private" || !userShowDiscover) {
-      // Remove from discover feed if event is now private or user no longer has showDiscover
-      const discoverFeedId = "discover";
-      const existingDiscoverEntry = await ctx.db
-        .query("userFeeds")
-        .withIndex("by_feed_event", (q) =>
-          q.eq("feedId", discoverFeedId).eq("eventId", eventId),
-        )
-        .first();
-
-      if (existingDiscoverEntry) {
-        await userFeedsAggregate.deleteIfExists(ctx, existingDiscoverEntry);
-        await ctx.db.delete(existingDiscoverEntry._id);
-      }
-    }
-
-    // 3. Add to feeds of users who follow this event
+    // 2. Add to feeds of users who follow this event directly
     const eventFollows = await ctx.db
       .query("eventFollows")
       .withIndex("by_event", (q) => q.eq("eventId", eventId))
@@ -106,6 +67,14 @@ export const updateEventInFeeds = internalMutation({
         similarityGroupId,
         visibility,
       );
+    }
+
+    // 3. Auto-populate contributor lists for this user
+    if (visibility === "public") {
+      await ctx.runMutation(internal.feedHelpers.addEventToContributorLists, {
+        eventId,
+        userId,
+      });
     }
 
     // Note: List-based feed fanout is handled at precise call sites:
@@ -979,6 +948,72 @@ export const addUserEventsToUserFeed = internalMutation({
         followedUserId,
       },
     );
+    return null;
+  },
+});
+
+// Helper to auto-add a public event to all contributor lists where the user is a contributor
+export const addEventToContributorLists = internalMutation({
+  args: {
+    eventId: v.string(),
+    userId: v.string(),
+  },
+  returns: v.null(),
+  handler: async (ctx, { eventId, userId }) => {
+    // Find all listMembers entries where this user has role="contributor"
+    const contributorMemberships = await ctx.db
+      .query("listMembers")
+      .withIndex("by_user", (q) => q.eq("userId", userId))
+      .collect();
+
+    const contributorLists = contributorMemberships.filter(
+      (m) => m.role === "contributor",
+    );
+
+    if (contributorLists.length === 0) {
+      return null;
+    }
+
+    for (const membership of contributorLists) {
+      // Check if the list is a contributor-type list
+      const list = await ctx.db
+        .query("lists")
+        .withIndex("by_custom_id", (q) => q.eq("id", membership.listId))
+        .first();
+
+      if (list?.listType !== "contributor") {
+        continue;
+      }
+
+      // Check if event already in list.
+      // NOTE: This check-then-insert can produce duplicate (eventId, listId)
+      // rows under concurrent mutation calls since eventToLists has no unique
+      // constraint. This is harmless because the downstream feed fan-out
+      // (addEventToListFollowersFeeds) uses upsertFeedEntry, which is idempotent.
+      const existing = await ctx.db
+        .query("eventToLists")
+        .withIndex("by_event_and_list", (q) =>
+          q.eq("eventId", eventId).eq("listId", membership.listId),
+        )
+        .first();
+
+      if (!existing) {
+        await ctx.db.insert("eventToLists", {
+          eventId,
+          listId: membership.listId,
+        });
+
+        // Fan out to list followers' feeds
+        await ctx.runMutation(
+          internal.feedHelpers.addEventToListFollowersFeeds,
+          {
+            eventId,
+            listId: membership.listId,
+          },
+        );
+      }
+    }
+
     return null;
   },
 });
