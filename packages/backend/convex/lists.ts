@@ -398,11 +398,65 @@ export const removeListMember = mutation({
  */
 export const getBySlug = query({
   args: { slug: v.string() },
+  returns: v.union(
+    v.object({
+      _id: v.id("lists"),
+      _creationTime: v.number(),
+      id: v.string(),
+      userId: v.string(),
+      name: v.string(),
+      description: v.string(),
+      visibility: v.union(
+        v.literal("public"),
+        v.literal("unlisted"),
+        v.literal("private"),
+      ),
+      contribution: v.optional(
+        v.union(v.literal("open"), v.literal("restricted"), v.literal("owner")),
+      ),
+      listType: v.optional(
+        v.union(v.literal("standard"), v.literal("contributor")),
+      ),
+      isSystemList: v.optional(v.boolean()),
+      systemListType: v.optional(v.string()),
+      slug: v.optional(v.string()),
+      created_at: v.string(),
+      updatedAt: v.union(v.string(), v.null()),
+      owner: v.union(
+        v.object({
+          _id: v.id("users"),
+          _creationTime: v.number(),
+          id: v.string(),
+          username: v.string(),
+          email: v.string(),
+          displayName: v.string(),
+          userImage: v.string(),
+          bio: v.union(v.string(), v.null()),
+          publicEmail: v.union(v.string(), v.null()),
+          publicPhone: v.union(v.string(), v.null()),
+          publicInsta: v.union(v.string(), v.null()),
+          publicWebsite: v.union(v.string(), v.null()),
+          publicMetadata: v.union(v.any(), v.null()),
+          emoji: v.union(v.string(), v.null()),
+          onboardingData: v.union(v.any(), v.null()),
+          onboardingCompletedAt: v.union(v.string(), v.null()),
+          publicListEnabled: v.optional(v.boolean()),
+          publicListName: v.optional(v.string()),
+          created_at: v.string(),
+          updatedAt: v.union(v.string(), v.null()),
+        }),
+        v.null(),
+      ),
+      contributorCount: v.number(),
+      followerCount: v.number(),
+    }),
+    v.null(),
+  ),
   handler: async (ctx, { slug }) => {
     const list = await ctx.db
       .query("lists")
       .withIndex("by_slug", (q) => q.eq("slug", slug))
-      .first();
+      .unique();
 
     if (!list) {
       return null;
@@ -447,6 +501,32 @@ export const getBySlug = query({
  */
 export const getSystemLists = query({
   args: {},
+  returns: v.array(
+    v.object({
+      _id: v.id("lists"),
+      _creationTime: v.number(),
+      id: v.string(),
+      userId: v.string(),
+      name: v.string(),
+      description: v.string(),
+      visibility: v.union(
+        v.literal("public"),
+        v.literal("unlisted"),
+        v.literal("private"),
+      ),
+      contribution: v.optional(
+        v.union(v.literal("open"), v.literal("restricted"), v.literal("owner")),
+      ),
+      listType: v.optional(
+        v.union(v.literal("standard"), v.literal("contributor")),
+      ),
+      isSystemList: v.optional(v.boolean()),
+      systemListType: v.optional(v.string()),
+      slug: v.optional(v.string()),
+      created_at: v.string(),
+      updatedAt: v.union(v.string(), v.null()),
+    }),
+  ),
   handler: async (ctx) => {
     const lists = await ctx.db
       .query("lists")
@@ -465,6 +545,7 @@ export const addContributor = mutation({
     listId: v.string(),
     contributorUserId: v.string(),
   },
+  returns: v.object({ success: v.literal(true) }),
   handler: async (ctx, { listId, contributorUserId }) => {
     const userId = await getUserId(ctx);
     if (!userId) {
@@ -500,8 +581,13 @@ export const addContributor = mutation({
       // Update role to contributor if needed
       if (existingMember.role !== "contributor") {
         await ctx.db.patch(existingMember._id, { role: "contributor" });
+        // Backfill existing public events for the promoted member
+        await ctx.runMutation(internal.lists.backfillContributorEvents, {
+          listId,
+          contributorUserId,
+        });
       }
-      return { success: true };
+      return { success: true as const };
     }
 
     await ctx.db.insert("listMembers", {
@@ -516,7 +602,7 @@ export const addContributor = mutation({
       contributorUserId,
     });
 
-    return { success: true };
+    return { success: true as const };
   },
 });
 
@@ -528,6 +614,7 @@ export const removeContributor = mutation({
     listId: v.string(),
     contributorUserId: v.string(),
   },
+  returns: v.object({ success: v.literal(true) }),
   handler: async (ctx, { listId, contributorUserId }) => {
     const userId = await getUserId(ctx);
     if (!userId) {
@@ -555,10 +642,39 @@ export const removeContributor = mutation({
       .first();
 
     if (existingMember) {
-      await ctx.db.delete(existingMember._id);
+      // Downgrade to member instead of deleting
+      await ctx.db.patch(existingMember._id, { role: "member" });
     }
 
-    return { success: true };
+    // Clean up: remove the contributor's events from this list
+    const contributorEvents = await ctx.db
+      .query("events")
+      .withIndex("by_user", (q) => q.eq("userId", contributorUserId))
+      .collect();
+
+    for (const event of contributorEvents) {
+      const eventToList = await ctx.db
+        .query("eventToLists")
+        .withIndex("by_event_and_list", (q) =>
+          q.eq("eventId", event.id).eq("listId", listId),
+        )
+        .first();
+
+      if (eventToList) {
+        await ctx.db.delete(eventToList._id);
+
+        // Remove from followers' feeds
+        await ctx.runMutation(
+          internal.feedHelpers.removeEventFromListFollowersFeeds,
+          {
+            eventId: event.id,
+            listId,
+          },
+        );
+      }
+    }
+
+    return { success: true as const };
   },
 });
 
@@ -570,40 +686,49 @@ export const backfillContributorEvents = internalMutation({
     listId: v.string(),
     contributorUserId: v.string(),
   },
+  returns: v.null(),
   handler: async (ctx, { listId, contributorUserId }) => {
-    const events = await ctx.db
-      .query("events")
-      .withIndex("by_user", (q) => q.eq("userId", contributorUserId))
-      .collect();
+    let cursor: string | null = null;
+    let isDone = false;
 
-    for (const event of events) {
-      if (event.visibility !== "public") {
-        continue;
-      }
+    while (!isDone) {
+      const result = await ctx.db
+        .query("events")
+        .withIndex("by_user", (q) => q.eq("userId", contributorUserId))
+        .paginate({ numItems: 100, cursor });
 
-      // Check if already in list
-      const existing = await ctx.db
-        .query("eventToLists")
-        .withIndex("by_event_and_list", (q) =>
-          q.eq("eventId", event.id).eq("listId", listId),
-        )
-        .first();
+      for (const event of result.page) {
+        if (event.visibility !== "public") {
+          continue;
+        }
 
-      if (!existing) {
-        await ctx.db.insert("eventToLists", {
-          eventId: event.id,
-          listId,
-        });
+        // Check if already in list
+        const existing = await ctx.db
+          .query("eventToLists")
+          .withIndex("by_event_and_list", (q) =>
+            q.eq("eventId", event.id).eq("listId", listId),
+          )
+          .first();
 
-        // Fan out to list followers' feeds
-        await ctx.runMutation(
-          internal.feedHelpers.addEventToListFollowersFeeds,
-          {
+        if (!existing) {
+          await ctx.db.insert("eventToLists", {
             eventId: event.id,
             listId,
-          },
-        );
+          });
+
+          // Fan out to list followers' feeds
+          await ctx.runMutation(
+            internal.feedHelpers.addEventToListFollowersFeeds,
+            {
+              eventId: event.id,
+              listId,
+            },
+          );
+        }
       }
+
+      isDone = result.isDone;
+      cursor = result.continueCursor;
     }
   },
 });
@@ -616,6 +741,7 @@ export const followSystemList = internalMutation({
     userId: v.string(),
     listId: v.string(),
   },
+  returns: v.null(),
   handler: async (ctx, { userId, listId }) => {
     // Check if already following
     const existingFollow = await ctx.db

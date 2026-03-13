@@ -1,18 +1,26 @@
 import { v } from "convex/values";
 
 import { internal } from "../_generated/api.js";
-import { internalAction, internalMutation } from "../_generated/server.js";
+import {
+  internalAction,
+  internalMutation,
+  internalQuery,
+} from "../_generated/server.js";
+import { userFeedsAggregate } from "../aggregates.js";
 import { generatePublicId } from "../utils.js";
 
 // Clerk user ID for the Soonlist system user
 const SYSTEM_USER_CLERK_ID = "user_3Aj06gNbZFN6UvIdklcPxLOt8v4";
 const PDX_DISCOVER_SLUG = "pdx-discover";
 
+const FOLLOWER_BATCH_SIZE = 10;
+
 /**
  * Step 1: Create the PDX Discover system list
  */
 export const createPdxDiscoverList = internalMutation({
   args: {},
+  returns: v.string(),
   handler: async (ctx) => {
     // Check if already exists
     const existing = await ctx.db
@@ -213,6 +221,7 @@ export const cleanupDiscoverFeedEntriesBatch = internalMutation({
       .paginate({ numItems: batchSize, cursor });
 
     for (const entry of result.page) {
+      await userFeedsAggregate.deleteIfExists(ctx, entry);
       await ctx.db.delete(entry._id);
     }
 
@@ -257,6 +266,12 @@ export const runDiscoverMigration = internalAction({
         `Users batch: processed=${result.processed}, migrated=${result.migrated}`,
       );
       if (result.isDone) break;
+      if (result.nextCursor === userCursor) {
+        console.error(
+          "Cursor did not advance — aborting migration loop to prevent infinite loop",
+        );
+        break;
+      }
       userCursor = result.nextCursor;
     }
     console.log(`Total users migrated: ${totalUsersMigrated}`);
@@ -280,23 +295,34 @@ export const runDiscoverMigration = internalAction({
         `Feed entries batch: processed=${result.processed}, migrated=${result.migrated}`,
       );
       if (result.isDone) break;
+      if (result.nextCursor === feedCursor) {
+        console.error(
+          "Cursor did not advance — aborting migration loop to prevent infinite loop",
+        );
+        break;
+      }
       feedCursor = result.nextCursor;
     }
     console.log(`Total events migrated to list: ${totalEventsMigrated}`);
 
     // Step 4: Backfill follower feeds (add list events to each follower's feed)
-    // This is handled by the followSystemList mutation already during Step 2
-    // But we need to explicitly trigger feed population for followers
-    const listFollows = await ctx.runMutation(
+    // Process followers in batches to avoid exceeding action runtime limits
+    const listFollows: string[] = await ctx.runQuery(
       internal.migrations.discoverListMigration.getListFollowerIds,
       { listId },
     );
     console.log(`Populating feeds for ${listFollows.length} followers...`);
-    for (const userId of listFollows) {
-      await ctx.runMutation(internal.feedHelpers.addListEventsToUserFeed, {
-        userId,
-        listId,
-      });
+    for (let i = 0; i < listFollows.length; i += FOLLOWER_BATCH_SIZE) {
+      const batch = listFollows.slice(i, i + FOLLOWER_BATCH_SIZE);
+      for (const userId of batch) {
+        await ctx.runMutation(internal.feedHelpers.addListEventsToUserFeed, {
+          userId,
+          listId,
+        });
+      }
+      console.log(
+        `Follower feed batch: processed ${Math.min(i + FOLLOWER_BATCH_SIZE, listFollows.length)}/${listFollows.length}`,
+      );
     }
 
     // Step 5: Clean up old discover feed entries
@@ -315,6 +341,12 @@ export const runDiscoverMigration = internalAction({
       totalDeleted += result.deleted;
       console.log(`Cleanup batch: deleted=${result.deleted}`);
       if (result.isDone) break;
+      if (result.nextCursor === cleanupCursor) {
+        console.error(
+          "Cursor did not advance — aborting migration loop to prevent infinite loop",
+        );
+        break;
+      }
       cleanupCursor = result.nextCursor;
     }
     console.log(`Total discover feed entries cleaned up: ${totalDeleted}`);
@@ -326,7 +358,7 @@ export const runDiscoverMigration = internalAction({
 /**
  * Helper query for the migration orchestrator
  */
-export const getListFollowerIds = internalMutation({
+export const getListFollowerIds = internalQuery({
   args: { listId: v.string() },
   returns: v.array(v.string()),
   handler: async (ctx, { listId }) => {
