@@ -69,18 +69,28 @@ export const updateEventInFeeds = internalMutation({
       );
     }
 
-    // 3. Add to discover feed for public events (legacy - kept during migration)
+    // 3. Add to discover feed for public events if creator has opted in
     if (visibility === "public") {
-      await upsertFeedEntry(
-        ctx,
-        "discover",
-        eventId,
-        eventStartTime,
-        eventEndTime,
-        currentTime,
-        similarityGroupId,
-        visibility,
-      );
+      const creator = await ctx.db
+        .query("users")
+        .withIndex("by_custom_id", (q) => q.eq("id", userId))
+        .first();
+      const showDiscover =
+        (creator?.publicMetadata as { showDiscover?: boolean } | null)
+          ?.showDiscover ?? false;
+
+      if (showDiscover) {
+        await upsertFeedEntry(
+          ctx,
+          "discover",
+          eventId,
+          eventStartTime,
+          eventEndTime,
+          currentTime,
+          similarityGroupId,
+          visibility,
+        );
+      }
     }
 
     // 4. Auto-populate contributor lists for this user
