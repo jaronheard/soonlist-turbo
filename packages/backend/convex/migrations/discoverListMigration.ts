@@ -367,6 +367,53 @@ export const runDiscoverMigration = internalAction({
 });
 
 /**
+ * Step 4 standalone: Populate follower feeds one at a time.
+ * Each follower is processed via scheduler to avoid action timeouts.
+ */
+export const populateFollowerFeeds = internalAction({
+  args: {
+    listId: v.string(),
+  },
+  handler: async (ctx, { listId }) => {
+    let cursor: string | null = null;
+    let totalScheduled = 0;
+
+    while (true) {
+      const page: {
+        followerIds: string[];
+        nextCursor: string | null;
+        isDone: boolean;
+      } = await ctx.runQuery(
+        internal.migrations.discoverListMigration.getListFollowerIds,
+        { listId, cursor, batchSize: 50 },
+      );
+
+      for (const userId of page.followerIds) {
+        await ctx.scheduler.runAfter(
+          0,
+          internal.feedHelpers.addListEventsToUserFeed,
+          { userId, listId },
+        );
+        totalScheduled++;
+      }
+
+      console.log(`Scheduled ${totalScheduled} follower feed jobs so far`);
+
+      if (page.isDone) break;
+      if (page.nextCursor === cursor) {
+        console.error("Cursor did not advance — aborting");
+        break;
+      }
+      cursor = page.nextCursor;
+    }
+
+    console.log(
+      `=== Scheduled ${totalScheduled} follower feed population jobs ===`,
+    );
+  },
+});
+
+/**
  * Helper query for the migration orchestrator — returns paginated follower IDs
  */
 export const getListFollowerIds = internalQuery({
