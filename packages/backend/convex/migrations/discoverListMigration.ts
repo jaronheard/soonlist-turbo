@@ -369,10 +369,6 @@ export const runDiscoverMigration = internalAction({
 });
 
 /**
- * Step 4 standalone: Populate follower feeds with batched event processing.
- * Processes one follower at a time, batching events to avoid mutation timeouts.
- */
-/**
  * Populate feeds for a single follower (batched).
  * Call once per follower to avoid action timeouts.
  */
