@@ -138,7 +138,6 @@ export default defineSchema({
     contribution: v.optional(
       v.union(v.literal("open"), v.literal("restricted"), v.literal("owner")),
     ),
-    // Contributor list fields
     listType: v.optional(
       v.union(v.literal("standard"), v.literal("contributor")),
     ),

@@ -9,7 +9,6 @@ import {
 import { userFeedsAggregate } from "../aggregates.js";
 import { generatePublicId } from "../utils.js";
 
-// Clerk user ID for the Soonlist system user
 const SYSTEM_USER_CLERK_ID = "user_3Aj06gNbZFN6UvIdklcPxLOt8v4";
 const PDX_DISCOVER_SLUG = "pdx-discover";
 
@@ -22,7 +21,6 @@ export const createPdxDiscoverList = internalMutation({
   args: {},
   returns: v.string(),
   handler: async (ctx) => {
-    // Check if already exists
     const existing = await ctx.db
       .query("lists")
       .withIndex("by_slug", (q) => q.eq("slug", PDX_DISCOVER_SLUG))
@@ -33,7 +31,6 @@ export const createPdxDiscoverList = internalMutation({
       return existing.id;
     }
 
-    // Look up system user by Clerk ID
     const systemUser = await ctx.db
       .query("users")
       .withIndex("by_custom_id", (q) => q.eq("id", SYSTEM_USER_CLERK_ID))
@@ -84,7 +81,6 @@ export const migrateDiscoverUsersBatch = internalMutation({
     isDone: v.boolean(),
   }),
   handler: async (ctx, { listId, cursor, batchSize }) => {
-    // Query users with pagination
     const result = await ctx.db
       .query("users")
       .paginate({ numItems: batchSize, cursor });
@@ -100,7 +96,6 @@ export const migrateDiscoverUsersBatch = internalMutation({
         continue;
       }
 
-      // Add as contributor
       const existingMember = await ctx.db
         .query("listMembers")
         .withIndex("by_list_and_user", (q) =>
@@ -118,14 +113,12 @@ export const migrateDiscoverUsersBatch = internalMutation({
         await ctx.db.patch(existingMember._id, { role: "contributor" });
       }
 
-      // Schedule backfill of contributor's existing events into the list
       await ctx.scheduler.runAfter(
         0,
         internal.lists.backfillContributorEvents,
         { listId, contributorUserId: user.id },
       );
 
-      // Add as follower
       const existingFollow = await ctx.db
         .query("listFollows")
         .withIndex("by_user_and_list", (q) =>
@@ -169,7 +162,6 @@ export const migrateDiscoverFeedEntriesBatch = internalMutation({
     isDone: v.boolean(),
   }),
   handler: async (ctx, { listId, cursor, batchSize }) => {
-    // Query discover feed entries
     const result = await ctx.db
       .query("userFeeds")
       .withIndex("by_feed_hasEnded_startTime", (q) =>
@@ -180,7 +172,6 @@ export const migrateDiscoverFeedEntriesBatch = internalMutation({
     let migrated = 0;
 
     for (const entry of result.page) {
-      // Add to eventToLists if not already there
       const existing = await ctx.db
         .query("eventToLists")
         .withIndex("by_event_and_list", (q) =>
@@ -248,14 +239,12 @@ export const runDiscoverMigration = internalAction({
   handler: async (ctx) => {
     console.log("=== Starting PDX Discover Migration ===");
 
-    // Step 1: Create the list
     const listId: string = await ctx.runMutation(
       internal.migrations.discoverListMigration.createPdxDiscoverList,
       {},
     );
     console.log("List ID:", listId);
 
-    // Step 2: Migrate users
     let userCursor: string | null = null;
     let totalUsersMigrated = 0;
     while (true) {
@@ -283,7 +272,6 @@ export const runDiscoverMigration = internalAction({
     }
     console.log(`Total users migrated: ${totalUsersMigrated}`);
 
-    // Step 3: Migrate feed entries to eventToLists
     let feedCursor: string | null = null;
     let totalEventsMigrated = 0;
     while (true) {
@@ -312,8 +300,6 @@ export const runDiscoverMigration = internalAction({
     }
     console.log(`Total events migrated to list: ${totalEventsMigrated}`);
 
-    // Step 4: Backfill follower feeds (add list events to each follower's feed)
-    // Process followers in paginated batches to avoid loading all follower IDs at once
     let followerCursor: string | null = null;
     let totalFollowersProcessed = 0;
     while (true) {
@@ -346,14 +332,9 @@ export const runDiscoverMigration = internalAction({
     }
     console.log(`Total follower feeds populated: ${totalFollowersProcessed}`);
 
-    // Step 5: Clean up old discover feed entries
-    // WARNING: Only run this step after all discover feed consumers have been
-    // migrated to use the contributor list system instead. Currently skipped
-    // because web/expo discover surfaces still read from feedId="discover".
     console.log(
       "Step 5: SKIPPED - discover feed cleanup deferred until consumers are migrated",
     );
-    // Uncomment the cleanup loop below once discover consumers are migrated:
     /*
     let cleanupCursor: string | null = null;
     let totalDeleted = 0;

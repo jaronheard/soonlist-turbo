@@ -461,15 +461,12 @@ export const getBySlug = query({
       return null;
     }
 
-    // Public and unlisted lists are viewable by anyone
     if (list.visibility === "public" || list.visibility === "unlisted") {
-      // Get owner info
       const owner = await ctx.db
         .query("users")
         .withIndex("by_custom_id", (q) => q.eq("id", list.userId))
         .first();
 
-      // Get contributor count
       const contributors = await ctx.db
         .query("listMembers")
         .withIndex("by_list_and_role", (q) =>
@@ -477,13 +474,11 @@ export const getBySlug = query({
         )
         .collect();
 
-      // Get follower count
       const followers = await ctx.db
         .query("listFollows")
         .withIndex("by_list", (q) => q.eq("listId", list.id))
         .collect();
 
-      // Sanitize owner to only include public-safe fields
       const sanitizedOwner = owner
         ? {
             _id: owner._id,
@@ -590,7 +585,6 @@ export const addContributor = mutation({
       throw new ConvexError("This list does not support contributors");
     }
 
-    // Validate that contributor user exists
     const contributorUser = await ctx.db
       .query("users")
       .withIndex("by_custom_id", (q) => q.eq("id", contributorUserId))
@@ -600,7 +594,6 @@ export const addContributor = mutation({
       throw new ConvexError("Contributor user not found");
     }
 
-    // Check if already a contributor
     const existingMember = await ctx.db
       .query("listMembers")
       .withIndex("by_list_and_user", (q) =>
@@ -609,10 +602,8 @@ export const addContributor = mutation({
       .first();
 
     if (existingMember) {
-      // Update role to contributor if needed
       if (existingMember.role !== "contributor") {
         await ctx.db.patch(existingMember._id, { role: "contributor" });
-        // Backfill existing public events for the promoted member
         await ctx.scheduler.runAfter(
           0,
           internal.lists.backfillContributorEvents,
@@ -631,7 +622,6 @@ export const addContributor = mutation({
       role: "contributor",
     });
 
-    // Backfill: add contributor's existing public events to this list
     await ctx.scheduler.runAfter(0, internal.lists.backfillContributorEvents, {
       listId,
       contributorUserId,
@@ -683,12 +673,9 @@ export const removeContributor = mutation({
       .first();
 
     if (existingMember) {
-      // Downgrade to member instead of deleting
       await ctx.db.patch(existingMember._id, { role: "member" });
     }
 
-    // Clean up: remove the contributor's events from this list
-    // Scheduled as an action to avoid exceeding transaction limits for large lists
     await ctx.scheduler.runAfter(
       0,
       internal.lists.removeContributorEventsAction,
@@ -726,7 +713,6 @@ export const removeContributorEventsBatch = internalMutation({
     let removed = 0;
 
     for (const entry of result.page) {
-      // Look up the event to check if it belongs to the contributor
       const event = await ctx.db
         .query("events")
         .withIndex("by_custom_id", (q) => q.eq("id", entry.eventId))
@@ -735,7 +721,6 @@ export const removeContributorEventsBatch = internalMutation({
       if (event?.userId === contributorUserId) {
         await ctx.db.delete(entry._id);
 
-        // Remove from followers' feeds
         await ctx.runMutation(
           internal.feedHelpers.removeEventFromListFollowersFeeds,
           {
@@ -790,7 +775,6 @@ export const removeContributorEventsAction = internalAction({
         break;
       }
 
-      // Cursor stall guard
       if (result.nextCursor === cursor) {
         console.error(
           `removeContributorEventsAction: cursor stalled at ${cursor} for list ${listId}`,
@@ -838,9 +822,6 @@ export const backfillContributorEventsBatch = internalMutation({
         continue;
       }
 
-      // Check if already in list.
-      // Convex mutations are serialized (atomic), so this check-then-insert
-      // is safe within a single mutation — no concurrent duplicates can occur here.
       const existing = await ctx.db
         .query("eventToLists")
         .withIndex("by_event_and_list", (q) =>
@@ -854,7 +835,6 @@ export const backfillContributorEventsBatch = internalMutation({
           listId,
         });
 
-        // Fan out to list followers' feeds
         await ctx.runMutation(
           internal.feedHelpers.addEventToListFollowersFeeds,
           {
@@ -937,7 +917,6 @@ export const followSystemList = internalMutation({
   },
   returns: v.null(),
   handler: async (ctx, { userId, listId }) => {
-    // Check if already following
     const existingFollow = await ctx.db
       .query("listFollows")
       .withIndex("by_user_and_list", (q) =>

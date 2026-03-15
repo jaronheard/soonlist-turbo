@@ -1364,7 +1364,6 @@ export async function addEventToList(
     }
   }
 
-  // Check if already in list (use .first() to tolerate potential duplicates)
   const existing = await ctx.db
     .query("eventToLists")
     .withIndex("by_event_and_list", (q) =>
@@ -1431,7 +1430,6 @@ export async function removeEventFromList(
     }
   }
 
-  // Use .first() to tolerate potential duplicates
   const existing = await ctx.db
     .query("eventToLists")
     .withIndex("by_event_and_list", (q) =>

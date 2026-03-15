@@ -48,8 +48,6 @@ export const updateEventInFeeds = internalMutation({
       similarityGroupId,
       visibility,
     );
-
-    // 2. Add to feeds of users who follow this event directly
     const eventFollows = await ctx.db
       .query("eventFollows")
       .withIndex("by_event", (q) => q.eq("eventId", eventId))
@@ -68,8 +66,6 @@ export const updateEventInFeeds = internalMutation({
         visibility,
       );
     }
-
-    // 3. Add to discover feed for public events if creator has opted in
     if (visibility === "public") {
       const creator = await ctx.db
         .query("users")
@@ -92,8 +88,6 @@ export const updateEventInFeeds = internalMutation({
         );
       }
     }
-
-    // 4. Auto-populate contributor lists for this user (async to avoid unbounded fanout)
     if (visibility === "public") {
       await ctx.scheduler.runAfter(
         0,
@@ -101,11 +95,6 @@ export const updateEventInFeeds = internalMutation({
         { eventId, userId },
       );
     }
-
-    // 5. Note: List-based feed fanout is handled at precise call sites:
-    // - createEvent: after inserting into eventToLists
-    // - addEventToList: when adding event to a list
-    // - toggleEventVisibility/updateEvent: when visibility changes to public
   },
 });
 
@@ -976,8 +965,6 @@ export const addUserEventsToUserFeed = internalMutation({
     return null;
   },
 });
-
-// Batch mutation: insert event into contributor lists, return list IDs that need follower fanout
 export const addEventToContributorLists = internalMutation({
   args: {
     eventId: v.string(),
@@ -985,7 +972,6 @@ export const addEventToContributorLists = internalMutation({
   },
   returns: v.array(v.string()),
   handler: async (ctx, { eventId, userId }) => {
-    // Find all listMembers entries where this user has role="contributor"
     const contributorMemberships = await ctx.db
       .query("listMembers")
       .withIndex("by_user_and_role", (q) =>
@@ -1000,7 +986,6 @@ export const addEventToContributorLists = internalMutation({
     const addedListIds: string[] = [];
 
     for (const membership of contributorMemberships) {
-      // Check if the list is a contributor-type list
       const list = await ctx.db
         .query("lists")
         .withIndex("by_custom_id", (q) => q.eq("id", membership.listId))
@@ -1010,9 +995,6 @@ export const addEventToContributorLists = internalMutation({
         continue;
       }
 
-      // Check if event already in list.
-      // Convex mutations are serialized (atomic), so this check-then-insert
-      // is safe within a single mutation — no concurrent duplicates can occur here.
       const existing = await ctx.db
         .query("eventToLists")
         .withIndex("by_event_and_list", (q) =>
@@ -1032,21 +1014,16 @@ export const addEventToContributorLists = internalMutation({
     return addedListIds;
   },
 });
-
-// Action to orchestrate contributor list fanout asynchronously
 export const addEventToContributorListsAction = internalAction({
   args: {
     eventId: v.string(),
     userId: v.string(),
   },
   handler: async (ctx, { eventId, userId }) => {
-    // Step 1: Insert eventToLists records and get list IDs that need fanout
     const addedListIds: string[] = await ctx.runMutation(
       internal.feedHelpers.addEventToContributorLists,
       { eventId, userId },
     );
-
-    // Step 2: Fan out to list followers' feeds (each as a separate mutation)
     for (const listId of addedListIds) {
       await ctx.runMutation(internal.feedHelpers.addEventToListFollowersFeeds, {
         eventId,
