@@ -89,9 +89,8 @@ export const migrateDiscoverUsersBatch = internalMutation({
     let migrated = 0;
 
     for (const user of result.page) {
-      const showDiscover =
-        (user.publicMetadata as { showDiscover?: boolean } | null)
-          ?.showDiscover ?? false;
+      // eslint-disable-next-line @typescript-eslint/consistent-type-assertions
+      const showDiscover: boolean = (user.publicMetadata as { showDiscover?: boolean } | null)?.showDiscover ?? false;
 
       if (!showDiscover) {
         continue;
@@ -485,7 +484,7 @@ export const addListEventsToUserFeedBatch = internalMutation({
         .withIndex("by_custom_id", (q) => q.eq("id", etl.eventId))
         .first();
 
-      if (!event || event.visibility !== "public") {
+      if (event?.visibility !== "public") {
         continue;
       }
 
