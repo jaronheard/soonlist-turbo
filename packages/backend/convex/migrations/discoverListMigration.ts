@@ -9,7 +9,7 @@ import {
 import { userFeedsAggregate } from "../aggregates.js";
 import { generatePublicId } from "../utils.js";
 
-const SYSTEM_USER_CLERK_ID = "user_3Aj06gNbZFN6UvIdklcPxLOt8v4";
+const SYSTEM_USER_USERNAME = "soonlist";
 const PDX_DISCOVER_SLUG = "pdx-discover";
 
 const FOLLOWER_BATCH_SIZE = 10;
@@ -33,19 +33,19 @@ export const createPdxDiscoverList = internalMutation({
 
     const systemUser = await ctx.db
       .query("users")
-      .withIndex("by_custom_id", (q) => q.eq("id", SYSTEM_USER_CLERK_ID))
+      .withIndex("by_username", (q) => q.eq("username", SYSTEM_USER_USERNAME))
       .first();
 
     if (!systemUser) {
       throw new Error(
-        `System user ${SYSTEM_USER_CLERK_ID} not found. Create this user in Clerk first.`,
+        `System user with username "${SYSTEM_USER_USERNAME}" not found.`,
       );
     }
 
     const listId = generatePublicId();
     await ctx.db.insert("lists", {
       id: listId,
-      userId: SYSTEM_USER_CLERK_ID,
+      userId: systemUser.id,
       name: "PDX Discover",
       description:
         "A community-curated list of events in Portland. Contributors' public events automatically appear here.",
