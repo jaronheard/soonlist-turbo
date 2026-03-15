@@ -164,7 +164,8 @@ export default defineSchema({
     .index("by_list", ["listId"])
     .index("by_user", ["userId"])
     .index("by_list_and_user", ["listId", "userId"])
-    .index("by_list_and_role", ["listId", "role"]),
+    .index("by_list_and_role", ["listId", "role"])
+    .index("by_user_and_role", ["userId", "role"]),
 
   users: defineTable({
     id: v.string(), // keeping the custom id field

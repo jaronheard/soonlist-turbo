@@ -93,12 +93,13 @@ export const updateEventInFeeds = internalMutation({
       }
     }
 
-    // 4. Auto-populate contributor lists for this user
+    // 4. Auto-populate contributor lists for this user (async to avoid unbounded fanout)
     if (visibility === "public") {
-      await ctx.runMutation(internal.feedHelpers.addEventToContributorLists, {
-        eventId,
-        userId,
-      });
+      await ctx.scheduler.runAfter(
+        0,
+        internal.feedHelpers.addEventToContributorListsAction,
+        { eventId, userId },
+      );
     }
 
     // 5. Note: List-based feed fanout is handled at precise call sites:
@@ -976,29 +977,29 @@ export const addUserEventsToUserFeed = internalMutation({
   },
 });
 
-// Helper to auto-add a public event to all contributor lists where the user is a contributor
+// Batch mutation: insert event into contributor lists, return list IDs that need follower fanout
 export const addEventToContributorLists = internalMutation({
   args: {
     eventId: v.string(),
     userId: v.string(),
   },
-  returns: v.null(),
+  returns: v.array(v.string()),
   handler: async (ctx, { eventId, userId }) => {
     // Find all listMembers entries where this user has role="contributor"
     const contributorMemberships = await ctx.db
       .query("listMembers")
-      .withIndex("by_user", (q) => q.eq("userId", userId))
+      .withIndex("by_user_and_role", (q) =>
+        q.eq("userId", userId).eq("role", "contributor"),
+      )
       .collect();
 
-    const contributorLists = contributorMemberships.filter(
-      (m) => m.role === "contributor",
-    );
-
-    if (contributorLists.length === 0) {
-      return null;
+    if (contributorMemberships.length === 0) {
+      return [];
     }
 
-    for (const membership of contributorLists) {
+    const addedListIds: string[] = [];
+
+    for (const membership of contributorMemberships) {
       // Check if the list is a contributor-type list
       const list = await ctx.db
         .query("lists")
@@ -1024,19 +1025,34 @@ export const addEventToContributorLists = internalMutation({
           eventId,
           listId: membership.listId,
         });
-
-        // Fan out to list followers' feeds
-        await ctx.runMutation(
-          internal.feedHelpers.addEventToListFollowersFeeds,
-          {
-            eventId,
-            listId: membership.listId,
-          },
-        );
+        addedListIds.push(membership.listId);
       }
     }
 
-    return null;
+    return addedListIds;
+  },
+});
+
+// Action to orchestrate contributor list fanout asynchronously
+export const addEventToContributorListsAction = internalAction({
+  args: {
+    eventId: v.string(),
+    userId: v.string(),
+  },
+  handler: async (ctx, { eventId, userId }) => {
+    // Step 1: Insert eventToLists records and get list IDs that need fanout
+    const addedListIds: string[] = await ctx.runMutation(
+      internal.feedHelpers.addEventToContributorLists,
+      { eventId, userId },
+    );
+
+    // Step 2: Fan out to list followers' feeds (each as a separate mutation)
+    for (const listId of addedListIds) {
+      await ctx.runMutation(internal.feedHelpers.addEventToListFollowersFeeds, {
+        eventId,
+        listId,
+      });
+    }
   },
 });
 
