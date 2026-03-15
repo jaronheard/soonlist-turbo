@@ -90,7 +90,9 @@ export const migrateDiscoverUsersBatch = internalMutation({
 
     for (const user of result.page) {
       // eslint-disable-next-line @typescript-eslint/consistent-type-assertions
-      const showDiscover: boolean = (user.publicMetadata as { showDiscover?: boolean } | null)?.showDiscover ?? false;
+      const showDiscover: boolean =
+        (user.publicMetadata as { showDiscover?: boolean } | null)
+          ?.showDiscover ?? false;
 
       if (!showDiscover) {
         continue;
