@@ -1430,15 +1430,17 @@ export async function removeEventFromList(
     }
   }
 
-  const existing = await ctx.db
+  const existingLinks = await ctx.db
     .query("eventToLists")
     .withIndex("by_event_and_list", (q) =>
       q.eq("eventId", eventId).eq("listId", listId),
     )
-    .first();
+    .collect();
 
-  if (existing) {
-    await ctx.db.delete(existing._id);
+  if (existingLinks.length > 0) {
+    for (const link of existingLinks) {
+      await ctx.db.delete(link._id);
+    }
 
     // Remove event from followers' feeds
     await ctx.runMutation(

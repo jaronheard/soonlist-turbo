@@ -674,16 +674,16 @@ export const removeContributor = mutation({
 
     if (existingMember) {
       await ctx.db.patch(existingMember._id, { role: "member" });
-    }
 
-    await ctx.scheduler.runAfter(
-      0,
-      internal.lists.removeContributorEventsAction,
-      {
-        listId,
-        contributorUserId,
-      },
-    );
+      await ctx.scheduler.runAfter(
+        0,
+        internal.lists.removeContributorEventsAction,
+        {
+          listId,
+          contributorUserId,
+        },
+      );
+    }
 
     return { success: true as const };
   },
