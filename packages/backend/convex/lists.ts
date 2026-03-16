@@ -835,7 +835,10 @@ export const backfillContributorEventsBatch = internalMutation({
           listId,
         });
 
-        await ctx.runMutation(
+        // Schedule feed population in a separate transaction to avoid
+        // hitting transaction limits when there are many followers
+        await ctx.scheduler.runAfter(
+          0,
           internal.feedHelpers.addEventToListFollowersFeeds,
           {
             eventId: event.id,
