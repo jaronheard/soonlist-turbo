@@ -1,12 +1,1 @@
-{
-  "crons": [
-    {
-      "path": "/api/cron/marketing-notification",
-      "schedule": "0 0 31 12 *"
-    },
-    {
-      "path": "/api/cron/trial-expiration",
-      "schedule": "0 10 * * *"
-    }
-  ]
-}
+{}

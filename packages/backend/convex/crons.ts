@@ -20,19 +20,14 @@ crons.cron(
   {},
 );
 
+// Marketing notification cron removed — the launch-specific message was stale.
+// Re-add with evergreen copy if an annual notification is desired.
+
 // Sync user properties to PostHog daily at 6 AM UTC
 crons.cron(
   "posthog user sync",
   "0 6 * * *", // Every day at 6:00 AM UTC
   internal.posthog.syncUserPropertiesToPostHog,
-  {},
-);
-
-// Sync data from PlanetScale every 15 minutes
-crons.cron(
-  "planetscale sync",
-  "*/15 * * * *", // Every 15 minutes
-  internal.planetscaleSync.syncAll,
   {},
 );
 

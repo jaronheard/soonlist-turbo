@@ -1,5 +1,5 @@
 import React from "react";
-import { StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import { Pressable, Text, View } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 
 interface AppleSignInButtonProps {
@@ -9,31 +9,20 @@ interface AppleSignInButtonProps {
 export const AppleSignInButton: React.FC<AppleSignInButtonProps> = ({
   onPress,
 }) => (
-  <TouchableOpacity style={styles.button} onPress={onPress} activeOpacity={0.7}>
-    <View style={styles.contentContainer}>
-      <Ionicons name="logo-apple" size={24} color="white" style={styles.icon} />
-      <Text style={styles.text}>Continue with Apple</Text>
+  <Pressable
+    className="rounded-full bg-black py-3 active:scale-[0.98] active:bg-neutral-800"
+    onPress={onPress}
+  >
+    <View className="flex-row items-center justify-center">
+      <Ionicons
+        name="logo-apple"
+        size={24}
+        color="white"
+        style={{ marginRight: 10 }}
+      />
+      <Text className="text-base font-semibold text-white">
+        Continue with Apple
+      </Text>
     </View>
-  </TouchableOpacity>
+  </Pressable>
 );
-
-const styles = StyleSheet.create({
-  button: {
-    backgroundColor: "#000",
-    borderRadius: 100,
-    paddingVertical: 12,
-  },
-  contentContainer: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  icon: {
-    marginRight: 10,
-  },
-  text: {
-    color: "white",
-    fontSize: 16,
-    fontWeight: "600",
-  },
-});

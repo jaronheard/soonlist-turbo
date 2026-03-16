@@ -11,7 +11,7 @@ import type {
   EventToLists,
   List,
   User,
-} from "@soonlist/db/types";
+} from "@soonlist/validators";
 import { api } from "@soonlist/backend/convex/_generated/api";
 import { collapseSimilarEvents } from "@soonlist/cal";
 
@@ -152,7 +152,9 @@ export function EventList({
                       id={item.id}
                       event={item.event as AddToCalendarButtonPropsRestricted}
                       visibility={item.visibility}
-                      lists={item.eventToLists?.map((list) => list.list)}
+                      lists={item.eventToLists?.map(
+                        (list: EventToListsWithList) => list.list,
+                      )}
                       createdAt={item.createdAt}
                       hideCurator={hideCurator}
                       showOtherCurators={showOtherCurators}
@@ -202,7 +204,9 @@ export function EventList({
                       id={item.id}
                       event={item.event as AddToCalendarButtonPropsRestricted}
                       visibility={item.visibility}
-                      lists={item.eventToLists?.map((list) => list.list)}
+                      lists={item.eventToLists?.map(
+                        (list: EventToListsWithList) => list.list,
+                      )}
                       createdAt={item.createdAt}
                       hideCurator={hideCurator}
                       showOtherCurators={showOtherCurators}
@@ -253,7 +257,9 @@ export function EventList({
                     id={item.id}
                     event={item.event as AddToCalendarButtonPropsRestricted}
                     visibility={item.visibility}
-                    lists={item.eventToLists?.map((list) => list.list)}
+                    lists={item.eventToLists?.map(
+                      (list: EventToListsWithList) => list.list,
+                    )}
                     createdAt={item.createdAt}
                     hideCurator={hideCurator}
                     showOtherCurators={showOtherCurators}

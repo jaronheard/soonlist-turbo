@@ -4,8 +4,9 @@ import { useEffect, useState } from "react";
 import { Smartphone, X } from "lucide-react";
 import { toast } from "sonner";
 
-import { createDeepLink } from "@soonlist/api/utils/urlScheme";
 import { Button } from "@soonlist/ui/button";
+
+import { createDeepLink } from "~/lib/urlScheme";
 
 interface OpenInAppBannerProps {
   eventId: string;

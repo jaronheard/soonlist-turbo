@@ -7,7 +7,7 @@ import type {
   EventToLists,
   List,
   User,
-} from "@soonlist/db/types";
+} from "@soonlist/validators";
 
 import type { AddToCalendarButtonProps } from "./types";
 
@@ -81,10 +81,16 @@ function isEventSimilar(
   const event2Data = event2.event as AddToCalendarButtonProps;
 
   const startTimeDifference = Math.abs(
-    differenceInMinutes(event1.startDateTime, event2.startDateTime),
+    differenceInMinutes(
+      new Date(event1.startDateTime),
+      new Date(event2.startDateTime),
+    ),
   );
   const endTimeDifference = Math.abs(
-    differenceInMinutes(event1.endDateTime, event2.endDateTime),
+    differenceInMinutes(
+      new Date(event1.endDateTime),
+      new Date(event2.endDateTime),
+    ),
   );
 
   // Text and Location Similarity

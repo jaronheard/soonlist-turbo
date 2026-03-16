@@ -108,7 +108,7 @@ npx convex run migrations/populateUserFeeds:populateUserFeeds
 2. **Event Updates** - Update feeds when visibility or time changes
 3. **Follow Actions** - Add `addEventToUserFeed` when user follows event
 4. **Unfollow Actions** - When unfollowing an event, only remove from feed if event is not in any followed list and user is not the creator
-5. **Cron Jobs** - Update feeds in PlanetScale sync if events are created externally
+5. **Cron Jobs** - Update feed state for ongoing and ended events
 
 ## Benefits
 

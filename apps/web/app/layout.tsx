@@ -4,7 +4,6 @@ import "~/styles/globals.css";
 
 import { IBM_Plex_Sans, Kalam } from "next/font/google";
 
-import { TRPCReactProvider } from "~/trpc/react";
 import PostHogClient from "./PostHogClient";
 import { PHProvider, Providers } from "./providers";
 
@@ -76,12 +75,10 @@ export default function RootLayout({
     >
       <PHProvider>
         <body className="overflow-x-hidden">
-          <TRPCReactProvider>
-            <Providers>
-              <PostHogClient />
-              {children}
-            </Providers>
-          </TRPCReactProvider>
+          <Providers>
+            <PostHogClient />
+            {children}
+          </Providers>
         </body>
       </PHProvider>
     </html>
