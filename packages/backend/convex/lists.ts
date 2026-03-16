@@ -906,38 +906,3 @@ export const backfillContributorEvents = internalAction({
     return null;
   },
 });
-
-/**
- * Internal: Follow a system list (used by migrations)
- */
-export const followSystemList = internalMutation({
-  args: {
-    userId: v.string(),
-    listId: v.string(),
-  },
-  returns: v.null(),
-  handler: async (ctx, { userId, listId }) => {
-    const existingFollow = await ctx.db
-      .query("listFollows")
-      .withIndex("by_user_and_list", (q) =>
-        q.eq("userId", userId).eq("listId", listId),
-      )
-      .first();
-
-    if (existingFollow) {
-      return null;
-    }
-
-    await ctx.db.insert("listFollows", {
-      userId,
-      listId,
-    });
-
-    await ctx.runMutation(internal.feedHelpers.addListEventsToUserFeed, {
-      userId,
-      listId,
-    });
-
-    return null;
-  },
-});
