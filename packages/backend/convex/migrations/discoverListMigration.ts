@@ -794,6 +794,137 @@ export const cleanupPersonalFeedGroupsSingle = internalAction({
   },
 });
 
+/**
+ * Diagnostic: Find eventFollows created during the migration window
+ * where the user's personal feed entry is now missing.
+ * These would be user saves that got caught by the cleanup.
+ */
+export const checkEdgeCases = internalAction({
+  args: {
+    listId: v.string(),
+    migrationStartMs: v.number(),
+    migrationEndMs: v.number(),
+  },
+  handler: async (ctx, { listId, migrationStartMs, migrationEndMs }) => {
+    // Get all followers of the list
+    let followerCursor: string | null = null;
+    const allFollowerIds: string[] = [];
+
+    while (true) {
+      const page: {
+        followerIds: string[];
+        nextCursor: string | null;
+        isDone: boolean;
+      } = await ctx.runQuery(
+        internal.migrations.discoverListMigration.getListFollowerIds,
+        { listId, cursor: followerCursor, batchSize: 50 },
+      );
+      allFollowerIds.push(...page.followerIds);
+      if (page.isDone) break;
+      if (page.nextCursor === followerCursor) break;
+      followerCursor = page.nextCursor;
+    }
+
+    console.log(`Checking ${allFollowerIds.length} followers for edge cases`);
+
+    const issues: Array<{
+      userId: string;
+      eventId: string;
+      followCreatedAt: number;
+    }> = [];
+
+    for (const userId of allFollowerIds) {
+      const result: Array<{
+        userId: string;
+        eventId: string;
+        followCreatedAt: number;
+      }> = await ctx.runQuery(
+        internal.migrations.discoverListMigration.checkUserEdgeCases,
+        { userId, listId, migrationStartMs, migrationEndMs },
+      );
+      issues.push(...result);
+    }
+
+    if (issues.length === 0) {
+      console.log("No edge cases found — no user saves were affected.");
+    } else {
+      console.log(`Found ${issues.length} potential edge cases:`);
+      for (const issue of issues) {
+        console.log(
+          `  User ${issue.userId} saved event ${issue.eventId} at ${new Date(issue.followCreatedAt).toISOString()} — personal feed entry is missing`,
+        );
+      }
+    }
+
+    return issues;
+  },
+});
+
+/**
+ * Check a single user for edge cases: eventFollows created during migration window
+ * where the personal feed entry is now missing.
+ */
+export const checkUserEdgeCases = internalQuery({
+  args: {
+    userId: v.string(),
+    listId: v.string(),
+    migrationStartMs: v.number(),
+    migrationEndMs: v.number(),
+  },
+  handler: async (ctx, { userId, listId, migrationStartMs, migrationEndMs }) => {
+    // Get all eventFollows for this user
+    const follows = await ctx.db
+      .query("eventFollows")
+      .withIndex("by_user", (q) => q.eq("userId", userId))
+      .collect();
+
+    const issues: Array<{
+      userId: string;
+      eventId: string;
+      followCreatedAt: number;
+    }> = [];
+
+    for (const follow of follows) {
+      // Only check follows created during the migration window
+      if (
+        follow._creationTime < migrationStartMs ||
+        follow._creationTime > migrationEndMs
+      ) {
+        continue;
+      }
+
+      // Check if this event is in the discover list
+      const inList = await ctx.db
+        .query("eventToLists")
+        .withIndex("by_event_and_list", (q) =>
+          q.eq("eventId", follow.eventId).eq("listId", listId),
+        )
+        .first();
+
+      if (!inList) continue;
+
+      // Check if the personal feed entry exists
+      const personalFeedId = `user_${userId}`;
+      const feedEntry = await ctx.db
+        .query("userFeeds")
+        .withIndex("by_feed_event", (q) =>
+          q.eq("feedId", personalFeedId).eq("eventId", follow.eventId),
+        )
+        .first();
+
+      if (!feedEntry) {
+        issues.push({
+          userId,
+          eventId: follow.eventId,
+          followCreatedAt: follow._creationTime,
+        });
+      }
+    }
+
+    return issues;
+  },
+});
+
 export const cleanupPersonalFeedGroups = internalAction({
   args: {
     listId: v.string(),
