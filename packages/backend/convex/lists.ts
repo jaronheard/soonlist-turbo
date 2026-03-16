@@ -835,7 +835,10 @@ export const backfillContributorEventsBatch = internalMutation({
           listId,
         });
 
-        await ctx.runMutation(
+        // Schedule feed population in a separate transaction to avoid
+        // hitting transaction limits when there are many followers
+        await ctx.scheduler.runAfter(
+          0,
           internal.feedHelpers.addEventToListFollowersFeeds,
           {
             eventId: event.id,
@@ -902,41 +905,6 @@ export const backfillContributorEvents = internalAction({
     console.log(
       `Backfilled ${totalAdded} events to list ${listId} for contributor ${contributorUserId} (processed ${totalProcessed})`,
     );
-
-    return null;
-  },
-});
-
-/**
- * Internal: Follow a system list (used by migrations)
- */
-export const followSystemList = internalMutation({
-  args: {
-    userId: v.string(),
-    listId: v.string(),
-  },
-  returns: v.null(),
-  handler: async (ctx, { userId, listId }) => {
-    const existingFollow = await ctx.db
-      .query("listFollows")
-      .withIndex("by_user_and_list", (q) =>
-        q.eq("userId", userId).eq("listId", listId),
-      )
-      .first();
-
-    if (existingFollow) {
-      return null;
-    }
-
-    await ctx.db.insert("listFollows", {
-      userId,
-      listId,
-    });
-
-    await ctx.runMutation(internal.feedHelpers.addListEventsToUserFeed, {
-      userId,
-      listId,
-    });
 
     return null;
   },

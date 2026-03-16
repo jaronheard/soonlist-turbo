@@ -459,19 +459,6 @@ export const addListEventsToUserFeed = internalMutation({
         similarityGroupId,
         event.visibility,
       );
-
-      // Upsert into personal feed
-      const personalFeedId = `user_${userId}`;
-      await upsertFeedEntry(
-        ctx,
-        personalFeedId,
-        etl.eventId,
-        eventStartTime,
-        eventEndTime,
-        currentTime,
-        similarityGroupId,
-        event.visibility,
-      );
     }
   },
 });
@@ -489,7 +476,6 @@ export const removeListEventsFromUserFeed = internalMutation({
       .collect();
 
     const followedListsFeedId = `followedLists_${userId}`;
-    const personalFeedId = `user_${userId}`;
 
     // Get all lists the user follows (excluding the one being unfollowed)
     // This is used to check if events are in other followed lists
@@ -502,7 +488,6 @@ export const removeListEventsFromUserFeed = internalMutation({
     followedListIds.delete(listId); // Exclude the list being unfollowed
 
     // Precompute which events from this list are also in other followed lists
-    // This avoids querying eventToLists per event (O(n) queries -> O(m) queries where m = other lists)
     const eventIdsInThisList = new Set(eventToLists.map((etl) => etl.eventId));
     const eventsInOtherFollowedLists = new Set<string>();
 
@@ -522,15 +507,6 @@ export const removeListEventsFromUserFeed = internalMutation({
     }
 
     for (const etl of eventToLists) {
-      const event = await ctx.db
-        .query("events")
-        .withIndex("by_custom_id", (q) => q.eq("id", etl.eventId))
-        .first();
-
-      if (!event) {
-        continue;
-      }
-
       // Check if event is in another list the user follows (using precomputed set)
       const isInOtherFollowedList = eventsInOtherFollowedLists.has(etl.eventId);
 
@@ -559,58 +535,6 @@ export const removeListEventsFromUserFeed = internalMutation({
               { feedId: followedListsFeedId, similarityGroupId },
             );
           }
-        }
-      }
-
-      // Check if event should remain in personal feed before removing
-      // Event should stay if:
-      // 1. User created the event
-      // 2. User follows the event directly (via eventFollows)
-      // 3. Event is in another list the user follows
-      const isCreator = event.userId === userId;
-      if (isCreator) {
-        // User created the event, so it should remain in personal feed
-        continue;
-      }
-
-      // Check if user follows the event directly
-      const eventFollow = await ctx.db
-        .query("eventFollows")
-        .withIndex("by_user_and_event", (q) =>
-          q.eq("userId", userId).eq("eventId", etl.eventId),
-        )
-        .first();
-
-      if (eventFollow) {
-        // User follows the event directly, so it should remain in personal feed
-        continue;
-      }
-
-      if (isInOtherFollowedList) {
-        // Event is in another list the user follows, so it should remain in personal feed
-        continue;
-      }
-
-      // Safe to remove from personal feed - user didn't create it,
-      // doesn't follow it directly, and it's not in another followed list
-      const existingPersonalEntry = await ctx.db
-        .query("userFeeds")
-        .withIndex("by_feed_event", (q) =>
-          q.eq("feedId", personalFeedId).eq("eventId", etl.eventId),
-        )
-        .first();
-
-      if (existingPersonalEntry) {
-        const similarityGroupId = existingPersonalEntry.similarityGroupId;
-        await userFeedsAggregate.deleteIfExists(ctx, existingPersonalEntry);
-        await ctx.db.delete(existingPersonalEntry._id);
-
-        // Update grouped feed entry
-        if (similarityGroupId) {
-          await ctx.runMutation(
-            internal.feedGroupHelpers.upsertGroupedFeedEntry,
-            { feedId: personalFeedId, similarityGroupId },
-          );
         }
       }
     }
@@ -654,24 +578,11 @@ export const addEventToListFollowersFeeds = internalMutation({
       }
 
       const followedListsFeedId = `followedLists_${follow.userId}`;
-      const personalFeedId = `user_${follow.userId}`;
 
       // Upsert into followedLists feed
       await upsertFeedEntry(
         ctx,
         followedListsFeedId,
-        eventId,
-        eventStartTime,
-        eventEndTime,
-        currentTime,
-        similarityGroupId,
-        event.visibility,
-      );
-
-      // Upsert into personal feed
-      await upsertFeedEntry(
-        ctx,
-        personalFeedId,
         eventId,
         eventStartTime,
         eventEndTime,
@@ -706,7 +617,6 @@ export const removeEventFromListFollowersFeeds = internalMutation({
 
     for (const follow of listFollows) {
       const followedListsFeedId = `followedLists_${follow.userId}`;
-      const personalFeedId = `user_${follow.userId}`;
 
       // Check if event is in another list this user follows
       const userListFollows = await ctx.db
@@ -754,52 +664,6 @@ export const removeEventFromListFollowersFeeds = internalMutation({
               { feedId: followedListsFeedId, similarityGroupId },
             );
           }
-        }
-      }
-
-      // Check if event should remain in personal feed before removing
-      // Event should stay if:
-      // 1. User created the event
-      // 2. User follows the event directly (via eventFollows)
-      // 3. Event is in another list the user follows
-      const isCreator = event.userId === follow.userId;
-      if (isCreator) {
-        continue;
-      }
-
-      const eventFollow = await ctx.db
-        .query("eventFollows")
-        .withIndex("by_user_and_event", (q) =>
-          q.eq("userId", follow.userId).eq("eventId", eventId),
-        )
-        .first();
-
-      if (eventFollow) {
-        continue;
-      }
-
-      if (isInOtherFollowedList) {
-        continue;
-      }
-
-      const existingPersonalEntry = await ctx.db
-        .query("userFeeds")
-        .withIndex("by_feed_event", (q) =>
-          q.eq("feedId", personalFeedId).eq("eventId", eventId),
-        )
-        .first();
-
-      if (existingPersonalEntry) {
-        const similarityGroupId = existingPersonalEntry.similarityGroupId;
-        await userFeedsAggregate.deleteIfExists(ctx, existingPersonalEntry);
-        await ctx.db.delete(existingPersonalEntry._id);
-
-        // Update grouped feed entry
-        if (similarityGroupId) {
-          await ctx.runMutation(
-            internal.feedGroupHelpers.upsertGroupedFeedEntry,
-            { feedId: personalFeedId, similarityGroupId },
-          );
         }
       }
     }
