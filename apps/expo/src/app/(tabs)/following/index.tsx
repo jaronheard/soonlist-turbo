@@ -132,7 +132,7 @@ function FollowingEmptyState() {
           lineHeight: 26,
         }}
       >
-        Events other people have captured will appear here
+        Events from lists you follow will appear here
       </Text>
       <TouchableOpacity
         onPress={() => void handleInvite()}
@@ -172,9 +172,9 @@ function FollowingFeedContent() {
   const [selectedSegment, setSelectedSegment] = useState<Segment>("upcoming");
   const stableTimestamp = useStableTimestamp();
 
-  // Check if user is following anyone
-  const followingUsers = useQuery(api.users.getFollowingUsers);
-  const hasFollowings = (followingUsers?.length ?? 0) > 0;
+  // Check if user is following any lists
+  const followedLists = useQuery(api.lists.getFollowedLists);
+  const hasFollowings = (followedLists?.length ?? 0) > 0;
 
   const handleSegmentChange = useCallback((segment: Segment) => {
     setSelectedSegment(segment);
@@ -192,7 +192,7 @@ function FollowingFeedContent() {
     status,
     loadMore,
   } = useStablePaginatedQuery(
-    api.feeds.getFollowedUsersFeed,
+    api.feeds.getFollowedListsFeed,
     hasFollowings ? queryArgs : "skip",
     {
       initialNumItems: 50,
@@ -273,8 +273,8 @@ function FollowingFeedContent() {
     );
   }, [selectedSegment, handleSegmentChange, enrichedEvents.length]);
 
-  // Show empty state if not following anyone
-  if (followingUsers !== undefined && !hasFollowings) {
+  // Show empty state if not following any lists
+  if (followedLists !== undefined && !hasFollowings) {
     return <FollowingEmptyState />;
   }
 
@@ -283,7 +283,7 @@ function FollowingFeedContent() {
       events={enrichedEvents}
       onEndReached={handleLoadMore}
       isFetchingNextPage={status === "LoadingMore"}
-      isLoadingFirstPage={followingUsers === undefined}
+      isLoadingFirstPage={followedLists === undefined}
       showCreator="always"
       primaryAction="save"
       showSourceStickers
