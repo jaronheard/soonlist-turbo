@@ -548,3 +548,153 @@ export const getListFollowerIds = internalQuery({
     };
   },
 });
+
+/**
+ * Cleanup: remove migration-added entries from personal feeds (user_${userId}).
+ * Only removes entries where the event is in the PDX Discover list AND
+ * addedAt falls within the migration time window.
+ * Leaves followedLists_ entries intact.
+ */
+export const cleanupPersonalFeedBatch = internalMutation({
+  args: {
+    userId: v.string(),
+    listId: v.string(),
+    migrationStartMs: v.number(),
+    migrationEndMs: v.number(),
+    cursor: v.union(v.string(), v.null()),
+    batchSize: v.number(),
+  },
+  returns: v.object({
+    checked: v.number(),
+    removed: v.number(),
+    nextCursor: v.union(v.string(), v.null()),
+    isDone: v.boolean(),
+  }),
+  handler: async (
+    ctx,
+    { userId, listId, migrationStartMs, migrationEndMs, cursor, batchSize },
+  ) => {
+    const personalFeedId = `user_${userId}`;
+    const result = await ctx.db
+      .query("userFeeds")
+      .withIndex("by_feed_hasEnded_startTime", (q) =>
+        q.eq("feedId", personalFeedId),
+      )
+      .paginate({ numItems: batchSize, cursor });
+
+    let removed = 0;
+
+    for (const entry of result.page) {
+      if (entry.addedAt < migrationStartMs || entry.addedAt > migrationEndMs) {
+        continue;
+      }
+
+      const inList = await ctx.db
+        .query("eventToLists")
+        .withIndex("by_event_and_list", (q) =>
+          q.eq("eventId", entry.eventId).eq("listId", listId),
+        )
+        .first();
+
+      if (inList) {
+        await userFeedsAggregate.deleteIfExists(ctx, entry);
+        await ctx.db.delete(entry._id);
+        removed++;
+      }
+    }
+
+    return {
+      checked: result.page.length,
+      removed,
+      nextCursor: result.continueCursor,
+      isDone: result.isDone,
+    };
+  },
+});
+
+export const cleanupPersonalFeedSingle = internalAction({
+  args: {
+    userId: v.string(),
+    listId: v.string(),
+    migrationStartMs: v.number(),
+    migrationEndMs: v.number(),
+  },
+  handler: async (
+    ctx,
+    { userId, listId, migrationStartMs, migrationEndMs },
+  ) => {
+    let cursor: string | null = null;
+    let totalRemoved = 0;
+
+    while (true) {
+      const result: {
+        checked: number;
+        removed: number;
+        nextCursor: string | null;
+        isDone: boolean;
+      } = await ctx.runMutation(
+        internal.migrations.discoverListMigration.cleanupPersonalFeedBatch,
+        {
+          userId,
+          listId,
+          migrationStartMs,
+          migrationEndMs,
+          cursor,
+          batchSize: 50,
+        },
+      );
+      totalRemoved += result.removed;
+      if (result.isDone) break;
+      if (result.nextCursor === cursor) {
+        console.error(`Cursor stalled for user ${userId} — aborting`);
+        break;
+      }
+      cursor = result.nextCursor;
+    }
+
+    console.log(
+      `User ${userId}: removed ${totalRemoved} migration entries from personal feed`,
+    );
+  },
+});
+
+export const cleanupPersonalFeeds = internalAction({
+  args: {
+    listId: v.string(),
+    migrationStartMs: v.number(),
+    migrationEndMs: v.number(),
+  },
+  handler: async (ctx, { listId, migrationStartMs, migrationEndMs }) => {
+    let followerCursor: string | null = null;
+    let totalScheduled = 0;
+
+    while (true) {
+      const page: {
+        followerIds: string[];
+        nextCursor: string | null;
+        isDone: boolean;
+      } = await ctx.runQuery(
+        internal.migrations.discoverListMigration.getListFollowerIds,
+        { listId, cursor: followerCursor, batchSize: 50 },
+      );
+
+      for (const userId of page.followerIds) {
+        await ctx.scheduler.runAfter(
+          0,
+          internal.migrations.discoverListMigration.cleanupPersonalFeedSingle,
+          { userId, listId, migrationStartMs, migrationEndMs },
+        );
+        totalScheduled++;
+      }
+
+      if (page.isDone) break;
+      if (page.nextCursor === followerCursor) {
+        console.error("Follower cursor stalled — aborting");
+        break;
+      }
+      followerCursor = page.nextCursor;
+    }
+
+    console.log(`Scheduled ${totalScheduled} personal feed cleanup jobs`);
+  },
+});
