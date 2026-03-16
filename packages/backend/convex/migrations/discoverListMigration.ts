@@ -5,6 +5,7 @@ import {
   internalAction,
   internalMutation,
   internalQuery,
+  query,
 } from "../_generated/server.js";
 import { userFeedsAggregate } from "../aggregates.js";
 import { upsertFeedEntry } from "../feedHelpers.js";
@@ -14,6 +15,29 @@ const SYSTEM_USER_USERNAME = "soonlist";
 const PDX_DISCOVER_SLUG = "pdx-discover";
 
 const FOLLOWER_BATCH_SIZE = 10;
+
+/**
+ * Legacy debug endpoint kept as a compatibility shim.
+ * Some stale scripts still call this with `{}`; accepting optional args prevents
+ * ArgumentValidationError noise while we phase those callers out.
+ */
+export const debugFeedEntry = query({
+  args: {
+    eventId: v.optional(v.string()),
+    feedId: v.optional(v.string()),
+  },
+  returns: v.object({
+    ok: v.boolean(),
+    message: v.string(),
+  }),
+  handler: (_ctx, { eventId, feedId }) => {
+    console.warn("Deprecated debugFeedEntry called", { eventId, feedId });
+    return {
+      ok: true,
+      message: "debugFeedEntry is deprecated and now a no-op.",
+    };
+  },
+});
 
 /**
  * Step 1: Create the PDX Discover system list
