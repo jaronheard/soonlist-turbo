@@ -550,6 +550,25 @@ export const getListFollowerIds = internalQuery({
 });
 
 /**
+ * Debug: look up a specific feed entry
+ */
+export const debugFeedEntry = internalQuery({
+  args: {
+    feedId: v.string(),
+    eventId: v.string(),
+  },
+  handler: async (ctx, { feedId, eventId }) => {
+    const entry = await ctx.db
+      .query("userFeeds")
+      .withIndex("by_feed_event", (q) =>
+        q.eq("feedId", feedId).eq("eventId", eventId),
+      )
+      .first();
+    return entry;
+  },
+});
+
+/**
  * Cleanup: remove migration-added entries from personal feeds (user_${userId}).
  * Only removes entries where the event is in the PDX Discover list AND
  * addedAt falls within the migration time window.
@@ -696,5 +715,123 @@ export const cleanupPersonalFeeds = internalAction({
     }
 
     console.log(`Scheduled ${totalScheduled} personal feed cleanup jobs`);
+  },
+});
+
+/**
+ * Cleanup userFeedGroups for user_${userId} feeds.
+ * Re-derives each group from userFeeds; groups with no remaining members are auto-deleted.
+ */
+export const cleanupPersonalFeedGroupsBatch = internalMutation({
+  args: {
+    userId: v.string(),
+    cursor: v.union(v.string(), v.null()),
+    batchSize: v.number(),
+  },
+  returns: v.object({
+    checked: v.number(),
+    rederived: v.number(),
+    nextCursor: v.union(v.string(), v.null()),
+    isDone: v.boolean(),
+  }),
+  handler: async (ctx, { userId, cursor, batchSize }) => {
+    const personalFeedId = `user_${userId}`;
+    const result = await ctx.db
+      .query("userFeedGroups")
+      .withIndex("by_feed_hasEnded_startTime", (q) =>
+        q.eq("feedId", personalFeedId),
+      )
+      .paginate({ numItems: batchSize, cursor });
+
+    let rederived = 0;
+
+    for (const groupEntry of result.page) {
+      await ctx.runMutation(internal.feedGroupHelpers.upsertGroupedFeedEntry, {
+        feedId: personalFeedId,
+        similarityGroupId: groupEntry.similarityGroupId,
+      });
+      rederived++;
+    }
+
+    return {
+      checked: result.page.length,
+      rederived,
+      nextCursor: result.continueCursor,
+      isDone: result.isDone,
+    };
+  },
+});
+
+export const cleanupPersonalFeedGroupsSingle = internalAction({
+  args: {
+    userId: v.string(),
+  },
+  handler: async (ctx, { userId }) => {
+    let cursor: string | null = null;
+    let totalRederived = 0;
+
+    while (true) {
+      const result: {
+        checked: number;
+        rederived: number;
+        nextCursor: string | null;
+        isDone: boolean;
+      } = await ctx.runMutation(
+        internal.migrations.discoverListMigration
+          .cleanupPersonalFeedGroupsBatch,
+        { userId, cursor, batchSize: 50 },
+      );
+      totalRederived += result.rederived;
+      if (result.isDone) break;
+      if (result.nextCursor === cursor) {
+        console.error(`Cursor stalled for user ${userId} — aborting`);
+        break;
+      }
+      cursor = result.nextCursor;
+    }
+
+    console.log(`User ${userId}: re-derived ${totalRederived} feed groups`);
+  },
+});
+
+export const cleanupPersonalFeedGroups = internalAction({
+  args: {
+    listId: v.string(),
+  },
+  handler: async (ctx, { listId }) => {
+    let followerCursor: string | null = null;
+    let totalScheduled = 0;
+
+    while (true) {
+      const page: {
+        followerIds: string[];
+        nextCursor: string | null;
+        isDone: boolean;
+      } = await ctx.runQuery(
+        internal.migrations.discoverListMigration.getListFollowerIds,
+        { listId, cursor: followerCursor, batchSize: 50 },
+      );
+
+      for (const userId of page.followerIds) {
+        await ctx.scheduler.runAfter(
+          0,
+          internal.migrations.discoverListMigration
+            .cleanupPersonalFeedGroupsSingle,
+          { userId },
+        );
+        totalScheduled++;
+      }
+
+      if (page.isDone) break;
+      if (page.nextCursor === followerCursor) {
+        console.error("Follower cursor stalled — aborting");
+        break;
+      }
+      followerCursor = page.nextCursor;
+    }
+
+    console.log(
+      `Scheduled ${totalScheduled} personal feed groups cleanup jobs`,
+    );
   },
 });
