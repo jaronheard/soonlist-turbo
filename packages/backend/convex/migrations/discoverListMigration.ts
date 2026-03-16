@@ -15,6 +15,42 @@ const PDX_DISCOVER_SLUG = "pdx-discover";
 
 const FOLLOWER_BATCH_SIZE = 10;
 
+interface CleanupPersonalFeedSchedulerArgs {
+  userId: string;
+  listId: string;
+  migrationStartMs: number;
+  migrationEndMs: number;
+}
+
+const isNonEmptyString = (value: unknown): value is string =>
+  typeof value === "string" && value.length > 0;
+
+const isFiniteNumber = (value: unknown): value is number =>
+  typeof value === "number" && Number.isFinite(value);
+
+const toCleanupPersonalFeedSchedulerArgs = (args: {
+  userId: unknown;
+  listId: unknown;
+  migrationStartMs: unknown;
+  migrationEndMs: unknown;
+}): CleanupPersonalFeedSchedulerArgs | null => {
+  if (
+    !isNonEmptyString(args.userId) ||
+    !isNonEmptyString(args.listId) ||
+    !isFiniteNumber(args.migrationStartMs) ||
+    !isFiniteNumber(args.migrationEndMs)
+  ) {
+    return null;
+  }
+
+  return {
+    userId: args.userId,
+    listId: args.listId,
+    migrationStartMs: args.migrationStartMs,
+    migrationEndMs: args.migrationEndMs,
+  };
+};
+
 /**
  * Step 1: Create the PDX Discover system list
  */
@@ -541,8 +577,19 @@ export const getListFollowerIds = internalQuery({
       .query("listFollows")
       .withIndex("by_list", (q) => q.eq("listId", listId))
       .paginate({ numItems: batchSize, cursor });
+
+    const followerIds = result.page
+      .map((f) => f.userId)
+      .filter((userId): userId is string => isNonEmptyString(userId));
+
+    if (followerIds.length !== result.page.length) {
+      console.warn(
+        `Skipped ${result.page.length - followerIds.length} malformed list followers while paginating cleanup targets for list ${listId}`,
+      );
+    }
+
     return {
-      followerIds: result.page.map((f) => f.userId),
+      followerIds,
       nextCursor: result.continueCursor,
       isDone: result.isDone,
     };
@@ -665,6 +712,16 @@ export const cleanupPersonalFeeds = internalAction({
     migrationEndMs: v.number(),
   },
   handler: async (ctx, { listId, migrationStartMs, migrationEndMs }) => {
+    if (
+      !isNonEmptyString(listId) ||
+      !isFiniteNumber(migrationStartMs) ||
+      !isFiniteNumber(migrationEndMs)
+    ) {
+      throw new Error(
+        "cleanupPersonalFeeds requires listId, migrationStartMs, and migrationEndMs to schedule cleanup jobs.",
+      );
+    }
+
     let followerCursor: string | null = null;
     let totalScheduled = 0;
 
@@ -679,10 +736,24 @@ export const cleanupPersonalFeeds = internalAction({
       );
 
       for (const userId of page.followerIds) {
+        const scheduleArgs = toCleanupPersonalFeedSchedulerArgs({
+          userId,
+          listId,
+          migrationStartMs,
+          migrationEndMs,
+        });
+
+        if (!scheduleArgs) {
+          console.warn(
+            `Skipping cleanupPersonalFeedSingle scheduling due to malformed args (userId=${String(userId)}, listId=${String(listId)}, migrationStartMs=${String(migrationStartMs)}, migrationEndMs=${String(migrationEndMs)})`,
+          );
+          continue;
+        }
+
         await ctx.scheduler.runAfter(
           0,
           internal.migrations.discoverListMigration.cleanupPersonalFeedSingle,
-          { userId, listId, migrationStartMs, migrationEndMs },
+          scheduleArgs,
         );
         totalScheduled++;
       }
