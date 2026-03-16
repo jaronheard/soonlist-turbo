@@ -7,6 +7,7 @@ import {
   internalQuery,
 } from "../_generated/server.js";
 import { userFeedsAggregate } from "../aggregates.js";
+import { upsertFeedEntry } from "../feedHelpers.js";
 import { generatePublicId } from "../utils.js";
 
 const SYSTEM_USER_USERNAME = "soonlist";
@@ -88,7 +89,8 @@ export const migrateDiscoverUsersBatch = internalMutation({
     let migrated = 0;
 
     for (const user of result.page) {
-      const showDiscover =
+      // eslint-disable-next-line @typescript-eslint/consistent-type-assertions
+      const showDiscover: boolean =
         (user.publicMetadata as { showDiscover?: boolean } | null)
           ?.showDiscover ?? false;
 
@@ -367,15 +369,50 @@ export const runDiscoverMigration = internalAction({
 });
 
 /**
- * Step 4 standalone: Populate follower feeds one at a time.
- * Each follower is processed via scheduler to avoid action timeouts.
+ * Populate feeds for a single follower (batched).
+ * Call once per follower to avoid action timeouts.
+ */
+export const populateFollowerFeedSingle = internalAction({
+  args: {
+    listId: v.string(),
+    userId: v.string(),
+  },
+  handler: async (ctx, { listId, userId }) => {
+    let eventCursor: string | null = null;
+    let totalProcessed = 0;
+
+    while (true) {
+      const result: {
+        processed: number;
+        nextCursor: string | null;
+        isDone: boolean;
+      } = await ctx.runMutation(
+        internal.migrations.discoverListMigration.addListEventsToUserFeedBatch,
+        { userId, listId, cursor: eventCursor, batchSize: 50 },
+      );
+      totalProcessed += result.processed;
+      if (result.isDone) break;
+      if (result.nextCursor === eventCursor) {
+        console.error(`Event cursor stalled for user ${userId} — aborting`);
+        break;
+      }
+      eventCursor = result.nextCursor;
+    }
+
+    console.log(`User ${userId}: ${totalProcessed} events added to feeds`);
+  },
+});
+
+/**
+ * Step 4 standalone: Schedule feed population for all followers.
+ * Each follower gets its own action to avoid overall timeout.
  */
 export const populateFollowerFeeds = internalAction({
   args: {
     listId: v.string(),
   },
   handler: async (ctx, { listId }) => {
-    let cursor: string | null = null;
+    let followerCursor: string | null = null;
     let totalScheduled = 0;
 
     while (true) {
@@ -385,14 +422,14 @@ export const populateFollowerFeeds = internalAction({
         isDone: boolean;
       } = await ctx.runQuery(
         internal.migrations.discoverListMigration.getListFollowerIds,
-        { listId, cursor, batchSize: 50 },
+        { listId, cursor: followerCursor, batchSize: 50 },
       );
 
       for (const userId of page.followerIds) {
         await ctx.scheduler.runAfter(
           0,
-          internal.feedHelpers.addListEventsToUserFeed,
-          { userId, listId },
+          internal.migrations.discoverListMigration.populateFollowerFeedSingle,
+          { listId, userId },
         );
         totalScheduled++;
       }
@@ -400,16 +437,88 @@ export const populateFollowerFeeds = internalAction({
       console.log(`Scheduled ${totalScheduled} follower feed jobs so far`);
 
       if (page.isDone) break;
-      if (page.nextCursor === cursor) {
-        console.error("Cursor did not advance — aborting");
+      if (page.nextCursor === followerCursor) {
+        console.error("Follower cursor stalled — aborting");
         break;
       }
-      cursor = page.nextCursor;
+      followerCursor = page.nextCursor;
     }
 
     console.log(
       `=== Scheduled ${totalScheduled} follower feed population jobs ===`,
     );
+  },
+});
+
+/**
+ * Batched mutation: add a page of list events to a user's feeds
+ */
+export const addListEventsToUserFeedBatch = internalMutation({
+  args: {
+    userId: v.string(),
+    listId: v.string(),
+    cursor: v.union(v.string(), v.null()),
+    batchSize: v.number(),
+  },
+  returns: v.object({
+    processed: v.number(),
+    nextCursor: v.union(v.string(), v.null()),
+    isDone: v.boolean(),
+  }),
+  handler: async (ctx, { userId, listId, cursor, batchSize }) => {
+    const result = await ctx.db
+      .query("eventToLists")
+      .withIndex("by_list", (q) => q.eq("listId", listId))
+      .paginate({ numItems: batchSize, cursor });
+
+    const currentTime = Date.now();
+    const followedListsFeedId = `followedLists_${userId}`;
+    const personalFeedId = `user_${userId}`;
+    let processed = 0;
+
+    for (const etl of result.page) {
+      const event = await ctx.db
+        .query("events")
+        .withIndex("by_custom_id", (q) => q.eq("id", etl.eventId))
+        .first();
+
+      if (event?.visibility !== "public") {
+        continue;
+      }
+
+      const eventStartTime = new Date(event.startDateTime).getTime();
+      const eventEndTime = new Date(event.endDateTime).getTime();
+
+      await upsertFeedEntry(
+        ctx,
+        followedListsFeedId,
+        etl.eventId,
+        eventStartTime,
+        eventEndTime,
+        currentTime,
+        event.similarityGroupId,
+        event.visibility,
+      );
+
+      await upsertFeedEntry(
+        ctx,
+        personalFeedId,
+        etl.eventId,
+        eventStartTime,
+        eventEndTime,
+        currentTime,
+        event.similarityGroupId,
+        event.visibility,
+      );
+
+      processed++;
+    }
+
+    return {
+      processed,
+      nextCursor: result.continueCursor,
+      isDone: result.isDone,
+    };
   },
 });
 

@@ -343,7 +343,7 @@ async function canUserViewListForFeed(
 }
 
 // Helper to upsert a feed entry (insert if missing, update timestamps if exists)
-async function upsertFeedEntry(
+export async function upsertFeedEntry(
   ctx: MutationCtx,
   feedId: string,
   eventId: string,
