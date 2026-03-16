@@ -801,12 +801,6 @@ export const syncFromClerk = internalMutation({
     };
 
     if (existing) {
-      // Only update username if the user doesn't already have one
-      if (existing.username && existing.username.trim() !== "") {
-        const { username: _, ...userDataWithoutUsername } = userData;
-        await ctx.db.patch(existing._id, userDataWithoutUsername);
-        return;
-      }
       await ctx.db.patch(existing._id, userData);
     } else {
       await ctx.db.insert("users", {
