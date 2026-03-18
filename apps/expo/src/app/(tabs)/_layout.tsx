@@ -1,9 +1,10 @@
-import { Tabs } from "expo-router";
+import { useRef } from "react";
+import { useRouter } from "expo-router";
+import { NativeTabs } from "expo-router/unstable-native-tabs";
 
-import { HeaderLogo } from "~/components/HeaderLogo";
-import { LiquidGlassHeader } from "~/components/LiquidGlassHeader";
-import { NavigationMenu } from "~/components/NavigationMenu";
-import { ProfileMenu } from "~/components/ProfileMenu";
+import type { BoardIcon, MyListIcon } from "~/store";
+import { useAddEventFlow } from "~/hooks/useAddEventFlow";
+import { useAppStore } from "~/store";
 
 // Export Expo Router's error boundary
 export { ErrorBoundary } from "expo-router";
@@ -12,48 +13,104 @@ export const unstable_settings = {
   initialRouteName: "feed",
 };
 
-const tabHeaderConfig = {
-  feed: { title: "Upcoming", active: "upcoming" },
-  following: { title: "Following", active: "following" },
-  past: { title: "Past", active: "past" },
-  discover: { title: "Discover", active: "discover" },
-} as const;
+const myListIconPairs = {
+  "list.bullet": { default: "list.bullet", selected: "list.bullet" },
+  clock: { default: "clock", selected: "clock.fill" },
+  calendar: { default: "calendar", selected: "calendar" },
+  star: { default: "star", selected: "star.fill" },
+  bookmark: { default: "bookmark", selected: "bookmark.fill" },
+  heart: { default: "heart", selected: "heart.fill" },
+} as const satisfies Record<MyListIcon, { default: string; selected: string }>;
 
-type TabRouteName = keyof typeof tabHeaderConfig;
+const boardIconPairs = {
+  "person.2": { default: "person.2", selected: "person.2.fill" },
+  "person.3": { default: "person.3", selected: "person.3.fill" },
+  "dot.radiowaves.left.and.right": {
+    default: "dot.radiowaves.left.and.right",
+    selected: "dot.radiowaves.left.and.right",
+  },
+  theatermasks: { default: "theatermasks", selected: "theatermasks.fill" },
+  globe: { default: "globe", selected: "globe" },
+  sparkles: { default: "sparkles", selected: "sparkles" },
+} as const satisfies Record<BoardIcon, { default: string; selected: string }>;
 
 export default function TabsLayout() {
+  const router = useRouter();
+  const { triggerAddEventFlow } = useAddEventFlow();
+  const pickerActiveRef = useRef(false);
+
+  const myListBadgeCount = useAppStore((s) => s.myListBadgeCount);
+  const communityBadgeCount = useAppStore((s) => s.communityBadgeCount);
+  const myListLabel = useAppStore((s) => s.myListLabel);
+  const boardLabel = useAppStore((s) => s.boardLabel);
+  const myListIcon = useAppStore((s) => s.myListIcon);
+  const boardIcon = useAppStore((s) => s.boardIcon);
+  const shortenMyListTab = useAppStore((s) => s.shortenMyListTab);
+
+  // Shorten tab labels when configured
+  const myListTabLabel = shortenMyListTab
+    ? myListLabel.replace("Soonlist", "List").replace("Events", "Events")
+    : myListLabel;
+  // For "Community Board", show just "Board" in the tab bar
+  const boardTabLabel = boardLabel === "Community Board" ? "Board" : boardLabel;
+
   return (
-    <Tabs
-      screenOptions={({ route }) => {
-        const config = tabHeaderConfig[route.name as TabRouteName];
-        return {
-          headerTransparent: true,
-          headerBackground: () => <LiquidGlassHeader />,
-          headerTintColor: "#fff",
-          headerTitleStyle: {
-            fontWeight: "bold",
-          },
-          tabBarStyle: {
-            display: "none", // Hide the default tab bar
-          },
-          headerLeftContainerStyle: { paddingLeft: 16 },
-          headerRightContainerStyle: { paddingRight: 16 },
-          headerTitleAlign: "center",
-          headerLeft: () => <HeaderLogo />,
-          headerRight: () => <ProfileMenu />,
-          ...(config
-            ? {
-                title: config.title,
-                headerTitle: () => <NavigationMenu active={config.active} />,
-              }
-            : null),
-        };
-      }}
+    <NativeTabs
+      tintColor="#5A32FB"
+      minimizeBehavior="onScrollDown"
+      blurEffect="systemChromeMaterialLight" /* interactive-1 */
     >
-      <Tabs.Screen name="feed" />
-      <Tabs.Screen name="following" />
-      <Tabs.Screen name="past" />
-      <Tabs.Screen name="discover" />
-    </Tabs>
+      <NativeTabs.Trigger name="feed">
+        <NativeTabs.Trigger.Label>{myListTabLabel}</NativeTabs.Trigger.Label>
+        <NativeTabs.Trigger.Icon sf={myListIconPairs[myListIcon]} />
+        {myListBadgeCount > 0 ? (
+          <NativeTabs.Trigger.Badge>
+            {String(myListBadgeCount)}
+          </NativeTabs.Trigger.Badge>
+        ) : (
+          <NativeTabs.Trigger.Badge hidden />
+        )}
+      </NativeTabs.Trigger>
+      <NativeTabs.Trigger name="following">
+        <NativeTabs.Trigger.Label>{boardTabLabel}</NativeTabs.Trigger.Label>
+        <NativeTabs.Trigger.Icon sf={boardIconPairs[boardIcon]} />
+        {communityBadgeCount > 0 ? (
+          <NativeTabs.Trigger.Badge>
+            {String(communityBadgeCount)}
+          </NativeTabs.Trigger.Badge>
+        ) : (
+          <NativeTabs.Trigger.Badge hidden />
+        )}
+      </NativeTabs.Trigger>
+      {/* Discover tab hidden */}
+      <NativeTabs.Trigger name="discover" hidden>
+        <NativeTabs.Trigger.Label hidden />
+        <NativeTabs.Trigger.Icon
+          sf={{ default: "binoculars", selected: "binoculars.fill" }}
+        />
+      </NativeTabs.Trigger>
+      {/* Add tab in search position (top-right on iOS Liquid Glass) */}
+      <NativeTabs.Trigger
+        name="add"
+        role="search"
+        listeners={{
+          tabPress: () => {
+            if (pickerActiveRef.current) return;
+            pickerActiveRef.current = true;
+            void triggerAddEventFlow().finally(() => {
+              pickerActiveRef.current = false;
+              setTimeout(() => router.navigate("/feed"), 100);
+            });
+          },
+        }}
+      >
+        <NativeTabs.Trigger.Label>Capture</NativeTabs.Trigger.Label>
+        <NativeTabs.Trigger.Icon
+          // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-require-imports
+          src={require("../../assets/capture-tab.png")}
+          renderingMode="original"
+        />
+      </NativeTabs.Trigger>
+    </NativeTabs>
   );
 }

@@ -1,5 +1,6 @@
 import React from "react";
 import { Pressable, StyleSheet, Text, View } from "react-native";
+import { router } from "expo-router";
 import { useVideoPlayer, VideoView } from "expo-video";
 import { useQuery } from "convex/react";
 
@@ -7,7 +8,6 @@ import { api } from "@soonlist/backend/convex/_generated/api";
 
 import LoadingSpinner from "~/components/LoadingSpinner";
 import { QuestionContainer } from "~/components/QuestionContainer";
-import { useOnboarding } from "~/hooks/useOnboarding";
 import { TOTAL_ONBOARDING_STEPS } from "../_layout";
 
 function VideoPlayer({ videoUrl }: { videoUrl: string }) {
@@ -22,18 +22,17 @@ function VideoPlayer({ videoUrl }: { videoUrl: string }) {
   );
 }
 
-export default function SeeHowItWorksScreen() {
-  const { saveStep } = useOnboarding();
+export default function ShareDemoScreen() {
   const videoUrl = useQuery(api.appConfig.getDemoVideoUrl);
 
   const handleContinue = () => {
-    saveStep("demo", { watchedDemo: true }, "/(onboarding)/onboarding/paywall");
+    router.navigate("/(onboarding)/onboarding/09-age");
   };
 
   return (
     <QuestionContainer
-      question="See how it works"
-      subtitle="Watch a quick demo of Soonlist in action"
+      question="Share into the app"
+      subtitle="Use the share button from any app to save events directly to Soonlist"
       currentStep={8}
       totalSteps={TOTAL_ONBOARDING_STEPS}
     >
@@ -58,9 +57,9 @@ export default function SeeHowItWorksScreen() {
 
         <Pressable
           onPress={handleContinue}
-          className="mx-4 rounded-2xl bg-interactive-1 px-6 py-4"
+          className="rounded-full bg-white py-4"
         >
-          <Text className="text-center text-lg font-semibold text-white">
+          <Text className="text-center text-lg font-semibold text-interactive-1">
             Continue
           </Text>
         </Pressable>

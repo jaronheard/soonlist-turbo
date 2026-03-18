@@ -15,6 +15,7 @@ export type OnboardingStep =
   | "screenshotDemo"
   | "addScreenshot"
   | "success"
-  | "paywall";
+  | "paywall"
+  | "shareDemoTryIt";
 
 export type { OnboardingData };

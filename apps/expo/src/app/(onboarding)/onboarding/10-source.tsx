@@ -31,11 +31,7 @@ export default function SourceScreen() {
     setIsLoading(true);
 
     try {
-      saveStep(
-        "source",
-        { source },
-        "/(onboarding)/onboarding/07-notifications",
-      );
+      saveStep("source", { source }, "/(onboarding)/onboarding/paywall");
     } catch (error) {
       logError("Failed to save source", error);
       toast.error("Something went wrong", "Please try again");
@@ -48,7 +44,7 @@ export default function SourceScreen() {
     <>
       <QuestionContainer
         question="Where did you hear about us?"
-        currentStep={7}
+        currentStep={10}
         totalSteps={TOTAL_ONBOARDING_STEPS}
       >
         <View>

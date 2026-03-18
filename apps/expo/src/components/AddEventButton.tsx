@@ -11,73 +11,35 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { LinearGradient } from "expo-linear-gradient";
 
 import { GlassButton } from "~/components/GlassButton";
-import { ChevronDown, CloudOff, Lock, PlusIcon } from "~/components/icons";
+import { ChevronDown, CloudOff, PlusIcon } from "~/components/icons";
 import { CircularSpinner } from "~/components/ui/CircularSpinner";
 import { useAddEventFlow } from "~/hooks/useAddEventFlow";
 import { useNetworkStatus } from "~/hooks/useNetworkStatus";
-import { useRevenueCat } from "~/providers/RevenueCatProvider";
 import { useInFlightEventStore } from "~/store/useInFlightEventStore";
 
-interface EventStats {
-  upcomingEvents: number;
-  allTimeEvents: number;
-  // Other fields from statsQuery.data if needed, but not used in current logic
-  // capturesThisWeek: number;
-  // weeklyGoal: number;
-}
 interface AddEventButtonProps {
   showChevron?: boolean;
-  stats?: EventStats;
+  /** Additional bottom offset to account for tab bar */
+  bottomOffset?: number;
 }
 
 /**
  * AddEventButton
  * ---------------
  * Opens the native photo picker (up to 10 images) and creates events for each selected photo in parallel.
- * This bypasses the /add screen for a faster multi‑event creation flow.
- * Paywall logic:
- * - First 3 events are free.
- * - After 3 total captured events, requires "unlimited" entitlement.
+ * All features are free — no subscription gating.
  */
 export default function AddEventButton({
   showChevron = true,
-  stats,
+  bottomOffset = 100,
 }: AddEventButtonProps) {
   const { isCapturing } = useInFlightEventStore();
   const isOnline = useNetworkStatus();
   const insets = useSafeAreaInsets();
 
-  const {
-    customerInfo,
-    isLoading: isRevenueCatLoading,
-    showProPaywallIfNeeded,
-  } = useRevenueCat();
-  const hasUnlimited =
-    customerInfo?.entitlements.active.unlimited?.isActive ?? false;
-
   const { triggerAddEventFlow } = useAddEventFlow();
 
-  const allTimeEventsCount = stats?.allTimeEvents ?? 0;
-  const isStatsLoading = stats === undefined;
-
-  let canProceedWithAdd = false;
-  if (allTimeEventsCount < 3) {
-    // First 3 captures are always allowed
-    canProceedWithAdd = true;
-  } else {
-    // After 3 captures, requires unlimited subscription
-    canProceedWithAdd = hasUnlimited;
-  }
-
-  const promptUserToUpgrade = async () => {
-    // Navigate to settings/plans page.
-    // You might want to adjust this path to your specific subscription/plans screen.
-    await showProPaywallIfNeeded();
-  };
-
-  const handlePress = canProceedWithAdd
-    ? triggerAddEventFlow
-    : promptUserToUpgrade;
+  const handlePress = triggerAddEventFlow;
 
   /**
    * Small bounce for the chevron hint
@@ -134,60 +96,43 @@ export default function AddEventButton({
       </View>
 
       {/* Main action button or offline indicator */}
-      {!isRevenueCatLoading && !isStatsLoading && (
-        <TouchableOpacity
-          onPress={handlePress}
-          disabled={!isOnline}
-          style={{ bottom: insets.bottom }}
-          className="absolute self-center"
-        >
-          {!isOnline ? (
-            // Offline indicator - replaces button when offline
-            <View className="relative">
-              <View
-                className="relative flex-row items-center justify-center gap-2 rounded-full bg-neutral-2 p-3"
-                style={{
-                  shadowColor: "#000",
-                  shadowOffset: { width: 0, height: 3 },
-                  shadowOpacity: 0.2,
-                  shadowRadius: 6,
-                  elevation: 8,
-                }}
-              >
-                <CloudOff size={44} color="#FFF" strokeWidth={2} />
-              </View>
+      <TouchableOpacity
+        onPress={handlePress}
+        disabled={!isOnline}
+        className="absolute self-center"
+        style={{ bottom: bottomOffset + insets.bottom }}
+      >
+        {!isOnline ? (
+          // Offline indicator - replaces button when offline
+          <View className="relative">
+            <View
+              className="relative flex-row items-center justify-center gap-2 rounded-full bg-neutral-2 p-3"
+              style={{
+                shadowColor: "#000",
+                shadowOffset: { width: 0, height: 3 },
+                shadowOpacity: 0.2,
+                shadowRadius: 6,
+                elevation: 8,
+              }}
+            >
+              <CloudOff size={44} color="#FFF" strokeWidth={2} />
             </View>
-          ) : canProceedWithAdd ? (
-            <View className="relative">
-              <GlassButton size={70}>
-                <PlusIcon size={44} color="#FFF" strokeWidth={2} />
-              </GlassButton>
+          </View>
+        ) : (
+          <View className="relative">
+            <GlassButton size={70}>
+              <PlusIcon size={44} color="#FFF" strokeWidth={2} />
+            </GlassButton>
 
-              {/* Spinner Overlay */}
-              {isCapturing && (
-                <View className="absolute -left-[3.5px] -top-[3.5px] h-[77px] w-[77px] items-center justify-center">
-                  <CircularSpinner size={77} strokeWidth={3} color="#5A32FB" />
-                </View>
-              )}
-            </View>
-          ) : (
-            <View className="relative">
-              <GlassButton size={70}>
-                <PlusIcon size={44} color="#FFF" strokeWidth={2} />
-              </GlassButton>
-              {/* Lock icon overlay */}
-              <View className="absolute bottom-0 right-0 rounded-full bg-white p-2">
-                <Lock
-                  id="lock-icon"
-                  size={16}
-                  color="#5A32FB"
-                  strokeWidth={3}
-                />
+            {/* Spinner Overlay */}
+            {isCapturing && (
+              <View className="absolute -left-[3.5px] -top-[3.5px] h-[77px] w-[77px] items-center justify-center">
+                <CircularSpinner size={77} strokeWidth={3} color="#5A32FB" />
               </View>
-            </View>
-          )}
-        </TouchableOpacity>
-      )}
+            )}
+          </View>
+        )}
+      </TouchableOpacity>
 
       {/* Bouncing chevron */}
       {showChevron && (

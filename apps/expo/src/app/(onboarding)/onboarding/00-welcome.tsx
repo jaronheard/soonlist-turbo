@@ -15,7 +15,7 @@ export default function WelcomeScreen() {
   const [isCodeModalVisible, setIsCodeModalVisible] = useState(false);
 
   const handleGetStarted = () => {
-    router.navigate("/(onboarding)/onboarding/01-intro");
+    router.navigate("/(onboarding)/onboarding/01-value-one-place");
   };
 
   const setHasSeenOnboarding = useSetHasSeenOnboarding();
@@ -56,8 +56,11 @@ export default function WelcomeScreen() {
                 Turn screenshots into{" "}
                 <Text className="text-interactive-1">plans</Text>
               </Text>
-              <Text className="mb-4 text-center text-lg text-gray-500">
+              <Text className="mb-2 text-center text-lg text-gray-500">
                 Save events in one tap. All in one place
+              </Text>
+              <Text className="mb-4 text-center text-sm text-gray-400">
+                Free, community-supported
               </Text>
             </AnimatedView>
           </View>
