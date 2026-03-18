@@ -172,6 +172,14 @@ export default function EditProfileScreen() {
     setBoardIcon,
     shortenMyListTab,
     setShortenMyListTab,
+    myListSubtitle,
+    setMyListSubtitle,
+    boardSubtitle,
+    setBoardSubtitle,
+    showMyListSubtitle,
+    setShowMyListSubtitle,
+    showBoardSubtitle,
+    setShowBoardSubtitle,
   } = useAppStore();
 
   const {
@@ -654,6 +662,44 @@ export default function EditProfileScreen() {
                 />
               </View>
             )}
+            <View className="py-2">
+              <View className="flex-row items-center justify-between">
+                <Text className="text-sm font-medium text-gray-700">
+                  My List subtitle
+                </Text>
+                <Switch
+                  value={showMyListSubtitle}
+                  onValueChange={setShowMyListSubtitle}
+                />
+              </View>
+              {showMyListSubtitle && (
+                <TextInput
+                  className="mt-1 rounded-lg border border-gray-300 px-3 py-2 text-sm"
+                  value={myListSubtitle}
+                  onChangeText={setMyListSubtitle}
+                  placeholder="e.g. Events I'm keeping track of"
+                />
+              )}
+            </View>
+            <View className="py-2">
+              <View className="flex-row items-center justify-between">
+                <Text className="text-sm font-medium text-gray-700">
+                  Scene subtitle
+                </Text>
+                <Switch
+                  value={showBoardSubtitle}
+                  onValueChange={setShowBoardSubtitle}
+                />
+              </View>
+              {showBoardSubtitle && (
+                <TextInput
+                  className="mt-1 rounded-lg border border-gray-300 px-3 py-2 text-sm"
+                  value={boardSubtitle}
+                  onChangeText={setBoardSubtitle}
+                  placeholder="e.g. Events from lists I follow"
+                />
+              )}
+            </View>
             <PreferenceRadioGroup<MyListIcon>
               label="My List Tab Icon"
               options={[
@@ -675,6 +721,7 @@ export default function EditProfileScreen() {
                 { value: "Community Board", label: "Community Board" },
                 { value: "Radar", label: "Radar" },
                 { value: "Scene", label: "Scene" },
+                { value: "My Scene", label: "My Scene" },
               ]}
               value={boardLabel}
               onChange={setBoardLabel}

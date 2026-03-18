@@ -72,7 +72,7 @@ interface AddEventInputState extends CommonEventInputState {
 type NewEventInputState = CommonEventInputState;
 
 export type MyListLabel = "My List" | "My Soonlist" | "My Events";
-export type BoardLabel = "Board" | "Community Board" | "Radar" | "Scene";
+export type BoardLabel = "Board" | "Community Board" | "Radar" | "Scene" | "My Scene";
 export type HeaderStyle = "possessive" | "my" | "your" | "plain";
 export type MyListIcon =
   | "list.bullet"
@@ -104,7 +104,17 @@ interface AppState {
   myListIcon: MyListIcon;
   boardIcon: BoardIcon;
   shortenMyListTab: boolean;
+  showContributingBadge: boolean;
+  myListSubtitle: string;
+  boardSubtitle: string;
+  showMyListSubtitle: boolean;
+  showBoardSubtitle: boolean;
   setShortenMyListTab: (shorten: boolean) => void;
+  setShowContributingBadge: (show: boolean) => void;
+  setMyListSubtitle: (subtitle: string) => void;
+  setBoardSubtitle: (subtitle: string) => void;
+  setShowMyListSubtitle: (show: boolean) => void;
+  setShowBoardSubtitle: (show: boolean) => void;
   setMyListLabel: (label: MyListLabel) => void;
   setBoardLabel: (label: BoardLabel) => void;
   setHeaderStyle: (style: HeaderStyle) => void;
@@ -227,7 +237,17 @@ export const useAppStore = create<AppState>()(
       myListIcon: "list.bullet",
       boardIcon: "person.2",
       shortenMyListTab: false,
+      showContributingBadge: true,
+      myListSubtitle: "Events I'm keeping track of",
+      boardSubtitle: "Events from lists I follow",
+      showMyListSubtitle: true,
+      showBoardSubtitle: true,
       setShortenMyListTab: (shorten) => set({ shortenMyListTab: shorten }),
+      setShowContributingBadge: (show) => set({ showContributingBadge: show }),
+      setMyListSubtitle: (subtitle) => set({ myListSubtitle: subtitle }),
+      setBoardSubtitle: (subtitle) => set({ boardSubtitle: subtitle }),
+      setShowMyListSubtitle: (show) => set({ showMyListSubtitle: show }),
+      setShowBoardSubtitle: (show) => set({ showBoardSubtitle: show }),
       setMyListLabel: (label) => set({ myListLabel: label }),
       setBoardLabel: (label) => set({ boardLabel: label }),
       setHeaderStyle: (style) => set({ headerStyle: style }),
@@ -417,6 +437,11 @@ export const useAppStore = create<AppState>()(
           myListIcon: "list.bullet",
           boardIcon: "person.2",
           shortenMyListTab: false,
+          showContributingBadge: true,
+          myListSubtitle: "Events I'm keeping track of",
+          boardSubtitle: "Events from lists I follow",
+          showMyListSubtitle: true,
+          showBoardSubtitle: true,
           // Ensure discover override never persists across global reset
           discoverAccessOverride: false,
           addEventState: {

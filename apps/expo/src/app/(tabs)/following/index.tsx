@@ -20,8 +20,11 @@ import {
 } from "convex/react";
 import { usePostHog } from "posthog-react-native";
 
+import { SymbolView } from "expo-symbols";
+
 import { api } from "@soonlist/backend/convex/_generated/api";
 
+import { FollowedListsModal } from "~/components/FollowedListsModal";
 import { ShareIcon } from "~/components/icons";
 import LoadingSpinner from "~/components/LoadingSpinner";
 import UserEventsList from "~/components/UserEventsList";
@@ -170,7 +173,11 @@ function FollowingEmptyState() {
 function FollowingFeedContent() {
   const { user } = useUser();
   const [selectedSegment, setSelectedSegment] = useState<Segment>("upcoming");
+  const [isModalVisible, setIsModalVisible] = useState(false);
   const stableTimestamp = useStableTimestamp();
+  const myListIcon = useAppStore((s) => s.myListIcon);
+  const boardSubtitle = useAppStore((s) => s.boardSubtitle);
+  const showBoardSubtitle = useAppStore((s) => s.showBoardSubtitle);
 
   // Check if user is following any lists
   const followedLists = useQuery(api.lists.getFollowedLists);
@@ -247,31 +254,105 @@ function FollowingFeedContent() {
     }
   }, [enrichedEvents.length, selectedSegment, setCommunityBadgeCount]);
 
+  const followedListCount = followedLists?.length ?? 0;
+  const singleFollowedList =
+    followedListCount === 1 ? followedLists?.[0] : null;
+
+  const handleShareList = useCallback(
+    async (listName: string, listSlug?: string) => {
+      const shareUrl = listSlug
+        ? `https://soonlist.com/list/${listSlug}`
+        : "https://soonlist.com";
+      try {
+        await Share.share({
+          message: `Check out ${listName} on Soonlist`,
+          url: shareUrl,
+        });
+      } catch (error) {
+        logError("Error sharing list", error);
+      }
+    },
+    [],
+  );
+
   const HeaderComponent = useCallback(() => {
     return (
-      <View className="px-3 pb-2 pt-3" style={{ width: 260 }}>
-        {Platform.OS === "ios" ? (
-          <Host matchContents>
-            <Picker
-              selection={selectedSegment}
-              onSelectionChange={(value) => {
-                handleSegmentChange(value as Segment);
-              }}
-              modifiers={[pickerStyle("segmented")]}
-            >
-              <SwiftUIText modifiers={[tag("upcoming")]}>Upcoming</SwiftUIText>
-              <SwiftUIText modifiers={[tag("past")]}>Past</SwiftUIText>
-            </Picker>
-          </Host>
-        ) : (
-          <SegmentedControlFallback
-            selectedSegment={selectedSegment}
-            onSegmentChange={handleSegmentChange}
-          />
+      <View className="px-3 pb-2" style={{ marginTop: -4 }}>
+        {showBoardSubtitle && boardSubtitle.length > 0 && (
+          <Text
+            className="mb-1 text-base font-medium text-neutral-1"
+            style={{ paddingLeft: 6 }}
+          >
+            {boardSubtitle}
+          </Text>
         )}
+        {followedListCount > 0 && (
+          <TouchableOpacity
+            onPress={() => {
+              if (singleFollowedList) {
+                void handleShareList(
+                  singleFollowedList.name,
+                  singleFollowedList.slug ?? undefined,
+                );
+              } else {
+                setIsModalVisible(true);
+              }
+            }}
+            activeOpacity={0.7}
+            className="mb-2"
+            style={{ paddingLeft: 6 }}
+          >
+            <View className="flex-row items-center">
+              <Text className="text-sm text-neutral-2">Includes: </Text>
+              <SymbolView
+                name={myListIcon}
+                size={14}
+                tintColor="#5A32FB"
+              />
+              <Text className="text-sm font-semibold text-interactive-1">
+                {" "}
+                {singleFollowedList
+                  ? singleFollowedList.name
+                  : `${followedListCount} lists`}
+              </Text>
+            </View>
+          </TouchableOpacity>
+        )}
+        <View style={{ width: 260 }}>
+          {Platform.OS === "ios" ? (
+            <Host matchContents>
+              <Picker
+                selection={selectedSegment}
+                onSelectionChange={(value) => {
+                  handleSegmentChange(value as Segment);
+                }}
+                modifiers={[pickerStyle("segmented")]}
+              >
+                <SwiftUIText modifiers={[tag("upcoming")]}>
+                  Upcoming
+                </SwiftUIText>
+                <SwiftUIText modifiers={[tag("past")]}>Past</SwiftUIText>
+              </Picker>
+            </Host>
+          ) : (
+            <SegmentedControlFallback
+              selectedSegment={selectedSegment}
+              onSegmentChange={handleSegmentChange}
+            />
+          )}
+        </View>
       </View>
     );
-  }, [selectedSegment, handleSegmentChange, enrichedEvents.length]);
+  }, [
+    selectedSegment,
+    handleSegmentChange,
+    followedListCount,
+    singleFollowedList,
+    handleShareList,
+    myListIcon,
+    boardSubtitle,
+    showBoardSubtitle,
+  ]);
 
   // Show empty state if not following any lists
   if (followedLists !== undefined && !hasFollowings) {
@@ -279,18 +360,24 @@ function FollowingFeedContent() {
   }
 
   return (
-    <UserEventsList
-      events={enrichedEvents}
-      onEndReached={handleLoadMore}
-      isFetchingNextPage={status === "LoadingMore"}
-      isLoadingFirstPage={followedLists === undefined}
-      showCreator="always"
-      primaryAction="save"
-      showSourceStickers
-      savedEventIds={savedEventIds}
-      source="following"
-      HeaderComponent={HeaderComponent}
-    />
+    <>
+      <FollowedListsModal
+        visible={isModalVisible}
+        onClose={() => setIsModalVisible(false)}
+      />
+      <UserEventsList
+        events={enrichedEvents}
+        onEndReached={handleLoadMore}
+        isFetchingNextPage={status === "LoadingMore"}
+        isLoadingFirstPage={followedLists === undefined}
+        showCreator="always"
+        primaryAction="save"
+        showSourceStickers
+        savedEventIds={savedEventIds}
+        source="following"
+        HeaderComponent={HeaderComponent}
+      />
+    </>
   );
 }
 

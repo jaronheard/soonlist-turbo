@@ -1,10 +1,10 @@
-import React, { useCallback, useMemo, useState } from "react";
+import React, { useCallback, useMemo } from "react";
 import { ActivityIndicator, Text, TouchableOpacity, View } from "react-native";
-import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Image } from "expo-image";
 import { Stack, useLocalSearchParams, useRouter } from "expo-router";
 import { useConvexAuth, useMutation, useQuery } from "convex/react";
 
+import type { Doc } from "@soonlist/backend/convex/_generated/dataModel";
 import { api } from "@soonlist/backend/convex/_generated/api";
 
 import { Check, User } from "~/components/icons";
@@ -21,7 +21,6 @@ export default function UserProfilePage() {
   const stableTimestamp = useStableTimestamp();
   const router = useRouter();
   const { isAuthenticated } = useConvexAuth();
-  const [isFollowLoading, setIsFollowLoading] = useState(false);
 
   // Fetch user data by username
   const targetUser = useQuery(
@@ -32,15 +31,15 @@ export default function UserProfilePage() {
   // Get current user to check if viewing own profile
   const currentUser = useQuery(api.users.getCurrentUser);
 
-  // Check if current user is following the target user
-  const isFollowing = useQuery(
-    api.users.isFollowingUser,
-    targetUser?.id ? { followingId: targetUser.id } : "skip",
+  // Get user's public lists
+  const userLists = useQuery(
+    api.lists.getListsForUser,
+    targetUser?.id ? { userId: targetUser.id } : "skip",
   );
 
-  // Follow/unfollow mutations
-  const followUserMutation = useMutation(api.users.followUser);
-  const unfollowUserMutation = useMutation(api.users.unfollowUser);
+  // Follow/unfollow list mutations
+  const followListMutation = useMutation(api.lists.followList);
+  const unfollowListMutation = useMutation(api.lists.unfollowList);
 
   // Query to get current user's saved event IDs
   const savedEventIdsQuery = useQuery(
@@ -86,37 +85,35 @@ export default function UserProfilePage() {
     }
   };
 
-  const handleFollow = useCallback(async () => {
-    if (!targetUser?.id) return;
+  // Get followed list IDs for the current user
+  const followedLists = useQuery(api.lists.getFollowedLists);
+  const followedListIds = new Set(
+    followedLists?.map((l: Doc<"lists">) => l.id) ?? [],
+  );
 
-    // If not authenticated, redirect to sign-in
-    if (!isAuthenticated) {
-      router.push("/(auth)/sign-in");
-      return;
-    }
-
-    setIsFollowLoading(true);
-    try {
-      if (isFollowing) {
-        await unfollowUserMutation({ followingId: targetUser.id });
-      } else {
-        await followUserMutation({ followingId: targetUser.id });
+  const handleListFollow = useCallback(
+    async (listId: string, currentlyFollowing: boolean) => {
+      if (!isAuthenticated) {
+        router.push("/(auth)/sign-in");
+        return;
       }
-      void hapticSuccess();
-    } catch (error) {
-      logError("Error following/unfollowing user", error);
-      toast.error(isFollowing ? "Failed to unfollow" : "Failed to follow");
-    } finally {
-      setIsFollowLoading(false);
-    }
-  }, [
-    targetUser,
-    isAuthenticated,
-    isFollowing,
-    followUserMutation,
-    unfollowUserMutation,
-    router,
-  ]);
+
+      try {
+        if (currentlyFollowing) {
+          await unfollowListMutation({ listId });
+        } else {
+          await followListMutation({ listId });
+        }
+        void hapticSuccess();
+      } catch (error) {
+        logError("Error following/unfollowing list", error);
+        toast.error(
+          currentlyFollowing ? "Failed to unfollow" : "Failed to follow",
+        );
+      }
+    },
+    [isAuthenticated, followListMutation, unfollowListMutation, router],
+  );
 
   // targetUser is undefined while loading, null if not found
   const isUserLoading = targetUser === undefined;
@@ -204,20 +201,75 @@ export default function UserProfilePage() {
           ActionButton={ProfileSaveShareButtonWrapper}
           savedEventIds={savedEventIds}
           HeaderComponent={() => (
-            <UserProfileHeader
-              user={targetUser}
-              eventCount={filteredEvents.length}
-            />
+            <>
+              <UserProfileHeader
+                user={targetUser}
+                eventCount={filteredEvents.length}
+              />
+              {!isOwnProfile && userLists && userLists.length > 0 && (
+                <View className="px-4 pb-4">
+                  {userLists.map(
+                    (list: Doc<"lists"> & { followerCount: number }) => {
+                      const isFollowingList = followedListIds.has(list.id);
+                      return (
+                        <View
+                          key={list.id}
+                          className="mb-2 flex-row items-center justify-between rounded-xl bg-white p-3"
+                        >
+                          <View className="flex-1">
+                            <Text
+                              className="text-base font-semibold text-neutral-1"
+                              numberOfLines={1}
+                            >
+                              {list.name}
+                            </Text>
+                            <Text className="text-xs text-neutral-2">
+                              {list.followerCount}{" "}
+                              {list.followerCount === 1
+                                ? "follower"
+                                : "followers"}
+                            </Text>
+                          </View>
+                          <TouchableOpacity
+                            onPress={() =>
+                              void handleListFollow(list.id, isFollowingList)
+                            }
+                            activeOpacity={0.7}
+                          >
+                            <View
+                              className={`flex-row items-center rounded-full px-4 py-2 ${
+                                isFollowingList
+                                  ? "bg-neutral-4"
+                                  : "bg-interactive-1"
+                              }`}
+                            >
+                              {isFollowingList && (
+                                <Check
+                                  size={16}
+                                  color="#627496"
+                                  strokeWidth={3}
+                                />
+                              )}
+                              <Text
+                                className={`ml-1 text-sm font-semibold ${
+                                  isFollowingList
+                                    ? "text-neutral-2"
+                                    : "text-white"
+                                }`}
+                              >
+                                {isFollowingList ? "Following" : "Follow"}
+                              </Text>
+                            </View>
+                          </TouchableOpacity>
+                        </View>
+                      );
+                    },
+                  )}
+                </View>
+              )}
+            </>
           )}
         />
-        {/* Don't show follow button on own profile */}
-        {!isOwnProfile && (
-          <FollowButton
-            isFollowing={isFollowing ?? false}
-            isLoading={isFollowLoading || isFollowing === undefined}
-            onPress={handleFollow}
-          />
-        )}
       </View>
     </>
   );
@@ -274,63 +326,6 @@ function UserProfileHeader({ user, eventCount }: UserProfileHeaderProps) {
       <Text className="mt-1 text-sm text-neutral-2">
         {eventCount} upcoming {eventCount === 1 ? "event" : "events"}
       </Text>
-    </View>
-  );
-}
-
-function FollowButton({
-  isFollowing,
-  isLoading,
-  onPress,
-}: {
-  isFollowing: boolean;
-  isLoading: boolean;
-  onPress: () => void;
-}) {
-  const insets = useSafeAreaInsets();
-
-  return (
-    <View
-      className="absolute bottom-0 flex-row items-center justify-center self-center"
-      style={{
-        paddingBottom: insets.bottom + 16,
-        shadowColor: "#5A32FB",
-        shadowOffset: { width: 0, height: 3 },
-        shadowOpacity: 0.3,
-        shadowRadius: 6,
-        elevation: 8,
-      }}
-    >
-      <TouchableOpacity
-        onPress={onPress}
-        disabled={isLoading}
-        accessibilityLabel={isFollowing ? "Unfollow" : "Get Updates"}
-        accessibilityRole="button"
-        activeOpacity={0.8}
-      >
-        <View
-          className={`flex-row items-center rounded-full px-8 py-5 ${
-            isFollowing
-              ? "gap-3 bg-neutral-2"
-              : isLoading
-                ? "gap-3 bg-interactive-1"
-                : "bg-interactive-1"
-          }`}
-        >
-          {isLoading ? (
-            <ActivityIndicator size="small" color="#FFFFFF" />
-          ) : isFollowing ? (
-            <Check size={24} color="#FFFFFF" strokeWidth={3} />
-          ) : null}
-          <Text className="text-xl font-bold text-white">
-            {isLoading
-              ? "Loading..."
-              : isFollowing
-                ? "Following"
-                : "Get Updates"}
-          </Text>
-        </View>
-      </TouchableOpacity>
     </View>
   );
 }

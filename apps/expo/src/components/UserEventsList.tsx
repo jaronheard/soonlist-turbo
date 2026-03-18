@@ -26,7 +26,9 @@ import {
   CalendarPlus,
   Copy,
   Heart,
+  List,
   MoreVertical,
+  PenSquare,
   ShareIcon,
   User,
 } from "~/components/icons";
@@ -76,14 +78,19 @@ function EventSaversRow({
   iconSize,
   eventId,
   currentUserId,
+  sourceListName,
+  additionalSourceCount,
 }: {
   creator: UserForDisplay;
   savers: UserForDisplay[];
   iconSize: number;
   eventId: string;
   currentUserId?: string;
+  sourceListName?: string;
+  additionalSourceCount?: number;
 }) {
   const [isExpanded, setIsExpanded] = useState(false);
+  const isOwnEvent = currentUserId === creator.id;
 
   // Combine creator with savers, deduplicate by id, and limit to first 2
   const allUsers: UserForDisplay[] = [creator];
@@ -128,7 +135,7 @@ function EventSaversRow({
   // Collapsed view
   if (!isExpanded) {
     return (
-      <View className="mx-auto mt-1 flex-row items-center gap-2">
+      <View className="mx-auto mt-1 flex-row items-center gap-1">
         {/* Stacked avatars */}
         <View
           className="flex-row items-center"
@@ -186,23 +193,59 @@ function EventSaversRow({
           ))}
         </View>
 
-        {/* Names text - individually tappable */}
+        {/* Names and source attribution */}
         <View className="flex-row flex-wrap items-center">
-          {displayUsers.map((user, index) =>
-            renderTappableName(
-              user,
-              index === displayUsers.length - 1 && remainingCount === 0,
-            ),
-          )}
-          {remainingCount > 0 && (
-            <Pressable
-              onPress={() => setIsExpanded(true)}
-              hitSlop={{ top: 8, bottom: 8, left: 4, right: 4 }}
-            >
-              <Text className="text-xs text-interactive-1">
-                +{remainingCount} more
+          {isOwnEvent && sourceListName ? (
+            // Own event: show "Shared to [list] Name"
+            <View className="flex-row items-center">
+              <Text className="text-xs text-neutral-2">Shared to </Text>
+              <List size={11} color="#5A32FB" />
+              <Text className="text-xs font-semibold text-interactive-1">
+                {" "}
+                {sourceListName}
               </Text>
-            </Pressable>
+              {additionalSourceCount && additionalSourceCount > 0 ? (
+                <Text className="text-xs text-neutral-2">
+                  {" "}
+                  +{additionalSourceCount} more
+                </Text>
+              ) : null}
+            </View>
+          ) : (
+            <>
+              {displayUsers.map((user, index) =>
+                renderTappableName(
+                  user,
+                  index === displayUsers.length - 1 && remainingCount === 0,
+                ),
+              )}
+              {remainingCount > 0 && (
+                <Pressable
+                  onPress={() => setIsExpanded(true)}
+                  hitSlop={{ top: 8, bottom: 8, left: 4, right: 4 }}
+                >
+                  <Text className="text-xs text-interactive-1">
+                    +{remainingCount} more
+                  </Text>
+                </Pressable>
+              )}
+              {sourceListName ? (
+                <View className="flex-row items-center">
+                  <Text className="text-xs text-neutral-2"> via </Text>
+                  <List size={11} color="#5A32FB" />
+                  <Text className="text-xs font-semibold text-interactive-1">
+                    {" "}
+                    {sourceListName}
+                  </Text>
+                  {additionalSourceCount && additionalSourceCount > 0 ? (
+                    <Text className="text-xs text-neutral-2">
+                      {" "}
+                      +{additionalSourceCount} more
+                    </Text>
+                  ) : null}
+                </View>
+              ) : null}
+            </>
           )}
         </View>
       </View>
@@ -292,6 +335,8 @@ interface UserEventListItemProps {
   isDiscoverFeed?: boolean;
   primaryAction?: "addToCalendar" | "save";
   source?: string;
+  sourceListName?: string;
+  additionalSourceCount?: number;
 }
 
 export function UserEventListItem(props: UserEventListItemProps) {
@@ -307,6 +352,8 @@ export function UserEventListItem(props: UserEventListItemProps) {
     isDiscoverFeed = false,
     primaryAction = "addToCalendar",
     source,
+    sourceListName,
+    additionalSourceCount,
   } = props;
   const { fontScale } = useWindowDimensions();
   const { handleAddToCal, handleShare, handleFollow } = useEventActions({
@@ -596,7 +643,18 @@ export function UserEventListItem(props: UserEventListItemProps) {
                     Add
                   </Text>
                 </TouchableOpacity>
-              ) : isSaved || isOwner ? (
+              ) : isOwner ? (
+                <TouchableOpacity
+                  className="-mb-0.5 -ml-2.5 flex-row items-center gap-1 py-2.5 pl-4 pr-1"
+                  onPress={handleShare}
+                  hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+                >
+                  <ShareIcon size={iconSize * 1.1} color="#5A32FB" />
+                  <Text className="text-base font-bold text-interactive-1">
+                    Share
+                  </Text>
+                </TouchableOpacity>
+              ) : isSaved ? (
                 <View className="-mb-0.5 -ml-2.5 flex-row items-center gap-1 py-2.5 pl-4 pr-1 opacity-60">
                   <Heart size={iconSize * 1.1} color="#5A32FB" fill="#5A32FB" />
                   <Text className="text-base font-bold text-interactive-1">
@@ -616,17 +674,30 @@ export function UserEventListItem(props: UserEventListItemProps) {
                 </TouchableOpacity>
               )}
 
-              {!isDiscoverFeed && (
-                <TouchableOpacity
-                  className="rounded-full p-2.5"
-                  onPress={handleShare}
-                  accessibilityLabel="Share"
-                  accessibilityRole="button"
-                  hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
-                >
-                  <ShareIcon size={iconSize * 1.1} color="#5A32FB" />
-                </TouchableOpacity>
-              )}
+              {!isDiscoverFeed &&
+                (isOwner && primaryAction !== "addToCalendar" ? (
+                  <TouchableOpacity
+                    className="rounded-full p-2.5"
+                    onPress={() => {
+                      router.navigate(`/event/${id}/edit`);
+                    }}
+                    accessibilityLabel="Edit"
+                    accessibilityRole="button"
+                    hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+                  >
+                    <PenSquare size={iconSize * 1.1} color="#5A32FB" />
+                  </TouchableOpacity>
+                ) : (
+                  <TouchableOpacity
+                    className="rounded-full p-2.5"
+                    onPress={handleShare}
+                    accessibilityLabel="Share"
+                    accessibilityRole="button"
+                    hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+                  >
+                    <ShareIcon size={iconSize * 1.1} color="#5A32FB" />
+                  </TouchableOpacity>
+                ))}
 
               <EventMenu
                 event={event}
@@ -674,7 +745,24 @@ export function UserEventListItem(props: UserEventListItemProps) {
               iconSize={iconSize}
               eventId={event.id}
               currentUserId={currentUser?.id}
+              sourceListName={sourceListName}
+              additionalSourceCount={additionalSourceCount}
             />
+          ) : sourceListName ? (
+            <View className="mx-auto mt-1 flex-row items-center">
+              <Text className="text-xs text-neutral-2">via </Text>
+              <List size={11} color="#5A32FB" />
+              <Text className="text-xs font-semibold text-interactive-1">
+                {" "}
+                {sourceListName}
+              </Text>
+              {additionalSourceCount && additionalSourceCount > 0 ? (
+                <Text className="text-xs text-neutral-2">
+                  {" "}
+                  +{additionalSourceCount} more
+                </Text>
+              ) : null}
+            </View>
           ) : null}
           <View className="absolute left-0 right-0 top-0 z-20 flex flex-row items-center justify-center space-x-2">
             {isRecent && (
@@ -1149,6 +1237,10 @@ export default function UserEventsList(props: UserEventsListProps) {
 
         const similarEventsCount = item.similarEvents.length;
 
+        // Source attribution from feed entry
+        const sourceListName = (eventData as { sourceListName?: string })
+          .sourceListName;
+
         return (
           <UserEventListItem
             event={eventData}
@@ -1165,6 +1257,7 @@ export default function UserEventsList(props: UserEventsListProps) {
             isDiscoverFeed={isDiscoverFeed}
             primaryAction={primaryAction}
             source={source}
+            sourceListName={sourceListName}
           />
         );
       }}

@@ -13,6 +13,7 @@ import {
   userFeedsAggregate,
 } from "../aggregates";
 import { DEFAULT_TIMEZONE } from "../constants";
+import { getOrCreatePersonalList } from "../lists";
 import { generateNumericId, generatePublicId } from "../utils";
 import {
   determineNewSimilarityGroup,
@@ -812,6 +813,21 @@ export async function createEvent(
         await addEventToList(ctx, eventId, list.value, userId);
       }
     }
+  }
+
+  // Link event to creator's personal list
+  const personalList = await getOrCreatePersonalList(ctx, userId);
+  const existingPersonalLink = await ctx.db
+    .query("eventToLists")
+    .withIndex("by_event_and_list", (q) =>
+      q.eq("eventId", eventId).eq("listId", personalList.id),
+    )
+    .first();
+  if (!existingPersonalLink) {
+    await ctx.db.insert("eventToLists", {
+      eventId,
+      listId: personalList.id,
+    });
   }
 
   // Add event to feeds (with similarity group for grouped feed support)

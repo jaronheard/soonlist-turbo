@@ -11,6 +11,8 @@ import {
   useQuery,
 } from "convex/react";
 
+import { SymbolView } from "expo-symbols";
+
 import { api } from "@soonlist/backend/convex/_generated/api";
 
 import LoadingSpinner from "~/components/LoadingSpinner";
@@ -69,10 +71,18 @@ function SegmentedControlFallback({
 function MyFeedContent() {
   const { user } = useUser();
   const [selectedSegment, setSelectedSegment] = useState<Segment>("upcoming");
-
   // Use the stable timestamp from the store that updates every 15 minutes
   // This prevents InvalidCursor errors while still filtering for upcoming events
   const stableTimestamp = useStableTimestamp();
+
+  // Check for contributing lists
+  const contributingLists = useQuery(api.lists.getContributingLists);
+  const contributingCount = contributingLists?.length ?? 0;
+  const singleContributingList =
+    contributingCount === 1 ? contributingLists?.[0] : null;
+  const myListIcon = useAppStore((s) => s.myListIcon);
+  const myListSubtitle = useAppStore((s) => s.myListSubtitle);
+  const showMyListSubtitle = useAppStore((s) => s.showMyListSubtitle);
 
   // Memoize query args - changes when segment changes, triggering refetch
   const queryArgs = useMemo(() => {
@@ -157,29 +167,67 @@ function MyFeedContent() {
 
   const HeaderComponent = useCallback(() => {
     return (
-      <View className="px-3 pb-2 pt-3" style={{ width: 260 }}>
-        {Platform.OS === "ios" ? (
-          <Host matchContents>
-            <Picker
-              selection={selectedSegment}
-              onSelectionChange={(value) => {
-                handleSegmentChange(value as Segment);
-              }}
-              modifiers={[pickerStyle("segmented")]}
-            >
-              <SwiftUIText modifiers={[tag("upcoming")]}>Upcoming</SwiftUIText>
-              <SwiftUIText modifiers={[tag("past")]}>Past</SwiftUIText>
-            </Picker>
-          </Host>
-        ) : (
-          <SegmentedControlFallback
-            selectedSegment={selectedSegment}
-            onSegmentChange={handleSegmentChange}
-          />
+      <View className="px-3 pb-2" style={{ marginTop: -4 }}>
+        {showMyListSubtitle && myListSubtitle.length > 0 && (
+          <Text
+            className="mb-1 text-base font-medium text-neutral-1"
+            style={{ paddingLeft: 6 }}
+          >
+            {myListSubtitle}
+          </Text>
         )}
+        {contributingCount > 0 && (
+          <View className="mb-2 flex-row items-center" style={{ paddingLeft: 6 }}>
+            <Text className="text-sm text-neutral-2">
+              Sharing public events to:{" "}
+            </Text>
+            <SymbolView
+              name={myListIcon}
+              size={14}
+              tintColor="#5A32FB"
+            />
+            <Text className="text-sm font-semibold text-interactive-1">
+              {" "}
+              {singleContributingList
+                ? singleContributingList.name
+                : `${contributingCount} lists`}
+            </Text>
+          </View>
+        )}
+        <View style={{ width: 260 }}>
+          {Platform.OS === "ios" ? (
+            <Host matchContents>
+              <Picker
+                selection={selectedSegment}
+                onSelectionChange={(value) => {
+                  handleSegmentChange(value as Segment);
+                }}
+                modifiers={[pickerStyle("segmented")]}
+              >
+                <SwiftUIText modifiers={[tag("upcoming")]}>
+                  Upcoming
+                </SwiftUIText>
+                <SwiftUIText modifiers={[tag("past")]}>Past</SwiftUIText>
+              </Picker>
+            </Host>
+          ) : (
+            <SegmentedControlFallback
+              selectedSegment={selectedSegment}
+              onSegmentChange={handleSegmentChange}
+            />
+          )}
+        </View>
       </View>
     );
-  }, [selectedSegment, handleSegmentChange]);
+  }, [
+    selectedSegment,
+    handleSegmentChange,
+    contributingCount,
+    singleContributingList,
+    myListIcon,
+    myListSubtitle,
+    showMyListSubtitle,
+  ]);
 
   return (
     <UserEventsList

@@ -352,6 +352,7 @@ export async function upsertFeedEntry(
   addedAt: number,
   similarityGroupId?: string,
   eventVisibility?: "public" | "private",
+  sourceListId?: string,
 ): Promise<void> {
   const existingEntry = await ctx.db
     .query("userFeeds")
@@ -373,6 +374,7 @@ export async function upsertFeedEntry(
       hasEnded,
       similarityGroupId,
       eventVisibility,
+      sourceListId,
     };
     const id = await ctx.db.insert("userFeeds", doc);
     const insertedDoc = (await ctx.db.get(id))!;
@@ -388,12 +390,14 @@ export async function upsertFeedEntry(
   } else {
     const oldDoc = existingEntry;
     // Also update similarityGroupId and eventVisibility if provided (for migration scenarios)
+    // Don't overwrite sourceListId — first source wins
     await ctx.db.patch(existingEntry._id, {
       eventStartTime,
       eventEndTime,
       hasEnded,
       ...(similarityGroupId && { similarityGroupId }),
       ...(eventVisibility && { eventVisibility }),
+      ...(!existingEntry.sourceListId && sourceListId ? { sourceListId } : {}),
     });
     const updatedDoc = (await ctx.db.get(existingEntry._id))!;
     await userFeedsAggregate.replaceOrInsert(ctx, oldDoc, updatedDoc);
@@ -458,6 +462,7 @@ export const addListEventsToUserFeed = internalMutation({
         currentTime,
         similarityGroupId,
         event.visibility,
+        listId, // sourceListId
       );
     }
   },
@@ -589,6 +594,7 @@ export const addEventToListFollowersFeeds = internalMutation({
         currentTime,
         similarityGroupId,
         event.visibility,
+        listId, // sourceListId
       );
     }
   },

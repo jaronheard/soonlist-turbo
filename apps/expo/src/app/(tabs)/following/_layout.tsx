@@ -17,12 +17,15 @@ export default function FollowingLayout() {
   const headerTitle = (() => {
     switch (headerStyle) {
       case "possessive":
+        if (boardLabel.startsWith("My ")) return boardLabel;
         return user?.firstName
           ? `${user.firstName}'s ${boardLabel}`
           : `My ${boardLabel}`;
       case "my":
+        if (boardLabel.startsWith("My ")) return boardLabel;
         return `My ${boardLabel}`;
       case "your":
+        if (boardLabel.startsWith("My ")) return boardLabel;
         return `Your ${boardLabel}`;
       case "plain":
         return boardLabel;
