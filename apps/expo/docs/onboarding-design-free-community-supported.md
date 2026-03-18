@@ -62,6 +62,7 @@ The thread running through every screen: **Soonlist is free, made by real people
 "Free forever. Community-supported."
 
 **What the user sees:**
+
 - Soonlist logo at top center
 - Headline and subtitle centered below
 - "Free forever. Community-supported." in a lighter/smaller treatment below the subtitle -- present but not shouting
@@ -87,6 +88,7 @@ Taps "Get Started" to begin.
 "Soonlist is built by a small team. No investors, no ads, no data sales. Every feature is free -- supported by people like you."
 
 **What the user sees:**
+
 - Progress indicator: step 1 of 10
 - Headline and subtitle in white on the purple onboarding background
 - Three short callouts in pill/chip format, stacked vertically with icons:
@@ -114,6 +116,7 @@ Taps "Continue."
 "This helps us build what matters to you"
 
 **What the user sees:**
+
 - Progress indicator: step 2 of 10
 - Multi-select list:
   - "Organize all my events in one place"
@@ -139,6 +142,7 @@ Selects one or more goals, taps "Continue."
 (none)
 
 **What the user sees:**
+
 - Progress indicator: step 3 of 10
 - Two options, single-select:
   - "Yes"
@@ -161,6 +165,7 @@ Taps an option.
 "We'll personalize your demo"
 
 **What the user sees:**
+
 - Progress indicator: step 4 of 10
 - Single-select list:
   - "Instagram"
@@ -191,6 +196,7 @@ Taps an option.
 "We'll do the rest -- for free"
 
 **What the user sees:**
+
 - Progress indicator: step 5 of 10
 - A sample event card (personalized to their discovery channel selection from Screen 5)
 - A prominent "Capture this event" button
@@ -201,6 +207,7 @@ Taps an option.
 "Capturing..."
 
 **What the user sees:**
+
 - Pulsing AI animation
 - "Parsing your event..." label
 - "AI is reading the details" sublabel
@@ -214,6 +221,7 @@ Taps an option.
 "Screenshots become organized events, automatically. No charge."
 
 **What the user sees:**
+
 - The parsed event card with date, time, name, location
 - Action chips: "Add to Calendar" and "Save"
 - A fake push notification slides in from the top showing the saved event
@@ -237,6 +245,7 @@ Taps "Capture this event," watches the animation, sees the result, taps "Continu
 "Get a reminder before events you've saved so you never forget"
 
 **What the user sees:**
+
 - Progress indicator: step 6 of 10
 - A simulated iOS notification permission dialog
 - Animated chevron pointing to the "Allow" button
@@ -258,6 +267,7 @@ Taps "Allow" (which triggers the real iOS notification permission prompt) or ski
 "Use the share button in Instagram, Safari, or any app to save events directly"
 
 **What the user sees:**
+
 - Progress indicator: step 7 of 10
 - Looping video demo of the share extension in action
 - "Continue" button
@@ -278,6 +288,7 @@ Watches the video, taps "Continue."
 "Helps us understand our community"
 
 **What the user sees:**
+
 - Progress indicator: step 8 of 10
 - Single-select list:
   - "Under 24"
@@ -306,6 +317,7 @@ Taps an option.
 (none)
 
 **What the user sees:**
+
 - Progress indicator: step 9 of 10
 - Single-select list:
   - "Google Search"
@@ -333,6 +345,7 @@ Taps an option.
 "Everything you just tried? It's yours. Free. All features, no limits, no catch. Soonlist is built by a small team and funded by the people who use it. If you find it valuable, you can help keep it going."
 
 **What the user sees:**
+
 - Progress indicator: step 10 of 10
 - Background: the same purple brand color, but the tone shifts -- this is a conversation, not a sales pitch
 - The headline "Support Soonlist" in large, warm type
@@ -353,13 +366,13 @@ Taps a support tier (triggers RevenueCat subscription flow) OR taps "Not now" to
 
 **Design note:** This is the critical screen. The reframing compared to the current "Unlock Soonlist" paywall:
 
-| Current paywall | Community-supported reframe |
-|---|---|
-| "Unlock Soonlist" | "Support Soonlist" |
-| Feature list behind gate | No features gated -- everything is free |
+| Current paywall                     | Community-supported reframe                                 |
+| ----------------------------------- | ----------------------------------------------------------- |
+| "Unlock Soonlist"                   | "Support Soonlist"                                          |
+| Feature list behind gate            | No features gated -- everything is free                     |
 | "Try 3 events free" (implies limit) | "Not now -- I'll use Soonlist for free" (implies abundance) |
-| Subscription framing | Patronage framing |
-| Skip is hidden/de-emphasized | Skip is clear and guilt-free |
+| Subscription framing                | Patronage framing                                           |
+| Skip is hidden/de-emphasized        | Skip is clear and guilt-free                                |
 
 The Wikipedia-inspired community math ("If just 5% supported it...") gives the ask social proof and scale without making any individual feel pressured. The Signal-inspired badge gives supporters a visible identity within the community.
 
@@ -367,19 +380,19 @@ The Wikipedia-inspired community math ("If just 5% supported it...") gives the a
 
 ## Flow Summary
 
-| # | Screen | Type | Key community thread |
-|---|--------|------|---------------------|
-| 1 | Welcome | Brand intro | "Free forever. Community-supported." |
-| 2 | Community Identity | Value prop | "Made by people, not a corporation" |
-| 3 | Goals | Survey | "Helps us build what matters to you" |
-| 4 | Screenshot Habit | Survey | (quick, no reframe needed) |
-| 5 | Discovery Channels | Survey | "We'll personalize your demo" |
-| 6 | Try It (Capture Demo) | Interactive demo | "We'll do the rest -- for free" / "No charge" |
-| 7 | Notifications | Permission | (standard, no reframe needed) |
-| 8 | Share Extension Demo | Video demo | (standard, no reframe needed) |
-| 9 | Age | Survey | "Helps us understand our community" |
-| 10 | Source | Survey | (quick, no reframe needed) |
-| 11 | Support Soonlist | Reframed paywall | "Support Soonlist" / patronage model |
+| #   | Screen                | Type             | Key community thread                          |
+| --- | --------------------- | ---------------- | --------------------------------------------- |
+| 1   | Welcome               | Brand intro      | "Free forever. Community-supported."          |
+| 2   | Community Identity    | Value prop       | "Made by people, not a corporation"           |
+| 3   | Goals                 | Survey           | "Helps us build what matters to you"          |
+| 4   | Screenshot Habit      | Survey           | (quick, no reframe needed)                    |
+| 5   | Discovery Channels    | Survey           | "We'll personalize your demo"                 |
+| 6   | Try It (Capture Demo) | Interactive demo | "We'll do the rest -- for free" / "No charge" |
+| 7   | Notifications         | Permission       | (standard, no reframe needed)                 |
+| 8   | Share Extension Demo  | Video demo       | (standard, no reframe needed)                 |
+| 9   | Age                   | Survey           | "Helps us understand our community"           |
+| 10  | Source                | Survey           | (quick, no reframe needed)                    |
+| 11  | Support Soonlist      | Reframed paywall | "Support Soonlist" / patronage model          |
 
 **Post-flow:** Sign-in via OAuth.
 
@@ -387,13 +400,13 @@ The Wikipedia-inspired community math ("If just 5% supported it...") gives the a
 
 ## Required Survey Questions: Coverage Check
 
-| Required survey | Screen | Present? |
-|----------------|--------|----------|
-| Goals | Screen 3 | Yes |
-| Screenshot habit | Screen 4 | Yes |
-| Discovery channels | Screen 5 | Yes |
-| Age | Screen 9 | Yes |
-| Source | Screen 10 | Yes |
+| Required survey    | Screen    | Present? |
+| ------------------ | --------- | -------- |
+| Goals              | Screen 3  | Yes      |
+| Screenshot habit   | Screen 4  | Yes      |
+| Discovery channels | Screen 5  | Yes      |
+| Age                | Screen 9  | Yes      |
+| Source             | Screen 10 | Yes      |
 
 All five required survey questions are included.
 

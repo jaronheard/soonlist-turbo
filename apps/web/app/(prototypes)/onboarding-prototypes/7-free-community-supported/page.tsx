@@ -160,11 +160,7 @@ export default function FreeCommunitySupported() {
 
         {/* Screen 10: Source */}
         <PhoneFrame screenId="7-source" label="10. Source">
-          <SourceScreen
-            step={9}
-            total={10}
-            headline="How did you find us?"
-          />
+          <SourceScreen step={9} total={10} headline="How did you find us?" />
         </PhoneFrame>
 
         {/* Screen 11: Reframed Paywall */}

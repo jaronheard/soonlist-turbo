@@ -1,6 +1,7 @@
 import {
   FlowRow,
   Headline,
+  NotificationPermission,
   PhoneFrame,
   PrimaryButton,
   PurpleScreen,
@@ -8,7 +9,6 @@ import {
   StoryIllustration,
   Subtitle,
   VideoPlaceholder,
-  NotificationPermission,
 } from "../components";
 import {
   CombinedAgeSurveyScreen,
@@ -145,8 +145,8 @@ export default function TellAStory() {
               </div>
               <Headline>Then Maya found Soonlist.</Headline>
               <Subtitle>
-                One app to save events from anywhere. Screenshots, texts,
-                flyers — captured in seconds, organized by AI.
+                One app to save events from anywhere. Screenshots, texts, flyers
+                — captured in seconds, organized by AI.
               </Subtitle>
             </div>
             <div className="mt-8">
@@ -175,7 +175,7 @@ export default function TellAStory() {
                 Tap &quot;Capture&quot; to see what happened next.
               </Subtitle>
             </div>
-            <div className="mt-6 mx-auto flex w-full max-w-[300px] flex-col overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-sm">
+            <div className="mx-auto mt-6 flex w-full max-w-[300px] flex-col overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-sm">
               <div className="flex h-[160px] items-center justify-center bg-gradient-to-br from-purple-100 to-pink-100 text-center text-sm text-neutral-2">
                 <div>
                   <div className="text-2xl">🎶</div>
@@ -201,7 +201,7 @@ export default function TellAStory() {
                 Screenshots become organized events, automatically.
               </Subtitle>
             </div>
-            <div className="mt-6 mx-auto w-full max-w-[300px] rounded-2xl border-2 border-white/30 bg-white p-5 shadow-sm">
+            <div className="mx-auto mt-6 w-full max-w-[300px] rounded-2xl border-2 border-white/30 bg-white p-5 shadow-sm">
               <div className="text-xs font-semibold uppercase tracking-wide text-interactive-1">
                 Sat, Mar 22 · 6:00 PM
               </div>
@@ -225,9 +225,7 @@ export default function TellAStory() {
               <div className="text-xs font-semibold uppercase tracking-wide text-white/50">
                 Chapter 6
               </div>
-              <Headline>
-                Maya didn&apos;t even have to open the app.
-              </Headline>
+              <Headline>Maya didn&apos;t even have to open the app.</Headline>
               <Subtitle>
                 She shared straight from Instagram. From Safari. From her group
                 text. One tap, done.
@@ -283,7 +281,7 @@ export default function TellAStory() {
                 she actually wanted to do.
               </Subtitle>
             </div>
-            <div className="mt-4 flex gap-2 text-2xl justify-center">
+            <div className="mt-4 flex justify-center gap-2 text-2xl">
               <span>🎺</span>
               <span>😂</span>
               <span>🎨</span>

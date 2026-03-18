@@ -55,19 +55,19 @@ Sources: [Calm's Carefully Curated New User Experience](https://goodux.appcues.c
 
 ### Flow Overview
 
-| # | Screen | Type | Purpose |
-|---|--------|------|---------|
-| 0 | Welcome | Value | Plant the loop |
-| 1 | The Loop | Value | Show the rhythm visually |
-| 2 | You Already Do This | Survey (screenshot habit) | Validate existing behavior |
-| 3 | Where You See Events | Survey (discovery channels) | Personalize the demo |
-| 4 | Your First Capture | Interactive demo | First rep of the habit |
-| 5 | Share Extension | Video demo | Second capture method |
-| 6 | Stay in the Loop | Notification permission | Frame notifications as rhythm |
-| 7 | What Matters to You | Survey (goals) | Connect habit to motivation |
-| 8 | Quick Questions | Survey (age + source) | Required data, fast |
-| 9 | Paywall | Monetization | Support the tool |
-| 10 | Sign In | Auth | Create account |
+| #   | Screen               | Type                        | Purpose                       |
+| --- | -------------------- | --------------------------- | ----------------------------- |
+| 0   | Welcome              | Value                       | Plant the loop                |
+| 1   | The Loop             | Value                       | Show the rhythm visually      |
+| 2   | You Already Do This  | Survey (screenshot habit)   | Validate existing behavior    |
+| 3   | Where You See Events | Survey (discovery channels) | Personalize the demo          |
+| 4   | Your First Capture   | Interactive demo            | First rep of the habit        |
+| 5   | Share Extension      | Video demo                  | Second capture method         |
+| 6   | Stay in the Loop     | Notification permission     | Frame notifications as rhythm |
+| 7   | What Matters to You  | Survey (goals)              | Connect habit to motivation   |
+| 8   | Quick Questions      | Survey (age + source)       | Required data, fast           |
+| 9   | Paywall              | Monetization                | Support the tool              |
+| 10  | Sign In              | Auth                        | Create account                |
 
 Total: 11 screens (10 before sign-in), within the 8-12 range.
 
@@ -80,6 +80,7 @@ Total: 11 screens (10 before sign-in), within the 8-12 range.
 **Subtitle:** The simplest way to never miss an event again.
 
 **What the user sees:**
+
 - Soonlist logo at top
 - Headline and subtitle centered
 - A looping 3-step illustration below the headline:
@@ -103,6 +104,7 @@ Total: 11 screens (10 before sign-in), within the 8-12 range.
 **Subtitle:** This is the whole thing.
 
 **What the user sees:**
+
 - Progress bar (step 1 of 10)
 - Three vertically stacked cards, each with an icon and short label:
   1. "You spot an event" -- eye icon, with examples: "on Instagram, a flyer, a text from a friend"
@@ -124,6 +126,7 @@ Total: 11 screens (10 before sign-in), within the 8-12 range.
 **Subtitle:** (none -- the question is the headline)
 
 **What the user sees:**
+
 - Progress bar (step 2 of 10)
 - Two options, styled as tappable cards:
   - "Yes, all the time" (maps to "Yes" in data)
@@ -146,6 +149,7 @@ Total: 11 screens (10 before sign-in), within the 8-12 range.
 **Subtitle:** We'll personalize your first capture.
 
 **What the user sees:**
+
 - Progress bar (step 3 of 10)
 - Six tappable options:
   - Instagram
@@ -178,22 +182,26 @@ Total: 11 screens (10 before sign-in), within the 8-12 range.
 **Headline (phase 3 - result):** That's your first one.
 
 **Subtitle (phase 3):** {Conditional on Screen 2 answer}
+
 - If "Yes, all the time": "You already do this. Now Soonlist does the rest."
 - If "Not yet, but I want to": "That's all there is to it. Screenshot, done."
 
 **What the user sees:**
 
-*Phase 1 -- Screenshot:*
+_Phase 1 -- Screenshot:_
+
 - Progress bar (step 4 of 10)
 - A sample event card styled to match the source they selected (e.g., if they picked Instagram, it looks like an Instagram story screenshot; if they picked "Walking around town," it looks like a photo of a flyer). Event content is personalized based on their discovery channel selection.
 - A prominent button: "Capture this event"
 
-*Phase 2 -- Parsing:*
+_Phase 2 -- Parsing:_
+
 - The sample event animates: a sparkle/pulse animation appears over the card
 - Text reads "Parsing your event..." with "AI is reading the details" subtitle
 - Lasts ~1.5 seconds
 
-*Phase 3 -- Result:*
+_Phase 3 -- Result:_
+
 - The parsed event card appears (clean, structured: date, time, name, location, action buttons)
 - A fake push notification slides down from top: "{Event name} saved!"
 - Below the card, a subtle line: "One screenshot. One tap. That's the whole habit."
@@ -212,6 +220,7 @@ Total: 11 screens (10 before sign-in), within the 8-12 range.
 **Subtitle:** Share directly from any app -- no screenshot needed.
 
 **What the user sees:**
+
 - Progress bar (step 5 of 10)
 - Looping demo video showing the share extension in action (loaded from Convex backend, same as current implementation)
 - Below the video, a small text: "Works with Instagram, Safari, Messages, and more."
@@ -230,6 +239,7 @@ Total: 11 screens (10 before sign-in), within the 8-12 range.
 **Subtitle:** We'll remind you before events happen so you actually go.
 
 **What the user sees:**
+
 - Progress bar (step 6 of 10)
 - A mock iOS notification permission dialog (styled to match iOS system dialog), with the messaging:
   - Dialog title: "Turn on Push Notifications to stay in your rhythm"
@@ -253,6 +263,7 @@ Total: 11 screens (10 before sign-in), within the 8-12 range.
 **Subtitle:** Pick as many as you like.
 
 **What the user sees:**
+
 - Progress bar (step 7 of 10)
 - Five tappable options (multi-select with checkmarks):
   - "Actually go to events I hear about"
@@ -288,13 +299,16 @@ Total: 11 screens (10 before sign-in), within the 8-12 range.
 **Subtitle:** (none)
 
 **What the user sees:**
+
 - Progress bar (step 8 of 10)
 - Two questions stacked vertically, each with horizontally scrollable pill-style option chips:
 
 **Question A: "How old are you?"**
+
 - Options: Under 24 | 25-34 | 35-44 | 45-54 | 55-64 | 65+
 
 **Question B: "Where did you hear about Soonlist?"**
+
 - Options: Google Search | TikTok | App Store | Instagram | Facebook | A friend | Other
 
 - "Continue" button (activates when both questions are answered)
@@ -316,6 +330,7 @@ Total: 11 screens (10 before sign-in), within the 8-12 range.
 **Subtitle:** Every feature works. No limits. No catch. If you love it, you can support us.
 
 **What the user sees:**
+
 - Full-screen paywall (RevenueCat native paywall, same as current implementation)
 - The framing copy above appears before the paywall modal loads
 - If user subscribes: navigates to Screen 10 with subscription status
@@ -352,13 +367,13 @@ Total: 11 screens (10 before sign-in), within the 8-12 range.
 
 All five required survey data points are collected:
 
-| Required survey | Screen | How it's framed |
-|----------------|--------|-----------------|
-| Goals | Screen 7 | "What do you want to do more of?" |
-| Screenshot habit | Screen 2 | "Do you already screenshot events?" |
+| Required survey    | Screen   | How it's framed                      |
+| ------------------ | -------- | ------------------------------------ |
+| Goals              | Screen 7 | "What do you want to do more of?"    |
+| Screenshot habit   | Screen 2 | "Do you already screenshot events?"  |
 | Discovery channels | Screen 3 | "Where do you spot the most events?" |
-| Age | Screen 8 | Combined quick-question screen |
-| Source | Screen 8 | Combined quick-question screen |
+| Age                | Screen 8 | Combined quick-question screen       |
+| Source             | Screen 8 | Combined quick-question screen       |
 
 ---
 

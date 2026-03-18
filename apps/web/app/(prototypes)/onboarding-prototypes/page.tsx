@@ -103,9 +103,7 @@ export default function OnboardingPrototypesIndex() {
               <div className="text-lg font-semibold text-neutral-1">
                 {d.title}
               </div>
-              <div className="mt-0.5 text-sm text-neutral-2">
-                {d.tagline}
-              </div>
+              <div className="mt-0.5 text-sm text-neutral-2">{d.tagline}</div>
               <div className="mt-1 text-xs text-neutral-2">
                 {d.screens} screens
               </div>
@@ -134,9 +132,7 @@ export default function OnboardingPrototypesIndex() {
               <div className="text-lg font-semibold text-neutral-1">
                 {v.title}
               </div>
-              <div className="mt-0.5 text-sm text-neutral-2">
-                {v.tagline}
-              </div>
+              <div className="mt-0.5 text-sm text-neutral-2">{v.tagline}</div>
               <div className="mt-1 text-xs text-neutral-2">
                 {v.screens} screens
               </div>

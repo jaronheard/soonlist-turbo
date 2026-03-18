@@ -11,10 +11,10 @@
  * Output: apps/web/output/onboarding-screenshots/{direction-name}/{screen-id}.png
  */
 
-import { chromium } from "playwright";
 import * as fs from "fs";
 import * as path from "path";
 import { fileURLToPath } from "url";
+import { chromium } from "playwright";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -70,7 +70,7 @@ async function main() {
     console.log(`  Found ${screens.length} screens`);
 
     // Collect all screen IDs first
-    const screenData: { id: string; locator: typeof screens[0] }[] = [];
+    const screenData: { id: string; locator: (typeof screens)[0] }[] = [];
     for (const screen of screens) {
       const id = await screen.getAttribute("data-screen-id");
       if (id) screenData.push({ id, locator: screen });
@@ -102,7 +102,10 @@ async function main() {
           const item = items[i]!;
           const seq = String(i + 1).padStart(2, "0");
           const filename = `${seq}-${item.id}.png`;
-          await item.locator.screenshot({ path: path.join(outDir, filename), type: "png" });
+          await item.locator.screenshot({
+            path: path.join(outDir, filename),
+            type: "png",
+          });
           console.log(`  [${bucketDir}] Saved ${filename}`);
         }
       }
@@ -113,7 +116,10 @@ async function main() {
         const item = screenData[i]!;
         const seq = String(i + 1).padStart(2, "0");
         const filename = `${seq}-${item.id}.png`;
-        await item.locator.screenshot({ path: path.join(outDir, filename), type: "png" });
+        await item.locator.screenshot({
+          path: path.join(outDir, filename),
+          type: "png",
+        });
         console.log(`  Saved ${filename}`);
       }
     }

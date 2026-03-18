@@ -42,19 +42,20 @@ Seven lenses for the onboarding. These aren't mutually exclusive — they can be
 
 Each direction has been researched (3-5 real iOS app examples) and designed as a complete screen-by-screen onboarding flow with exact copy, UI elements, and navigation. Full documents are in `docs/`.
 
-| # | Direction | File | Research examples | Welcome headline | Key structural change |
-|---|-----------|------|-------------------|------------------|-----------------------|
-| 1 | Try it immediately | [`onboarding-design-try-it-immediately.md`](docs/onboarding-design-try-it-immediately.md) | Duolingo, Photoroom, Robinhood, Headspace, Calm | "Screenshot. Tap. Done." | Capture simulation is screen 1 (not screen 6). No value screens precede it. |
-| 2 | Someone's list | [`onboarding-design-someones-list.md`](docs/onboarding-design-someones-list.md) | Discord, Partiful, Clubhouse, Venmo, Strava | Referral: "[Name] wants you to see what's coming up" / Organic: "Turn screenshots into plans" | Two diverging paths based on referral context. Referral users see the sharer's real event list. |
-| 3 | Go out more | [`onboarding-design-go-out-more.md`](docs/onboarding-design-go-out-more.md) | Strava, Headspace, Opal, Noom, Duolingo | "Be the person who actually goes" | Aspirational tone throughout. Goals reframed as lifestyle aspirations ("Go to more concerts"). Problem/promise pair before demo. |
-| 4 | Everything in one place | [`onboarding-direction-everything-in-one-place.md`](docs/onboarding-direction-everything-in-one-place.md) | Notion, Readwise Reader, Fantastical, Spark Mail, Raindrop.io | "Your events are everywhere" | Before/after pair (mess → fix) as screens 1-2. Survey reframed as problems ("What's slipping through the cracks?"). |
-| 5 | The habit loop | [`onboarding-design-habit-loop.md`](docs/onboarding-design-habit-loop.md) | Duolingo, Headspace, Fabulous, Atoms, Calm | "See it. Screenshot it. Soonlist does the rest." | Rhythm visualization on screen 1. Screenshot habit survey moved early as validation. Age+source combined into one screen. |
-| 6 | Tell a story | [`onboarding-story-direction.md`](docs/onboarding-story-direction.md) | Headspace, Florence, Finch, Duolingo, Noom | "Maya spotted a poster for a jazz night..." | Character-driven narrative. Surveys embedded in story chapters. Illustrated scenes required. |
-| 7 | Free and community | [`onboarding-design-free-community-supported.md`](docs/onboarding-design-free-community-supported.md) | Signal, Overcast, Wikipedia, Mastodon, Halide | "Turn screenshots into plans" + "Free forever. Community-supported." | "Made by people, not a corporation" screen. Paywall reframed as "Support Soonlist" with patronage tiers. |
+| #   | Direction               | File                                                                                                      | Research examples                                             | Welcome headline                                                                              | Key structural change                                                                                                            |
+| --- | ----------------------- | --------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------- | --------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------- |
+| 1   | Try it immediately      | [`onboarding-design-try-it-immediately.md`](docs/onboarding-design-try-it-immediately.md)                 | Duolingo, Photoroom, Robinhood, Headspace, Calm               | "Screenshot. Tap. Done."                                                                      | Capture simulation is screen 1 (not screen 6). No value screens precede it.                                                      |
+| 2   | Someone's list          | [`onboarding-design-someones-list.md`](docs/onboarding-design-someones-list.md)                           | Discord, Partiful, Clubhouse, Venmo, Strava                   | Referral: "[Name] wants you to see what's coming up" / Organic: "Turn screenshots into plans" | Two diverging paths based on referral context. Referral users see the sharer's real event list.                                  |
+| 3   | Go out more             | [`onboarding-design-go-out-more.md`](docs/onboarding-design-go-out-more.md)                               | Strava, Headspace, Opal, Noom, Duolingo                       | "Be the person who actually goes"                                                             | Aspirational tone throughout. Goals reframed as lifestyle aspirations ("Go to more concerts"). Problem/promise pair before demo. |
+| 4   | Everything in one place | [`onboarding-direction-everything-in-one-place.md`](docs/onboarding-direction-everything-in-one-place.md) | Notion, Readwise Reader, Fantastical, Spark Mail, Raindrop.io | "Your events are everywhere"                                                                  | Before/after pair (mess → fix) as screens 1-2. Survey reframed as problems ("What's slipping through the cracks?").              |
+| 5   | The habit loop          | [`onboarding-design-habit-loop.md`](docs/onboarding-design-habit-loop.md)                                 | Duolingo, Headspace, Fabulous, Atoms, Calm                    | "See it. Screenshot it. Soonlist does the rest."                                              | Rhythm visualization on screen 1. Screenshot habit survey moved early as validation. Age+source combined into one screen.        |
+| 6   | Tell a story            | [`onboarding-story-direction.md`](docs/onboarding-story-direction.md)                                     | Headspace, Florence, Finch, Duolingo, Noom                    | "Maya spotted a poster for a jazz night..."                                                   | Character-driven narrative. Surveys embedded in story chapters. Illustrated scenes required.                                     |
+| 7   | Free and community      | [`onboarding-design-free-community-supported.md`](docs/onboarding-design-free-community-supported.md)     | Signal, Overcast, Wikipedia, Mastodon, Halide                 | "Turn screenshots into plans" + "Free forever. Community-supported."                          | "Made by people, not a corporation" screen. Paywall reframed as "Support Soonlist" with patronage tiers.                         |
 
 ### Cross-Direction Comparison
 
 **Where the capture demo lives:**
+
 - Screen 1-3: Direction 1 (try it immediately)
 - Screen 4-5 (referral) / Screen 6 (organic): Direction 2 (someone's list)
 - Screen 6: Directions 3, 4, 7
@@ -62,6 +63,7 @@ Each direction has been researched (3-5 real iOS app examples) and designed as a
 - Screen 5: Direction 6 (tell a story)
 
 **How survey questions are reframed:**
+
 - Directions 1, 2, 7: Keep original copy, reorder
 - Direction 3: Aspirational ("What kind of plans do you want to make?" / "Sound familiar?")
 - Direction 4: Problem-framed ("What's slipping through the cracks?" / "Where do your events get lost?")
@@ -69,11 +71,13 @@ Each direction has been researched (3-5 real iOS app examples) and designed as a
 - Direction 6: Embedded in narrative (asked during Maya's story chapters)
 
 **Paywall framing:**
+
 - Directions 1-5: Standard RevenueCat with tweaked copy
 - Direction 6: "If Maya's story resonated, you can help us keep building it for everyone"
 - Direction 7: Full reframe — "Support Soonlist" with patronage tiers, Wikipedia-style community math, no feature gating
 
 **Biggest production investment:**
+
 - Direction 6 (story) requires 9+ illustrated scenes in a consistent style
 - Direction 2 (someone's list) requires fetching real referrer data + two path implementations
 - Directions 1, 3, 4, 5, 7 are primarily copy/reorder changes to existing screens

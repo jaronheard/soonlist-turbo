@@ -69,15 +69,19 @@ Sources: [Raindrop.io](https://raindrop.io/), [Raindrop.io as a Productivity Hac
 **Background:** Light (bg-interactive-3)
 
 **Headline:**
+
 > Your events are everywhere
 
 **Subtitle:**
+
 > Soonlist brings them all into one place
 
 **Tagline:**
+
 > Free, community-supported
 
 **What the user sees:**
+
 - Soonlist logo (top center)
 - FollowContextBanner (conditional)
 - Illustration: a scattered collage of event source icons (Instagram logo, text message bubble, email icon, camera/photo icon, flyer icon) loosely arranged around the screen, with subtle dotted lines converging toward a single Soonlist feed preview at the bottom center. The feed preview uses the existing `assets/feed.png`.
@@ -85,11 +89,11 @@ Sources: [Raindrop.io](https://raindrop.io/), [Raindrop.io as a Productivity Hac
 
 **What the user does:**
 
-| Button | Style | Destination |
-|--------|-------|-------------|
-| "Bring them together" | Purple filled | 01-the-mess |
-| "Already have an account? **Sign in**" | Text link | /sign-in (marks onboarding as seen) |
-| "Got a code? **Enter it here**" | Text link | Opens CodeEntryModal |
+| Button                                 | Style         | Destination                         |
+| -------------------------------------- | ------------- | ----------------------------------- |
+| "Bring them together"                  | Purple filled | 01-the-mess                         |
+| "Already have an account? **Sign in**" | Text link     | /sign-in (marks onboarding as seen) |
+| "Got a code? **Enter it here**"        | Text link     | Opens CodeEntryModal                |
 
 ---
 
@@ -100,12 +104,15 @@ Sources: [Raindrop.io](https://raindrop.io/), [Raindrop.io as a Productivity Hac
 **Background:** Purple
 
 **Headline:**
+
 > Sound familiar?
 
 **Subtitle:**
+
 > Events buried in screenshots. Plans lost in group chats. Flyers you forgot to save. Newsletters you skimmed and closed.
 
 **What the user sees:**
+
 - Four mini "source cards" stacked at slight angles (like a messy pile), each representing a different source:
   - An Instagram story thumbnail with an event poster
   - A text message bubble: "you coming to the thing saturday?"
@@ -116,9 +123,9 @@ Sources: [Raindrop.io](https://raindrop.io/), [Raindrop.io as a Productivity Hac
 
 **What the user does:**
 
-| Button | Style | Destination |
-|--------|-------|-------------|
-| "That's me" | White filled | 02-the-fix |
+| Button      | Style        | Destination |
+| ----------- | ------------ | ----------- |
+| "That's me" | White filled | 02-the-fix  |
 
 ---
 
@@ -129,21 +136,24 @@ Sources: [Raindrop.io](https://raindrop.io/), [Raindrop.io as a Productivity Hac
 **Background:** Purple
 
 **Headline:**
+
 > One place. Every event.
 
 **Subtitle:**
+
 > No matter where you find it — Instagram, a friend's text, a flyer on the street — capture it and it lives here
 
 **What the user sees:**
+
 - Same source icons from Screen 1, but now they are arranged in a neat row at the top with thin lines converging downward into a single, clean Soonlist feed preview (using `assets/feed.png`)
 - The feed preview shows 3-4 neatly organized event cards with dates, names, and locations
 - Social proof pill: "Join thousands of people who stopped losing events"
 
 **What the user does:**
 
-| Button | Style | Destination |
-|--------|-------|-------------|
-| "Continue" | White filled | 03-batch |
+| Button     | Style        | Destination |
+| ---------- | ------------ | ----------- |
+| "Continue" | White filled | 03-batch    |
 
 ---
 
@@ -154,21 +164,24 @@ Sources: [Raindrop.io](https://raindrop.io/), [Raindrop.io as a Productivity Hac
 **Background:** Purple
 
 **Headline:**
+
 > Add them all at once
 
 **Subtitle:**
+
 > Select up to 10 screenshots from your camera roll. We'll save every event in seconds.
 
 **What the user sees:**
+
 - 2x3 grid of thumbnail placeholders (using `assets/feed.png`)
 - First 3 thumbnails have a purple checkmark badge overlay
 - Social proof pill: "Most people have 5+ event screenshots saved already"
 
 **What the user does:**
 
-| Button | Style | Destination |
-|--------|-------|-------------|
-| "Continue" | White filled | 04-goals |
+| Button     | Style        | Destination |
+| ---------- | ------------ | ----------- |
+| "Continue" | White filled | 04-goals    |
 
 ---
 
@@ -180,12 +193,15 @@ Sources: [Raindrop.io](https://raindrop.io/), [Raindrop.io as a Productivity Hac
 **Data saved:** `onboardingData.goals` (string array)
 
 **Headline:**
+
 > What's slipping through the cracks?
 
 **Subtitle:**
+
 > Pick everything that applies
 
 **Options (multi-select, checkmark on selected):**
+
 1. Events I screenshot but never look at again
 2. Plans friends text me that I forget
 3. Local things I hear about too late
@@ -196,8 +212,8 @@ Sources: [Raindrop.io](https://raindrop.io/), [Raindrop.io as a Productivity Hac
 
 **What the user does:**
 
-| Button | Style | Destination |
-|--------|-------|-------------|
+| Button     | Style                                 | Destination         |
+| ---------- | ------------------------------------- | ------------------- |
 | "Continue" | White filled (disabled if 0 selected) | 05-screenshot-habit |
 
 **Note:** The goals are reframed as "problems" to reinforce the consolidation message. Each option names a specific scattered-event failure mode rather than a generic aspiration. Data maps to the same `goals` field.
@@ -212,9 +228,11 @@ Sources: [Raindrop.io](https://raindrop.io/), [Raindrop.io as a Productivity Hac
 **Data saved:** `onboardingData.screenshotEvents`
 
 **Headline:**
+
 > Do you already screenshot events you want to remember?
 
 **Options (single-select, tapping advances immediately):**
+
 1. Yes, all the time
 2. Sometimes
 3. Not yet
@@ -233,12 +251,15 @@ Sources: [Raindrop.io](https://raindrop.io/), [Raindrop.io as a Productivity Hac
 **Data saved:** `onboardingData.discoveryMethod`
 
 **Headline:**
+
 > Where do your events get lost?
 
 **Subtitle:**
+
 > Pick the place where you find the most events
 
 **Options (single-select, tapping advances immediately):**
+
 1. Instagram
 2. TikTok
 3. Friends' recommendations
@@ -264,26 +285,31 @@ This screen has 3 phases that transition in sequence. The sample event card vari
 #### Phase 1: Capture
 
 **Headline:**
+
 > See it. Screenshot it. Done.
 
 **Subtitle:**
+
 > Tap below to capture this event from {source}
 
 **What the user sees:**
+
 - A sample event card styled to match the source selected in Screen 6 (Instagram story, TikTok post, text message, newsletter clipping, flyer photo, or Facebook event). The card shows event name, date, time, location, and a small italic "Spotted on {source}" label.
 
 **What the user does:**
 
-| Button | Style | Action |
-|--------|-------|--------|
+| Button               | Style        | Action         |
+| -------------------- | ------------ | -------------- |
 | "Capture this event" | White filled | Starts Phase 2 |
 
 #### Phase 2: Parsing (1.5 seconds)
 
 **Headline:**
+
 > Capturing...
 
 **What the user sees:**
+
 - Pulsing sparkle icon in a circle
 - "Parsing your event..."
 - "AI is reading the details"
@@ -293,19 +319,22 @@ Auto-transitions to Phase 3 after 1.5s.
 #### Phase 3: Result
 
 **Headline:**
+
 > Saved. Organized. One place.
 
 **Subtitle:**
+
 > Every event you capture lands right here — no sorting, no folders, no effort
 
 **What the user sees:**
+
 - Parsed event card (styled like the real app's event cards): date + time header, bold event name, location, "Add to Calendar" and "Save" action pills
 - Fake notification banner (slides in from top after 0.8s, auto-dismisses after 3s): Soonlist app icon, "Soonlist" label, "{Event name} saved!", date and time
 
 **What the user does:**
 
-| Button | Style | Destination |
-|--------|-------|-------------|
+| Button     | Style                                   | Destination      |
+| ---------- | --------------------------------------- | ---------------- |
 | "Continue" | White filled (appears after 0.5s delay) | 08-notifications |
 
 ---
@@ -318,15 +347,19 @@ Auto-transitions to Phase 3 after 1.5s.
 **Data saved:** `onboardingData.notificationsEnabled`
 
 **Headline:**
+
 > Never lose an event again
 
 **Subtitle:**
+
 > Get a notification every time an event is saved, so nothing slips through the cracks
 
 **Footer:**
+
 > You can always change this in Settings
 
 **What the user sees:**
+
 - Fake iOS notification permission dialog:
   - Dialog title: "Turn on Push Notifications to capture and remember"
   - Dialog body: "Soonlist notifies you when events are created, and to help you build a habit of capturing events"
@@ -335,13 +368,14 @@ Auto-transitions to Phase 3 after 1.5s.
 - Bouncing chevron-up arrow pointing at "Allow" button
 
 **Behavior:**
+
 - If permission already granted: navigates directly to 09-share-demo
 - Otherwise: calls `registerForPushNotifications()`, saves result, navigates
 
 **What the user does:**
 
-| Button | Style | Destination |
-|--------|-------|-------------|
+| Button  | Style                        | Destination   |
+| ------- | ---------------------------- | ------------- |
 | "Allow" | Blue text (iOS dialog style) | 09-share-demo |
 
 ---
@@ -353,12 +387,15 @@ Auto-transitions to Phase 3 after 1.5s.
 **Background:** Purple
 
 **Headline:**
+
 > Share from any app, straight to Soonlist
 
 **Subtitle:**
+
 > See an event in Instagram, Safari, or a text? Tap share, tap Soonlist. It's in your feed instantly.
 
 **What the user sees:**
+
 - Demo video player (looping, muted, auto-playing)
   - Video URL loaded from Convex: `api.appConfig.getDemoVideoUrl`
   - Aspect ratio: 884/1920
@@ -367,9 +404,9 @@ Auto-transitions to Phase 3 after 1.5s.
 
 **What the user does:**
 
-| Button | Style | Destination |
-|--------|-------|-------------|
-| "Continue" | White filled | 10-age |
+| Button     | Style        | Destination |
+| ---------- | ------------ | ----------- |
+| "Continue" | White filled | 10-age      |
 
 ---
 
@@ -381,9 +418,11 @@ Auto-transitions to Phase 3 after 1.5s.
 **Data saved:** `onboardingData.ageRange`
 
 **Headline:**
+
 > Almost there — how old are you?
 
 **Options (single-select, tapping advances immediately):**
+
 1. Under 24
 2. 25-34
 3. 35-44
@@ -403,9 +442,11 @@ Auto-transitions to Phase 3 after 1.5s.
 **Data saved:** `onboardingData.source`
 
 **Headline:**
+
 > Last one — where did you hear about us?
 
 **Options (single-select, tapping advances immediately):**
+
 1. Google Search
 2. TikTok
 3. Searched on App Store
@@ -431,9 +472,11 @@ Auto-transitions to Phase 3 after 1.5s.
 **Framing note for RevenueCat paywall copy (if customizable):**
 
 **Headline:**
+
 > Support Soonlist
 
 **Subtitle:**
+
 > Every feature is free, forever. Your support keeps it that way.
 
 **Paywall outcomes:** Same as current (Purchased/Restored -> sign-in with subscribed=true; Cancelled/Error -> trial mode, sign-in with trial=true).
@@ -470,13 +513,13 @@ Paywall ---------------> /sign-in
 
 All five required survey questions are present:
 
-| Survey | Screen | Headline reframing |
-|--------|--------|--------------------|
-| Goals | Screen 4 | "What's slipping through the cracks?" (problems, not aspirations) |
-| Screenshot Habit | Screen 5 | "Do you already screenshot events you want to remember?" (minor reframe) |
-| Discovery Channels | Screen 6 | "Where do your events get lost?" (names the source as the problem) |
-| Age | Screen 10 | "Almost there — how old are you?" (quick, end-of-flow) |
-| Source | Screen 11 | "Last one — where did you hear about us?" (momentum into paywall) |
+| Survey             | Screen    | Headline reframing                                                       |
+| ------------------ | --------- | ------------------------------------------------------------------------ |
+| Goals              | Screen 4  | "What's slipping through the cracks?" (problems, not aspirations)        |
+| Screenshot Habit   | Screen 5  | "Do you already screenshot events you want to remember?" (minor reframe) |
+| Discovery Channels | Screen 6  | "Where do your events get lost?" (names the source as the problem)       |
+| Age                | Screen 10 | "Almost there — how old are you?" (quick, end-of-flow)                   |
+| Source             | Screen 11 | "Last one — where did you hear about us?" (momentum into paywall)        |
 
 ---
 
@@ -484,4 +527,4 @@ All five required survey questions are present:
 
 **Why this works for Soonlist:** Soonlist's core value proposition IS consolidation — events genuinely are scattered across Instagram, texts, email, and physical flyers, and the app genuinely does bring them into one place. Unlike aspirational framings ("go out more") that require the user to buy into an identity shift, the consolidation pitch works for anyone who has ever lost track of a plan. It is the most universally relatable framing because it describes a problem people already know they have. The simulated capture demo (Screen 7) lands harder in this context because the user has just been shown the "mess" and the "fix" — the demo becomes proof, not pitch.
 
-**Biggest risk:** This direction may feel too utilitarian for users who don't yet have a large volume of events to track. Someone who screenshots one event a month won't feel the "chaos" that makes the consolidation pitch resonate. The "everything in one place" framing works best for power users who already feel the pain — it may underwhelm casual or aspirational users who need to be sold on the *desire* to track events, not just the *tool* to do it. Mitigation: the Try It demo (Screen 7) and the reframed Goals screen (Screen 4, "what's slipping through the cracks?") help even light users recognize scattered events as a real problem worth solving.
+**Biggest risk:** This direction may feel too utilitarian for users who don't yet have a large volume of events to track. Someone who screenshots one event a month won't feel the "chaos" that makes the consolidation pitch resonate. The "everything in one place" framing works best for power users who already feel the pain — it may underwhelm casual or aspirational users who need to be sold on the _desire_ to track events, not just the _tool_ to do it. Mitigation: the Try It demo (Screen 7) and the reframed Goals screen (Screen 4, "what's slipping through the cracks?") help even light users recognize scattered events as a real problem worth solving.

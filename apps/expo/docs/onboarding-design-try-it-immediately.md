@@ -3,18 +3,23 @@
 ## Research: Apps That Lead With the Experience
 
 ### 1. Duolingo
-The gold standard for experience-first onboarding. On the very first screen after the splash, Duolingo asks "What language do you want to learn?" -- not "create an account." Users are dropped into a real translation exercise within 60 seconds of opening the app. Sign-up is deferred until *after* the user has completed their first mini-lesson and felt the dopamine of getting answers right. The lesson IS the pitch. ([Source](https://goodux.appcues.com/blog/duolingo-user-onboarding), [Source](https://www.theappfuel.com/casestudies/three-learnings-from-duolingos-onboarding))
+
+The gold standard for experience-first onboarding. On the very first screen after the splash, Duolingo asks "What language do you want to learn?" -- not "create an account." Users are dropped into a real translation exercise within 60 seconds of opening the app. Sign-up is deferred until _after_ the user has completed their first mini-lesson and felt the dopamine of getting answers right. The lesson IS the pitch. ([Source](https://goodux.appcues.com/blog/duolingo-user-onboarding), [Source](https://www.theappfuel.com/casestudies/three-learnings-from-duolingos-onboarding))
 
 ### 2. Photoroom
-Photoroom asks the user to select a photo on the first screen, then immediately removes the background -- demonstrating its core AI capability before any signup or paywall. The paywall appears *after* the user has seen the magic happen to their own photo. This is structurally identical to what Soonlist could do: select an input, watch AI transform it, see the result. ([Source](https://www.purchasely.com/blog/app-onboarding))
+
+Photoroom asks the user to select a photo on the first screen, then immediately removes the background -- demonstrating its core AI capability before any signup or paywall. The paywall appears _after_ the user has seen the magic happen to their own photo. This is structurally identical to what Soonlist could do: select an input, watch AI transform it, see the result. ([Source](https://www.purchasely.com/blog/app-onboarding))
 
 ### 3. Robinhood
-On the launch screen, Robinhood offers three CTAs: Register, Learn More, and *Try Demo*. Users who tap "Try Demo" can execute a simulated stock trade -- picking a stock, setting a quantity, swiping to confirm -- before providing any personal information. The simulated trade is clearly labeled as simulated, but the mechanics are real. This is the closest analog to Soonlist's "simulated capture" concept. ([Source](https://medium.com/@ericyi/ux-teardown-3-robinhood-79e310f7578))
+
+On the launch screen, Robinhood offers three CTAs: Register, Learn More, and _Try Demo_. Users who tap "Try Demo" can execute a simulated stock trade -- picking a stock, setting a quantity, swiping to confirm -- before providing any personal information. The simulated trade is clearly labeled as simulated, but the mechanics are real. This is the closest analog to Soonlist's "simulated capture" concept. ([Source](https://medium.com/@ericyi/ux-teardown-3-robinhood-79e310f7578))
 
 ### 4. Headspace
-Rather than explaining what meditation is or showing feature carousels, Headspace guides the user through a real 1-minute breathing exercise in the first session. Three quick personalization questions (experience level, goal, schedule) happen *before* the exercise, but they take under 30 seconds and feel like part of the experience rather than a gate. The exercise creates its own context. ([Source](https://goodux.appcues.com/blog/headspaces-mindful-onboarding-sequence))
+
+Rather than explaining what meditation is or showing feature carousels, Headspace guides the user through a real 1-minute breathing exercise in the first session. Three quick personalization questions (experience level, goal, schedule) happen _before_ the exercise, but they take under 30 seconds and feel like part of the experience rather than a gate. The exercise creates its own context. ([Source](https://goodux.appcues.com/blog/headspaces-mindful-onboarding-sequence))
 
 ### 5. Calm
+
 Calm opens with a purple screen that simply says "Take a deep breath" -- no logo, no feature list. The user breathes. Then a short personalization quiz (3-4 taps) leads directly into a guided session. The paywall and account creation come after. The first screen IS the product. ([Source](https://appagent.com/blog/new-user-flow-types/))
 
 ---
@@ -27,7 +32,7 @@ Calm opens with a purple screen that simply says "Take a deep breath" -- no logo
 
 **New flow order:** Welcome/Capture Prompt > AI Parsing > Result + Reaction > Discovery Channels > Share Demo > Notifications > Goals > Screenshot Habit > Age > Source > Paywall > Sign-in
 
-The key structural change: the capture simulation moves from screen 7 to screen 1. No explanatory screens precede it. The experience *is* the explanation.
+The key structural change: the capture simulation moves from screen 7 to screen 1. No explanatory screens precede it. The experience _is_ the explanation.
 
 ---
 
@@ -38,6 +43,7 @@ The key structural change: the capture simulation moves from screen 7 to screen 
 **Subtitle:** Try it right now -- tap the screenshot below.
 
 **What the user sees:**
+
 - Soonlist logo (small, top center)
 - A realistic-looking sample event screenshot in the center of the screen (styled to look like an Instagram story or flyer -- the same `SampleScreenshot` component from the current `06-try-it.tsx`, but using the Instagram sample event as the default since no discovery channel has been selected yet)
 - A large, pulsing "Capture this event" button at the bottom (white pill on the purple `interactive-3` background)
@@ -58,6 +64,7 @@ The key structural change: the capture simulation moves from screen 7 to screen 
 **Subtitle:** AI is reading the details
 
 **What the user sees:**
+
 - The sample screenshot shrinks/fades upward
 - A centered parsing animation: a pulsing sparkle icon inside a translucent circle with the text "Parsing your event..." and "AI is reading the details"
 - This is the same `ParsingAnimation` component from the current `06-try-it.tsx`
@@ -77,6 +84,7 @@ The key structural change: the capture simulation moves from screen 7 to screen 
 **Subtitle:** Screenshots become organized events, automatically.
 
 **What the user sees:**
+
 - The parsed event card (the same `ParsedEventCard` component from `06-try-it.tsx`) showing the structured event: date, time, name, location, plus "Add to Calendar" and "Save" action chips
 - A simulated iOS push notification slides in from the top after 800ms: "Soonlist -- Rooftop Sunset DJ Set saved! Sat, Mar 22 at 6:00 PM" (the `FakeNotificationBanner` component)
 - After the notification auto-dismisses (3s), the "Continue" button fades in
@@ -96,6 +104,7 @@ The key structural change: the capture simulation moves from screen 7 to screen 
 **Subtitle:** (none)
 
 **What the user sees:**
+
 - Progress bar: step 1 of 8
 - Six tappable options: Instagram, TikTok, Friends' recommendations, Local websites/newsletters, Walking around town, Facebook
 - Same `QuestionOption` component styling as current flow
@@ -115,6 +124,7 @@ The key structural change: the capture simulation moves from screen 7 to screen 
 **Subtitle:** Use the share button from any app to save events directly to Soonlist
 
 **What the user sees:**
+
 - Progress bar: step 2 of 8
 - A looping video demonstrating the share extension flow (same `VideoPlayer` component from current `08-share-demo.tsx`, fetching from Convex)
 - "Continue" button at the bottom
@@ -134,6 +144,7 @@ The key structural change: the capture simulation moves from screen 7 to screen 
 **Subtitle:** Get notified when events are saved so you can stay on top of your plans
 
 **What the user sees:**
+
 - Progress bar: step 3 of 8
 - A styled iOS notification permission dialog (the existing custom dialog from `07-notifications.tsx`) with the "Don't Allow" button grayed out and an animated chevron pointing to "Allow"
 - Small text at the bottom: "You can always update this later in your settings!"
@@ -153,6 +164,7 @@ The key structural change: the capture simulation moves from screen 7 to screen 
 **Subtitle:** Pick as many as you like
 
 **What the user sees:**
+
 - Progress bar: step 4 of 8
 - Five multi-select options: Organize all my events in one place, Turn my screenshots into saved plans, Discover fun events near me, Share plans with friends, Just exploring for now
 - "Continue" button (disabled until at least one selected)
@@ -173,6 +185,7 @@ The key structural change: the capture simulation moves from screen 7 to screen 
 **Subtitle:** (none)
 
 **What the user sees:**
+
 - Progress bar: step 5 of 8
 - Two options: "Yes" and "Not yet"
 - Same component as current `04-screenshot-habit.tsx`
@@ -190,6 +203,7 @@ The key structural change: the capture simulation moves from screen 7 to screen 
 **Subtitle:** (none)
 
 **What the user sees:**
+
 - Progress bar: step 6 of 8
 - Six age range options: Under 24, 25-34, 35-44, 45-54, 55-64, 65+
 - Same component as current `09-age.tsx`
@@ -207,6 +221,7 @@ The key structural change: the capture simulation moves from screen 7 to screen 
 **Subtitle:** (none)
 
 **What the user sees:**
+
 - Progress bar: step 7 of 8
 - Seven options: Google Search, TikTok, Searched on App Store, Instagram, Facebook, Through a friend, Other
 - Same component as current `10-source.tsx`
@@ -224,6 +239,7 @@ The key structural change: the capture simulation moves from screen 7 to screen 
 **Subtitle:** (Handled by RevenueCat native paywall UI)
 
 **What the user sees:**
+
 - The RevenueCat paywall modal (existing implementation from `paywall.tsx`)
 - Monthly and yearly subscription options
 - Dismiss/skip option that enters trial mode
@@ -236,19 +252,19 @@ The key structural change: the capture simulation moves from screen 7 to screen 
 
 ## Flow Summary Table
 
-| # | Screen Name | Type | Time (est.) |
-|---|------------|------|-------------|
-| 1 | The Hook | Interactive demo | 3s |
-| 2 | The Magic | Auto-animation | 1.5s |
-| 3 | The Payoff | Result + notification | 5s |
-| 4 | Discovery Channels | Survey (single-select) | 3s |
-| 5 | Share Demo | Video demo | 8s |
-| 6 | Notifications | Permission request | 5s |
-| 7 | Goals | Survey (multi-select) | 5s |
-| 8 | Screenshot Habit | Survey (single-select) | 2s |
-| 9 | Age | Survey (single-select) | 2s |
-| 10 | Source | Survey (single-select) | 2s |
-| 11 | Paywall | Subscription | 10s |
+| #   | Screen Name        | Type                   | Time (est.) |
+| --- | ------------------ | ---------------------- | ----------- |
+| 1   | The Hook           | Interactive demo       | 3s          |
+| 2   | The Magic          | Auto-animation         | 1.5s        |
+| 3   | The Payoff         | Result + notification  | 5s          |
+| 4   | Discovery Channels | Survey (single-select) | 3s          |
+| 5   | Share Demo         | Video demo             | 8s          |
+| 6   | Notifications      | Permission request     | 5s          |
+| 7   | Goals              | Survey (multi-select)  | 5s          |
+| 8   | Screenshot Habit   | Survey (single-select) | 2s          |
+| 9   | Age                | Survey (single-select) | 2s          |
+| 10  | Source             | Survey (single-select) | 2s          |
+| 11  | Paywall            | Subscription           | 10s         |
 
 **Estimated total time: ~45 seconds** (vs. current flow which reaches the demo at screen 7, roughly 30+ seconds in)
 
@@ -258,11 +274,12 @@ The key structural change: the capture simulation moves from screen 7 to screen 
 
 This direction works for Soonlist because the core value proposition -- "screenshot becomes structured event" -- is visual, fast, and self-explanatory. Unlike apps where the product requires context (e.g., finance, health), Soonlist's magic is immediately legible: you see a messy screenshot, you tap a button, you get a clean event card. That three-beat rhythm (input, magic, output) is compelling enough to carry the first 5 seconds without any preamble. Duolingo proved this pattern at scale: when the product experience is inherently satisfying, explanation is overhead.
 
-The biggest risk is that the simulated capture feels hollow without stakes. The user knows this is a demo event, not *their* event. Unlike Duolingo (where even the demo quiz teaches you a real word) or Photoroom (where you use your own photo), Soonlist's simulation uses a fake screenshot. If the animation and result card do not feel polished and real, the "aha moment" could land as "oh, a canned demo" instead of "wow, this is magic." Mitigating this requires the sample screenshot to look genuinely like something the user would encounter in the wild, and the parsing animation to feel genuinely intelligent rather than performative.
+The biggest risk is that the simulated capture feels hollow without stakes. The user knows this is a demo event, not _their_ event. Unlike Duolingo (where even the demo quiz teaches you a real word) or Photoroom (where you use your own photo), Soonlist's simulation uses a fake screenshot. If the animation and result card do not feel polished and real, the "aha moment" could land as "oh, a canned demo" instead of "wow, this is magic." Mitigating this requires the sample screenshot to look genuinely like something the user would encounter in the wild, and the parsing animation to feel genuinely intelligent rather than performative.
 
 ---
 
 Sources:
+
 - [Duolingo's delightful user onboarding experience](https://goodux.appcues.com/blog/duolingo-user-onboarding)
 - [Three learnings from Duolingo's onboarding](https://www.theappfuel.com/casestudies/three-learnings-from-duolingos-onboarding)
 - [The Best App Onboarding Examples & Best Practices (Purchasely)](https://www.purchasely.com/blog/app-onboarding)

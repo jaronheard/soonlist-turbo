@@ -57,7 +57,10 @@ export default function EverythingInOnePlace() {
               </div>
             </div>
             <div className="mt-6">
-              <ImagePlaceholder label="Convergence Illustration" aspectRatio="1/1" />
+              <ImagePlaceholder
+                label="Convergence Illustration"
+                aspectRatio="1/1"
+              />
             </div>
             <div className="mt-auto pt-4">
               <PrimaryButton label="Bring them together" variant="purple" />
@@ -101,7 +104,10 @@ export default function EverythingInOnePlace() {
               </Subtitle>
             </div>
             <div className="mt-6">
-              <ImagePlaceholder label="Clean Feed (sources → one list)" aspectRatio="3/4" />
+              <ImagePlaceholder
+                label="Clean Feed (sources → one list)"
+                aspectRatio="3/4"
+              />
             </div>
             <SocialProof text="Join thousands of people who stopped losing events" />
             <div className="mt-auto pt-4">

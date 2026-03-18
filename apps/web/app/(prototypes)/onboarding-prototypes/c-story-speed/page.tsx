@@ -99,8 +99,8 @@ export default function StorySpeed() {
               </div>
               <Headline>Then she found Soonlist.</Headline>
               <Subtitle>
-                One app to save events from anywhere. Screenshots, texts,
-                flyers — captured in seconds, organized by AI.
+                One app to save events from anywhere. Screenshots, texts, flyers
+                — captured in seconds, organized by AI.
               </Subtitle>
             </div>
             <div className="mt-8">
@@ -139,7 +139,7 @@ export default function StorySpeed() {
                 She never lost an event again. And neither will you.
               </Subtitle>
             </div>
-            <div className="mt-6 mx-auto w-full max-w-[300px] rounded-2xl border-2 border-white/30 bg-white p-5 shadow-sm">
+            <div className="mx-auto mt-6 w-full max-w-[300px] rounded-2xl border-2 border-white/30 bg-white p-5 shadow-sm">
               <div className="text-xs font-semibold uppercase tracking-wide text-interactive-1">
                 Sat, Mar 22 · 6:00 PM
               </div>
@@ -164,8 +164,8 @@ export default function StorySpeed() {
                 Chapter 4
               </div>
               <Headline>
-                She went to the rooftop jazz night. And the comedy show. And
-                the art walk.
+                She went to the rooftop jazz night. And the comedy show. And the
+                art walk.
               </Headline>
               <Subtitle>
                 For the first time in months, she didn&apos;t miss the things

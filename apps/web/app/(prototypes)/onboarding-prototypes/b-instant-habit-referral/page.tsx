@@ -117,20 +117,14 @@ export default function InstantHabitReferral() {
           <PurpleScreen>
             <ProgressBar step={2} total={12} />
             <div className="mt-8">
-              <Headline>
-                You&apos;ll follow Jamie after sign-up
-              </Headline>
-              <Subtitle>
-                Now let&apos;s set up your own event feed
-              </Subtitle>
+              <Headline>You&apos;ll follow Jamie after sign-up</Headline>
+              <Subtitle>Now let&apos;s set up your own event feed</Subtitle>
             </div>
             <div className="mt-6 flex items-center gap-3 rounded-xl bg-white/15 px-4 py-3">
               <div className="flex h-8 w-8 items-center justify-center rounded-full bg-interactive-2 text-sm font-bold text-interactive-1">
                 J
               </div>
-              <span className="text-sm text-white">
-                Following Jamie Chen ✓
-              </span>
+              <span className="text-sm text-white">Following Jamie Chen ✓</span>
             </div>
             <div className="mt-6 text-center text-sm text-white/60">
               ↓ Try it yourself ↓

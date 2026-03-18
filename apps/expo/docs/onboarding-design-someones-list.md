@@ -6,7 +6,7 @@
 
 When a user taps a Discord invite link, the app opens (or the App Store opens for install, with deferred deep linking) directly to a screen that says "You've been invited to join [Server Name]" with the server's icon, name, member count, and online count. The user sees "Accept Invite" as the primary action. After accepting, Discord runs the server owner's custom onboarding questions (e.g., "What are you interested in?") to assign roles and channels. If you open Discord organically -- no invite context -- you see a generic "Create or Join a Server" screen instead. The entire first minute of the app is shaped by whether you arrived from a link or not.
 
-This is relevant to Soonlist because it proves that showing the *specific thing someone was invited to* (a server / a list) dramatically increases the likelihood of completing onboarding. The invite object becomes the anchor.
+This is relevant to Soonlist because it proves that showing the _specific thing someone was invited to_ (a server / a list) dramatically increases the likelihood of completing onboarding. The invite object becomes the anchor.
 
 ### 2. Partiful -- Event-First Onboarding via Shared Link
 
@@ -74,7 +74,7 @@ Strava's onboarding aggressively front-loads social connection. After basic acco
 
 **Referral path: 3 unique screens + 10 shared = 13 total**
 **Organic path: 3 unique screens + 10 shared = 13 total**
-*(But 2 organic value screens replace the 3 referral screens, so organic is 12 total)*
+_(But 2 organic value screens replace the 3 referral screens, so organic is 12 total)_
 
 ---
 
@@ -90,14 +90,17 @@ These screens appear only when the app detects a `pendingFollowUsername` in the 
 **Screen name:** referral-welcome
 
 **Headline copy:**
+
 > "[Display Name] wants you to see what's coming up"
 
 (Example: "Jamie Chen wants you to see what's coming up")
 
 **Subtitle copy:**
+
 > You're one step away from following their events
 
 **What the user sees:**
+
 - Soonlist logo at top (small, same as current)
 - The referrer's avatar (circular, 64px, pulled from Convex user data via `pendingFollowUsername`) centered below the logo
 - The referrer's display name bolded in the headline
@@ -108,6 +111,7 @@ These screens appear only when the app detects a `pendingFollowUsername` in the 
 - "Got a code? Enter it here" tertiary link below
 
 **What the user does:**
+
 - Taps "See Their Events" to continue to R2
 - OR taps "Sign in" to skip onboarding entirely (same behavior as current)
 - OR taps "Got a code?" to open the code modal (same behavior as current)
@@ -122,14 +126,17 @@ These screens appear only when the app detects a `pendingFollowUsername` in the 
 **Screen name:** referral-list-preview
 
 **Headline copy:**
+
 > "[Display Name]'s upcoming events"
 
 (Example: "Jamie Chen's upcoming events")
 
 **Subtitle copy:**
+
 > Follow them to keep these in your feed
 
 **What the user sees:**
+
 - Progress bar at top: step 1 of N
 - Headline with referrer's name
 - Subtitle
@@ -143,6 +150,7 @@ These screens appear only when the app detects a `pendingFollowUsername` in the 
 - Small text below: "You can unfollow anytime"
 
 **What the user does:**
+
 - Scrolls to browse the events
 - Taps "Follow [First Name] + Continue" -- this queues the follow action (to be executed after sign-in) and advances
 
@@ -156,12 +164,15 @@ These screens appear only when the app detects a `pendingFollowUsername` in the 
 **Screen name:** referral-bridge
 
 **Headline copy:**
+
 > "You'll follow [First Name] after sign-up"
 
 **Subtitle copy:**
+
 > Now let's set up your own event feed
 
 **What the user sees:**
+
 - Progress bar: step 2 of N
 - A compact confirmation card at the top showing: referrer's avatar + "Following [Display Name]" with a checkmark
 - Below the card, a visual transition element -- a downward arrow or divider with the text "Your turn"
@@ -169,6 +180,7 @@ These screens appear only when the app detects a `pendingFollowUsername` in the 
 - "Continue" primary button
 
 **What the user does:**
+
 - Taps "Continue" to proceed to the shared survey flow
 
 **Navigates to:** C1 (Goals)
@@ -187,15 +199,19 @@ These screens appear when there is no `pendingFollowUsername` -- the user found 
 **Screen name:** organic-welcome
 
 **Headline copy:**
+
 > Turn screenshots into plans
 
 **Subtitle copy:**
+
 > Save events in one tap. All in one place
 
 **Tertiary copy:**
+
 > Free, community-supported
 
 **What the user sees:**
+
 - Soonlist logo centered at top
 - Headline with "plans" in the accent purple color (`interactive-1`)
 - Subtitle and tertiary text
@@ -204,9 +220,10 @@ These screens appear when there is no `pendingFollowUsername` -- the user found 
 - "Already have an account? Sign in" link
 - "Got a code? Enter it here" link
 
-*This is essentially identical to the current `00-welcome.tsx` screen, minus the `FollowContextBanner` component (which renders nothing in the organic case anyway).*
+_This is essentially identical to the current `00-welcome.tsx` screen, minus the `FollowContextBanner` component (which renders nothing in the organic case anyway)._
 
 **What the user does:**
+
 - Taps "Get Started"
 
 **Navigates to:** O2 (Value: One Place)
@@ -219,20 +236,24 @@ These screens appear when there is no `pendingFollowUsername` -- the user found 
 **Screen name:** value-one-place
 
 **Headline copy:**
+
 > One place for all your events
 
 **Subtitle copy:**
+
 > No matter where you find them -- Instagram, flyers, texts -- save them all here
 
 **What the user sees:**
+
 - Progress bar: step 1 of N
 - Feed preview image (existing `feed.png`)
 - Social proof callout: "Join thousands of people saving events with Soonlist"
 - "Continue" button
 
-*Identical to current `01-value-one-place.tsx`.*
+_Identical to current `01-value-one-place.tsx`._
 
 **What the user does:**
+
 - Taps "Continue"
 
 **Navigates to:** O3 (Value: Batch)
@@ -245,20 +266,24 @@ These screens appear when there is no `pendingFollowUsername` -- the user found 
 **Screen name:** value-batch
 
 **Headline copy:**
+
 > Add them all at once
 
 **Subtitle copy:**
+
 > Select multiple screenshots from your camera roll and save them in seconds
 
 **What the user sees:**
+
 - Progress bar: step 2 of N
 - Grid of 6 thumbnail placeholders showing the batch-select concept (3 with checkmarks)
 - Social proof: "Most people have 5+ event screenshots saved already"
 - "Continue" button
 
-*Identical to current `02-value-batch.tsx`.*
+_Identical to current `02-value-batch.tsx`._
 
 **What the user does:**
+
 - Taps "Continue"
 
 **Navigates to:** C1 (Goals)
@@ -277,23 +302,27 @@ Both referral and organic paths converge here. Step numbering in the progress ba
 **Screen name:** goals
 
 **Headline copy:**
+
 > What do you want to use Soonlist for?
 
 **Subtitle copy:**
+
 > Pick as many as you like
 
 **What the user sees:**
+
 - Progress bar
 - Multi-select list of goals:
   - "Organize all my events in one place"
   - "Turn my screenshots into saved plans"
   - "Discover fun events near me"
   - "Share plans with friends"
-  - "Follow a friend's event list" *(new option -- pre-selected if referral path)*
+  - "Follow a friend's event list" _(new option -- pre-selected if referral path)_
   - "Just exploring for now"
 - "Continue" button (disabled until at least one selected)
 
 **What the user does:**
+
 - Taps one or more goals, then taps "Continue"
 
 **Navigates to:** C2
@@ -306,16 +335,19 @@ Both referral and organic paths converge here. Step numbering in the progress ba
 **Screen name:** screenshot-habit
 
 **Headline copy:**
+
 > Do you already screenshot events you're interested in?
 
 **Subtitle copy:** (none)
 
 **What the user sees:**
+
 - Progress bar
 - Two options: "Yes" / "Not yet"
 - Tapping an option auto-advances
 
 **What the user does:**
+
 - Taps one option
 
 **Navigates to:** C3
@@ -328,11 +360,13 @@ Both referral and organic paths converge here. Step numbering in the progress ba
 **Screen name:** discovery-channels
 
 **Headline copy:**
+
 > Where do you see the most events?
 
 **Subtitle copy:** (none)
 
 **What the user sees:**
+
 - Progress bar
 - Single-select list:
   - "Instagram"
@@ -344,6 +378,7 @@ Both referral and organic paths converge here. Step numbering in the progress ba
 - Tapping an option auto-advances
 
 **What the user does:**
+
 - Taps one option
 
 **Navigates to:** C4
@@ -356,30 +391,37 @@ Both referral and organic paths converge here. Step numbering in the progress ba
 **Screen name:** try-it
 
 **Headline copy (phase 1):**
+
 > Capture any event screenshot
 
 **Subtitle copy (phase 1):**
+
 > We'll do the rest
 
 **Headline copy (phase 2 -- parsing):**
+
 > Capturing...
 
 **Headline copy (phase 3 -- result):**
+
 > That's it!
 
 **Subtitle copy (phase 3):**
+
 > Screenshots become organized events, automatically
 
 **What the user sees:**
+
 - Progress bar
 - Phase 1: A sample event screenshot card (content personalized based on their C3 discovery channel answer -- e.g., if they said "Instagram," they see a rooftop DJ set from an Instagram Story). A "Capture this event" button at bottom.
 - Phase 2: A pulsing sparkle animation with "Parsing your event..." and "AI is reading the details" -- lasts ~1.5 seconds
 - Phase 3: A parsed event card (purple border, white bg) showing the extracted name, date, time, location, with "Add to Calendar" and "Save" pill badges. A simulated push notification banner slides in from the top showing "Soonlist -- [Event Name] saved!"
 - "Continue" button appears after the parsed card
 
-*Identical to current `06-try-it.tsx`.*
+_Identical to current `06-try-it.tsx`._
 
 **What the user does:**
+
 - Taps "Capture this event" --> watches parsing animation --> sees result --> taps "Continue"
 
 **Navigates to:** C5
@@ -392,12 +434,15 @@ Both referral and organic paths converge here. Step numbering in the progress ba
 **Screen name:** notifications
 
 **Headline copy:**
+
 > Never miss an event
 
 **Subtitle copy:**
+
 > Get notified when events are saved so you can stay on top of your plans
 
 **What the user sees:**
+
 - Progress bar
 - A mock iOS notification permission dialog (white card with rounded corners) showing:
   - "Turn on Push Notifications to capture and remember"
@@ -406,9 +451,10 @@ Both referral and organic paths converge here. Step numbering in the progress ba
   - An animated bouncing chevron pointing at "Allow"
 - Small text: "You can always update this later in your settings!"
 
-*Identical to current `07-notifications.tsx`. Tapping "Allow" triggers the real iOS permission dialog.*
+_Identical to current `07-notifications.tsx`. Tapping "Allow" triggers the real iOS permission dialog._
 
 **What the user does:**
+
 - Taps "Allow" (which triggers the actual system permission dialog)
 
 **Navigates to:** C6
@@ -421,19 +467,23 @@ Both referral and organic paths converge here. Step numbering in the progress ba
 **Screen name:** share-demo
 
 **Headline copy:**
+
 > Share into the app
 
 **Subtitle copy:**
+
 > Use the share button from any app to save events directly to Soonlist
 
 **What the user sees:**
+
 - Progress bar
 - A looping, muted video (fetched from Convex via `appConfig.getDemoVideoUrl`) demonstrating the share extension workflow
 - "Continue" button
 
-*Identical to current `08-share-demo.tsx`.*
+_Identical to current `08-share-demo.tsx`._
 
 **What the user does:**
+
 - Watches the video, taps "Continue"
 
 **Navigates to:** C7
@@ -446,11 +496,13 @@ Both referral and organic paths converge here. Step numbering in the progress ba
 **Screen name:** age
 
 **Headline copy:**
+
 > How old are you?
 
 **Subtitle copy:** (none)
 
 **What the user sees:**
+
 - Progress bar
 - Single-select list of age ranges:
   - "Under 24"
@@ -461,9 +513,10 @@ Both referral and organic paths converge here. Step numbering in the progress ba
   - "65+"
 - Tapping an option auto-advances
 
-*Identical to current `09-age.tsx`.*
+_Identical to current `09-age.tsx`._
 
 **What the user does:**
+
 - Taps one option
 
 **Navigates to:** C8
@@ -476,14 +529,16 @@ Both referral and organic paths converge here. Step numbering in the progress ba
 **Screen name:** source
 
 **Headline copy:**
+
 > Where did you hear about us?
 
 **Subtitle copy:** (none)
 
 **What the user sees:**
+
 - Progress bar
 - Single-select list:
-  - "A friend's shared list" *(new option, pre-selected if referral path -- this captures the referral attribution explicitly)*
+  - "A friend's shared list" _(new option, pre-selected if referral path -- this captures the referral attribution explicitly)_
   - "Through a friend"
   - "Google Search"
   - "TikTok"
@@ -494,6 +549,7 @@ Both referral and organic paths converge here. Step numbering in the progress ba
 - Tapping an option auto-advances
 
 **What the user does:**
+
 - Taps one option. For referral users, "A friend's shared list" is at the top and likely the natural choice, which completes the attribution loop.
 
 **Navigates to:** C9
@@ -508,13 +564,15 @@ Both referral and organic paths converge here. Step numbering in the progress ba
 **Headline copy:** (handled by RevenueCat paywall UI)
 
 **What the user sees:**
+
 - RevenueCat's native paywall modal with subscription options (Monthly $9.99, Yearly $59.99)
 - "Try 3 events free" skip option
 - For referral users, the paywall could include a custom subtitle: "Support Soonlist to keep following [First Name]'s events and more" -- though this depends on RevenueCat's customization capabilities. If not feasible, use the standard paywall.
 
-*Functionally identical to current `paywall.tsx`.*
+_Functionally identical to current `paywall.tsx`._
 
 **What the user does:**
+
 - Subscribes, restores, or skips/cancels
 
 **Navigates to:** C10
@@ -527,10 +585,12 @@ Both referral and organic paths converge here. Step numbering in the progress ba
 **Screen name:** sign-in
 
 **What the user sees:**
+
 - Clerk OAuth sign-in screen (Apple, Google, etc.)
 - For referral users: after sign-in completes, the queued follow action executes automatically (following the referrer's account)
 
 **What the user does:**
+
 - Signs in via OAuth
 - App completes onboarding, lands on the main feed
 - Referral users see the referrer's events in their feed immediately
@@ -541,13 +601,13 @@ Both referral and organic paths converge here. Step numbering in the progress ba
 
 ### Survey Question Placement Summary
 
-| Survey Question | Screen | Position in Flow |
-|---|---|---|
-| Goals | C1 | Immediately after path convergence |
-| Screenshot habit | C2 | After goals |
-| Discovery channels | C3 | After screenshot habit (feeds into C4 demo personalization) |
-| Age | C7 | After demos, before source |
-| Source | C8 | Last survey, right before paywall |
+| Survey Question    | Screen | Position in Flow                                            |
+| ------------------ | ------ | ----------------------------------------------------------- |
+| Goals              | C1     | Immediately after path convergence                          |
+| Screenshot habit   | C2     | After goals                                                 |
+| Discovery channels | C3     | After screenshot habit (feeds into C4 demo personalization) |
+| Age                | C7     | After demos, before source                                  |
+| Source             | C8     | Last survey, right before paywall                           |
 
 All five required survey questions are present. The ordering is intentional: goals/discovery are asked before the demo so the demo can be personalized to the user's context (e.g., showing an Instagram event if they said Instagram). Age and source are moved to after the demos to avoid front-loading too many survey screens in a row.
 
@@ -555,13 +615,14 @@ All five required survey questions are present. The ordering is intentional: goa
 
 ## Part 3: Justification
 
-**Why this direction works for Soonlist specifically:** Soonlist's strongest organic growth channel is someone sharing their event list -- a friend sees the list, thinks "I want that," and installs the app. But the current onboarding treats that high-intent user the same as someone who stumbled onto the App Store listing. By opening with the specific person's name and their actual upcoming events, the referral path converts the user's existing intent ("I want to see Jamie's events") into an immediate action ("Follow Jamie"), and only then broadens to "now build your own feed." This mirrors the Partiful and Discord pattern where the shared content *is* the onboarding, and it respects the user's real motivation rather than making them sit through generic value propositions they already believe in. The existing `FollowContextBanner` component and `pendingFollowUsername` store mechanism already provide the infrastructure for detecting referral context, so the technical lift is incremental rather than architectural.
+**Why this direction works for Soonlist specifically:** Soonlist's strongest organic growth channel is someone sharing their event list -- a friend sees the list, thinks "I want that," and installs the app. But the current onboarding treats that high-intent user the same as someone who stumbled onto the App Store listing. By opening with the specific person's name and their actual upcoming events, the referral path converts the user's existing intent ("I want to see Jamie's events") into an immediate action ("Follow Jamie"), and only then broadens to "now build your own feed." This mirrors the Partiful and Discord pattern where the shared content _is_ the onboarding, and it respects the user's real motivation rather than making them sit through generic value propositions they already believe in. The existing `FollowContextBanner` component and `pendingFollowUsername` store mechanism already provide the infrastructure for detecting referral context, so the technical lift is incremental rather than architectural.
 
 **Biggest risk:** If the referrer's list has few or no upcoming events (they shared their list months ago, or their events have all passed), screens R1 and R2 will feel empty and underwhelming -- the social hook falls flat. Mitigation: if the referrer has fewer than 2 upcoming events, fall back to showing their most recent past events with a label like "Recent events from [Name]," or collapse R2 into R1 and move to the shared flow faster. The system needs a graceful degradation path for stale referrals.
 
 ---
 
 Sources:
+
 - [Branch Deep Linking](https://www.branch.io/deep-linking/)
 - [Personalized Onboarding Flow for Apps - Branch Documentation](https://dev.branch.io/marketing-channels/custom-onboarding/guide/ios/)
 - [How Mobile Apps Go Viral: User-generated Sharing Links - Branch](https://www.branch.io/resources/blog/how-mobile-apps-go-viral-user-generated-sharing-links/)

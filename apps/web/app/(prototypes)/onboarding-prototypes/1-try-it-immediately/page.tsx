@@ -59,7 +59,12 @@ export default function TryItImmediately() {
 
         {/* Screen 2: The Magic */}
         <PhoneFrame screenId="1-magic" label="2. The Magic">
-          <TryItParsing step={0} total={8} headline="Capturing..." subtitle="AI is reading the details" />
+          <TryItParsing
+            step={0}
+            total={8}
+            headline="Capturing..."
+            subtitle="AI is reading the details"
+          />
         </PhoneFrame>
 
         {/* Screen 3: The Payoff */}

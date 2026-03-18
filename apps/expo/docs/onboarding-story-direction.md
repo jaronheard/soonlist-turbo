@@ -62,6 +62,7 @@ Maya is 28, lives in a mid-size city, and loves going to things -- concerts, pop
 ---
 
 ### Screen 1: "Chapter 1: The Flyer"
+
 **Type:** Story (narrative)
 
 **Headline:**
@@ -83,6 +84,7 @@ Single button: "What happened next" (navigates forward).
 ---
 
 ### Screen 2: "Chapter 2: The Screenshot Graveyard"
+
 **Type:** Story (narrative) + Survey (screenshot habit)
 
 **Headline:**
@@ -97,6 +99,7 @@ Illustrated phone screen showing a messy camera roll grid -- event flyers mixed 
 **User action:**
 The narrative question appears below the illustration:
 "Sound familiar? Do you screenshot events too?"
+
 - "All the time" (maps to "Yes")
 - "Not yet" (maps to "Not yet")
 
@@ -109,6 +112,7 @@ Tapping either option auto-advances.
 ---
 
 ### Screen 3: "Chapter 3: Saturday Morning"
+
 **Type:** Story (narrative) + Survey (discovery channels)
 
 **Headline:**
@@ -123,6 +127,7 @@ Illustrated Maya sitting on her couch, phone in hand, eyebrows slightly furrowed
 **User action:**
 "Where do you usually spot events?"
 Options (single-select, presented as floating bubbles matching the illustration):
+
 - Instagram
 - TikTok
 - Friends' recommendations
@@ -139,6 +144,7 @@ Tapping an option highlights it (the corresponding floating icon near Maya enlar
 ---
 
 ### Screen 4: "Chapter 4: Then She Found Soonlist"
+
 **Type:** Story (narrative transition)
 
 **Headline:**
@@ -160,6 +166,7 @@ Single button: "Show me how" (navigates forward).
 ---
 
 ### Screen 5: "Chapter 5: The Capture"
+
 **Type:** Interactive demo (simulated capture)
 
 **Headline:**
@@ -183,6 +190,7 @@ Phase 3 (result): Parsed event card appears. Fake notification banner slides in 
 ---
 
 ### Screen 6: "Chapter 6: The Shortcut"
+
 **Type:** Video demo (share extension)
 
 **Headline:**
@@ -204,6 +212,7 @@ Single button: "Continue" (navigates forward).
 ---
 
 ### Screen 7: "Chapter 7: The Reminder"
+
 **Type:** Notification permission request
 
 **Headline:**
@@ -225,6 +234,7 @@ Tapping "Allow" triggers the real iOS push notification permission prompt. After
 ---
 
 ### Screen 8: "Chapter 8: She Actually Went"
+
 **Type:** Story (narrative climax) + Survey (goals)
 
 **Headline:**
@@ -240,6 +250,7 @@ Illustrated montage: three small vignette panels arranged vertically, like a com
 Below the illustration, the narrative question:
 "What matters most to you?"
 (Pick as many as you like)
+
 - Organize all my events in one place
 - Turn my screenshots into saved plans
 - Discover fun events near me
@@ -255,6 +266,7 @@ Multi-select with checkmarks. "Continue" button at bottom.
 ---
 
 ### Screen 9: "Epilogue: Your Turn"
+
 **Type:** Survey (age + source), reframed as story transition
 
 **Headline:**
@@ -270,9 +282,11 @@ Clean transition screen. The illustrated style continues but now the "character"
 Two sequential questions on the same screen (stacked):
 
 **Question 1:** "How old are you?"
+
 - Under 24 / 25-34 / 35-44 / 45-54 / 55-64 / 65+
 
 **Question 2 (appears after Q1 is answered):** "How did you find us?"
+
 - Google Search / TikTok / Searched on App Store / Instagram / Facebook / Through a friend / Other
 
 "Continue" button activates after both are answered.
@@ -284,6 +298,7 @@ Two sequential questions on the same screen (stacked):
 ---
 
 ### Screen 10: "Support the Story"
+
 **Type:** Paywall
 
 **Headline:**
@@ -305,6 +320,7 @@ Standard paywall flow: Subscribe (monthly/yearly) or dismiss/skip.
 ---
 
 ### Screen 11: Sign-In
+
 **Type:** Authentication (OAuth)
 
 This is the existing sign-in screen. The user arrives here after the paywall, whether they subscribed or not. Standard Clerk OAuth flow (Apple, Google, email).
@@ -317,23 +333,24 @@ This is the existing sign-in screen. The user arrives here after the paywall, wh
 
 ## Flow Summary
 
-| # | Screen Name | Type | Data Collected |
-|---|------------|------|----------------|
-| 1 | Chapter 1: The Flyer | Story | -- |
-| 2 | Chapter 2: The Screenshot Graveyard | Story + Survey | `screenshotEvents` |
-| 3 | Chapter 3: Saturday Morning | Story + Survey | `discoveryMethod` |
-| 4 | Chapter 4: Then She Found Soonlist | Story (pivot) | -- |
-| 5 | Chapter 5: The Capture | Interactive demo | `completedShareDemo` |
-| 6 | Chapter 6: The Shortcut | Video demo | -- |
-| 7 | Chapter 7: The Reminder | Notification permission | `notificationsEnabled` |
-| 8 | Chapter 8: She Actually Went | Story + Survey | `goals` |
-| 9 | Epilogue: Your Turn | Survey | `ageRange`, `source` |
-| 10 | Support the Story | Paywall | subscription data |
-| 11 | Sign-In | Auth | credentials |
+| #   | Screen Name                         | Type                    | Data Collected         |
+| --- | ----------------------------------- | ----------------------- | ---------------------- |
+| 1   | Chapter 1: The Flyer                | Story                   | --                     |
+| 2   | Chapter 2: The Screenshot Graveyard | Story + Survey          | `screenshotEvents`     |
+| 3   | Chapter 3: Saturday Morning         | Story + Survey          | `discoveryMethod`      |
+| 4   | Chapter 4: Then She Found Soonlist  | Story (pivot)           | --                     |
+| 5   | Chapter 5: The Capture              | Interactive demo        | `completedShareDemo`   |
+| 6   | Chapter 6: The Shortcut             | Video demo              | --                     |
+| 7   | Chapter 7: The Reminder             | Notification permission | `notificationsEnabled` |
+| 8   | Chapter 8: She Actually Went        | Story + Survey          | `goals`                |
+| 9   | Epilogue: Your Turn                 | Survey                  | `ageRange`, `source`   |
+| 10  | Support the Story                   | Paywall                 | subscription data      |
+| 11  | Sign-In                             | Auth                    | credentials            |
 
 **Total screens:** 11 (9 authored + paywall + sign-in)
 
 **All required survey data points collected:**
+
 - Goals (Screen 8)
 - Screenshot habit (Screen 2)
 - Discovery channels (Screen 3)

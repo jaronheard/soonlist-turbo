@@ -13,6 +13,7 @@ import {
 import {
   AgeScreen,
   DiscoveryChannelsScreen,
+  GoalsScreen,
   NotificationsScreen,
   PaywallScreen,
   ScreenshotHabitScreen,
@@ -22,7 +23,6 @@ import {
   TryItParsing,
   TryItResult,
   TryItScreenshot,
-  GoalsScreen,
 } from "../shared-screens";
 
 export default function GoOutMore() {
@@ -87,10 +87,7 @@ export default function GoOutMore() {
             step={2}
             total={10}
             headline="Sound familiar?"
-            options={[
-              "That's literally me",
-              "Not yet, but I want to start",
-            ]}
+            options={["That's literally me", "Not yet, but I want to start"]}
           />
         </PhoneFrame>
 
@@ -108,7 +105,10 @@ export default function GoOutMore() {
         <PhoneFrame screenId="3-problem" label="4. The Problem">
           <div className="flex h-full flex-col bg-interactive-1 px-8 py-10 text-white">
             <div className="mx-6 mt-0 h-1.5 rounded-full bg-white/30">
-              <div className="h-full rounded-full bg-white" style={{ width: "40%" }} />
+              <div
+                className="h-full rounded-full bg-white"
+                style={{ width: "40%" }}
+              />
             </div>
             <div className="mt-8">
               <Headline>
@@ -132,7 +132,10 @@ export default function GoOutMore() {
         <PhoneFrame screenId="3-promise" label="5. The Promise">
           <div className="flex h-full flex-col bg-interactive-1 px-8 py-10 text-white">
             <div className="mx-6 mt-0 h-1.5 rounded-full bg-white/30">
-              <div className="h-full rounded-full bg-white" style={{ width: "50%" }} />
+              <div
+                className="h-full rounded-full bg-white"
+                style={{ width: "50%" }}
+              />
             </div>
             <div className="mt-8">
               <Headline>One tap. Every detail. Actually go.</Headline>
@@ -157,16 +160,12 @@ export default function GoOutMore() {
             step={6}
             total={10}
             headline="Try it — capture this event"
-            subtitle='Imagine you just saw this on Instagram'
+            subtitle="Imagine you just saw this on Instagram"
           />
         </PhoneFrame>
 
         <PhoneFrame screenId="3-tryit2" label="6. Try It 2/3">
-          <TryItParsing
-            step={6}
-            total={10}
-            headline="Making you a plan..."
-          />
+          <TryItParsing step={6} total={10} headline="Making you a plan..." />
         </PhoneFrame>
 
         <PhoneFrame screenId="3-tryit3" label="6. Try It 3/3">

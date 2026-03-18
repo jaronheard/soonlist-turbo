@@ -28,13 +28,7 @@ export function PhoneFrame({
 }
 
 /* ─── ProgressBar ─── */
-export function ProgressBar({
-  step,
-  total,
-}: {
-  step: number;
-  total: number;
-}) {
+export function ProgressBar({ step, total }: { step: number; total: number }) {
   const pct = (step / total) * 100;
   return (
     <div className="mx-6 mt-6 h-1.5 rounded-full bg-white/30">
@@ -164,7 +158,11 @@ export function SecondaryLinks() {
 }
 
 /* ─── SampleScreenshot ─── */
-export function SampleScreenshot({ source = "Instagram" }: { source?: string }) {
+export function SampleScreenshot({
+  source = "Instagram",
+}: {
+  source?: string;
+}) {
   return (
     <div className="mx-auto flex w-full max-w-[300px] flex-col overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-sm">
       <div className="flex h-[200px] items-center justify-center bg-gradient-to-br from-purple-100 to-pink-100 text-center text-sm text-neutral-2">
@@ -173,9 +171,7 @@ export function SampleScreenshot({ source = "Instagram" }: { source?: string }) 
           <div className="mt-2 font-semibold text-neutral-1">
             Rooftop Sunset DJ Set
           </div>
-          <div className="text-xs text-neutral-2">
-            Sat, Mar 22 · 6:00 PM
-          </div>
+          <div className="text-xs text-neutral-2">Sat, Mar 22 · 6:00 PM</div>
           <div className="mt-1 text-xs italic text-neutral-2">
             Spotted on {source}
           </div>
@@ -231,7 +227,11 @@ export function FakeNotification({
 }
 
 /* ─── VideoPlaceholder ─── */
-export function VideoPlaceholder({ label = "Share Extension Demo" }: { label?: string }) {
+export function VideoPlaceholder({
+  label = "Share Extension Demo",
+}: {
+  label?: string;
+}) {
   return (
     <div className="mx-auto flex aspect-[884/1920] w-full max-w-[220px] items-center justify-center rounded-2xl bg-white/20 text-center text-sm text-white/60">
       <div>
@@ -352,13 +352,7 @@ export function Logo() {
 }
 
 /* ─── CommunityPill ─── */
-export function CommunityPill({
-  icon,
-  text,
-}: {
-  icon: string;
-  text: string;
-}) {
+export function CommunityPill({ icon, text }: { icon: string; text: string }) {
   return (
     <div className="flex items-center gap-3 rounded-xl bg-white/15 px-4 py-3 text-sm text-white">
       <span>{icon}</span>
@@ -468,14 +462,12 @@ export function PostSignInShare() {
         <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-interactive-1 text-2xl">
           🎉
         </div>
-        <Headline className="mt-4 text-interactive-1">
-          You&apos;re in!
-        </Headline>
+        <Headline className="mt-4 text-interactive-1">You&apos;re in!</Headline>
         <Subtitle className="text-neutral-2">
           Share your event list with a friend and discover events together.
         </Subtitle>
       </div>
-      <div className="mt-8 mx-auto w-full max-w-[300px] rounded-2xl border border-gray-200 bg-white p-5 shadow-sm">
+      <div className="mx-auto mt-8 w-full max-w-[300px] rounded-2xl border border-gray-200 bg-white p-5 shadow-sm">
         <div className="text-center text-sm font-semibold text-neutral-1">
           Your Soonlist link
         </div>
@@ -505,13 +497,7 @@ export function PostSignInShare() {
 }
 
 /* ─── MessCard (scattered source cards) ─── */
-export function MessCard({
-  icon,
-  text,
-}: {
-  icon: string;
-  text: string;
-}) {
+export function MessCard({ icon, text }: { icon: string; text: string }) {
   return (
     <div className="flex items-center gap-2 rounded-xl bg-white/15 px-4 py-3 text-sm text-white shadow-sm">
       <span className="text-lg">{icon}</span>
@@ -576,9 +562,7 @@ export function MiniEventCard({
         {date}
       </div>
       <div className="text-sm font-bold text-neutral-1">{name}</div>
-      {location && (
-        <div className="text-xs text-neutral-2">{location}</div>
-      )}
+      {location && <div className="text-xs text-neutral-2">{location}</div>}
     </div>
   );
 }

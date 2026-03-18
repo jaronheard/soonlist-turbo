@@ -1,17 +1,17 @@
 import {
   FlowRow,
   Headline,
+  ImagePlaceholder,
   LightScreen,
   Logo,
   MiniEventCard,
   PhoneFrame,
   PrimaryButton,
-  PurpleScreen,
   ProgressBar,
+  PurpleScreen,
   ReferralAvatar,
   SecondaryLinks,
   Subtitle,
-  ImagePlaceholder,
 } from "../components";
 import {
   AgeScreen,
