@@ -51,8 +51,19 @@ export function BlogPostCard({ slug, frontmatter }: BlogPostCardProps) {
           <CardTitle className="group-hover:text-interactive-1">
             {frontmatter.title}
           </CardTitle>
-          <CardDescription>
-            {formatDate(frontmatter.date)} &middot; {frontmatter.author}
+          <CardDescription className="flex items-center gap-2">
+            {frontmatter.authorImage && (
+              <Image
+                src={frontmatter.authorImage}
+                alt={frontmatter.author}
+                width={24}
+                height={24}
+                className="rounded-full"
+              />
+            )}
+            <span>
+              {formatDate(frontmatter.date)} &middot; {frontmatter.author}
+            </span>
           </CardDescription>
         </CardHeader>
         <CardContent>

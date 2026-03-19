@@ -30,9 +30,20 @@ export function BlogPostHeader({ frontmatter }: BlogPostHeaderProps) {
       <h1 className="mb-4 text-4xl font-bold tracking-tight sm:text-5xl">
         {frontmatter.title}
       </h1>
-      <p className="text-lg text-neutral-2">
-        {frontmatter.author} &middot; {formatDate(frontmatter.date)}
-      </p>
+      <div className="flex items-center gap-3 text-lg text-neutral-2">
+        {frontmatter.authorImage && (
+          <Image
+            src={frontmatter.authorImage}
+            alt={frontmatter.author}
+            width={40}
+            height={40}
+            className="rounded-full"
+          />
+        )}
+        <span>
+          {frontmatter.author} &middot; {formatDate(frontmatter.date)}
+        </span>
+      </div>
       {frontmatter.coverImage && (
         <div className="relative mt-8 aspect-[2/1] overflow-hidden rounded-lg">
           <Image

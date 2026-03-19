@@ -11,6 +11,7 @@ const frontmatterSchema = z.object({
   title: z.string(),
   date: z.string(),
   author: z.string(),
+  authorImage: z.string().optional(),
   tags: z.array(z.string()),
   excerpt: z.string(),
   coverImage: z.string().optional(),
