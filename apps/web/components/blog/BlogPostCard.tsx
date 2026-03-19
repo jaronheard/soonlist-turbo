@@ -40,7 +40,7 @@ export function BlogPostCard({ slug, frontmatter }: BlogPostCardProps) {
             />
           </div>
         )}
-        <CardHeader>
+        <CardHeader className="space-y-3">
           <div className="flex flex-wrap gap-1.5">
             {frontmatter.tags.map((tag) => (
               <Badge key={tag} variant="gray">
@@ -48,25 +48,25 @@ export function BlogPostCard({ slug, frontmatter }: BlogPostCardProps) {
               </Badge>
             ))}
           </div>
-          <CardTitle className="group-hover:text-interactive-1">
+          <CardTitle className="text-xl group-hover:text-interactive-1">
             {frontmatter.title}
           </CardTitle>
-          <CardDescription className="flex items-center gap-2">
+          <div className="flex items-center gap-2.5 pt-1">
             {frontmatter.authorImage && (
               <Image
                 src={frontmatter.authorImage}
                 alt={frontmatter.author}
-                width={24}
-                height={24}
+                width={28}
+                height={28}
                 className="rounded-full"
               />
             )}
-            <span>
-              {formatDate(frontmatter.date)} &middot; {frontmatter.author}
-            </span>
-          </CardDescription>
+            <CardDescription>
+              {frontmatter.author} &middot; {formatDate(frontmatter.date)}
+            </CardDescription>
+          </div>
         </CardHeader>
-        <CardContent>
+        <CardContent className="pt-1">
           <p className="text-neutral-2">{frontmatter.excerpt}</p>
         </CardContent>
       </Card>
