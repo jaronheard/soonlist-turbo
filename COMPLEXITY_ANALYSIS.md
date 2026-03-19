@@ -130,7 +130,25 @@ actions: {
 }
 ```
 
-### 10. Prototype/Dead Code Still in the Codebase
+### 10. Three-Layer Schema Duplication
+
+The same data shapes are defined in three places:
+
+1. **Convex schema** (`packages/backend/convex/schema.ts`) — `v.object()` validators like `onboardingDataValidator`, `userAdditionalInfoValidator`
+2. **Validators package** (`packages/validators/src/`) — Zod schemas like `userAdditionalInfoSchema`, plus TypeScript interfaces (`User`, `Event`, `List`, etc.)
+3. **Component-level types** — prop interfaces in EventDisplays.tsx, EventCard.tsx, etc.
+
+Example: `onboardingData` is defined as a Convex validator, a TypeScript interface in `packages/validators`, a Zustand state shape, and inline in component props.
+
+**Fix:** Convex should be the single source of truth. Export types from Convex `Doc<"tableName">` and use those downstream. The `packages/validators` types should be auto-derived or deleted. Component props should reference the Convex types directly.
+
+### 11. EventCard Props Drilling
+
+`EventCard` takes 18 individual props instead of compound objects. User info is spread across 4 props (`userAvatar`, `userName`, `userDisplayName`, `userEmoji`), event details across 7 props, and buttons across 5 props.
+
+**Fix:** Group into compound objects: `user: { avatar, name, displayName, emoji }`, `actions: { calendar, follow, edit, delete }`. This cuts the prop count from 18 to ~6.
+
+### 12. Prototype/Dead Code Still in the Codebase
 
 - `apps/web/app/(prototypes)/onboarding-prototypes/` — 1,100+ lines of prototype code
 - `apps/web/app/(base)/2024/` — Year-specific data files (1,091 + 438 lines)
