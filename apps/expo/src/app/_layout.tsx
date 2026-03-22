@@ -149,49 +149,43 @@ function RootLayout() {
   const isDev = Constants.expoConfig?.scheme === "soonlist.dev";
 
   return (
-    <GestureHandlerRootView style={{ flex: 1 }}>
-      <NotifierWrapper>
-        <KeyboardProvider>
-          <ClerkProvider
-            publishableKey={clerkPublishableKey}
-            tokenCache={tokenCache}
-            __experimental_resourceCache={resourceCache}
-          >
-            {/* eslint-disable-next-line react-compiler/react-compiler */}
-            <ConvexProviderWithClerk client={convex} useAuth={useAuth}>
-              <QueryClientProvider client={queryClient}>
-                <SafeAreaProvider>
-                  <PostHogProvider
-                    apiKey={Config.posthogApiKey}
-                    options={{
-                      host: "https://us.i.posthog.com",
-                      disabled: isDev,
-                      enableSessionReplay: !isDev,
-                      sessionReplayConfig: {
-                        maskAllTextInputs: false,
-                        maskAllImages: false,
-                        captureLog: false,
-                        captureNetworkTelemetry: true,
-                        androidDebouncerDelayMs: 500,
-                        iOSdebouncerDelayMs: 1000,
-                      },
-                    }}
-                  >
-                    <PostHogIdentityTracker />
-                    <OneSignalProvider>
-                      <RevenueCatProvider>
-                        <AuthAndTokenSync />
-                        <RootLayoutContent />
-                      </RevenueCatProvider>
-                    </OneSignalProvider>
-                  </PostHogProvider>
-                </SafeAreaProvider>
-              </QueryClientProvider>
-            </ConvexProviderWithClerk>
-          </ClerkProvider>
-        </KeyboardProvider>
-      </NotifierWrapper>
-    </GestureHandlerRootView>
+    <View style={{ flex: 1 }}>
+      <ClerkProvider
+        publishableKey={clerkPublishableKey}
+        tokenCache={tokenCache}
+        __experimental_resourceCache={resourceCache}
+      >
+        {/* eslint-disable-next-line react-compiler/react-compiler */}
+        <ConvexProviderWithClerk client={convex} useAuth={useAuth}>
+          <QueryClientProvider client={queryClient}>
+            <PostHogProvider
+              apiKey={Config.posthogApiKey}
+              options={{
+                host: "https://us.i.posthog.com",
+                disabled: isDev,
+                enableSessionReplay: !isDev,
+                sessionReplayConfig: {
+                  maskAllTextInputs: false,
+                  maskAllImages: false,
+                  captureLog: false,
+                  captureNetworkTelemetry: true,
+                  androidDebouncerDelayMs: 500,
+                  iOSdebouncerDelayMs: 1000,
+                },
+              }}
+            >
+              <PostHogIdentityTracker />
+              <OneSignalProvider>
+                <RevenueCatProvider>
+                  <AuthAndTokenSync />
+                  <RootLayoutContent />
+                </RevenueCatProvider>
+              </OneSignalProvider>
+            </PostHogProvider>
+          </QueryClientProvider>
+        </ConvexProviderWithClerk>
+      </ClerkProvider>
+    </View>
   );
 }
 
@@ -203,6 +197,7 @@ const InitialLayout = () => {
     <Stack
       screenOptions={{
         headerTransparent: true,
+        headerBlurEffect: "none",
         headerTintColor: "#5A32FB",
         headerTitleStyle: {
           fontWeight: "bold",

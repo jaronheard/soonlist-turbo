@@ -3,6 +3,7 @@ import type { ViewStyle } from "react-native";
 import React, { useEffect, useMemo, useState } from "react";
 import {
   ActivityIndicator,
+  FlatList,
   Image,
   Pressable,
   ScrollView,
@@ -11,7 +12,6 @@ import {
   useWindowDimensions,
   View,
 } from "react-native";
-import { FlatList } from "react-native-gesture-handler";
 import Animated, { FadeInDown, FadeInLeft } from "react-native-reanimated";
 import { Image as ExpoImage } from "expo-image";
 import { router } from "expo-router";

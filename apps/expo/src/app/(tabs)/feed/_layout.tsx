@@ -48,6 +48,7 @@ export default function FeedLayout() {
         headerTintColor: "#5A32FB",
         headerShadowVisible: false,
         headerTransparent: true,
+        headerBlurEffect: "none",
       }}
     >
       <Stack.Screen

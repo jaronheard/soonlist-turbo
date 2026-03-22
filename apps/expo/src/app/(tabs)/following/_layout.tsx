@@ -50,6 +50,7 @@ export default function FollowingLayout() {
         headerTintColor: "#5A32FB",
         headerShadowVisible: false,
         headerTransparent: true,
+        headerBlurEffect: "none",
       }}
     >
       <Stack.Screen
