@@ -721,7 +721,11 @@ export const removeContributorEventsBatch = internalMutation({
       if (event?.userId === contributorUserId) {
         await ctx.db.delete(entry._id);
 
-        await ctx.runMutation(
+        // Schedule feed cleanup in a separate transaction to reduce bandwidth
+        // of this batch mutation — removeEventFromListFollowersFeeds does
+        // multiple queries per follower
+        await ctx.scheduler.runAfter(
+          0,
           internal.feedHelpers.removeEventFromListFollowersFeeds,
           {
             eventId: entry.eventId,
