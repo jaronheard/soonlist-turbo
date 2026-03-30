@@ -335,9 +335,9 @@ The system using the output requires specific date and time formatting.
 - Always include seconds in the time, even if they're 00.
 - Always provide both startTime and endTime.
 
-**Year Inference (when no year is specified):**
-- All dates MUST fall between ${minDate} and ${maxDate}.
-- Only use a year outside this window if a year is explicitly stated in the source text. This is extremely rare — double-check before doing so.
+**Year Inference:**
+- If no year is explicitly stated: You MUST infer a year that places the date between ${minDate} and ${maxDate}.
+- If a year IS explicitly stated: Use that exact year. This is the ONLY time a date can fall outside the ${minDate} to ${maxDate} window.
 
 ** Time Inference (when a start or end time is not explicitly stated):**
 - If start time is not explicitly stated, infer a reasonable start time based on the event type and context (e.g., 19:00:00 for an evening concert, 10:00:00 for a morning workshop).
