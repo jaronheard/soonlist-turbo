@@ -3,7 +3,7 @@ import Image from "next/image";
 import { Badge } from "@soonlist/ui/badge";
 
 import type { BlogFrontmatter } from "~/lib/blog";
-import { formatDate } from "~/lib/blog";
+import { formatDate } from "~/lib/formatDate";
 
 interface BlogPostHeaderProps {
   frontmatter: BlogFrontmatter;

@@ -11,7 +11,7 @@ import {
 } from "@soonlist/ui/card";
 
 import type { BlogFrontmatter } from "~/lib/blog";
-import { formatDate } from "~/lib/blog";
+import { formatDate } from "~/lib/formatDate";
 
 interface BlogPostCardProps {
   slug: string;

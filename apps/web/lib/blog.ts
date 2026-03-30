@@ -114,15 +114,6 @@ export function getPostBySlug(slug: string): BlogPostWithContent | null {
   return { slug, frontmatter: parsed.data, content };
 }
 
-export function formatDate(dateStr: string): string {
-  const date = new Date(dateStr + "T00:00:00");
-  return date.toLocaleDateString("en-US", {
-    year: "numeric",
-    month: "long",
-    day: "numeric",
-  });
-}
-
 export function getAllTags(posts?: BlogPost[]): string[] {
   const allPosts = posts ?? getAllPosts();
   const tags = new Set<string>();
