@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 
-import { Badge } from "@soonlist/ui/badge";
+import { badgeVariants } from "@soonlist/ui/badge";
 
 import type { BlogPost } from "~/lib/blog";
 import { BlogPostCard } from "./BlogPostCard";
@@ -25,22 +25,26 @@ export function BlogTagFilter({ posts, tags }: BlogTagFilterProps) {
         <button
           type="button"
           onClick={() => setActiveTag(null)}
-          className="cursor-pointer"
+          className={badgeVariants({
+            variant: activeTag === null ? "yellow" : "gray",
+          })}
           aria-pressed={activeTag === null}
           aria-label="Show all posts"
         >
-          <Badge variant={activeTag === null ? "yellow" : "gray"}>All</Badge>
+          All
         </button>
         {tags.map((tag) => (
           <button
             type="button"
             key={tag}
             onClick={() => setActiveTag(tag === activeTag ? null : tag)}
-            className="cursor-pointer"
+            className={badgeVariants({
+              variant: tag === activeTag ? "yellow" : "gray",
+            })}
             aria-pressed={tag === activeTag}
             aria-label={`Filter by ${tag}`}
           >
-            <Badge variant={tag === activeTag ? "yellow" : "gray"}>{tag}</Badge>
+            {tag}
           </button>
         ))}
       </div>

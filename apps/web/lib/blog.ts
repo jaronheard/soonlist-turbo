@@ -9,9 +9,17 @@ const blogDirectory = path.join(process.cwd(), "content", "blog");
 
 const frontmatterSchema = z.object({
   title: z.string(),
-  date: z.string(),
+  date: z
+    .string()
+    .regex(/^\d{4}-\d{2}-\d{2}$/, "date must be in YYYY-MM-DD format"),
   author: z.string(),
-  authorImage: z.string().optional(),
+  authorImage: z
+    .string()
+    .refine(
+      (value) => value.startsWith("/") || /^https?:\/\//.test(value),
+      "authorImage must be a root-relative path or absolute http(s) URL",
+    )
+    .optional(),
   tags: z.array(z.string()),
   excerpt: z.string(),
   coverImage: z
@@ -45,6 +53,10 @@ export function getAllPosts(): BlogPost[] {
   const posts = files
     .map((filename) => {
       const slug = filename.replace(/\.mdx$/, "");
+      if (!/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(slug)) {
+        console.warn(`Skipping file with invalid slug: ${filename}`);
+        return null;
+      }
       const filePath = path.join(blogDirectory, filename);
       const fileContents = fs.readFileSync(filePath, "utf8");
       const { data } = matter(fileContents) as { data: unknown };
@@ -100,6 +112,15 @@ export function getPostBySlug(slug: string): BlogPostWithContent | null {
   }
 
   return { slug, frontmatter: parsed.data, content };
+}
+
+export function formatDate(dateStr: string): string {
+  const date = new Date(dateStr + "T00:00:00");
+  return date.toLocaleDateString("en-US", {
+    year: "numeric",
+    month: "long",
+    day: "numeric",
+  });
 }
 
 export function getAllTags(posts?: BlogPost[]): string[] {

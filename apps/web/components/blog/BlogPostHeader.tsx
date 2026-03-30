@@ -3,18 +3,10 @@ import Image from "next/image";
 import { Badge } from "@soonlist/ui/badge";
 
 import type { BlogFrontmatter } from "~/lib/blog";
+import { formatDate } from "~/lib/blog";
 
 interface BlogPostHeaderProps {
   frontmatter: BlogFrontmatter;
-}
-
-function formatDate(dateStr: string): string {
-  const date = new Date(dateStr + "T00:00:00");
-  return date.toLocaleDateString("en-US", {
-    year: "numeric",
-    month: "long",
-    day: "numeric",
-  });
 }
 
 export function BlogPostHeader({ frontmatter }: BlogPostHeaderProps) {
