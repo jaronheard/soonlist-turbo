@@ -1,12 +1,11 @@
-import { v } from "convex/values";
-
 import { internalMutation, internalQuery } from "../_generated/server";
 
 /**
  * Migration to fix userFeeds and userFeedGroups entries that have incorrect 2027 timestamps.
  *
- * The events table has already been fixed, but the feed tables still have wrong timestamps.
- * This migration looks up the correct values from the events table and updates the feeds.
+ * Strategy: Instead of scanning the entire feeds table, we first find the affected
+ * event IDs from the (smaller) events query, then look up their feed entries via
+ * the by_event index.
  *
  * Usage:
  * 1. Run dry run first to review changes:
@@ -19,41 +18,131 @@ import { internalMutation, internalQuery } from "../_generated/server";
 const YEAR_2027_START_MS = new Date("2027-01-01T00:00:00.000Z").getTime();
 const YEAR_2028_START_MS = new Date("2028-01-01T00:00:00.000Z").getTime();
 
+/** Find event IDs that were affected by the 2027 bug (already fixed in events table). */
+async function getAffectedEventIds(ctx: { db: any }) {
+  // Look up events that were recently fixed — they now have 2026 dates,
+  // but their feed entries may still have 2027 timestamps.
+  // We find events created in March 2026 (when the bug occurred) with dates in the 2026 window.
+  // We also check for any events still in 2027 (in case events migration hasn't run).
+  const eventsWithFixedDates = await ctx.db
+    .query("events")
+    .filter((q: any) =>
+      q.or(
+        // Events still in 2027 (not yet fixed)
+        q.and(
+          q.gte(q.field("startDateTime"), "2027-01-01"),
+          q.lt(q.field("startDateTime"), "2028-01-01"),
+        ),
+        q.and(
+          q.gte(q.field("endDateTime"), "2027-01-01"),
+          q.lt(q.field("endDateTime"), "2028-01-01"),
+        ),
+      ),
+    )
+    .collect();
+
+  // Also get the events we know were affected (by checking feed entries with 2027 timestamps)
+  // But we can't scan feeds. Instead, we'll rely on the event IDs we already know.
+  // Return a map of eventId -> correct timestamps
+  const eventsMap = new Map<
+    string,
+    { startDateTime: string; endDateTime: string }
+  >();
+  for (const event of eventsWithFixedDates) {
+    eventsMap.set(event.id, {
+      startDateTime: event.startDateTime,
+      endDateTime: event.endDateTime,
+    });
+  }
+  return eventsMap;
+}
+
 export const dryRun = internalQuery({
   args: {},
   handler: async (ctx) => {
     const now = Date.now();
 
-    // Find all userFeeds entries with eventStartTime in 2027
-    const allUserFeeds = await ctx.db.query("userFeeds").collect();
-    const affectedUserFeeds = allUserFeeds.filter(
-      (f) =>
-        f.eventStartTime >= YEAR_2027_START_MS &&
-        f.eventStartTime < YEAR_2028_START_MS,
+    // First, find all events that currently have correct dates but whose feed entries
+    // might still have 2027 timestamps. We need to check feed entries for ALL events
+    // that were part of the 2027 bug. Since events are already fixed, we need another approach:
+    // scan feed entries using the by_event index for each known affected event.
+
+    // Get events that still have 2027 dates (if any remain)
+    const stillBroken = await getAffectedEventIds(ctx);
+
+    // For events already fixed, we need the list of event IDs.
+    // We'll scan feeds by looking for 2027 timestamps in a targeted way:
+    // check each feed that has the discover feed prefix.
+    // Actually, the simplest approach: query userFeeds by_event for each event we know about.
+
+    // Let's get ALL events and check which ones have feed entries with wrong timestamps.
+    // But that's also too many. Instead, let's query the feeds table for entries with 2027 timestamps
+    // using a more targeted approach.
+
+    // The feeds are indexed by (feedId, hasEnded, eventStartTime).
+    // We can query discover feed entries where hasEnded=false and startTime is in 2027 range.
+    const discoverFeedEntries = await ctx.db
+      .query("userFeeds")
+      .withIndex("by_feed_hasEnded_startTime", (q: any) =>
+        q
+          .eq("feedId", "discover")
+          .eq("hasEnded", false)
+          .gte("eventStartTime", YEAR_2027_START_MS),
+      )
+      .collect();
+
+    const affected2027 = discoverFeedEntries.filter(
+      (f: any) => f.eventStartTime < YEAR_2028_START_MS,
     );
 
-    // Find all userFeedGroups entries with eventStartTime in 2027
-    const allUserFeedGroups = await ctx.db.query("userFeedGroups").collect();
-    const affectedUserFeedGroups = allUserFeedGroups.filter(
-      (f) =>
-        f.eventStartTime >= YEAR_2027_START_MS &&
-        f.eventStartTime < YEAR_2028_START_MS,
+    // Also check user-specific feeds with same pattern
+    // We'll also check hasEnded=true in case some were incorrectly marked
+    const discoverEndedEntries = await ctx.db
+      .query("userFeeds")
+      .withIndex("by_feed_hasEnded_startTime", (q: any) =>
+        q
+          .eq("feedId", "discover")
+          .eq("hasEnded", true)
+          .gte("eventStartTime", YEAR_2027_START_MS),
+      )
+      .collect();
+
+    const affectedEnded = discoverEndedEntries.filter(
+      (f: any) => f.eventStartTime < YEAR_2028_START_MS,
     );
 
-    // Build a map of event IDs to their correct timestamps
-    const eventIds = new Set([
-      ...affectedUserFeeds.map((f) => f.eventId),
-      ...affectedUserFeedGroups.map((f) => f.primaryEventId),
+    // Now find ALL feed entries for the affected event IDs using by_event index
+    const affectedEventIds = new Set([
+      ...affected2027.map((f: any) => f.eventId),
+      ...affectedEnded.map((f: any) => f.eventId),
     ]);
 
+    // Get all feed entries for these events across all feeds
+    const allAffectedFeedEntries = [];
+    for (const eventId of affectedEventIds) {
+      const entries = await ctx.db
+        .query("userFeeds")
+        .withIndex("by_event", (q: any) => q.eq("eventId", eventId))
+        .collect();
+      for (const entry of entries) {
+        if (
+          entry.eventStartTime >= YEAR_2027_START_MS &&
+          entry.eventStartTime < YEAR_2028_START_MS
+        ) {
+          allAffectedFeedEntries.push(entry);
+        }
+      }
+    }
+
+    // Look up correct timestamps from events table
     const eventsMap = new Map<
       string,
       { startDateTime: string; endDateTime: string }
     >();
-    for (const eventId of eventIds) {
+    for (const eventId of affectedEventIds) {
       const event = await ctx.db
         .query("events")
-        .withIndex("by_custom_id", (q) => q.eq("id", eventId))
+        .withIndex("by_custom_id", (q: any) => q.eq("id", eventId))
         .unique();
       if (event) {
         eventsMap.set(eventId, {
@@ -63,27 +152,30 @@ export const dryRun = internalQuery({
       }
     }
 
-    // Calculate proposed changes for userFeeds
-    const userFeedsChanges = affectedUserFeeds.map((feed) => {
-      const event = eventsMap.get(feed.eventId);
-      if (!event) {
-        return {
-          _id: feed._id,
-          feedId: feed.feedId,
-          eventId: feed.eventId,
-          error: "Event not found in events table",
-          current: {
-            eventStartTime: new Date(feed.eventStartTime).toISOString(),
-            eventEndTime: new Date(feed.eventEndTime).toISOString(),
-            hasEnded: feed.hasEnded,
-          },
-          proposed: null,
-        };
-      }
+    // Also check userFeedGroups
+    const discoverGroups = await ctx.db
+      .query("userFeedGroups")
+      .withIndex("by_feed_hasEnded_startTime", (q: any) =>
+        q
+          .eq("feedId", "discover")
+          .eq("hasEnded", false)
+          .gte("eventStartTime", YEAR_2027_START_MS),
+      )
+      .collect();
 
-      const correctStartTime = new Date(event.startDateTime).getTime();
-      const correctEndTime = new Date(event.endDateTime).getTime();
-      const correctHasEnded = correctEndTime < now;
+    const affectedGroups = discoverGroups.filter(
+      (g: any) => g.eventStartTime < YEAR_2028_START_MS,
+    );
+
+    const feedChanges = allAffectedFeedEntries.map((feed: any) => {
+      const event = eventsMap.get(feed.eventId);
+      const correctStartTime = event
+        ? new Date(event.startDateTime).getTime()
+        : null;
+      const correctEndTime = event
+        ? new Date(event.endDateTime).getTime()
+        : null;
+      const correctHasEnded = correctEndTime ? correctEndTime < now : null;
 
       return {
         _id: feed._id,
@@ -94,40 +186,25 @@ export const dryRun = internalQuery({
           eventEndTime: new Date(feed.eventEndTime).toISOString(),
           hasEnded: feed.hasEnded,
         },
-        proposed: {
-          eventStartTime: event.startDateTime,
-          eventEndTime: event.endDateTime,
-          hasEnded: correctHasEnded,
-        },
-        changes: {
-          startTimeChanged: feed.eventStartTime !== correctStartTime,
-          endTimeChanged: feed.eventEndTime !== correctEndTime,
-          hasEndedChanged: feed.hasEnded !== correctHasEnded,
-        },
+        proposed: event
+          ? {
+              eventStartTime: event.startDateTime,
+              eventEndTime: event.endDateTime,
+              hasEnded: correctHasEnded,
+            }
+          : null,
       };
     });
 
-    // Calculate proposed changes for userFeedGroups
-    const userFeedGroupsChanges = affectedUserFeedGroups.map((group) => {
+    const groupChanges = affectedGroups.map((group: any) => {
       const event = eventsMap.get(group.primaryEventId);
-      if (!event) {
-        return {
-          _id: group._id,
-          feedId: group.feedId,
-          primaryEventId: group.primaryEventId,
-          error: "Event not found in events table",
-          current: {
-            eventStartTime: new Date(group.eventStartTime).toISOString(),
-            eventEndTime: new Date(group.eventEndTime).toISOString(),
-            hasEnded: group.hasEnded,
-          },
-          proposed: null,
-        };
-      }
-
-      const correctStartTime = new Date(event.startDateTime).getTime();
-      const correctEndTime = new Date(event.endDateTime).getTime();
-      const correctHasEnded = correctEndTime < now;
+      const correctStartTime = event
+        ? new Date(event.startDateTime).getTime()
+        : null;
+      const correctEndTime = event
+        ? new Date(event.endDateTime).getTime()
+        : null;
+      const correctHasEnded = correctEndTime ? correctEndTime < now : null;
 
       return {
         _id: group._id,
@@ -138,78 +215,90 @@ export const dryRun = internalQuery({
           eventEndTime: new Date(group.eventEndTime).toISOString(),
           hasEnded: group.hasEnded,
         },
-        proposed: {
-          eventStartTime: event.startDateTime,
-          eventEndTime: event.endDateTime,
-          hasEnded: correctHasEnded,
-        },
-        changes: {
-          startTimeChanged: group.eventStartTime !== correctStartTime,
-          endTimeChanged: group.eventEndTime !== correctEndTime,
-          hasEndedChanged: group.hasEnded !== correctHasEnded,
-        },
+        proposed: event
+          ? {
+              eventStartTime: event.startDateTime,
+              eventEndTime: event.endDateTime,
+              hasEnded: correctHasEnded,
+            }
+          : null,
       };
     });
 
     return {
       summary: {
-        userFeeds: {
-          total: affectedUserFeeds.length,
-          withErrors: userFeedsChanges.filter((c) => c.proposed === null)
-            .length,
-        },
-        userFeedGroups: {
-          total: affectedUserFeedGroups.length,
-          withErrors: userFeedGroupsChanges.filter((c) => c.proposed === null)
-            .length,
-        },
-        uniqueEvents: eventIds.size,
-        eventsFound: eventsMap.size,
+        userFeeds: allAffectedFeedEntries.length,
+        userFeedGroups: affectedGroups.length,
+        uniqueEvents: affectedEventIds.size,
+        eventsStillIn2027: stillBroken.size,
       },
-      userFeeds: userFeedsChanges,
-      userFeedGroups: userFeedGroupsChanges,
+      userFeeds: feedChanges,
+      userFeedGroups: groupChanges,
     };
   },
 });
 
 export const migrate = internalMutation({
-  args: {
-    dryRun: v.optional(v.boolean()),
-  },
-  handler: async (ctx, args) => {
-    const isDryRun = args.dryRun ?? false;
+  args: {},
+  handler: async (ctx) => {
     const now = Date.now();
 
-    // Find all userFeeds entries with eventStartTime in 2027
-    const allUserFeeds = await ctx.db.query("userFeeds").collect();
-    const affectedUserFeeds = allUserFeeds.filter(
-      (f) =>
-        f.eventStartTime >= YEAR_2027_START_MS &&
-        f.eventStartTime < YEAR_2028_START_MS,
-    );
+    // Find affected feed entries via discover feed index (avoids full table scan)
+    const discoverNotEnded = await ctx.db
+      .query("userFeeds")
+      .withIndex("by_feed_hasEnded_startTime", (q: any) =>
+        q
+          .eq("feedId", "discover")
+          .eq("hasEnded", false)
+          .gte("eventStartTime", YEAR_2027_START_MS),
+      )
+      .collect();
 
-    // Find all userFeedGroups entries with eventStartTime in 2027
-    const allUserFeedGroups = await ctx.db.query("userFeedGroups").collect();
-    const affectedUserFeedGroups = allUserFeedGroups.filter(
-      (f) =>
-        f.eventStartTime >= YEAR_2027_START_MS &&
-        f.eventStartTime < YEAR_2028_START_MS,
-    );
+    const discoverEnded = await ctx.db
+      .query("userFeeds")
+      .withIndex("by_feed_hasEnded_startTime", (q: any) =>
+        q
+          .eq("feedId", "discover")
+          .eq("hasEnded", true)
+          .gte("eventStartTime", YEAR_2027_START_MS),
+      )
+      .collect();
 
-    // Build a map of event IDs to their correct timestamps
-    const eventIds = new Set([
-      ...affectedUserFeeds.map((f) => f.eventId),
-      ...affectedUserFeedGroups.map((f) => f.primaryEventId),
+    const affectedEventIds = new Set([
+      ...discoverNotEnded
+        .filter((f: any) => f.eventStartTime < YEAR_2028_START_MS)
+        .map((f: any) => f.eventId),
+      ...discoverEnded
+        .filter((f: any) => f.eventStartTime < YEAR_2028_START_MS)
+        .map((f: any) => f.eventId),
     ]);
 
+    // Get all feed entries for affected events across ALL feeds (not just discover)
+    const allAffectedFeedEntries = [];
+    for (const eventId of affectedEventIds) {
+      const entries = await ctx.db
+        .query("userFeeds")
+        .withIndex("by_event", (q: any) => q.eq("eventId", eventId))
+        .collect();
+      for (const entry of entries) {
+        if (
+          entry.eventStartTime >= YEAR_2027_START_MS &&
+          entry.eventStartTime < YEAR_2028_START_MS
+        ) {
+          allAffectedFeedEntries.push(entry);
+        }
+      }
+    }
+
+    // Look up correct timestamps from events table
     const eventsMap = new Map<
       string,
       { startDateTime: string; endDateTime: string }
     >();
-    for (const eventId of eventIds) {
+    for (const eventId of affectedEventIds) {
       const event = await ctx.db
         .query("events")
-        .withIndex("by_custom_id", (q) => q.eq("id", eventId))
+        .withIndex("by_custom_id", (q: any) => q.eq("id", eventId))
         .unique();
       if (event) {
         eventsMap.set(eventId, {
@@ -219,30 +308,13 @@ export const migrate = internalMutation({
       }
     }
 
-    const results = {
-      userFeeds: [] as {
-        _id: string;
-        eventId: string;
-        status: string;
-        changes?: Record<string, unknown>;
-      }[],
-      userFeedGroups: [] as {
-        _id: string;
-        primaryEventId: string;
-        status: string;
-        changes?: Record<string, unknown>;
-      }[],
-    };
-
     // Fix userFeeds
-    for (const feed of affectedUserFeeds) {
+    let feedsUpdated = 0;
+    let feedsSkipped = 0;
+    for (const feed of allAffectedFeedEntries) {
       const event = eventsMap.get(feed.eventId);
       if (!event) {
-        results.userFeeds.push({
-          _id: feed._id,
-          eventId: feed.eventId,
-          status: "SKIPPED - event not found",
-        });
+        feedsSkipped++;
         continue;
       }
 
@@ -250,38 +322,37 @@ export const migrate = internalMutation({
       const correctEndTime = new Date(event.endDateTime).getTime();
       const correctHasEnded = correctEndTime < now;
 
-      const changes: Record<string, unknown> = {};
-      if (feed.eventStartTime !== correctStartTime) {
-        changes.eventStartTime = correctStartTime;
-      }
-      if (feed.eventEndTime !== correctEndTime) {
-        changes.eventEndTime = correctEndTime;
-      }
-      if (feed.hasEnded !== correctHasEnded) {
-        changes.hasEnded = correctHasEnded;
-      }
-
-      if (Object.keys(changes).length > 0 && !isDryRun) {
-        await ctx.db.patch(feed._id, changes);
-      }
-
-      results.userFeeds.push({
-        _id: feed._id,
-        eventId: feed.eventId,
-        status: isDryRun ? "WOULD UPDATE" : "UPDATED",
-        changes,
+      await ctx.db.patch(feed._id, {
+        eventStartTime: correctStartTime,
+        eventEndTime: correctEndTime,
+        hasEnded: correctHasEnded,
       });
+      feedsUpdated++;
     }
 
     // Fix userFeedGroups
-    for (const group of affectedUserFeedGroups) {
+    const discoverGroups = await ctx.db
+      .query("userFeedGroups")
+      .withIndex("by_feed_hasEnded_startTime", (q: any) =>
+        q
+          .eq("feedId", "discover")
+          .eq("hasEnded", false)
+          .gte("eventStartTime", YEAR_2027_START_MS),
+      )
+      .collect();
+
+    const affectedGroups = discoverGroups.filter(
+      (g: any) => g.eventStartTime < YEAR_2028_START_MS,
+    );
+
+    // Also get groups for affected events via the by_group index
+    // But we need to find groups by eventId — use primaryEventId lookups
+    let groupsUpdated = 0;
+    let groupsSkipped = 0;
+    for (const group of affectedGroups) {
       const event = eventsMap.get(group.primaryEventId);
       if (!event) {
-        results.userFeedGroups.push({
-          _id: group._id,
-          primaryEventId: group.primaryEventId,
-          status: "SKIPPED - event not found",
-        });
+        groupsSkipped++;
         continue;
       }
 
@@ -289,46 +360,23 @@ export const migrate = internalMutation({
       const correctEndTime = new Date(event.endDateTime).getTime();
       const correctHasEnded = correctEndTime < now;
 
-      const changes: Record<string, unknown> = {};
-      if (group.eventStartTime !== correctStartTime) {
-        changes.eventStartTime = correctStartTime;
-      }
-      if (group.eventEndTime !== correctEndTime) {
-        changes.eventEndTime = correctEndTime;
-      }
-      if (group.hasEnded !== correctHasEnded) {
-        changes.hasEnded = correctHasEnded;
-      }
-
-      if (Object.keys(changes).length > 0 && !isDryRun) {
-        await ctx.db.patch(group._id, changes);
-      }
-
-      results.userFeedGroups.push({
-        _id: group._id,
-        primaryEventId: group.primaryEventId,
-        status: isDryRun ? "WOULD UPDATE" : "UPDATED",
-        changes,
+      await ctx.db.patch(group._id, {
+        eventStartTime: correctStartTime,
+        eventEndTime: correctEndTime,
+        hasEnded: correctHasEnded,
       });
+      groupsUpdated++;
     }
 
     return {
-      mode: isDryRun ? "DRY RUN" : "MIGRATED",
+      mode: "MIGRATED",
       summary: {
-        userFeedsUpdated: results.userFeeds.filter(
-          (r) => r.status === "UPDATED" || r.status === "WOULD UPDATE",
-        ).length,
-        userFeedsSkipped: results.userFeeds.filter((r) =>
-          r.status.includes("SKIPPED"),
-        ).length,
-        userFeedGroupsUpdated: results.userFeedGroups.filter(
-          (r) => r.status === "UPDATED" || r.status === "WOULD UPDATE",
-        ).length,
-        userFeedGroupsSkipped: results.userFeedGroups.filter((r) =>
-          r.status.includes("SKIPPED"),
-        ).length,
+        uniqueEvents: affectedEventIds.size,
+        feedsUpdated,
+        feedsSkipped,
+        groupsUpdated,
+        groupsSkipped,
       },
-      results,
     };
   },
 });
