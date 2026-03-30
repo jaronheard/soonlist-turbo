@@ -14,7 +14,7 @@ export const metadata: Metadata = {
 
 export default function BlogPage() {
   const posts = getAllPosts();
-  const tags = getAllTags();
+  const tags = getAllTags(posts);
 
   return (
     <div className="bg-white px-6 py-32 lg:px-8">

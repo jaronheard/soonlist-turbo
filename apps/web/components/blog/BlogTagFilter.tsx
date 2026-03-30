@@ -26,6 +26,8 @@ export function BlogTagFilter({ posts, tags }: BlogTagFilterProps) {
           type="button"
           onClick={() => setActiveTag(null)}
           className="cursor-pointer"
+          aria-pressed={activeTag === null}
+          aria-label="Show all posts"
         >
           <Badge variant={activeTag === null ? "yellow" : "gray"}>All</Badge>
         </button>
@@ -35,6 +37,8 @@ export function BlogTagFilter({ posts, tags }: BlogTagFilterProps) {
             key={tag}
             onClick={() => setActiveTag(tag === activeTag ? null : tag)}
             className="cursor-pointer"
+            aria-pressed={tag === activeTag}
+            aria-label={`Filter by ${tag}`}
           >
             <Badge variant={tag === activeTag ? "yellow" : "gray"}>{tag}</Badge>
           </button>

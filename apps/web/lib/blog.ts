@@ -14,7 +14,13 @@ const frontmatterSchema = z.object({
   authorImage: z.string().optional(),
   tags: z.array(z.string()),
   excerpt: z.string(),
-  coverImage: z.string().optional(),
+  coverImage: z
+    .string()
+    .refine(
+      (value) => value.startsWith("/") || /^https?:\/\//.test(value),
+      "coverImage must be a root-relative path or absolute http(s) URL",
+    )
+    .optional(),
   published: z.boolean(),
 });
 
@@ -41,7 +47,7 @@ export function getAllPosts(): BlogPost[] {
       const slug = filename.replace(/\.mdx$/, "");
       const filePath = path.join(blogDirectory, filename);
       const fileContents = fs.readFileSync(filePath, "utf8");
-      const { data } = matter(fileContents);
+      const { data } = matter(fileContents) as { data: unknown };
       const parsed = frontmatterSchema.safeParse(data);
 
       if (!parsed.success) {
@@ -54,7 +60,7 @@ export function getAllPosts(): BlogPost[] {
     .filter((post): post is BlogPost => post !== null);
 
   const published =
-    process.env.NODE_ENV === "production"
+    process.env.NEXT_PUBLIC_VERCEL_ENV === "production"
       ? posts.filter((p) => p.frontmatter.published)
       : posts;
 
@@ -66,6 +72,8 @@ export function getAllPosts(): BlogPost[] {
 }
 
 export function getPostBySlug(slug: string): BlogPostWithContent | null {
+  if (!/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(slug)) return null;
+
   const filePath = path.join(blogDirectory, `${slug}.mdx`);
 
   if (!fs.existsSync(filePath)) {
@@ -73,7 +81,10 @@ export function getPostBySlug(slug: string): BlogPostWithContent | null {
   }
 
   const fileContents = fs.readFileSync(filePath, "utf8");
-  const { data, content } = matter(fileContents);
+  const { data, content } = matter(fileContents) as {
+    data: unknown;
+    content: string;
+  };
   const parsed = frontmatterSchema.safeParse(data);
 
   if (!parsed.success) {
@@ -81,13 +92,20 @@ export function getPostBySlug(slug: string): BlogPostWithContent | null {
     return null;
   }
 
+  if (
+    process.env.NEXT_PUBLIC_VERCEL_ENV === "production" &&
+    !parsed.data.published
+  ) {
+    return null;
+  }
+
   return { slug, frontmatter: parsed.data, content };
 }
 
-export function getAllTags(): string[] {
-  const posts = getAllPosts();
+export function getAllTags(posts?: BlogPost[]): string[] {
+  const allPosts = posts ?? getAllPosts();
   const tags = new Set<string>();
-  for (const post of posts) {
+  for (const post of allPosts) {
     for (const tag of post.frontmatter.tags) {
       tags.add(tag);
     }
