@@ -306,6 +306,9 @@ catalogs:
     expo-web-browser:
       specifier: ~55.0.8
       version: 55.0.8
+    gray-matter:
+      specifier: ^4.0.3
+      version: 4.0.3
     jiti:
       specifier: ^1.21.3
       version: 1.21.7
@@ -327,6 +330,9 @@ catalogs:
     next:
       specifier: 15.1.9
       version: 15.1.9
+    next-mdx-remote:
+      specifier: ^6.0.0
+      version: 6.0.0
     next-themes:
       specifier: ^0.3.0
       version: 0.3.0
@@ -902,7 +908,7 @@ importers:
         specifier: 'catalog:'
         version: 11.0.7
       gray-matter:
-        specifier: ^4.0.3
+        specifier: 'catalog:'
         version: 4.0.3
       langfuse:
         specifier: 'catalog:'
@@ -914,7 +920,7 @@ importers:
         specifier: 'catalog:'
         version: 15.1.9(@opentelemetry/api@1.9.0)(babel-plugin-react-compiler@1.0.0)(react-dom@19.2.0(react@19.2.0))(react@19.2.0)
       next-mdx-remote:
-        specifier: ^6.0.0
+        specifier: 'catalog:'
         version: 6.0.0(@types/react@19.2.14)(react@19.2.0)
       posthog-js:
         specifier: 'catalog:'
@@ -14235,7 +14241,7 @@ snapshots:
       debug: 4.4.3
       invariant: 2.2.4
       metro: 0.83.3(bufferutil@4.1.0)(utf-8-validate@5.0.10)
-      metro-config: 0.83.3
+      metro-config: 0.83.3(bufferutil@4.1.0)(utf-8-validate@5.0.10)
       metro-core: 0.83.3
       semver: 7.7.3
     transitivePeerDependencies:
@@ -18949,19 +18955,6 @@ snapshots:
       flow-enums-runtime: 0.0.6
       https-proxy-agent: 7.0.6
       metro-core: 0.83.3
-    transitivePeerDependencies:
-      - supports-color
-
-  metro-config@0.83.3:
-    dependencies:
-      connect: 3.7.0
-      flow-enums-runtime: 0.0.6
-      jest-validate: 29.7.0
-      metro: 0.83.3(bufferutil@4.1.0)(utf-8-validate@5.0.10)
-      metro-cache: 0.83.3
-      metro-core: 0.83.3
-      metro-runtime: 0.83.3
-      yaml: 2.8.2
     transitivePeerDependencies:
       - supports-color
 
