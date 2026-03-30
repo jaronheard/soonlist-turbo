@@ -608,6 +608,8 @@ export const removeEventFromListFollowersFeeds = internalMutation({
       .withIndex("by_list", (q) => q.eq("listId", listId))
       .collect();
 
+    if (listFollows.length === 0) return;
+
     const event = await ctx.db
       .query("events")
       .withIndex("by_custom_id", (q) => q.eq("id", eventId))
