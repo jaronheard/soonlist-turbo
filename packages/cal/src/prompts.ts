@@ -335,10 +335,9 @@ The system using the output requires specific date and time formatting.
 - Always include seconds in the time, even if they're 00.
 - Always provide both startTime and endTime.
 
-**Year Inference (when no year is specified):**
-- Valid date window: ${minDate} to ${maxDate}
-- Choose the year that places the date within this window.
-- Only allow dates outside this window when the year is EXPLICITLY specified (e.g., "March 15, 2027").
+**Year Inference:**
+- If no year is explicitly stated: You MUST infer a year that places the date between ${minDate} and ${maxDate}.
+- If a year IS explicitly stated: Use that exact year. This is the ONLY time a date can fall outside the ${minDate} to ${maxDate} window.
 
 ** Time Inference (when a start or end time is not explicitly stated):**
 - If start time is not explicitly stated, infer a reasonable start time based on the event type and context (e.g., 19:00:00 for an evening concert, 10:00:00 for a morning workshop).
@@ -407,20 +406,20 @@ export const getPrompt = (
   return {
     text: getText(date, timezoneIANA, minDate, maxDate),
     textMetadata: getTextMetadata(),
-    version: "v2026.01.19.1", // specified year inference more clearly, reformatted time inference to be more clear
+    version: "v2026.03.30.2", // simplify year inference to strict date window with rare explicit-year override
   };
 };
 
 export const getSystemMessage = () => {
   return {
     text: systemMessage(),
-    version: "v2026.01.19.1", // Add 1-year future date limit unless year explicitly stated
+    version: "v2026.03.30.2", // simplify year inference to strict date window with rare explicit-year override
   };
 };
 
 export const getSystemMessageMetadata = () => {
   return {
     text: systemMessage(eventMetadataSchemaAsText),
-    version: "v2026.01.19.1", // Add 1-year future date limit unless year explicitly stated
+    version: "v2026.03.30.2", // simplify year inference to strict date window with rare explicit-year override
   };
 };
