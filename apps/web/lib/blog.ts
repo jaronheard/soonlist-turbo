@@ -2,6 +2,7 @@ import "server-only";
 
 import fs from "fs";
 import path from "path";
+import { cache } from "react";
 import matter from "gray-matter";
 import { z } from "zod";
 
@@ -83,7 +84,7 @@ export function getAllPosts(): BlogPost[] {
   );
 }
 
-export function getPostBySlug(slug: string): BlogPostWithContent | null {
+const getPostBySlugUncached = (slug: string): BlogPostWithContent | null => {
   if (!/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(slug)) return null;
 
   const filePath = path.join(blogDirectory, `${slug}.mdx`);
@@ -112,7 +113,9 @@ export function getPostBySlug(slug: string): BlogPostWithContent | null {
   }
 
   return { slug, frontmatter: parsed.data, content };
-}
+};
+
+export const getPostBySlug = cache(getPostBySlugUncached);
 
 export function getAllTags(posts?: BlogPost[]): string[] {
   const allPosts = posts ?? getAllPosts();

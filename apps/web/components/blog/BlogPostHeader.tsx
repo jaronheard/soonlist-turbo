@@ -42,6 +42,7 @@ export function BlogPostHeader({ frontmatter }: BlogPostHeaderProps) {
             src={frontmatter.coverImage}
             alt={frontmatter.title}
             fill
+            sizes="(min-width: 1024px) 800px, 100vw"
             className="object-cover"
             priority
           />
