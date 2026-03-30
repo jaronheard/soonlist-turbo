@@ -336,11 +336,8 @@ The system using the output requires specific date and time formatting.
 - Always provide both startTime and endTime.
 
 **Year Inference (when no year is specified):**
-- The current year is ${date.slice(0, 4)}.
-- ALWAYS default to the current year (${date.slice(0, 4)}) first.
-- Only use the next year if the date has already passed more than 2 months ago (i.e., falls before ${minDate}).
-- Valid date window: ${minDate} to ${maxDate}. Dates outside this window are only allowed when the year is EXPLICITLY stated in the source (e.g., "March 15, 2027").
-- When in doubt, use ${date.slice(0, 4)}.
+- All dates MUST fall between ${minDate} and ${maxDate}.
+- Only use a year outside this window if a year is explicitly stated in the source text. This is extremely rare — double-check before doing so.
 
 ** Time Inference (when a start or end time is not explicitly stated):**
 - If start time is not explicitly stated, infer a reasonable start time based on the event type and context (e.g., 19:00:00 for an evening concert, 10:00:00 for a morning workshop).
@@ -409,20 +406,20 @@ export const getPrompt = (
   return {
     text: getText(date, timezoneIANA, minDate, maxDate),
     textMetadata: getTextMetadata(),
-    version: "v2026.03.30.1", // specified year inference more clearly, reformatted time inference to be more clear
+    version: "v2026.03.30.2", // simplify year inference to strict date window with rare explicit-year override
   };
 };
 
 export const getSystemMessage = () => {
   return {
     text: systemMessage(),
-    version: "v2026.03.30.1", // Add 1-year future date limit unless year explicitly stated
+    version: "v2026.03.30.2", // simplify year inference to strict date window with rare explicit-year override
   };
 };
 
 export const getSystemMessageMetadata = () => {
   return {
     text: systemMessage(eventMetadataSchemaAsText),
-    version: "v2026.03.30.1", // Add 1-year future date limit unless year explicitly stated
+    version: "v2026.03.30.2", // simplify year inference to strict date window with rare explicit-year override
   };
 };
