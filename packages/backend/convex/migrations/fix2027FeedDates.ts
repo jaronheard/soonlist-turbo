@@ -53,13 +53,23 @@ export const migrateFeedsBatch = internalMutation({
       .order("asc")
       .paginate({ numItems: batchSize, cursor });
 
+    const eventCache = new Map<
+      string,
+      { startDateTime: string; endDateTime: string } | null
+    >();
+
     for (const entry of result.page) {
       if (!isIn2027(entry.eventStartTime)) continue;
 
-      const event = await ctx.db
-        .query("events")
-        .withIndex("by_custom_id", (q) => q.eq("id", entry.eventId))
-        .first();
+      let event = eventCache.get(entry.eventId);
+      if (event === undefined) {
+        event =
+          (await ctx.db
+            .query("events")
+            .withIndex("by_custom_id", (q) => q.eq("id", entry.eventId))
+            .first()) ?? null;
+        eventCache.set(entry.eventId, event);
+      }
 
       if (!event) {
         skipped++;
@@ -80,9 +90,9 @@ export const migrateFeedsBatch = internalMutation({
 
       if (Object.keys(changes).length > 0) {
         const oldDoc = entry;
+        const updatedDoc = { ...oldDoc, ...changes };
         await ctx.db.patch(entry._id, changes);
         if ("hasEnded" in changes) {
-          const updatedDoc = (await ctx.db.get(entry._id))!;
           await userFeedsAggregate.replaceOrInsert(ctx, oldDoc, updatedDoc);
         }
         updated++;
@@ -121,13 +131,25 @@ export const migrateGroupsBatch = internalMutation({
       .order("asc")
       .paginate({ numItems: batchSize, cursor });
 
+    const eventCache = new Map<
+      string,
+      { startDateTime: string; endDateTime: string } | null
+    >();
+
     for (const entry of result.page) {
       if (!isIn2027(entry.eventStartTime)) continue;
 
-      const event = await ctx.db
-        .query("events")
-        .withIndex("by_custom_id", (q) => q.eq("id", entry.primaryEventId))
-        .first();
+      let event = eventCache.get(entry.primaryEventId);
+      if (event === undefined) {
+        event =
+          (await ctx.db
+            .query("events")
+            .withIndex("by_custom_id", (q) =>
+              q.eq("id", entry.primaryEventId),
+            )
+            .first()) ?? null;
+        eventCache.set(entry.primaryEventId, event);
+      }
 
       if (!event) {
         skipped++;
@@ -177,6 +199,7 @@ export const dryRunFeedsBatch = internalQuery({
     isDone: v.boolean(),
   }),
   handler: async (ctx, { cursor, batchSize }) => {
+    const now = Date.now();
     let affected = 0;
     let skipped = 0;
 
@@ -185,19 +208,40 @@ export const dryRunFeedsBatch = internalQuery({
       .order("asc")
       .paginate({ numItems: batchSize, cursor });
 
+    const eventCache = new Map<
+      string,
+      { startDateTime: string; endDateTime: string } | null
+    >();
+
     for (const entry of result.page) {
       if (!isIn2027(entry.eventStartTime)) continue;
 
-      const event = await ctx.db
-        .query("events")
-        .withIndex("by_custom_id", (q) => q.eq("id", entry.eventId))
-        .first();
+      let event = eventCache.get(entry.eventId);
+      if (event === undefined) {
+        event =
+          (await ctx.db
+            .query("events")
+            .withIndex("by_custom_id", (q) => q.eq("id", entry.eventId))
+            .first()) ?? null;
+        eventCache.set(entry.eventId, event);
+      }
 
       if (!event) {
         skipped++;
         continue;
       }
-      affected++;
+
+      const correctStartTime = new Date(event.startDateTime).getTime();
+      const correctEndTime = new Date(event.endDateTime).getTime();
+      const correctHasEnded = correctEndTime < now;
+
+      if (
+        entry.eventStartTime !== correctStartTime ||
+        entry.eventEndTime !== correctEndTime ||
+        entry.hasEnded !== correctHasEnded
+      ) {
+        affected++;
+      }
     }
 
     return {
@@ -223,6 +267,7 @@ export const dryRunGroupsBatch = internalQuery({
     isDone: v.boolean(),
   }),
   handler: async (ctx, { cursor, batchSize }) => {
+    const now = Date.now();
     let affected = 0;
     let skipped = 0;
 
@@ -231,19 +276,42 @@ export const dryRunGroupsBatch = internalQuery({
       .order("asc")
       .paginate({ numItems: batchSize, cursor });
 
+    const eventCache = new Map<
+      string,
+      { startDateTime: string; endDateTime: string } | null
+    >();
+
     for (const entry of result.page) {
       if (!isIn2027(entry.eventStartTime)) continue;
 
-      const event = await ctx.db
-        .query("events")
-        .withIndex("by_custom_id", (q) => q.eq("id", entry.primaryEventId))
-        .first();
+      let event = eventCache.get(entry.primaryEventId);
+      if (event === undefined) {
+        event =
+          (await ctx.db
+            .query("events")
+            .withIndex("by_custom_id", (q) =>
+              q.eq("id", entry.primaryEventId),
+            )
+            .first()) ?? null;
+        eventCache.set(entry.primaryEventId, event);
+      }
 
       if (!event) {
         skipped++;
         continue;
       }
-      affected++;
+
+      const correctStartTime = new Date(event.startDateTime).getTime();
+      const correctEndTime = new Date(event.endDateTime).getTime();
+      const correctHasEnded = correctEndTime < now;
+
+      if (
+        entry.eventStartTime !== correctStartTime ||
+        entry.eventEndTime !== correctEndTime ||
+        entry.hasEnded !== correctHasEnded
+      ) {
+        affected++;
+      }
     }
 
     return {
