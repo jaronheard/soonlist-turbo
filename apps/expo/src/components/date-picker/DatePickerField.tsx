@@ -114,7 +114,7 @@ export function DatePickerField<T extends FieldValues>({
                   }
                   style={
                     Platform.OS === "ios"
-                      ? { height: 300, alignSelf: "center" }
+                      ? { height: 350, width: "100%", alignSelf: "center" }
                       : {}
                   }
                 />
