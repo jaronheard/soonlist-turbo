@@ -109,12 +109,13 @@ export function DatePickerField<T extends FieldValues>({
                   value={tempDate}
                   mode="date"
                   display={Platform.OS === "ios" ? "inline" : "default"}
+                  themeVariant="light"
                   onChange={(event, date) =>
                     onDateChange(onChange as FieldOnChange, event, date)
                   }
                   style={
                     Platform.OS === "ios"
-                      ? { height: 350, width: "100%", alignSelf: "center" }
+                      ? { height: 300, alignSelf: "center" }
                       : {}
                   }
                 />

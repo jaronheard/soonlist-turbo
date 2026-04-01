@@ -114,6 +114,7 @@ export function TimePickerField<T extends FieldValues>({
                   mode="time"
                   minuteInterval={minuteInterval}
                   display={Platform.OS === "ios" ? "spinner" : "default"}
+                  themeVariant="light"
                   onChange={(event, time) =>
                     onTimeChange(onChange as FieldOnChange, event, time)
                   }
