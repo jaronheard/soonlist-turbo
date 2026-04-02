@@ -1,7 +1,6 @@
 import React, { useCallback, useEffect, useState } from "react";
 import {
   ActivityIndicator,
-  Platform,
   Pressable,
   ScrollView,
   Text,
@@ -9,13 +8,17 @@ import {
 } from "react-native";
 import RevenueCatUI, { PAYWALL_RESULT } from "react-native-purchases-ui";
 import { SafeAreaView } from "react-native-safe-area-context";
-import Constants from "expo-constants";
 import { router } from "expo-router";
 
 import { useRevenueCat } from "~/providers/RevenueCatProvider";
 import { useAppStore, useSetHasSeenOnboarding } from "~/store";
 import { AF_EVENTS, trackAFEvent } from "~/utils/appsflyerEvents";
 import { isSimulator, shouldMockPaywall } from "~/utils/deviceInfo";
+
+// Route path for the sign-in screen within the onboarding flow.
+// Expo Router's typed routes are generated from the file structure and may be stale.
+// Using a relative path avoids the strict typed-route check.
+const SIGN_IN_PATH = "./05-sign-in" as const;
 
 export default function PaywallScreen() {
   const { isInitialized, customerInfo } = useRevenueCat();
@@ -30,19 +33,6 @@ export default function PaywallScreen() {
   const completeOnboarding = useCallback(() => {
     setHasSeenOnboarding(true);
   }, [setHasSeenOnboarding]);
-
-  // Debug logging
-  console.log("Paywall Debug:", {
-    isDevice: Constants.isDevice as boolean | undefined,
-    deviceName: String(Constants.deviceName ?? "unknown"),
-    platform: Platform.OS,
-    model: String(Constants.platform?.ios?.model ?? "unknown"),
-    isSimulator: isSimulator(),
-    shouldMockPaywall: shouldMockPaywall(),
-    showMockPaywall,
-    isInitialized,
-    hasUnlimited,
-  });
 
   const presentPaywall = useCallback(async () => {
     try {
@@ -64,7 +54,7 @@ export default function PaywallScreen() {
           completeOnboarding();
           // Navigate to sign-in screen with subscription status
           router.navigate({
-            pathname: "/sign-in",
+            pathname: SIGN_IN_PATH,
             params: { fromPaywall: "true", subscribed: "true" },
           });
           break;
@@ -79,7 +69,7 @@ export default function PaywallScreen() {
           completeOnboarding();
           // Navigate to sign-in screen with subscription status
           router.navigate({
-            pathname: "/sign-in",
+            pathname: SIGN_IN_PATH,
             params: {
               fromPaywall: "true",
               subscribed: "true",
@@ -101,7 +91,7 @@ export default function PaywallScreen() {
           completeOnboarding();
           // Navigate to sign-in screen in trial mode
           router.navigate({
-            pathname: "/sign-in",
+            pathname: SIGN_IN_PATH,
             params: { fromPaywall: "true", trial: "true" },
           });
           break;
@@ -117,7 +107,7 @@ export default function PaywallScreen() {
       // Mark onboarding as seen
       completeOnboarding();
       router.navigate({
-        pathname: "/sign-in",
+        pathname: SIGN_IN_PATH,
         params: { fromPaywall: "true", trial: "true" },
       });
     }
@@ -135,7 +125,7 @@ export default function PaywallScreen() {
       completeOnboarding();
       // Navigate to sign-in screen with subscription status
       router.navigate({
-        pathname: "/sign-in",
+        pathname: SIGN_IN_PATH,
         params: {
           fromPaywall: "true",
           subscribed: "true",
@@ -183,7 +173,7 @@ export default function PaywallScreen() {
 
     // Navigate to sign-in screen
     router.navigate({
-      pathname: "/sign-in",
+      pathname: SIGN_IN_PATH,
       params: { fromPaywall: "true", trial: "true" },
     });
   };
@@ -199,7 +189,7 @@ export default function PaywallScreen() {
     completeOnboarding();
     // Navigate to sign-in screen
     router.navigate({
-      pathname: "/sign-in",
+      pathname: SIGN_IN_PATH,
       params: { fromPaywall: "true", subscribed: "true", plan },
     });
   };

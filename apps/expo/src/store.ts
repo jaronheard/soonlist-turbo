@@ -72,7 +72,12 @@ interface AddEventInputState extends CommonEventInputState {
 type NewEventInputState = CommonEventInputState;
 
 export type MyListLabel = "My List" | "My Soonlist" | "My Events";
-export type BoardLabel = "Board" | "Community Board" | "Radar" | "Scene" | "My Scene";
+export type BoardLabel =
+  | "Board"
+  | "Community Board"
+  | "Radar"
+  | "Scene"
+  | "My Scene";
 export type HeaderStyle = "possessive" | "my" | "your" | "plain";
 export type MyListIcon =
   | "list.bullet"

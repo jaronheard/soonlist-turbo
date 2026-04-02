@@ -13,67 +13,27 @@ import Animated, {
 
 import { QuestionContainer } from "~/components/QuestionContainer";
 import { useOnboarding } from "~/hooks/useOnboarding";
-import { useAppStore } from "~/store";
-import { TOTAL_ONBOARDING_STEPS } from "../_layout";
+import { usePendingFollowUsername } from "~/store";
 
-// Sample events keyed by discovery channel
-const SAMPLE_EVENTS: Record<
-  string,
-  { name: string; location: string; date: string; time: string; source: string }
-> = {
-  Instagram: {
-    name: "Rooftop Sunset DJ Set",
-    location: "The Hoxton, Portland",
-    date: "Sat, Mar 22",
-    time: "6:00 PM",
-    source: "Instagram Story",
-  },
-  TikTok: {
-    name: "Pop-Up Night Market",
-    location: "Pioneer Courthouse Square",
-    date: "Fri, Mar 21",
-    time: "5:00 PM",
-    source: "TikTok",
-  },
-  "Friends' recommendations": {
-    name: "Game Night at the Brewery",
-    location: "Breakside Brewery, Portland",
-    date: "Thu, Mar 20",
-    time: "7:00 PM",
-    source: "a friend's text",
-  },
-  "Local websites/newsletters": {
-    name: "Spring Art Walk",
-    location: "Alberta Arts District",
-    date: "Sat, Mar 22",
-    time: "12:00 PM",
-    source: "a local newsletter",
-  },
-  "Walking around town": {
-    name: "Live Jazz & Open Mic",
-    location: "Jack London Revue",
-    date: "Fri, Mar 21",
-    time: "8:00 PM",
-    source: "a flyer",
-  },
-  Facebook: {
-    name: "Community Volunteer Day",
-    location: "Forest Park, Portland",
-    date: "Sun, Mar 23",
-    time: "9:00 AM",
-    source: "Facebook",
-  },
+interface SampleEvent {
+  name: string;
+  location: string;
+  date: string;
+  time: string;
+  source: string;
+}
+
+const DEFAULT_EVENT: SampleEvent = {
+  name: "Rooftop Sunset DJ Set",
+  location: "The Hoxton, Portland",
+  date: "Sat, Mar 22",
+  time: "6:00 PM",
+  source: "Instagram Story",
 };
-
-const DEFAULT_EVENT = SAMPLE_EVENTS.Instagram!;
 
 type Phase = "screenshot" | "parsing" | "result" | "notification";
 
-function SampleScreenshot({
-  event,
-}: {
-  event: (typeof SAMPLE_EVENTS)[string];
-}) {
+function SampleScreenshot({ event }: { event: SampleEvent }) {
   return (
     <View className="mx-4 overflow-hidden rounded-2xl bg-white">
       <View className="bg-interactive-1 px-6 py-8">
@@ -133,7 +93,7 @@ function ParsingAnimation() {
   );
 }
 
-function ParsedEventCard({ event }: { event: (typeof SAMPLE_EVENTS)[string] }) {
+function ParsedEventCard({ event }: { event: SampleEvent }) {
   return (
     <Animated.View entering={FadeIn.duration(500)} className="mx-4">
       <View className="overflow-hidden rounded-2xl border-[3px] border-[#E0D9FF] bg-white p-3">
@@ -165,7 +125,7 @@ function FakeNotificationBanner({
   event,
   onDismiss,
 }: {
-  event: (typeof SAMPLE_EVENTS)[string];
+  event: SampleEvent;
   onDismiss: () => void;
 }) {
   useEffect(() => {
@@ -209,11 +169,11 @@ function FakeNotificationBanner({
 export default function TryItScreen() {
   const [phase, setPhase] = useState<Phase>("screenshot");
   const { saveStep } = useOnboarding();
-  const { onboardingData } = useAppStore();
+  const pendingFollowUsername = usePendingFollowUsername();
   const [showNotification, setShowNotification] = useState(false);
 
-  const selectedChannel = onboardingData.discoveryMethod ?? "Instagram";
-  const event = SAMPLE_EVENTS[selectedChannel] ?? DEFAULT_EVENT;
+  const totalSteps = pendingFollowUsername ? 6 : 5;
+  const event = DEFAULT_EVENT;
 
   const handleCapture = useCallback(() => {
     setPhase("parsing");
@@ -232,9 +192,11 @@ export default function TryItScreen() {
 
   const handleContinue = () => {
     saveStep(
-      "shareDemoTryIt",
-      { completedShareDemo: true },
-      "/(onboarding)/onboarding/07-notifications",
+      "tryIt",
+      {},
+      pendingFollowUsername
+        ? "/(onboarding)/onboarding/02-your-list"
+        : "/(onboarding)/onboarding/03-notifications",
     );
   };
 
@@ -254,8 +216,8 @@ export default function TryItScreen() {
             ? undefined
             : "We'll do the rest"
       }
-      currentStep={6}
-      totalSteps={TOTAL_ONBOARDING_STEPS}
+      currentStep={1}
+      totalSteps={totalSteps}
     >
       {showNotification && (
         <FakeNotificationBanner

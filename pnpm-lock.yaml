@@ -675,6 +675,9 @@ importers:
       expo-localization:
         specifier: 'catalog:'
         version: 55.0.7(expo@55.0.0-preview.12)(react@19.2.0)
+      expo-location:
+        specifier: ^55.1.4
+        version: 55.1.4(expo@55.0.0-preview.12)
       expo-media-library:
         specifier: 'catalog:'
         version: 55.0.8(expo@55.0.0-preview.12)(react-native@0.83.2(@babel/core@7.28.5)(@types/react@19.2.14)(bufferutil@4.1.0)(react@19.2.0)(utf-8-validate@5.0.10))
@@ -6709,6 +6712,11 @@ packages:
       expo: '*'
       react: 19.2.0
 
+  expo-location@55.1.4:
+    resolution: {integrity: sha512-0QWQ4QP8I6svtGUL895Y8bvKM3nGUWNp/MdCoCQNH3uAuwvLf2TQ6ZDVD3kdlkl2wGGdw6ziHQIYDHL96OlfnA==}
+    peerDependencies:
+      expo: '*'
+
   expo-manifests@55.0.8:
     resolution: {integrity: sha512-1YAbEvr8qmYoWNQAgmcAjTYF8nJNjka/CkPM2WgHMW5NyfQ4qzaJIFGXxqhY9B8U5eP4cGc5R8/hJ8IL3pVVKg==}
     peerDependencies:
@@ -7129,7 +7137,7 @@ packages:
 
   glob@7.2.3:
     resolution: {integrity: sha512-nFR0zLpU2YCaRxwoCJvL6UvCH2JFyFVIvwTLsIf21AuHlMskA1hhTdk+LlYJtOlYt9v6dvszD2BGRqBL+iQK9Q==}
-    deprecated: Glob versions prior to v9 are no longer supported
+    deprecated: Old versions of glob are not supported, and contain widely publicized security vulnerabilities, which have been fixed in the current version. Please update. Support for old versions may be purchased (at exorbitant rates) by contacting i@izs.me
 
   glob@9.3.5:
     resolution: {integrity: sha512-e1LleDykUz2Iu+MTYdkSsuWX8lvAjAcs0Xef0lNIu0S2wOAzuTxCJtcd9S3cijlwYF18EsU3rzb8jPVobxDh9Q==}
@@ -13867,7 +13875,7 @@ snapshots:
       debug: 4.4.3
       invariant: 2.2.4
       metro: 0.83.3(bufferutil@4.1.0)(utf-8-validate@5.0.10)
-      metro-config: 0.83.3
+      metro-config: 0.83.3(bufferutil@4.1.0)(utf-8-validate@5.0.10)
       metro-core: 0.83.3
       semver: 7.7.3
     transitivePeerDependencies:
@@ -16900,6 +16908,11 @@ snapshots:
       react: 19.2.0
       rtl-detect: 1.1.2
 
+  expo-location@55.1.4(expo@55.0.0-preview.12):
+    dependencies:
+      '@expo/image-utils': 0.8.12
+      expo: 55.0.0-preview.12(@babel/core@7.28.5)(@expo/dom-webview@55.0.3)(@expo/metro-runtime@55.0.6)(bufferutil@4.1.0)(expo-router@55.0.0-preview.9)(react-dom@19.2.0(react@19.2.0))(react-native@0.83.2(@babel/core@7.28.5)(@types/react@19.2.14)(bufferutil@4.1.0)(react@19.2.0)(utf-8-validate@5.0.10))(react@19.2.0)(typescript@5.9.3)(utf-8-validate@5.0.10)
+
   expo-manifests@55.0.8(expo@55.0.0-preview.12)(typescript@5.9.3):
     dependencies:
       '@expo/config': 55.0.7(typescript@5.9.3)
@@ -18317,19 +18330,6 @@ snapshots:
       flow-enums-runtime: 0.0.6
       https-proxy-agent: 7.0.6
       metro-core: 0.83.3
-    transitivePeerDependencies:
-      - supports-color
-
-  metro-config@0.83.3:
-    dependencies:
-      connect: 3.7.0
-      flow-enums-runtime: 0.0.6
-      jest-validate: 29.7.0
-      metro: 0.83.3(bufferutil@4.1.0)(utf-8-validate@5.0.10)
-      metro-cache: 0.83.3
-      metro-core: 0.83.3
-      metro-runtime: 0.83.3
-      yaml: 2.8.2
     transitivePeerDependencies:
       - supports-color
 

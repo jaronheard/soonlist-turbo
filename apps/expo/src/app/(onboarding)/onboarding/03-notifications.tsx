@@ -13,16 +13,19 @@ import { ChevronUp } from "~/components/icons";
 import { QuestionContainer } from "~/components/QuestionContainer";
 import { useOnboarding } from "~/hooks/useOnboarding";
 import { useOneSignal } from "~/providers/OneSignalProvider";
+import { usePendingFollowUsername } from "~/store";
 import { logError } from "~/utils/errorLogging";
 import { toast } from "~/utils/feedback";
-import { TOTAL_ONBOARDING_STEPS } from "../_layout";
 
 export default function NotificationsScreen() {
   const { registerForPushNotifications, hasNotificationPermission } =
     useOneSignal();
   const { saveStep } = useOnboarding();
+  const pendingFollowUsername = usePendingFollowUsername();
   const translateY = useSharedValue(0);
   const [isLoading, setIsLoading] = useState(false);
+
+  const totalSteps = pendingFollowUsername ? 6 : 5;
 
   useEffect(() => {
     translateY.value = withRepeat(
@@ -53,7 +56,7 @@ export default function NotificationsScreen() {
     try {
       if (hasNotificationPermission) {
         // Already has permission, just continue
-        router.navigate("/(onboarding)/onboarding/08-share-demo");
+        router.navigate("/(onboarding)/onboarding/04-paywall");
         return;
       }
 
@@ -66,7 +69,7 @@ export default function NotificationsScreen() {
         {
           notificationsEnabled: isPermissionGranted,
         },
-        "/(onboarding)/onboarding/08-share-demo",
+        "/(onboarding)/onboarding/04-paywall",
       );
     } catch (error) {
       logError("Failed to save notifications", error);
@@ -80,8 +83,8 @@ export default function NotificationsScreen() {
     <QuestionContainer
       question="Never miss an event"
       subtitle="Get notified when events are saved so you can stay on top of your plans"
-      currentStep={7}
-      totalSteps={TOTAL_ONBOARDING_STEPS}
+      currentStep={3}
+      totalSteps={totalSteps}
     >
       <View className="flex-1">
         <View className="flex-1 items-center justify-center px-12">

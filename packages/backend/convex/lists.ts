@@ -339,6 +339,71 @@ export const followList = mutation({
 });
 
 /**
+ * Follow a user's personal list by username.
+ * Encapsulates user lookup, personal list lookup, and follow in one server-side call.
+ */
+export const followUserByUsername = mutation({
+  args: { username: v.string() },
+  handler: async (ctx, { username }) => {
+    const userId = await getUserId(ctx);
+    if (!userId) {
+      throw new ConvexError("Authentication required");
+    }
+
+    // Look up target user by username
+    const targetUser = await ctx.db
+      .query("users")
+      .withIndex("by_username", (q) => q.eq("username", username))
+      .unique();
+
+    if (!targetUser) {
+      return { success: false as const, reason: "User not found" };
+    }
+
+    // Get their personal list
+    const personalList = await ctx.db
+      .query("lists")
+      .withIndex("by_user_and_isSystemList_and_systemListType", (q) =>
+        q
+          .eq("userId", targetUser.id)
+          .eq("isSystemList", true)
+          .eq("systemListType", "personal"),
+      )
+      .first();
+
+    if (!personalList) {
+      return { success: false as const, reason: "User has no personal list" };
+    }
+
+    const listId = personalList.id;
+
+    // Check if already following
+    const existingFollow = await ctx.db
+      .query("listFollows")
+      .withIndex("by_user_and_list", (q) =>
+        q.eq("userId", userId).eq("listId", listId),
+      )
+      .first();
+
+    if (existingFollow) {
+      return { success: true as const };
+    }
+
+    await ctx.db.insert("listFollows", {
+      userId,
+      listId,
+    });
+
+    await ctx.runMutation(internal.feedHelpers.addListEventsToUserFeed, {
+      userId,
+      listId,
+    });
+
+    return { success: true as const };
+  },
+});
+
+/**
  * Unfollow a list
  */
 export const unfollowList = mutation({

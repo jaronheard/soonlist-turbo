@@ -9,6 +9,7 @@ import {
 } from "react-native";
 import * as Haptics from "expo-haptics";
 import { Redirect } from "expo-router";
+import { SymbolView } from "expo-symbols";
 import { useUser } from "@clerk/clerk-expo";
 import { Host, Picker, Text as SwiftUIText } from "@expo/ui/swift-ui";
 import { pickerStyle, tag } from "@expo/ui/swift-ui/modifiers";
@@ -19,8 +20,6 @@ import {
   useQuery,
 } from "convex/react";
 import { usePostHog } from "posthog-react-native";
-
-import { SymbolView } from "expo-symbols";
 
 import { api } from "@soonlist/backend/convex/_generated/api";
 
@@ -304,11 +303,7 @@ function FollowingFeedContent() {
           >
             <View className="flex-row items-center">
               <Text className="text-sm text-neutral-2">Includes: </Text>
-              <SymbolView
-                name={myListIcon}
-                size={14}
-                tintColor="#5A32FB"
-              />
+              <SymbolView name={myListIcon} size={14} tintColor="#5A32FB" />
               <Text className="text-sm font-semibold text-interactive-1">
                 {" "}
                 {singleFollowedList

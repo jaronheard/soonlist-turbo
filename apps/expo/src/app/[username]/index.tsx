@@ -172,13 +172,7 @@ function FollowSceneModal({
     } finally {
       setIsSubmitting(false);
     }
-  }, [
-    packLists,
-    includedIds,
-    followingIds,
-    followListMutation,
-    onClose,
-  ]);
+  }, [packLists, includedIds, followingIds, followListMutation, onClose]);
 
   if (packLists.length === 0) {
     return (
@@ -205,7 +199,9 @@ function FollowSceneModal({
               className="mt-4 items-center rounded-full bg-neutral-4 py-3"
               activeOpacity={0.8}
             >
-              <Text className="text-sm font-semibold text-neutral-2">Close</Text>
+              <Text className="text-sm font-semibold text-neutral-2">
+                Close
+              </Text>
             </TouchableOpacity>
           </Pressable>
         </Pressable>
@@ -452,9 +448,7 @@ export default function UserProfilePage() {
         />
 
         <View className="px-4 pb-2">
-          <Text
-            className="mb-1 text-base font-medium text-neutral-1"
-          >
+          <Text className="mb-1 text-base font-medium text-neutral-1">
             {isOwnProfile ? "Your scene" : "Their scene"}
           </Text>
           <TouchableOpacity
@@ -659,10 +653,7 @@ function ProfileIdentityHeader({
             {upcomingEventCount === 1 ? "upcoming event" : "upcoming events"}
           </Text>
           {locationLine ? (
-            <Text
-              className="text-sm text-neutral-2"
-              numberOfLines={1}
-            >
+            <Text className="text-sm text-neutral-2" numberOfLines={1}>
               {locationLine}
             </Text>
           ) : null}
