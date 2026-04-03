@@ -5,11 +5,14 @@ import { useUser } from "@clerk/clerk-expo";
 
 import { ProfileMenu } from "~/components/ProfileMenu";
 import { useAppStore } from "~/store";
+import Config from "~/utils/config";
 
 export default function FollowingLayout() {
   const { user } = useUser();
   const boardLabel = useAppStore((s) => s.boardLabel);
   const headerStyle = useAppStore((s) => s.headerStyle);
+  const boardSubtitle = useAppStore((s) => s.boardSubtitle);
+  const showBoardSubtitle = useAppStore((s) => s.showBoardSubtitle);
 
   // URL path matches the board label
   const boardUrlPath = boardLabel.toLowerCase().replace(/\s+/g, "-");

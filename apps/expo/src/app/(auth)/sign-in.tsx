@@ -57,16 +57,6 @@ export default function AuthScreen() {
           </View>
         )}
 
-        {trial === "true" && (
-          <View className="rounded-2xl bg-interactive-2 px-6 py-4">
-            <Text className="text-center text-lg font-bold text-neutral-1">
-              Try saving 3 events for free
-            </Text>
-            <Text className="text-center text-base text-neutral-1">
-              Create your account to get started
-            </Text>
-          </View>
-        )}
 
         {showFollowBanner && <FollowContextBanner />}
       </View>

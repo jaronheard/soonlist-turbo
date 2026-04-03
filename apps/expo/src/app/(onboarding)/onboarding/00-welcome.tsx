@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React from "react";
 import { Pressable, Text, View } from "react-native";
 import Animated, { FadeIn, Layout } from "react-native-reanimated";
 import { Image as ExpoImage } from "expo-image";
@@ -7,7 +7,6 @@ import { useQuery } from "convex/react";
 
 import { api } from "@soonlist/backend/convex/_generated/api";
 
-import { CodeEntryModal } from "~/components/CodeEntryModal";
 import { Logo } from "~/components/Logo";
 import { usePendingFollowUsername, useSetHasSeenOnboarding } from "~/store";
 
@@ -125,7 +124,6 @@ function OrganicWelcome() {
 }
 
 export default function WelcomeScreen() {
-  const [isCodeModalVisible, setIsCodeModalVisible] = useState(false);
   const pendingFollowUsername = usePendingFollowUsername();
 
   const handleGetStarted = () => {
@@ -142,13 +140,6 @@ export default function WelcomeScreen() {
     router.navigate("/sign-in");
   };
 
-  const handleCodeEntry = () => {
-    setIsCodeModalVisible(true);
-  };
-
-  const handleCodeModalClose = () => {
-    setIsCodeModalVisible(false);
-  };
 
   return (
     <View className="flex-1 bg-interactive-3">
@@ -172,10 +163,7 @@ export default function WelcomeScreen() {
                   <Text className="text-interactive-1">plans</Text>
                 </Text>
                 <Text className="mb-2 text-center text-lg text-gray-500">
-                  Save events in one tap. All in one place
-                </Text>
-                <Text className="mb-4 text-center text-sm text-gray-400">
-                  Free, community-supported
+                  Save events in one tap, all in one shareable list
                 </Text>
               </AnimatedView>
             )}
@@ -211,28 +199,10 @@ export default function WelcomeScreen() {
               </Text>
             </Pressable>
 
-            {/* Code entry link */}
-            <Pressable
-              onPress={handleCodeEntry}
-              className="py-2"
-              accessibilityRole="button"
-              accessibilityLabel="Enter a discover access code"
-            >
-              <Text className="text-center text-sm text-gray-600">
-                {"🎟"} Got a code?{" "}
-                <Text className="font-semibold text-interactive-1">
-                  Enter it here
-                </Text>
-              </Text>
-            </Pressable>
           </AnimatedView>
         </AnimatedView>
       </View>
 
-      <CodeEntryModal
-        isVisible={isCodeModalVisible}
-        onClose={handleCodeModalClose}
-      />
     </View>
   );
 }

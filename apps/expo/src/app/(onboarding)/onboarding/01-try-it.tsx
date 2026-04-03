@@ -11,7 +11,9 @@ import Animated, {
   withTiming,
 } from "react-native-reanimated";
 
+import type { Event } from "~/components/UserEventsList";
 import { QuestionContainer } from "~/components/QuestionContainer";
+import { UserEventListItem } from "~/components/UserEventsList";
 import { useOnboarding } from "~/hooks/useOnboarding";
 import { usePendingFollowUsername } from "~/store";
 
@@ -93,33 +95,55 @@ function ParsingAnimation() {
   );
 }
 
-function ParsedEventCard({ event }: { event: SampleEvent }) {
-  return (
-    <Animated.View entering={FadeIn.duration(500)} className="mx-4">
-      <View className="overflow-hidden rounded-2xl border-[3px] border-[#E0D9FF] bg-white p-3">
-        <Text className="text-sm font-medium text-[#627496]">
-          {event.date} {"·"} {event.time}
-        </Text>
-        <Text className="mt-1 text-lg font-bold text-neutral-800">
-          {event.name}
-        </Text>
-        <Text className="mt-0.5 text-sm text-[#627496]">{event.location}</Text>
-        <View className="mt-3 flex-row gap-3">
-          <View className="flex-row items-center gap-1.5 rounded-full bg-interactive-1/10 px-3 py-1.5">
-            <Text className="text-sm">{"📅"}</Text>
-            <Text className="text-sm font-medium text-interactive-1">
-              Add to Calendar
-            </Text>
-          </View>
-          <View className="flex-row items-center gap-1.5 rounded-full bg-interactive-1/10 px-3 py-1.5">
-            <Text className="text-sm">{"❤️"}</Text>
-            <Text className="text-sm font-medium text-interactive-1">Save</Text>
-          </View>
-        </View>
-      </View>
-    </Animated.View>
-  );
-}
+// Demo event data for the onboarding try-it flow. Cast as Event since
+// this is synthetic data that doesn't come from the backend.
+const DEMO_EVENT = {
+  _id: "demo-1",
+  _creationTime: Date.now(),
+  id: "demo-1",
+  userId: "demo-user",
+  userName: "demo",
+  event: {
+    name: "Rooftop Sunset DJ Set",
+    startDate: "2026-03-22",
+    endDate: "2026-03-22",
+    startTime: "18:00",
+    endTime: "22:00",
+    timeZone: "America/Los_Angeles",
+    location: "The Hoxton, Portland",
+    description: "Sunset vibes with live DJ sets on the rooftop",
+    images: [],
+  },
+  eventMetadata: {
+    category: "music",
+    type: "social",
+    source: "Instagram Story",
+  },
+  name: "Rooftop Sunset DJ Set",
+  image: null,
+  location: "The Hoxton, Portland",
+  startDate: "2026-03-22",
+  endDate: "2026-03-22",
+  startTime: "18:00",
+  endTime: "22:00",
+  timeZone: "America/Los_Angeles",
+  description: "Sunset vibes with live DJ sets on the rooftop",
+  startDateTime: "2026-03-22T18:00:00-07:00",
+  endDateTime: "2026-03-22T22:00:00-07:00",
+  visibility: "public" as const,
+  created_at: new Date().toISOString(),
+  updatedAt: null,
+  user: {
+    id: "demo-user",
+    username: "demouser",
+    displayName: "You",
+    userImage: "",
+  },
+  eventFollows: [],
+  comments: [],
+  eventToLists: [],
+  lists: [],
+} as unknown as Event;
 
 function FakeNotificationBanner({
   event,
@@ -194,9 +218,7 @@ export default function TryItScreen() {
     saveStep(
       "tryIt",
       {},
-      pendingFollowUsername
-        ? "/(onboarding)/onboarding/02-your-list"
-        : "/(onboarding)/onboarding/03-notifications",
+      "/(onboarding)/onboarding/02-your-list",
     );
   };
 
@@ -230,9 +252,18 @@ export default function TryItScreen() {
         {phase === "parsing" ? (
           <ParsingAnimation />
         ) : phase === "result" ? (
-          <View className="flex-1 justify-center">
-            <ParsedEventCard event={event} />
-          </View>
+          <Animated.View
+            entering={FadeIn.duration(500)}
+            className="flex-1 justify-center"
+          >
+            <UserEventListItem
+              event={DEMO_EVENT}
+              showCreator="never"
+              isSaved={false}
+              demoMode={true}
+              index={0}
+            />
+          </Animated.View>
         ) : (
           <View className="flex-1 justify-center">
             <SampleScreenshot event={event} />

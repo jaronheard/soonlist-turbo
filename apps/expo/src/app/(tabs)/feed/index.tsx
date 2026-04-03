@@ -189,7 +189,7 @@ function MyFeedContent() {
       <View className="px-3 pb-2" style={{ marginTop: -4 }}>
         {showMyListSubtitle && myListSubtitle.length > 0 && (
           <Text
-            className="mb-1 text-base font-medium text-neutral-1"
+            className="mb-1 text-base font-medium text-neutral-2"
             style={{ paddingLeft: 6 }}
           >
             {myListSubtitle}

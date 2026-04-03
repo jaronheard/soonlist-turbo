@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { Pressable, Text, View } from "react-native";
+import { BlurView } from "expo-blur";
 import Animated, {
   Easing,
   useAnimatedStyle,
@@ -26,6 +27,7 @@ export default function NotificationsScreen() {
   const [isLoading, setIsLoading] = useState(false);
 
   const totalSteps = pendingFollowUsername ? 6 : 5;
+  const currentStep = pendingFollowUsername ? 4 : 3;
 
   useEffect(() => {
     translateY.value = withRepeat(
@@ -81,39 +83,70 @@ export default function NotificationsScreen() {
 
   return (
     <QuestionContainer
-      question="Never miss an event"
-      subtitle="Get notified when events are saved so you can stay on top of your plans"
-      currentStep={3}
+      question="Stay in the loop"
+      subtitle="Know when events are saved and lists are updated"
+      currentStep={currentStep}
       totalSteps={totalSteps}
     >
       <View className="flex-1">
         <View className="flex-1 items-center justify-center px-12">
-          <View className="relative">
-            <View className="rounded-2xl bg-white">
-              <View className="px-2 pb-3 pt-4">
-                <Text className="mb-2 px-4 text-center text-xl font-semibold leading-6">
-                  Turn on Push Notifications to capture and remember
+          <View
+            className="relative"
+            style={{
+              borderRadius: 14,
+              overflow: "hidden",
+              shadowColor: "#000",
+              shadowOffset: { width: 0, height: 2 },
+              shadowOpacity: 0.15,
+              shadowRadius: 20,
+              elevation: 10,
+            }}
+          >
+            <BlurView
+              tint="systemUltraThinMaterialLight"
+              intensity={100}
+              style={{
+                borderRadius: 14,
+                overflow: "hidden",
+                backgroundColor: "rgba(255,255,255,0.75)",
+              }}
+            >
+              <View className="px-4 pb-4 pt-5">
+                <Text className="mb-1 text-center text-[17px] font-semibold leading-[22px] text-black">
+                  Allow {'"'}Soonlist{'"'} to send you notifications?
                 </Text>
-                <Text className="mb-2 px-4 text-center text-sm leading-5">
-                  Soonlist notifies you when events are created, and to help you
-                  build a habit of capturing events
+                <Text className="mt-1 text-center text-[13px] leading-[18px] text-black/50">
+                  Soonlist will notify you when events are saved and with
+                  updates from shared lists
                 </Text>
               </View>
-              <View className="flex-row border-t border-[#3c3c43]/30">
-                <Pressable className="w-1/2 py-3" disabled>
-                  <Text className="text-center text-lg font-normal text-blue-500/30">
-                    Don't Allow
+              <View
+                style={{
+                  height: 0.5,
+                  backgroundColor: "rgba(60,60,67,0.36)",
+                }}
+              />
+              <View className="flex-row" style={{ height: 44 }}>
+                <Pressable className="flex-1 items-center justify-center" disabled>
+                  <Text className="text-[17px] font-normal text-blue-500/30">
+                    Don{"'"}t Allow
                   </Text>
                 </Pressable>
-                <View className="w-1/2">
+                <View
+                  style={{
+                    width: 0.5,
+                    backgroundColor: "rgba(60,60,67,0.36)",
+                  }}
+                />
+                <View className="flex-1">
                   <Pressable
-                    className="w-full border-l border-[#3c3c43]/30 py-3"
+                    className="flex-1 items-center justify-center"
                     onPress={handleNotificationPermission}
                     hitSlop={40}
                     disabled={isLoading}
                   >
                     <Text
-                      className={`text-center text-lg font-bold ${
+                      className={`text-[17px] font-semibold ${
                         isLoading ? "text-blue-500/50" : "text-blue-500"
                       }`}
                     >
@@ -125,7 +158,7 @@ export default function NotificationsScreen() {
                   </Animated.View>
                 </View>
               </View>
-            </View>
+            </BlurView>
           </View>
         </View>
 

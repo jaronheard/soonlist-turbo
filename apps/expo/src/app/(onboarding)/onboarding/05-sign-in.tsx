@@ -48,22 +48,18 @@ export default function OnboardingSignInScreen() {
           </View>
         )}
 
-        {trial === "true" && (
-          <View className="rounded-2xl bg-interactive-2 px-6 py-4">
-            <Text className="text-center text-lg font-bold text-neutral-1">
-              Try saving 3 events for free
-            </Text>
-            <Text className="text-center text-base text-neutral-1">
-              Create your account to get started
-            </Text>
-          </View>
-        )}
 
         {showFollowBanner && <FollowContextBanner />}
       </View>
     ) : null;
 
-  return <SignInWithOAuth banner={banner} />;
+  return (
+    <SignInWithOAuth
+      banner={banner}
+      headline="Start your Soonlist"
+      subtitle="Sign up to capture every event in one place"
+    />
+  );
 }
 
 // Export Expo Router's error boundary

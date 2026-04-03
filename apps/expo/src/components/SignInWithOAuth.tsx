@@ -39,9 +39,12 @@ WebBrowser.maybeCompleteAuthSession();
 
 interface SignInWithOAuthProps {
   banner?: React.ReactNode;
+  headline?: React.ReactNode;
+  subtitle?: string;
+  hideImage?: boolean;
 }
 
-const SignInWithOAuth = ({ banner }: SignInWithOAuthProps) => {
+const SignInWithOAuth = ({ banner, headline, subtitle, hideImage }: SignInWithOAuthProps) => {
   useWarmUpBrowser();
   const posthog = usePostHog();
   const convex = useConvex();
@@ -322,25 +325,32 @@ const SignInWithOAuth = ({ banner }: SignInWithOAuthProps) => {
             </View>
             <View className="items-center">
               <Text className="mb-2 text-center font-heading text-4xl font-bold text-gray-700">
-                Turn screenshots into{" "}
-                <Text className="text-interactive-1">plans</Text>
+                {headline ?? (
+                  <>
+                    Turn screenshots into{" "}
+                    <Text className="text-interactive-1">plans</Text>
+                  </>
+                )}
               </Text>
               <Text className="mb-4 text-center text-lg text-gray-500">
-                Save events in one tap. All in one place.
+                {subtitle ?? "Save events in one tap, all in one shareable list"}
               </Text>
             </View>
           </View>
 
-          <View className="flex-1 justify-center">
-            <ExpoImage
-              // eslint-disable-next-line @typescript-eslint/consistent-type-assertions, @typescript-eslint/no-require-imports
-              source={require("../assets/feed.png") as ImageSourcePropType}
-              style={{ width: "100%", height: "100%" }}
-              contentFit="contain"
-              cachePolicy="disk"
-              transition={100}
-            />
-          </View>
+          {!hideImage && (
+            <View className="flex-1 justify-center">
+              <ExpoImage
+                // eslint-disable-next-line @typescript-eslint/consistent-type-assertions, @typescript-eslint/no-require-imports
+                source={require("../assets/feed.png") as ImageSourcePropType}
+                style={{ width: "100%", height: "100%" }}
+                contentFit="contain"
+                cachePolicy="disk"
+                transition={100}
+              />
+            </View>
+          )}
+          {hideImage && <View className="flex-1" />}
 
           {oauthError && (
             <View className="mb-4 rounded-lg bg-red-100 p-4">
@@ -360,7 +370,7 @@ const SignInWithOAuth = ({ banner }: SignInWithOAuthProps) => {
               className="relative flex-row items-center justify-center rounded-full border border-gray-300 bg-white px-6 py-3 active:opacity-70"
             >
               <Text className="text-base font-medium text-gray-700">
-                Other Options
+                More ways to sign up
               </Text>
               {showOtherOptions && (
                 <View className="absolute right-6">

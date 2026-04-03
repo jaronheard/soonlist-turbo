@@ -82,6 +82,8 @@ function FollowingEmptyState() {
   const { user } = useUser();
   const posthog = usePostHog();
   const username = user?.username ?? "";
+  const boardSubtitle = useAppStore((s) => s.boardSubtitle);
+  const showBoardSubtitle = useAppStore((s) => s.showBoardSubtitle);
 
   const handleInvite = async () => {
     void Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
@@ -118,23 +120,49 @@ function FollowingEmptyState() {
       style={{ flex: 1, backgroundColor: "#F4F1FF" }}
       contentContainerStyle={{
         flexGrow: 1,
-        justifyContent: "center",
-        alignItems: "center",
-        paddingHorizontal: 32,
-        paddingBottom: 120,
       }}
     >
+      <View className="px-3 pb-2" style={{ marginTop: -4 }}>
+        {showBoardSubtitle && boardSubtitle.length > 0 && (
+          <Text
+            className="mb-1 text-base font-medium text-neutral-2"
+            style={{ paddingLeft: 6 }}
+          >
+            {boardSubtitle}
+          </Text>
+        )}
+      </View>
+      <View
+        style={{
+          flex: 1,
+          justifyContent: "center",
+          alignItems: "center",
+          paddingHorizontal: 32,
+          paddingBottom: 200,
+        }}
+      >
       <Text
         style={{
           fontSize: 18,
           fontWeight: "600",
           color: "#627496",
           textAlign: "center",
-          marginBottom: 24,
+          marginBottom: 8,
           lineHeight: 26,
         }}
       >
-        Events from lists you follow will appear here
+        Your scene starts with a list
+      </Text>
+      <Text
+        style={{
+          fontSize: 15,
+          color: "#8E99A4",
+          textAlign: "center",
+          marginBottom: 24,
+          lineHeight: 22,
+        }}
+      >
+        Follow other lists to see their events here
       </Text>
       <TouchableOpacity
         onPress={() => void handleInvite()}
@@ -165,6 +193,7 @@ function FollowingEmptyState() {
           </Text>
         </View>
       </TouchableOpacity>
+      </View>
     </ScrollView>
   );
 }
@@ -279,7 +308,7 @@ function FollowingFeedContent() {
       <View className="px-3 pb-2" style={{ marginTop: -4 }}>
         {showBoardSubtitle && boardSubtitle.length > 0 && (
           <Text
-            className="mb-1 text-base font-medium text-neutral-1"
+            className="mb-1 text-base font-medium text-neutral-2"
             style={{ paddingLeft: 6 }}
           >
             {boardSubtitle}

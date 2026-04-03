@@ -263,7 +263,7 @@ export default function PaywallScreen() {
             {/* Try Free Button */}
             <Pressable onPress={handleSkip} className="py-2">
               <Text className="text-center text-white/80 underline">
-                Try 3 events free
+                Continue for free
               </Text>
             </Pressable>
           </View>

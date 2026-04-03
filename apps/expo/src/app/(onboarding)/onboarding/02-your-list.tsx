@@ -1,93 +1,153 @@
-import React from "react";
+import React, { useMemo } from "react";
 import { Pressable, Text, View } from "react-native";
+import { SymbolView } from "expo-symbols";
 import { router } from "expo-router";
 
+import type { EventWithSimilarity } from "~/utils/similarEvents";
 import { QuestionContainer } from "~/components/QuestionContainer";
+import UserEventsList from "~/components/UserEventsList";
+import { usePendingFollowUsername } from "~/store";
 
-function FakeEventRow({
-  emoji,
-  name,
-  date,
-}: {
-  emoji: string;
-  name: string;
-  date: string;
-}) {
-  return (
-    <View className="flex-row items-center border-b border-gray-100 px-4 py-3">
-      <View className="mr-3 h-10 w-10 items-center justify-center rounded-xl bg-interactive-1/10">
-        <Text className="text-lg">{emoji}</Text>
-      </View>
-      <View className="flex-1">
-        <Text className="text-base font-semibold text-gray-700">{name}</Text>
-        <Text className="text-sm text-gray-400">{date}</Text>
-      </View>
-    </View>
-  );
+function makeDemoEvent(
+  id: string,
+  name: string,
+  startDate: string,
+  startTime: string,
+  endTime: string,
+  location: string,
+  category: string,
+): EventWithSimilarity {
+  const startDateTime = `${startDate}T${startTime}:00-07:00`;
+  const endDateTime = `${startDate}T${endTime}:00-07:00`;
+  // Demo events use mock data that doesn't fully match Convex branded types
+  // eslint-disable-next-line @typescript-eslint/consistent-type-assertions
+  return {
+    event: {
+      _id: id,
+      _creationTime: Date.now(),
+      id,
+      userId: "demo-user",
+      userName: "you",
+      event: {
+        name,
+        startDate,
+        endDate: startDate,
+        startTime,
+        endTime,
+        timeZone: "America/Los_Angeles",
+        location,
+        images: [],
+      },
+      eventMetadata: { category },
+      name,
+      image: null,
+      location,
+      startDate,
+      endDate: startDate,
+      startTime,
+      endTime,
+      timeZone: "America/Los_Angeles",
+      startDateTime,
+      endDateTime,
+      visibility: "public",
+      created_at: new Date().toISOString(),
+      updatedAt: null,
+      user: {
+        id: "demo-user",
+        username: "you",
+        displayName: "You",
+        userImage: null,
+      },
+      eventFollows: [],
+      comments: [],
+      eventToLists: [],
+      lists: [],
+    },
+    similarEvents: [],
+  } as unknown as EventWithSimilarity;
 }
 
+const DEMO_EVENTS: EventWithSimilarity[] = [
+  makeDemoEvent(
+    "demo-1",
+    "Rooftop Sunset DJ Set",
+    "2025-03-22",
+    "18:00",
+    "22:00",
+    "The Hoxton, Portland",
+    "music",
+  ),
+  makeDemoEvent(
+    "demo-2",
+    "Spring Art Walk",
+    "2025-03-22",
+    "12:00",
+    "16:00",
+    "Pearl District",
+    "arts",
+  ),
+  makeDemoEvent(
+    "demo-3",
+    "Live Jazz & Open Mic",
+    "2025-03-21",
+    "20:00",
+    "23:00",
+    "Doug Fir Lounge",
+    "music",
+  ),
+];
+
 export default function YourListScreen() {
+  const pendingFollowUsername = usePendingFollowUsername();
+  const totalSteps = pendingFollowUsername ? 6 : 5;
+  const groupedEvents = useMemo(() => DEMO_EVENTS, []);
+
   const handleContinue = () => {
     router.navigate("/(onboarding)/onboarding/03-notifications");
   };
 
   return (
     <QuestionContainer
-      question="Share your list with anyone"
-      subtitle="Your events become a shareable page — no app needed"
+      question="Meet your Soonlist"
+      subtitle="All in one place. Share with just a link."
       currentStep={2}
-      totalSteps={6}
+      totalSteps={totalSteps}
     >
       <View className="flex-1 justify-between">
-        <View className="flex-1 justify-center">
-          {/* Fake shareable list card */}
-          <View className="mx-2 overflow-hidden rounded-2xl bg-white">
-            {/* URL bar */}
-            <View className="flex-row items-center bg-gray-50 px-4 py-2.5">
-              <View className="mr-2 h-4 w-4 items-center justify-center rounded-full bg-gray-300">
-                <Text className="text-[8px] text-white">{"🔒"}</Text>
-              </View>
-              <Text className="flex-1 text-sm text-gray-500">
-                soonlist.com/you/events
-              </Text>
-            </View>
-
-            {/* Event rows */}
-            <FakeEventRow
-              emoji={"🎵"}
-              name="Rooftop Sunset DJ Set"
-              date="Sat, Mar 22 · 6:00 PM"
+        <View
+          className="-mx-2 flex-1 overflow-hidden rounded-2xl bg-interactive-3"
+          style={{
+            borderWidth: 3,
+            borderColor: "#FFFFFF",
+          }}
+        >
+          {/* Share hint */}
+          <View className="flex-row items-center justify-between bg-interactive-2 px-4 py-2">
+            <Text className="text-sm font-semibold text-interactive-1">
+              soonlist.com/you
+            </Text>
+            <SymbolView name="square.and.arrow.up" size={16} tintColor="#5A32FB" />
+          </View>
+          <View style={{ marginLeft: -6, marginRight: 6 }} className="flex-1">
+            <UserEventsList
+              groupedEvents={groupedEvents}
+              demoMode={true}
+              showCreator="never"
+              // eslint-disable-next-line @typescript-eslint/no-empty-function
+              onEndReached={() => {}}
+              isFetchingNextPage={false}
             />
-            <FakeEventRow
-              emoji={"🎨"}
-              name="Spring Art Walk"
-              date="Sat, Mar 22 · 12:00 PM"
-            />
-            <FakeEventRow
-              emoji={"🎭"}
-              name="Live Jazz & Open Mic"
-              date="Fri, Mar 21 · 8:00 PM"
-            />
-
-            {/* Follower avatars */}
-            <View className="flex-row items-center px-4 py-3">
-              <View className="flex-row -space-x-2">
-                <View className="h-8 w-8 items-center justify-center rounded-full border-2 border-white bg-interactive-1">
-                  <Text className="text-xs font-bold text-white">A</Text>
-                </View>
-                <View className="h-8 w-8 items-center justify-center rounded-full border-2 border-white bg-interactive-2">
-                  <Text className="text-xs font-bold text-neutral-1">B</Text>
-                </View>
-                <View className="h-8 w-8 items-center justify-center rounded-full border-2 border-white bg-gray-300">
-                  <Text className="text-xs font-bold text-gray-600">C</Text>
-                </View>
-              </View>
-              <Text className="ml-3 text-sm text-gray-500">
-                3 followers see your events
-              </Text>
-            </View>
           </View>
         </View>
+
+        <View className="h-4" />
+
+        {/* Referral follow note */}
+        {pendingFollowUsername && (
+          <Text className="mb-2 text-center text-sm font-medium text-white/80">
+            You'll follow @{pendingFollowUsername}'s events after sign-up
+          </Text>
+        )}
 
         <Pressable
           onPress={handleContinue}

@@ -237,13 +237,13 @@ export const useAppStore = create<AppState>()(
 
       // Tab label preferences
       myListLabel: "My Soonlist",
-      boardLabel: "Board",
-      headerStyle: "possessive",
+      boardLabel: "My Scene",
+      headerStyle: "my",
       myListIcon: "list.bullet",
       boardIcon: "person.2",
       shortenMyListTab: false,
       showContributingBadge: true,
-      myListSubtitle: "Events I'm keeping track of",
+      myListSubtitle: "Events I'm tracking",
       boardSubtitle: "Events from lists I follow",
       showMyListSubtitle: true,
       showBoardSubtitle: true,
@@ -437,13 +437,13 @@ export const useAppStore = create<AppState>()(
           intentParams: null,
           preferredCalendarApp: null,
           myListLabel: "My Soonlist",
-          boardLabel: "Board",
-          headerStyle: "possessive",
+          boardLabel: "My Scene",
+          headerStyle: "my",
           myListIcon: "list.bullet",
           boardIcon: "person.2",
           shortenMyListTab: false,
           showContributingBadge: true,
-          myListSubtitle: "Events I'm keeping track of",
+          myListSubtitle: "Events I'm tracking",
           boardSubtitle: "Events from lists I follow",
           showMyListSubtitle: true,
           showBoardSubtitle: true,
@@ -604,7 +604,18 @@ export const useAppStore = create<AppState>()(
     }),
     {
       name: "app-storage",
+      version: 1,
       storage: createJSONStorage(() => AsyncStorage),
+      migrate: (persistedState, version) => {
+        const state = persistedState as Record<string, unknown>;
+        if (version === 0) {
+          // v1: Update defaults for onboarding redesign
+          state.headerStyle = "my";
+          state.boardLabel = "My Scene";
+          state.myListSubtitle = "Events I'm tracking";
+        }
+        return state as AppState;
+      },
       // Do not persist ephemeral flags like discoverAccessOverride
       partialize: (state) => {
         // eslint-disable-next-line @typescript-eslint/no-unused-vars

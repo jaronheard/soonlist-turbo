@@ -12,6 +12,8 @@ export default function FeedLayout() {
   const { user } = useUser();
   const myListLabel = useAppStore((s) => s.myListLabel);
   const headerStyle = useAppStore((s) => s.headerStyle);
+  const myListSubtitle = useAppStore((s) => s.myListSubtitle);
+  const showMyListSubtitle = useAppStore((s) => s.showMyListSubtitle);
 
   // Strip "My " prefix to get the base noun: "My List" → "List", "My Soonlist" → "Soonlist"
   const baseNoun = myListLabel.replace(/^My\s+/, "");
