@@ -24,6 +24,9 @@ export const hapticLight = () =>
 export const hapticMedium = () =>
   Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
 
+export const hapticHeavy = () =>
+  Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy);
+
 export const hapticSelection = () => Haptics.selectionAsync();
 
 // Toast notifications using burnt (native iOS SPIndicator)

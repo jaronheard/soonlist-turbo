@@ -9,7 +9,7 @@ import { api } from "@soonlist/backend/convex/_generated/api";
 
 import { Logo } from "~/components/Logo";
 import { usePendingFollowUsername, useSetHasSeenOnboarding } from "~/store";
-import { hapticMedium } from "~/utils/feedback";
+import { hapticLight, hapticMedium } from "~/utils/feedback";
 
 const AnimatedView = Animated.createAnimatedComponent(View);
 
@@ -135,6 +135,7 @@ export default function WelcomeScreen() {
   const setHasSeenOnboarding = useSetHasSeenOnboarding();
 
   const handleSignIn = () => {
+    void hapticLight();
     // Mark as seen onboarding so they skip it after sign-in
     setHasSeenOnboarding(true);
 
@@ -184,7 +185,7 @@ export default function WelcomeScreen() {
             {/* Get Started Button */}
             <Pressable
               onPress={handleGetStarted}
-              className="mb-3 rounded-full bg-interactive-1 py-4"
+              className="mb-3 rounded-full bg-interactive-1 py-4 active:scale-[0.98] active:bg-interactive-1/90"
             >
               <Text className="text-center text-lg font-semibold text-white">
                 Get Started

@@ -10,7 +10,12 @@ import { QuestionContainer } from "~/components/QuestionContainer";
 import { UserEventListItem } from "~/components/UserEventsList";
 import { useOnboarding } from "~/hooks/useOnboarding";
 import { usePendingFollowUsername } from "~/store";
-import { hapticLight, hapticMedium, hapticSuccess } from "~/utils/feedback";
+import {
+  hapticHeavy,
+  hapticLight,
+  hapticMedium,
+  hapticSuccess,
+} from "~/utils/feedback";
 
 // eslint-disable-next-line @typescript-eslint/no-require-imports, @typescript-eslint/no-unsafe-assignment
 const lloydMallCrawlImage = require("../../../assets/demo-lloyd-mall-crawl.webp");
@@ -139,7 +144,8 @@ export default function TryItScreen() {
     startCapturingHaptics();
     setTimeout(() => {
       stopCapturingHaptics();
-      void hapticSuccess();
+      void hapticHeavy();
+      setTimeout(() => void hapticSuccess(), 100);
       setPhase("result");
     }, 1500);
   }, [startCapturingHaptics, stopCapturingHaptics]);
@@ -198,7 +204,7 @@ export default function TryItScreen() {
           <Animated.View entering={FadeIn.duration(300)} className="mt-4">
             <Pressable
               onPress={handleCapture}
-              className="rounded-full bg-white py-4"
+              className="rounded-full bg-white py-4 active:scale-[0.98] active:bg-neutral-100"
             >
               <View className="flex-row items-center justify-center">
                 <PlusIcon size={24} color="#5A32FB" strokeWidth={2} />
@@ -214,7 +220,7 @@ export default function TryItScreen() {
           <Animated.View entering={FadeIn.delay(500).duration(300)} className="mt-4">
             <Pressable
               onPress={handleContinue}
-              className="rounded-full bg-white py-4"
+              className="rounded-full bg-white py-4 active:scale-[0.98] active:bg-neutral-100"
             >
               <Text className="text-center text-lg font-semibold text-interactive-1">
                 Continue

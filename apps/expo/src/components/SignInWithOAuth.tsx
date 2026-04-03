@@ -368,7 +368,7 @@ const SignInWithOAuth = ({ banner, headline, subtitle, hideImage, imageSource }:
             <View className="h-3" />
             <Pressable
               onPress={toggleOtherOptions}
-              className="relative flex-row items-center justify-center rounded-full border border-gray-300 bg-white px-6 py-3 active:opacity-70"
+              className="relative flex-row items-center justify-center rounded-full border border-gray-300 bg-white px-6 py-3 active:scale-[0.98] active:bg-neutral-100"
             >
               <Text className="text-base font-medium text-gray-700">
                 More ways to sign up

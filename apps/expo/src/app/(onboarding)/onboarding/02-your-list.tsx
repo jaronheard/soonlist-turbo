@@ -166,7 +166,7 @@ export default function YourListScreen() {
 
         <Pressable
           onPress={handleContinue}
-          className="rounded-full bg-white py-4"
+          className="rounded-full bg-white py-4 active:scale-[0.98] active:bg-neutral-100"
         >
           <Text className="text-center text-lg font-semibold text-interactive-1">
             Continue

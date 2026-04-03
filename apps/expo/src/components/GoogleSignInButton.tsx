@@ -3,6 +3,8 @@ import React from "react";
 import { Pressable, Text, View } from "react-native";
 import { Image } from "expo-image";
 
+import { hapticMedium } from "~/utils/feedback";
+
 interface GoogleSignInButtonProps {
   onPress: () => void;
 }
@@ -13,7 +15,10 @@ export const GoogleSignInButton: React.FC<GoogleSignInButtonProps> = ({
   return (
     <Pressable
       className="rounded-full border border-gray-300 bg-white py-3 active:scale-[0.98] active:bg-neutral-100"
-      onPress={onPress}
+      onPress={() => {
+        void hapticMedium();
+        onPress();
+      }}
     >
       <View className="flex-row items-center justify-center">
         <Image
