@@ -82,9 +82,6 @@ function FollowingEmptyState() {
   const { user } = useUser();
   const posthog = usePostHog();
   const username = user?.username ?? "";
-  const boardSubtitle = useAppStore((s) => s.boardSubtitle);
-  const showBoardSubtitle = useAppStore((s) => s.showBoardSubtitle);
-
   const handleInvite = async () => {
     void Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
 
@@ -123,14 +120,12 @@ function FollowingEmptyState() {
       }}
     >
       <View className="px-3 pb-2" style={{ marginTop: -4 }}>
-        {showBoardSubtitle && boardSubtitle.length > 0 && (
-          <Text
-            className="mb-1 text-base font-medium text-neutral-2"
-            style={{ paddingLeft: 6 }}
-          >
-            {boardSubtitle}
-          </Text>
-        )}
+        <Text
+          className="mb-1 text-base font-medium text-neutral-2"
+          style={{ paddingLeft: 6 }}
+        >
+          Events from lists I follow
+        </Text>
       </View>
       <View
         style={{
@@ -203,9 +198,6 @@ function FollowingFeedContent() {
   const [selectedSegment, setSelectedSegment] = useState<Segment>("upcoming");
   const [isModalVisible, setIsModalVisible] = useState(false);
   const stableTimestamp = useStableTimestamp();
-  const myListIcon = useAppStore((s) => s.myListIcon);
-  const boardSubtitle = useAppStore((s) => s.boardSubtitle);
-  const showBoardSubtitle = useAppStore((s) => s.showBoardSubtitle);
 
   // Check if user is following any lists
   const followedLists = useQuery(api.lists.getFollowedLists);
@@ -306,14 +298,12 @@ function FollowingFeedContent() {
   const HeaderComponent = useCallback(() => {
     return (
       <View className="px-3 pb-2" style={{ marginTop: -4 }}>
-        {showBoardSubtitle && boardSubtitle.length > 0 && (
-          <Text
-            className="mb-1 text-base font-medium text-neutral-2"
-            style={{ paddingLeft: 6 }}
-          >
-            {boardSubtitle}
-          </Text>
-        )}
+        <Text
+          className="mb-1 text-base font-medium text-neutral-2"
+          style={{ paddingLeft: 6 }}
+        >
+          Events from lists I follow
+        </Text>
         {followedListCount > 0 && (
           <TouchableOpacity
             onPress={() => {
@@ -332,7 +322,7 @@ function FollowingFeedContent() {
           >
             <View className="flex-row items-center">
               <Text className="text-sm text-neutral-2">Includes: </Text>
-              <SymbolView name={myListIcon} size={14} tintColor="#5A32FB" />
+              <SymbolView name="list.bullet" size={14} tintColor="#5A32FB" />
               <Text className="text-sm font-semibold text-interactive-1">
                 {" "}
                 {singleFollowedList
@@ -373,9 +363,6 @@ function FollowingFeedContent() {
     followedListCount,
     singleFollowedList,
     handleShareList,
-    myListIcon,
-    boardSubtitle,
-    showBoardSubtitle,
   ]);
 
   // Show empty state if not following any lists

@@ -4,34 +4,11 @@ import { Stack } from "expo-router";
 import { useUser } from "@clerk/clerk-expo";
 
 import { ProfileMenu } from "~/components/ProfileMenu";
-import { useAppStore } from "~/store";
 import Config from "~/utils/config";
 import { logError } from "~/utils/errorLogging";
 
 export default function FeedLayout() {
   const { user } = useUser();
-  const myListLabel = useAppStore((s) => s.myListLabel);
-  const headerStyle = useAppStore((s) => s.headerStyle);
-  const myListSubtitle = useAppStore((s) => s.myListSubtitle);
-  const showMyListSubtitle = useAppStore((s) => s.showMyListSubtitle);
-
-  // Strip "My " prefix to get the base noun: "My List" → "List", "My Soonlist" → "Soonlist"
-  const baseNoun = myListLabel.replace(/^My\s+/, "");
-
-  const headerTitle = (() => {
-    switch (headerStyle) {
-      case "possessive":
-        return user?.firstName
-          ? `${user.firstName}'s ${baseNoun}`
-          : `My ${baseNoun}`;
-      case "my":
-        return `My ${baseNoun}`;
-      case "your":
-        return `Your ${baseNoun}`;
-      case "plain":
-        return baseNoun;
-    }
-  })();
 
   const handleShareEvents = useCallback(async () => {
     const shareUrl = `${Config.apiBaseUrl}/${user?.username ?? ""}`;
@@ -56,7 +33,7 @@ export default function FeedLayout() {
       <Stack.Screen
         name="index"
         options={{
-          title: headerTitle,
+          title: "My Soonlist",
           unstable_headerRightItems: () => [
             {
               type: "button",

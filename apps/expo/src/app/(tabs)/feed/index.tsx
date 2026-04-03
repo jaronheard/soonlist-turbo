@@ -99,9 +99,6 @@ function MyFeedContent() {
   const contributingCount = contributingLists?.length ?? 0;
   const singleContributingList =
     contributingCount === 1 ? contributingLists?.[0] : null;
-  const myListIcon = useAppStore((s) => s.myListIcon);
-  const myListSubtitle = useAppStore((s) => s.myListSubtitle);
-  const showMyListSubtitle = useAppStore((s) => s.showMyListSubtitle);
 
   // Memoize query args - changes when segment changes, triggering refetch
   const queryArgs = useMemo(() => {
@@ -187,14 +184,12 @@ function MyFeedContent() {
   const HeaderComponent = useCallback(() => {
     return (
       <View className="px-3 pb-2" style={{ marginTop: -4 }}>
-        {showMyListSubtitle && myListSubtitle.length > 0 && (
-          <Text
-            className="mb-1 text-base font-medium text-neutral-2"
-            style={{ paddingLeft: 6 }}
-          >
-            {myListSubtitle}
-          </Text>
-        )}
+        <Text
+          className="mb-1 text-base font-medium text-neutral-2"
+          style={{ paddingLeft: 6 }}
+        >
+          Events I&apos;m tracking
+        </Text>
         {contributingCount > 0 && (
           <View
             className="mb-2 flex-row items-center"
@@ -203,7 +198,7 @@ function MyFeedContent() {
             <Text className="text-sm text-neutral-2">
               Sharing public events to:{" "}
             </Text>
-            <SymbolView name={myListIcon} size={14} tintColor="#5A32FB" />
+            <SymbolView name="list.bullet" size={14} tintColor="#5A32FB" />
             <Text className="text-sm font-semibold text-interactive-1">
               {" "}
               {singleContributingList
@@ -242,9 +237,6 @@ function MyFeedContent() {
     handleSegmentChange,
     contributingCount,
     singleContributingList,
-    myListIcon,
-    myListSubtitle,
-    showMyListSubtitle,
   ]);
 
   return (

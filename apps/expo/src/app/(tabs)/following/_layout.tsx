@@ -4,46 +4,19 @@ import { Stack } from "expo-router";
 import { useUser } from "@clerk/clerk-expo";
 
 import { ProfileMenu } from "~/components/ProfileMenu";
-import { useAppStore } from "~/store";
-import Config from "~/utils/config";
 
 export default function FollowingLayout() {
   const { user } = useUser();
-  const boardLabel = useAppStore((s) => s.boardLabel);
-  const headerStyle = useAppStore((s) => s.headerStyle);
-  const boardSubtitle = useAppStore((s) => s.boardSubtitle);
-  const showBoardSubtitle = useAppStore((s) => s.showBoardSubtitle);
-
-  // URL path matches the board label
-  const boardUrlPath = boardLabel.toLowerCase().replace(/\s+/g, "-");
-
-  const headerTitle = (() => {
-    switch (headerStyle) {
-      case "possessive":
-        if (boardLabel.startsWith("My ")) return boardLabel;
-        return user?.firstName
-          ? `${user.firstName}'s ${boardLabel}`
-          : `My ${boardLabel}`;
-      case "my":
-        if (boardLabel.startsWith("My ")) return boardLabel;
-        return `My ${boardLabel}`;
-      case "your":
-        if (boardLabel.startsWith("My ")) return boardLabel;
-        return `Your ${boardLabel}`;
-      case "plain":
-        return boardLabel;
-    }
-  })();
 
   const handleShare = useCallback(async () => {
     try {
       await Share.share({
-        url: `https://soonlist.com/${user?.username ?? ""}/${boardUrlPath}`,
+        url: `https://soonlist.com/${user?.username ?? ""}/my-scene`,
       });
     } catch {
       // ignore
     }
-  }, [user?.username, boardUrlPath]);
+  }, [user?.username]);
 
   return (
     <Stack
@@ -59,7 +32,7 @@ export default function FollowingLayout() {
       <Stack.Screen
         name="index"
         options={{
-          title: headerTitle,
+          title: "My Scene",
           unstable_headerRightItems: () => [
             {
               type: "button",

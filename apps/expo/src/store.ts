@@ -71,29 +71,6 @@ interface AddEventInputState extends CommonEventInputState {
 // State specific to the /new route (share extension)
 type NewEventInputState = CommonEventInputState;
 
-export type MyListLabel = "My List" | "My Soonlist" | "My Events";
-export type BoardLabel =
-  | "Board"
-  | "Community Board"
-  | "Radar"
-  | "Scene"
-  | "My Scene";
-export type HeaderStyle = "possessive" | "my" | "your" | "plain";
-export type MyListIcon =
-  | "list.bullet"
-  | "clock"
-  | "calendar"
-  | "star"
-  | "bookmark"
-  | "heart";
-export type BoardIcon =
-  | "person.2"
-  | "person.3"
-  | "dot.radiowaves.left.and.right"
-  | "theatermasks"
-  | "globe"
-  | "sparkles";
-
 interface AppState {
   filter: "upcoming" | "past";
   intentParams: { text?: string; imageUri?: string } | null;
@@ -101,30 +78,6 @@ interface AppState {
   setIntentParams: (
     params: { text?: string; imageUri?: string } | null,
   ) => void;
-
-  // Tab label preferences
-  myListLabel: MyListLabel;
-  boardLabel: BoardLabel;
-  headerStyle: HeaderStyle;
-  myListIcon: MyListIcon;
-  boardIcon: BoardIcon;
-  shortenMyListTab: boolean;
-  showContributingBadge: boolean;
-  myListSubtitle: string;
-  boardSubtitle: string;
-  showMyListSubtitle: boolean;
-  showBoardSubtitle: boolean;
-  setShortenMyListTab: (shorten: boolean) => void;
-  setShowContributingBadge: (show: boolean) => void;
-  setMyListSubtitle: (subtitle: string) => void;
-  setBoardSubtitle: (subtitle: string) => void;
-  setShowMyListSubtitle: (show: boolean) => void;
-  setShowBoardSubtitle: (show: boolean) => void;
-  setMyListLabel: (label: MyListLabel) => void;
-  setBoardLabel: (label: BoardLabel) => void;
-  setHeaderStyle: (style: HeaderStyle) => void;
-  setMyListIcon: (icon: MyListIcon) => void;
-  setBoardIcon: (icon: BoardIcon) => void;
 
   // Calendar preferences
   preferredCalendarApp: CalendarApp | null;
@@ -234,30 +187,6 @@ export const useAppStore = create<AppState>()(
       userPriority: null,
       userTimezone: getUserTimeZone(),
       hasShownTimezoneAlert: false,
-
-      // Tab label preferences
-      myListLabel: "My Soonlist",
-      boardLabel: "My Scene",
-      headerStyle: "my",
-      myListIcon: "list.bullet",
-      boardIcon: "person.2",
-      shortenMyListTab: false,
-      showContributingBadge: true,
-      myListSubtitle: "Events I'm tracking",
-      boardSubtitle: "Events from lists I follow",
-      showMyListSubtitle: true,
-      showBoardSubtitle: true,
-      setShortenMyListTab: (shorten) => set({ shortenMyListTab: shorten }),
-      setShowContributingBadge: (show) => set({ showContributingBadge: show }),
-      setMyListSubtitle: (subtitle) => set({ myListSubtitle: subtitle }),
-      setBoardSubtitle: (subtitle) => set({ boardSubtitle: subtitle }),
-      setShowMyListSubtitle: (show) => set({ showMyListSubtitle: show }),
-      setShowBoardSubtitle: (show) => set({ showBoardSubtitle: show }),
-      setMyListLabel: (label) => set({ myListLabel: label }),
-      setBoardLabel: (label) => set({ boardLabel: label }),
-      setHeaderStyle: (style) => set({ headerStyle: style }),
-      setMyListIcon: (icon) => set({ myListIcon: icon }),
-      setBoardIcon: (icon) => set({ boardIcon: icon }),
 
       // Calendar preferences
       preferredCalendarApp: null,
@@ -436,17 +365,6 @@ export const useAppStore = create<AppState>()(
           filter: "upcoming",
           intentParams: null,
           preferredCalendarApp: null,
-          myListLabel: "My Soonlist",
-          boardLabel: "My Scene",
-          headerStyle: "my",
-          myListIcon: "list.bullet",
-          boardIcon: "person.2",
-          shortenMyListTab: false,
-          showContributingBadge: true,
-          myListSubtitle: "Events I'm tracking",
-          boardSubtitle: "Events from lists I follow",
-          showMyListSubtitle: true,
-          showBoardSubtitle: true,
           // Ensure discover override never persists across global reset
           discoverAccessOverride: false,
           addEventState: {
@@ -604,18 +522,7 @@ export const useAppStore = create<AppState>()(
     }),
     {
       name: "app-storage",
-      version: 1,
       storage: createJSONStorage(() => AsyncStorage),
-      migrate: (persistedState, version) => {
-        const state = persistedState as Record<string, unknown>;
-        if (version === 0) {
-          // v1: Update defaults for onboarding redesign
-          state.headerStyle = "my";
-          state.boardLabel = "My Scene";
-          state.myListSubtitle = "Events I'm tracking";
-        }
-        return state as AppState;
-      },
       // Do not persist ephemeral flags like discoverAccessOverride
       partialize: (state) => {
         // eslint-disable-next-line @typescript-eslint/no-unused-vars
