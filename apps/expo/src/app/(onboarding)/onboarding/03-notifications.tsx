@@ -16,7 +16,7 @@ import { useOnboarding } from "~/hooks/useOnboarding";
 import { useOneSignal } from "~/providers/OneSignalProvider";
 import { usePendingFollowUsername } from "~/store";
 import { logError } from "~/utils/errorLogging";
-import { toast } from "~/utils/feedback";
+import { hapticLight, toast } from "~/utils/feedback";
 
 export default function NotificationsScreen() {
   const { registerForPushNotifications, hasNotificationPermission } =
@@ -53,6 +53,7 @@ export default function NotificationsScreen() {
 
   const handleNotificationPermission = async () => {
     if (isLoading) return;
+    void hapticLight();
     setIsLoading(true);
 
     try {

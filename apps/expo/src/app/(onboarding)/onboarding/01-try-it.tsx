@@ -1,5 +1,6 @@
-import React, { useCallback, useEffect, useState } from "react";
+import React, { useCallback, useEffect, useRef, useState } from "react";
 import { ActivityIndicator, Pressable, Text, View } from "react-native";
+import * as Haptics from "expo-haptics";
 import { Image as ExpoImage } from "expo-image";
 import Animated, {
   FadeIn,
@@ -14,6 +15,7 @@ import { QuestionContainer } from "~/components/QuestionContainer";
 import { UserEventListItem } from "~/components/UserEventsList";
 import { useOnboarding } from "~/hooks/useOnboarding";
 import { usePendingFollowUsername } from "~/store";
+import { hapticLight, hapticMedium, hapticSuccess } from "~/utils/feedback";
 
 // eslint-disable-next-line @typescript-eslint/no-require-imports, @typescript-eslint/no-unsafe-assignment
 const lloydMallCrawlImage = require("../../../assets/demo-lloyd-mall-crawl.webp");
@@ -125,22 +127,61 @@ export default function TryItScreen() {
 
   const totalSteps = pendingFollowUsername ? 6 : 5;
 
+  // Escalating haptic pattern during "capturing" phase
+  const hapticIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
+
+  const startCapturingHaptics = useCallback(() => {
+    let step = 0;
+    const styles = [
+      Haptics.ImpactFeedbackStyle.Light,
+      Haptics.ImpactFeedbackStyle.Light,
+      Haptics.ImpactFeedbackStyle.Medium,
+      Haptics.ImpactFeedbackStyle.Medium,
+      Haptics.ImpactFeedbackStyle.Heavy,
+      Haptics.ImpactFeedbackStyle.Heavy,
+    ];
+    hapticIntervalRef.current = setInterval(() => {
+      const style = styles[Math.min(step, styles.length - 1)];
+      if (style !== undefined) {
+        void Haptics.impactAsync(style);
+      }
+      step++;
+    }, 250);
+  }, []);
+
+  const stopCapturingHaptics = useCallback(() => {
+    if (hapticIntervalRef.current) {
+      clearInterval(hapticIntervalRef.current);
+      hapticIntervalRef.current = null;
+    }
+  }, []);
+
+  // Clean up on unmount
+  useEffect(() => {
+    return () => stopCapturingHaptics();
+  }, [stopCapturingHaptics]);
+
   const handleCapture = useCallback(() => {
+    void hapticMedium();
     setPhase("parsing");
+    startCapturingHaptics();
     setTimeout(() => {
+      stopCapturingHaptics();
+      void hapticSuccess();
       setPhase("result");
       // Show fake notification after a brief delay
       setTimeout(() => {
         setShowNotification(true);
       }, 800);
     }, 1500);
-  }, []);
+  }, [startCapturingHaptics, stopCapturingHaptics]);
 
   const handleDismissNotification = useCallback(() => {
     setShowNotification(false);
   }, []);
 
   const handleContinue = () => {
+    void hapticLight();
     saveStep(
       "tryIt",
       {},

@@ -9,6 +9,7 @@ import { api } from "@soonlist/backend/convex/_generated/api";
 
 import { Logo } from "~/components/Logo";
 import { usePendingFollowUsername, useSetHasSeenOnboarding } from "~/store";
+import { hapticMedium } from "~/utils/feedback";
 
 const AnimatedView = Animated.createAnimatedComponent(View);
 
@@ -127,6 +128,7 @@ export default function WelcomeScreen() {
   const pendingFollowUsername = usePendingFollowUsername();
 
   const handleGetStarted = () => {
+    void hapticMedium();
     router.navigate("/(onboarding)/onboarding/01-try-it");
   };
 
@@ -176,7 +178,7 @@ export default function WelcomeScreen() {
           )}
 
           <AnimatedView
-            className="relative w-full shrink-0"
+            className="relative mt-4 w-full shrink-0"
             layout={Layout.duration(400)}
           >
             {/* Get Started Button */}

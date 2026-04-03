@@ -361,7 +361,7 @@ const SignInWithOAuth = ({ banner, headline, subtitle, hideImage, imageSource }:
             </View>
           )}
 
-          <View className="relative w-full shrink-0">
+          <View className="relative mt-4 w-full shrink-0">
             <AppleSignInButton
               onPress={() => void handleOAuthFlow("oauth_apple")}
             />

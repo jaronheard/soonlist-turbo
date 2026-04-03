@@ -9,6 +9,7 @@ import type { EventWithSimilarity } from "~/utils/similarEvents";
 import { QuestionContainer } from "~/components/QuestionContainer";
 import UserEventsList from "~/components/UserEventsList";
 import { usePendingFollowUsername } from "~/store";
+import { hapticLight } from "~/utils/feedback";
 
 // eslint-disable-next-line @typescript-eslint/no-require-imports, @typescript-eslint/no-unsafe-assignment
 const lloydMallCrawlImage: ImageSource = require("../../../assets/demo-lloyd-mall-crawl.webp");
@@ -116,6 +117,7 @@ export default function YourListScreen() {
   const groupedEvents = useMemo(() => DEMO_EVENTS, []);
 
   const handleContinue = () => {
+    void hapticLight();
     router.navigate("/(onboarding)/onboarding/03-notifications");
   };
 
