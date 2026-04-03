@@ -2,15 +2,10 @@ import React, { useCallback, useEffect, useRef, useState } from "react";
 import { ActivityIndicator, Pressable, Text, View } from "react-native";
 import * as Haptics from "expo-haptics";
 import { Image as ExpoImage } from "expo-image";
-import Animated, {
-  FadeIn,
-  SlideInUp,
-  SlideOutUp,
-} from "react-native-reanimated";
+import Animated, { FadeIn } from "react-native-reanimated";
 
 import type { Event } from "~/components/UserEventsList";
 import { PlusIcon } from "~/components/icons";
-import { NotificationBanner } from "~/components/NotificationBanner";
 import { QuestionContainer } from "~/components/QuestionContainer";
 import { UserEventListItem } from "~/components/UserEventsList";
 import { useOnboarding } from "~/hooks/useOnboarding";
@@ -20,7 +15,7 @@ import { hapticLight, hapticMedium, hapticSuccess } from "~/utils/feedback";
 // eslint-disable-next-line @typescript-eslint/no-require-imports, @typescript-eslint/no-unsafe-assignment
 const lloydMallCrawlImage = require("../../../assets/demo-lloyd-mall-crawl.webp");
 
-type Phase = "screenshot" | "parsing" | "result" | "notification";
+type Phase = "screenshot" | "parsing" | "result";
 
 function SampleScreenshot() {
   return (
@@ -97,33 +92,10 @@ const DEMO_EVENT = {
   lists: [],
 } as unknown as Event;
 
-function FakeNotificationBanner({ onDismiss }: { onDismiss: () => void }) {
-  useEffect(() => {
-    const timer = setTimeout(onDismiss, 3000);
-    return () => clearTimeout(timer);
-  }, [onDismiss]);
-
-  return (
-    <Animated.View
-      entering={SlideInUp.duration(400)}
-      exiting={SlideOutUp.duration(300)}
-      className="absolute left-0 right-0 top-0 z-50"
-    >
-      <NotificationBanner
-        title="Soonlist"
-        subtitle="Lloyd Mall Crawl saved!"
-        body="Sat, Jul 12 at 12:00 PM"
-        onPress={onDismiss}
-      />
-    </Animated.View>
-  );
-}
-
 export default function TryItScreen() {
   const [phase, setPhase] = useState<Phase>("screenshot");
   const { saveStep } = useOnboarding();
   const pendingFollowUsername = usePendingFollowUsername();
-  const [showNotification, setShowNotification] = useState(false);
 
   const totalSteps = pendingFollowUsername ? 6 : 5;
 
@@ -169,16 +141,8 @@ export default function TryItScreen() {
       stopCapturingHaptics();
       void hapticSuccess();
       setPhase("result");
-      // Show fake notification after a brief delay
-      setTimeout(() => {
-        setShowNotification(true);
-      }, 800);
     }, 1500);
   }, [startCapturingHaptics, stopCapturingHaptics]);
-
-  const handleDismissNotification = useCallback(() => {
-    setShowNotification(false);
-  }, []);
 
   const handleContinue = () => {
     void hapticLight();
@@ -208,10 +172,6 @@ export default function TryItScreen() {
       currentStep={1}
       totalSteps={totalSteps}
     >
-      {showNotification && (
-        <FakeNotificationBanner onDismiss={handleDismissNotification} />
-      )}
-
       <View className="flex-1 justify-between">
         {phase === "parsing" ? (
           <ParsingAnimation />
