@@ -42,9 +42,10 @@ interface SignInWithOAuthProps {
   headline?: React.ReactNode;
   subtitle?: string;
   hideImage?: boolean;
+  imageSource?: ImageSourcePropType;
 }
 
-const SignInWithOAuth = ({ banner, headline, subtitle, hideImage }: SignInWithOAuthProps) => {
+const SignInWithOAuth = ({ banner, headline, subtitle, hideImage, imageSource }: SignInWithOAuthProps) => {
   useWarmUpBrowser();
   const posthog = usePostHog();
   const convex = useConvex();
@@ -342,7 +343,7 @@ const SignInWithOAuth = ({ banner, headline, subtitle, hideImage }: SignInWithOA
             <View className="flex-1 justify-center">
               <ExpoImage
                 // eslint-disable-next-line @typescript-eslint/consistent-type-assertions, @typescript-eslint/no-require-imports
-                source={require("../assets/feed.png") as ImageSourcePropType}
+                source={imageSource ?? require("../assets/feed.png") as ImageSourcePropType}
                 style={{ width: "100%", height: "100%" }}
                 contentFit="contain"
                 cachePolicy="disk"

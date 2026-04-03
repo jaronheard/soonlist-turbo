@@ -3,10 +3,19 @@ import { Pressable, Text, View } from "react-native";
 import { SymbolView } from "expo-symbols";
 import { router } from "expo-router";
 
+import type { ImageSource } from "expo-image";
+
 import type { EventWithSimilarity } from "~/utils/similarEvents";
 import { QuestionContainer } from "~/components/QuestionContainer";
 import UserEventsList from "~/components/UserEventsList";
 import { usePendingFollowUsername } from "~/store";
+
+// eslint-disable-next-line @typescript-eslint/no-require-imports, @typescript-eslint/no-unsafe-assignment
+const lloydMallCrawlImage: ImageSource = require("../../../assets/demo-lloyd-mall-crawl.webp");
+// eslint-disable-next-line @typescript-eslint/no-require-imports, @typescript-eslint/no-unsafe-assignment
+const jamieXxImage: ImageSource = require("../../../assets/demo-jamie-xx.webp");
+// eslint-disable-next-line @typescript-eslint/no-require-imports, @typescript-eslint/no-unsafe-assignment
+const sharpieSmileImage: ImageSource = require("../../../assets/demo-sharpie-smile.webp");
 
 function makeDemoEvent(
   id: string,
@@ -16,6 +25,7 @@ function makeDemoEvent(
   endTime: string,
   location: string,
   category: string,
+  image?: ImageSource,
 ): EventWithSimilarity {
   const startDateTime = `${startDate}T${startTime}:00-07:00`;
   const endDateTime = `${startDate}T${endTime}:00-07:00`;
@@ -36,7 +46,7 @@ function makeDemoEvent(
         endTime,
         timeZone: "America/Los_Angeles",
         location,
-        images: [],
+        images: image ? [null, null, null, image] : [],
       },
       eventMetadata: { category },
       name,
@@ -70,30 +80,33 @@ function makeDemoEvent(
 const DEMO_EVENTS: EventWithSimilarity[] = [
   makeDemoEvent(
     "demo-1",
-    "Rooftop Sunset DJ Set",
-    "2025-03-22",
-    "18:00",
-    "22:00",
-    "The Hoxton, Portland",
-    "music",
+    "Lloyd Mall Crawl",
+    "2026-07-12",
+    "12:00",
+    "17:00",
+    "Lloyd Center",
+    "community",
+    lloydMallCrawlImage,
   ),
   makeDemoEvent(
     "demo-2",
-    "Spring Art Walk",
-    "2025-03-22",
-    "12:00",
-    "16:00",
-    "Pearl District",
-    "arts",
+    "Jamie XX",
+    "2026-08-08",
+    "19:00",
+    "22:00",
+    "Pioneer Courthouse Square",
+    "music",
+    jamieXxImage,
   ),
   makeDemoEvent(
     "demo-3",
-    "Live Jazz & Open Mic",
-    "2025-03-21",
-    "20:00",
-    "23:00",
-    "Doug Fir Lounge",
+    "Sharpie Smile",
+    "2026-08-13",
+    "19:00",
+    "22:00",
+    "Holocene, Portland, OR",
     "music",
+    sharpieSmileImage,
   ),
 ];
 

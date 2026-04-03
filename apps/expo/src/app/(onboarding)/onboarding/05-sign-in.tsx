@@ -58,6 +58,8 @@ export default function OnboardingSignInScreen() {
       banner={banner}
       headline="Start your Soonlist"
       subtitle="Sign up to capture every event in one place"
+      // eslint-disable-next-line @typescript-eslint/no-require-imports, @typescript-eslint/no-unsafe-assignment
+      imageSource={require("../../../assets/feed-alternate.png")}
     />
   );
 }

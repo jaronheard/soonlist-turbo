@@ -511,13 +511,9 @@ export function UserEventListItem(props: UserEventListItemProps) {
       <Pressable
         className="relative"
         onPress={() => {
-          const isDemoEvent = id.startsWith("demo-");
-          if (isDemoEvent) {
-            router.navigate(`/onboarding/demo-event/${id}`);
-          } else {
-            setEventCache(id, event);
-            router.navigate(`/event/${id}`);
-          }
+          if (demoMode) return;
+          setEventCache(id, event);
+          router.navigate(`/event/${id}`);
         }}
         onLongPress={(e) => {
           e.stopPropagation();
