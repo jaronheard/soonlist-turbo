@@ -1,8 +1,5 @@
-import { useRef } from "react";
-import { useRouter } from "expo-router";
 import { NativeTabs } from "expo-router/unstable-native-tabs";
 
-import { useAddEventFlow } from "~/hooks/useAddEventFlow";
 import { useAppStore } from "~/store";
 
 // Export Expo Router's error boundary
@@ -13,10 +10,6 @@ export const unstable_settings = {
 };
 
 export default function TabsLayout() {
-  const router = useRouter();
-  const { triggerAddEventFlow } = useAddEventFlow();
-  const pickerActiveRef = useRef(false);
-
   const myListBadgeCount = useAppStore((s) => s.myListBadgeCount);
   const communityBadgeCount = useAppStore((s) => s.communityBadgeCount);
 
@@ -57,28 +50,6 @@ export default function TabsLayout() {
         <NativeTabs.Trigger.Label hidden />
         <NativeTabs.Trigger.Icon
           sf={{ default: "binoculars", selected: "binoculars.fill" }}
-        />
-      </NativeTabs.Trigger>
-      {/* Add tab in search position (top-right on iOS Liquid Glass) */}
-      <NativeTabs.Trigger
-        name="add"
-        role="search"
-        listeners={{
-          tabPress: () => {
-            if (pickerActiveRef.current) return;
-            pickerActiveRef.current = true;
-            void triggerAddEventFlow().finally(() => {
-              pickerActiveRef.current = false;
-              setTimeout(() => router.navigate("/feed"), 100);
-            });
-          },
-        }}
-      >
-        <NativeTabs.Trigger.Label>Capture</NativeTabs.Trigger.Label>
-        <NativeTabs.Trigger.Icon
-          // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-require-imports
-          src={require("../../assets/capture-tab.png")}
-          renderingMode="original"
         />
       </NativeTabs.Trigger>
     </NativeTabs>

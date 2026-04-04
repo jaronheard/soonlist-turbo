@@ -1,7 +1,7 @@
 ---
 title: "fix: Replace capture tab with overlay button to eliminate blank screen"
 type: fix
-status: active
+status: completed
 date: 2026-04-04
 origin: docs/brainstorms/2026-04-03-capture-button-redesign-requirements.md
 ---
@@ -162,7 +162,7 @@ Render order: `<CaptureOverlayButton />` is a later sibling than `<InitialLayout
 
 ## Implementation Units
 
-- [ ] **Unit 1: Create `CaptureOverlayButton` component with path gating, offline state, and in-flight feedback**
+- [x] **Unit 1: Create `CaptureOverlayButton` component with path gating, offline state, and in-flight feedback**
 
 **Goal:** Self-contained overlay component that owns all of its visibility logic, state reactions, and styling. Can be dropped into any layout position and Just Works.
 
@@ -227,7 +227,7 @@ Render order: `<CaptureOverlayButton />` is a later sibling than `<InitialLayout
 
 ---
 
-- [ ] **Unit 2: Mount overlay in root layout**
+- [x] **Unit 2: Mount overlay in root layout**
 
 **Goal:** Render `CaptureOverlayButton` at root so it appears above the native tab bar on tab routes.
 
@@ -265,7 +265,7 @@ Render order: `<CaptureOverlayButton />` is a later sibling than `<InitialLayout
 
 ---
 
-- [ ] **Unit 3: Remove `add` tab from NativeTabs and delete placeholder screen**
+- [x] **Unit 3: Remove `add` tab from NativeTabs and delete placeholder screen**
 
 **Goal:** Remove the broken `NativeTabs.Trigger` for capture and its related machinery, then delete the empty placeholder screen file.
 
