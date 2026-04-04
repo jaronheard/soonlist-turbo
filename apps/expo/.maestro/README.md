@@ -4,7 +4,7 @@ This directory contains end-to-end tests for the Soonlist mobile app using Maest
 
 ## Directory Structure
 
-- `local/` - Tests for running locally in iOS simulator or Android emulator
+- `local/` - Tests for running locally in iOS simulator
 - `cloud/` - Tests for running in cloud environments or on real devices
 - `flows/` - Shared test flows used by both local and cloud tests
 - `config.yaml` - Shared configuration values
