@@ -1,3 +1,4 @@
+import type { ImageSource } from "expo-image";
 import React, { useCallback, useEffect, useRef, useState } from "react";
 import { ActivityIndicator, Pressable, Text, View } from "react-native";
 import Animated, { FadeIn } from "react-native-reanimated";
@@ -18,7 +19,7 @@ import {
 } from "~/utils/feedback";
 
 // eslint-disable-next-line @typescript-eslint/no-require-imports, @typescript-eslint/no-unsafe-assignment
-const lloydMallCrawlImage = require("../../../assets/demo-lloyd-mall-crawl.webp");
+const lloydMallCrawlImage: ImageSource = require("../../../assets/demo-lloyd-mall-crawl.webp");
 
 type Phase = "screenshot" | "parsing" | "result";
 

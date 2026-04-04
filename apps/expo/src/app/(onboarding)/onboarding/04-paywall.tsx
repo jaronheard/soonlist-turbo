@@ -18,7 +18,7 @@ import {
   useSetHasSeenOnboarding,
 } from "~/store";
 import { AF_EVENTS, trackAFEvent } from "~/utils/appsflyerEvents";
-import { isSimulator, shouldMockPaywall } from "~/utils/deviceInfo";
+import { shouldMockPaywall } from "~/utils/deviceInfo";
 
 // Route path for the sign-in screen within the onboarding flow.
 // Expo Router's typed routes are generated from the file structure and may be stale.

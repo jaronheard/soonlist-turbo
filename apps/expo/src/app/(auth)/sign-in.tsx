@@ -9,7 +9,7 @@ import SignInWithOAuth from "../../components/SignInWithOAuth";
 
 export default function AuthScreen() {
   const { isAuthenticated } = useConvexAuth();
-  const { fromPaywall, subscribed, trial, plan } = useLocalSearchParams<{
+  const { fromPaywall, subscribed, plan } = useLocalSearchParams<{
     fromPaywall?: string;
     subscribed?: string;
     trial?: string;

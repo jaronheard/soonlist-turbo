@@ -1,14 +1,12 @@
 import type { FunctionReturnType } from "convex/server";
 import type { ViewStyle } from "react-native";
-import React, { useCallback, useEffect, useMemo, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import {
   ActivityIndicator,
   FlatList,
   Image,
-  Linking,
   Pressable,
   ScrollView,
-  Share,
   Text,
   TouchableOpacity,
   useWindowDimensions,
@@ -37,7 +35,6 @@ import {
 import { useAddEventFlow } from "~/hooks/useAddEventFlow";
 import { useEventActions } from "~/hooks/useEventActions";
 import { useUserTimezone } from "~/store";
-import Config from "~/utils/config";
 import { cn } from "~/utils/cn";
 import {
   formatEventDateRange,
@@ -971,76 +968,6 @@ const GhostEventCard = ({ index }: { index: number }) => {
             ))}
           </View>
         </View>
-      </View>
-    </View>
-  );
-};
-
-const YourSoonlistLive = () => {
-  const { user } = useUser();
-  const username = user?.username ?? "";
-  const soonlistUrl = `${Config.apiBaseUrl}/${username}`;
-
-  const handleShare = useCallback(async () => {
-    try {
-      await Share.share({ url: soonlistUrl });
-    } catch {
-      // ignore
-    }
-  }, [soonlistUrl]);
-
-  if (!username) return null;
-
-  return (
-    <View className="mb-4 px-4">
-      <View className="items-center rounded-2xl bg-white px-6 py-5">
-        <Text className="mb-1 text-center text-base font-semibold text-gray-700">
-          Your Soonlist is live
-        </Text>
-        <Text className="mb-3 text-center text-sm text-interactive-1">
-          soonlist.com/@{username}
-        </Text>
-        <TouchableOpacity
-          onPress={() => void handleShare()}
-          activeOpacity={0.7}
-          className="flex-row items-center gap-2 rounded-full bg-interactive-1 px-5 py-2.5"
-        >
-          <ShareIcon size={16} color="#FFFFFF" />
-          <Text className="text-sm font-semibold text-white">
-            Share your Soonlist
-          </Text>
-        </TouchableOpacity>
-      </View>
-    </View>
-  );
-};
-
-const FounderAskCard = () => {
-  const handleFeedback = useCallback(() => {
-    void Linking.openURL("mailto:jaron@soonlist.com?subject=Soonlist feedback");
-  }, []);
-
-  return (
-    <View className="mb-4 px-4">
-      <View className="rounded-2xl bg-white px-6 py-5">
-        <Text className="mb-2 text-center text-2xl">{"👋"}</Text>
-        <Text className="mb-1 text-center text-base font-bold text-gray-700">
-          Hey, I'm Jaron
-        </Text>
-        <Text className="mb-4 text-center text-sm leading-5 text-gray-500">
-          I built Soonlist in Portland because I want people to get out more — to
-          shows, openings, meetups, all of it. It's just me, and your feedback
-          makes this thing better.
-        </Text>
-        <TouchableOpacity
-          onPress={handleFeedback}
-          activeOpacity={0.7}
-          className="self-center rounded-full bg-interactive-2 px-5 py-2.5"
-        >
-          <Text className="text-sm font-semibold text-neutral-1">
-            Message me your feedback
-          </Text>
-        </TouchableOpacity>
       </View>
     </View>
   );

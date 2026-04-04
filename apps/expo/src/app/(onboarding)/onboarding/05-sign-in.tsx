@@ -8,7 +8,7 @@ import SignInWithOAuth from "~/components/SignInWithOAuth";
 import { useAppStore, usePendingFollowUsername } from "~/store";
 
 export default function OnboardingSignInScreen() {
-  const { fromPaywall, subscribed, trial, plan } = useLocalSearchParams<{
+  const { fromPaywall, subscribed, plan } = useLocalSearchParams<{
     fromPaywall?: string;
     subscribed?: string;
     trial?: string;
