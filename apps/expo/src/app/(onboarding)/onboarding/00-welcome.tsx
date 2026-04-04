@@ -143,7 +143,6 @@ export default function WelcomeScreen() {
     router.navigate("/sign-in");
   };
 
-
   return (
     <View className="flex-1 bg-interactive-3">
       <Stack.Screen options={{ headerShown: false }} />
@@ -201,11 +200,9 @@ export default function WelcomeScreen() {
                 </Text>
               </Text>
             </Pressable>
-
           </AnimatedView>
         </AnimatedView>
       </View>
-
     </View>
   );
 }

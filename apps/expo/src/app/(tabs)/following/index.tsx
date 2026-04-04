@@ -136,58 +136,58 @@ function FollowingEmptyState() {
           paddingBottom: 200,
         }}
       >
-      <Text
-        style={{
-          fontSize: 18,
-          fontWeight: "600",
-          color: "#627496",
-          textAlign: "center",
-          marginBottom: 8,
-          lineHeight: 26,
-        }}
-      >
-        Your scene starts with a list
-      </Text>
-      <Text
-        style={{
-          fontSize: 15,
-          color: "#8E99A4",
-          textAlign: "center",
-          marginBottom: 24,
-          lineHeight: 22,
-        }}
-      >
-        Follow other lists to see their events here
-      </Text>
-      <TouchableOpacity
-        onPress={() => void handleInvite()}
-        activeOpacity={0.7}
-        accessibilityRole="button"
-        accessibilityLabel="Invite friends to Soonlist"
-      >
-        <View
+        <Text
           style={{
-            flexDirection: "row",
-            alignItems: "center",
-            gap: 8,
-            backgroundColor: "#5A32FB",
-            paddingHorizontal: 24,
-            paddingVertical: 14,
-            borderRadius: 999,
+            fontSize: 18,
+            fontWeight: "600",
+            color: "#627496",
+            textAlign: "center",
+            marginBottom: 8,
+            lineHeight: 26,
           }}
         >
-          <ShareIcon size={18} color="#FFFFFF" />
-          <Text
+          Your scene starts with a list
+        </Text>
+        <Text
+          style={{
+            fontSize: 15,
+            color: "#8E99A4",
+            textAlign: "center",
+            marginBottom: 24,
+            lineHeight: 22,
+          }}
+        >
+          Follow other lists to see their events here
+        </Text>
+        <TouchableOpacity
+          onPress={() => void handleInvite()}
+          activeOpacity={0.7}
+          accessibilityRole="button"
+          accessibilityLabel="Invite friends to Soonlist"
+        >
+          <View
             style={{
-              fontSize: 17,
-              fontWeight: "700",
-              color: "#FFFFFF",
+              flexDirection: "row",
+              alignItems: "center",
+              gap: 8,
+              backgroundColor: "#5A32FB",
+              paddingHorizontal: 24,
+              paddingVertical: 14,
+              borderRadius: 999,
             }}
           >
-            Invite friends
-          </Text>
-        </View>
-      </TouchableOpacity>
+            <ShareIcon size={18} color="#FFFFFF" />
+            <Text
+              style={{
+                fontSize: 17,
+                fontWeight: "700",
+                color: "#FFFFFF",
+              }}
+            >
+              Invite friends
+            </Text>
+          </View>
+        </TouchableOpacity>
       </View>
     </ScrollView>
   );

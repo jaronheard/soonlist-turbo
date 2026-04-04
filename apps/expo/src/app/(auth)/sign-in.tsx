@@ -57,7 +57,6 @@ export default function AuthScreen() {
           </View>
         )}
 
-
         {showFollowBanner && <FollowContextBanner />}
       </View>
     ) : null;
