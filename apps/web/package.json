@@ -77,7 +77,6 @@
     "eslint-plugin-path": "catalog:",
     "eslint-plugin-tailwindcss": "catalog:",
     "jiti": "catalog:",
-    "playwright": "^1.58.2",
     "postcss": "catalog:",
     "tailwindcss": "catalog:",
     "typescript": "catalog:"

@@ -677,7 +677,7 @@ importers:
         version: 55.0.7(expo@55.0.0-preview.12)(react@19.2.0)
       expo-location:
         specifier: ^55.1.4
-        version: 55.1.4(expo@55.0.0-preview.12)
+        version: 55.1.6(expo@55.0.0-preview.12)
       expo-media-library:
         specifier: 'catalog:'
         version: 55.0.8(expo@55.0.0-preview.12)(react-native@0.83.2(@babel/core@7.28.5)(@types/react@19.2.14)(bufferutil@4.1.0)(react@19.2.0)(utf-8-validate@5.0.10))
@@ -1022,9 +1022,6 @@ importers:
       jiti:
         specifier: 'catalog:'
         version: 1.21.7
-      playwright:
-        specifier: ^1.58.2
-        version: 1.58.2
       postcss:
         specifier: 'catalog:'
         version: 8.5.6
@@ -6712,8 +6709,8 @@ packages:
       expo: '*'
       react: 19.2.0
 
-  expo-location@55.1.4:
-    resolution: {integrity: sha512-0QWQ4QP8I6svtGUL895Y8bvKM3nGUWNp/MdCoCQNH3uAuwvLf2TQ6ZDVD3kdlkl2wGGdw6ziHQIYDHL96OlfnA==}
+  expo-location@55.1.6:
+    resolution: {integrity: sha512-GDzZmfiAWsfOVHpF4a5h/MGYAO3LotB2nyN+waxwK81Du4gNg+ALHNi+yeLSv3oy7LNcNfbdLAvEneQQgRvYLg==}
     peerDependencies:
       expo: '*'
 
@@ -7036,11 +7033,6 @@ packages:
 
   fs.realpath@1.0.0:
     resolution: {integrity: sha512-OO0pH2lK6a0hZnAdau5ItzHPI6pUlvI7jMVnxUQRtw4owF2wk8lOSabtGDCTP4Ggrg2MbGnWO9X8K1t4+fGMDw==}
-
-  fsevents@2.3.2:
-    resolution: {integrity: sha512-xiqMQR4xAeHTuB9uWm+fFRcIOgKBMiOBP+eXiyT7jsgVCq1bkVygt00oASowB7EdtpOHaaPgKt812P9ab+DDKA==}
-    engines: {node: ^8.16.0 || ^10.6.0 || >=11.0.0}
-    os: [darwin]
 
   fsevents@2.3.3:
     resolution: {integrity: sha512-5xoDfX+fL7faATnagmWPpbFtwh/R77WmMMqqHGS65C3vvB0YHrgF+B1YmZ3441tMj5n63k0212XNoJwzlhffQw==}
@@ -8556,16 +8548,6 @@ packages:
   pirates@4.0.7:
     resolution: {integrity: sha512-TfySrs/5nm8fQJDcBDuUng3VOUKsd7S+zqvbOTiGXHfxX4wK31ard+hoNuvkicM/2YFzlpDgABOevKSsB4G/FA==}
     engines: {node: '>= 6'}
-
-  playwright-core@1.58.2:
-    resolution: {integrity: sha512-yZkEtftgwS8CsfYo7nm0KE8jsvm6i/PTgVtB8DL726wNf6H2IMsDuxCpJj59KDaxCtSnrWan2AeDqM7JBaultg==}
-    engines: {node: '>=18'}
-    hasBin: true
-
-  playwright@1.58.2:
-    resolution: {integrity: sha512-vA30H8Nvkq/cPBnNw4Q8TWz1EJyqgpuinBcHET0YVJVFldr8JDNiU9LaWAE1KqSkRYazuaBhTpB5ZzShOezQ6A==}
-    engines: {node: '>=18'}
-    hasBin: true
 
   plist@3.1.0:
     resolution: {integrity: sha512-uysumyrvkUX0rX/dEVqt8gC3sTBzd4zoWfLeS29nb53imdaXVvLINYXTI2GNqzaMuvacNx4uJQ8+b3zXR0pkgQ==}
@@ -16908,7 +16890,7 @@ snapshots:
       react: 19.2.0
       rtl-detect: 1.1.2
 
-  expo-location@55.1.4(expo@55.0.0-preview.12):
+  expo-location@55.1.6(expo@55.0.0-preview.12):
     dependencies:
       '@expo/image-utils': 0.8.12
       expo: 55.0.0-preview.12(@babel/core@7.28.5)(@expo/dom-webview@55.0.3)(@expo/metro-runtime@55.0.6)(bufferutil@4.1.0)(expo-router@55.0.0-preview.9)(react-dom@19.2.0(react@19.2.0))(react-native@0.83.2(@babel/core@7.28.5)(@types/react@19.2.14)(bufferutil@4.1.0)(react@19.2.0)(utf-8-validate@5.0.10))(react@19.2.0)(typescript@5.9.3)(utf-8-validate@5.0.10)
@@ -17327,9 +17309,6 @@ snapshots:
       universalify: 1.0.0
 
   fs.realpath@1.0.0: {}
-
-  fsevents@2.3.2:
-    optional: true
 
   fsevents@2.3.3:
     optional: true
@@ -18994,14 +18973,6 @@ snapshots:
   pify@2.3.0: {}
 
   pirates@4.0.7: {}
-
-  playwright-core@1.58.2: {}
-
-  playwright@1.58.2:
-    dependencies:
-      playwright-core: 1.58.2
-    optionalDependencies:
-      fsevents: 2.3.2
 
   plist@3.1.0:
     dependencies:
