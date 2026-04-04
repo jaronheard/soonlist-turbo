@@ -108,7 +108,6 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
       "@intercom/intercom-react-native",
       {
         appId: "xn0q41hi",
-        androidApiKey: "android_sdk-a26b2f3e5307db04134c71c8e59f7465a578109d",
         iosApiKey: "ios_sdk-34383d2c19fe53cc172a8be023b3dfc92fa87004",
       },
     ],
@@ -191,13 +190,6 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
       "applinks:soonlist.com",
       "applinks:soonlist.onelink.me",
     ],
-  },
-  android: {
-    package: getUniqueIdentifier(),
-    adaptiveIcon: {
-      foregroundImage: "./assets/adaptive-icon.png",
-      backgroundColor: "#ffffff",
-    },
   },
   updates: {
     url: "https://u.expo.dev/a8acc202-ed8c-48ed-9e5a-2570f510fe8a",
