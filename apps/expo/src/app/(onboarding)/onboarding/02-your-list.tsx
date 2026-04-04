@@ -1,9 +1,8 @@
+import type { ImageSource } from "expo-image";
 import React, { useMemo } from "react";
 import { Pressable, Text, View } from "react-native";
-import { SymbolView } from "expo-symbols";
 import { router } from "expo-router";
-
-import type { ImageSource } from "expo-image";
+import { SymbolView } from "expo-symbols";
 
 import type { EventWithSimilarity } from "~/utils/similarEvents";
 import { QuestionContainer } from "~/components/QuestionContainer";
@@ -113,7 +112,7 @@ const DEMO_EVENTS: EventWithSimilarity[] = [
 
 export default function YourListScreen() {
   const pendingFollowUsername = usePendingFollowUsername();
-  const totalSteps = pendingFollowUsername ? 6 : 5;
+  const totalSteps = pendingFollowUsername ? 7 : 6;
   const groupedEvents = useMemo(() => DEMO_EVENTS, []);
 
   const handleContinue = () => {
@@ -141,7 +140,11 @@ export default function YourListScreen() {
             <Text className="text-sm font-semibold text-interactive-1">
               soonlist.com/you
             </Text>
-            <SymbolView name="square.and.arrow.up" size={16} tintColor="#5A32FB" />
+            <SymbolView
+              name="square.and.arrow.up"
+              size={16}
+              tintColor="#5A32FB"
+            />
           </View>
           <View style={{ marginLeft: -6, marginRight: 6 }} className="flex-1">
             <UserEventsList

@@ -1,8 +1,8 @@
 import React, { useCallback, useEffect, useRef, useState } from "react";
 import { ActivityIndicator, Pressable, Text, View } from "react-native";
+import Animated, { FadeIn } from "react-native-reanimated";
 import * as Haptics from "expo-haptics";
 import { Image as ExpoImage } from "expo-image";
-import Animated, { FadeIn } from "react-native-reanimated";
 
 import type { Event } from "~/components/UserEventsList";
 import { PlusIcon } from "~/components/icons";
@@ -62,8 +62,9 @@ const DEMO_EVENT = {
     endTime: "17:00",
     timeZone: "America/Los_Angeles",
     location: "Lloyd Center",
-    description: "A mall crawl featuring local shops, organizations, nerdy fun, and family activities. Attendees can expect deals, games, art, food, and animals.",
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+    description:
+      "A mall crawl featuring local shops, organizations, nerdy fun, and family activities. Attendees can expect deals, games, art, food, and animals.",
+
     images: [null, null, null, lloydMallCrawlImage],
   },
   eventMetadata: {
@@ -79,7 +80,8 @@ const DEMO_EVENT = {
   startTime: "12:00",
   endTime: "17:00",
   timeZone: "America/Los_Angeles",
-  description: "A mall crawl featuring local shops, organizations, nerdy fun, and family activities. Attendees can expect deals, games, art, food, and animals.",
+  description:
+    "A mall crawl featuring local shops, organizations, nerdy fun, and family activities. Attendees can expect deals, games, art, food, and animals.",
   startDateTime: "2026-07-12T19:00:00.000Z",
   endDateTime: "2026-07-13T00:00:00.000Z",
   visibility: "public" as const,
@@ -102,7 +104,7 @@ export default function TryItScreen() {
   const { saveStep } = useOnboarding();
   const pendingFollowUsername = usePendingFollowUsername();
 
-  const totalSteps = pendingFollowUsername ? 6 : 5;
+  const totalSteps = pendingFollowUsername ? 7 : 6;
 
   // Escalating haptic pattern during "capturing" phase
   const hapticIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
@@ -152,11 +154,7 @@ export default function TryItScreen() {
 
   const handleContinue = () => {
     void hapticLight();
-    saveStep(
-      "tryIt",
-      {},
-      "/(onboarding)/onboarding/02-your-list",
-    );
+    saveStep("tryIt", {}, "/(onboarding)/onboarding/02-your-list");
   };
 
   return (
@@ -217,7 +215,10 @@ export default function TryItScreen() {
         )}
 
         {phase === "result" && (
-          <Animated.View entering={FadeIn.delay(500).duration(300)} className="mt-4">
+          <Animated.View
+            entering={FadeIn.delay(500).duration(300)}
+            className="mt-4"
+          >
             <Pressable
               onPress={handleContinue}
               className="rounded-full bg-white py-4 active:scale-[0.98] active:bg-neutral-100"

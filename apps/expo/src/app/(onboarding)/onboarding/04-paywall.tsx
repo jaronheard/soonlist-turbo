@@ -10,8 +10,13 @@ import RevenueCatUI, { PAYWALL_RESULT } from "react-native-purchases-ui";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { router } from "expo-router";
 
+import { ProgressBar } from "~/components/ProgressBar";
 import { useRevenueCat } from "~/providers/RevenueCatProvider";
-import { useAppStore, useSetHasSeenOnboarding } from "~/store";
+import {
+  useAppStore,
+  usePendingFollowUsername,
+  useSetHasSeenOnboarding,
+} from "~/store";
 import { AF_EVENTS, trackAFEvent } from "~/utils/appsflyerEvents";
 import { isSimulator, shouldMockPaywall } from "~/utils/deviceInfo";
 
@@ -23,10 +28,16 @@ const SIGN_IN_PATH = "./05-sign-in" as const;
 export default function PaywallScreen() {
   const { isInitialized, customerInfo } = useRevenueCat();
   const { setOnboardingData } = useAppStore();
+  const pendingFollowUsername = usePendingFollowUsername();
   const [showMockPaywall] = useState(() => shouldMockPaywall());
   const [paywallPresented, setPaywallPresented] = useState(false);
   const hasUnlimited =
     customerInfo?.entitlements.active.unlimited?.isActive ?? false;
+
+  // Paywall is the step after notifications. Sign-in sits at totalSteps - 1
+  // and final "done" is totalSteps, so paywall lands at totalSteps - 2.
+  const totalSteps = pendingFollowUsername ? 7 : 6;
+  const currentStep = totalSteps - 2;
 
   const setHasSeenOnboarding = useSetHasSeenOnboarding();
 
@@ -198,6 +209,14 @@ export default function PaywallScreen() {
   if (showMockPaywall) {
     return (
       <SafeAreaView className="flex-1 bg-interactive-1">
+        <View className="pt-2">
+          <ProgressBar
+            currentStep={currentStep}
+            totalSteps={totalSteps}
+            backgroundColor="bg-neutral-3"
+            foregroundColor="bg-neutral-1"
+          />
+        </View>
         <ScrollView className="flex-1 px-6">
           <View className="py-8">
             <Text className="mb-2 text-center text-3xl font-bold text-white">
@@ -276,6 +295,14 @@ export default function PaywallScreen() {
   // The RevenueCat paywall will appear as a modal over this screen
   return (
     <SafeAreaView className="flex-1 bg-interactive-1">
+      <View className="pt-2">
+        <ProgressBar
+          currentStep={currentStep}
+          totalSteps={totalSteps}
+          backgroundColor="bg-neutral-3"
+          foregroundColor="bg-neutral-1"
+        />
+      </View>
       <View className="flex-1 items-center justify-center px-6">
         <ActivityIndicator size="large" color="white" />
         <Text className="mt-4 text-lg text-white">

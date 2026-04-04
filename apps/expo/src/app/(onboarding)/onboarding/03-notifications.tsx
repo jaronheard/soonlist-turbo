@@ -1,6 +1,5 @@
 import React, { useEffect, useState } from "react";
 import { Pressable, Text, View } from "react-native";
-import { BlurView } from "expo-blur";
 import Animated, {
   Easing,
   useAnimatedStyle,
@@ -8,6 +7,7 @@ import Animated, {
   withRepeat,
   withTiming,
 } from "react-native-reanimated";
+import { BlurView } from "expo-blur";
 import { router } from "expo-router";
 
 import { ChevronUp } from "~/components/icons";
@@ -26,7 +26,7 @@ export default function NotificationsScreen() {
   const translateY = useSharedValue(0);
   const [isLoading, setIsLoading] = useState(false);
 
-  const totalSteps = pendingFollowUsername ? 6 : 5;
+  const totalSteps = pendingFollowUsername ? 7 : 6;
   const currentStep = pendingFollowUsername ? 4 : 3;
 
   useEffect(() => {
@@ -128,7 +128,10 @@ export default function NotificationsScreen() {
                 }}
               />
               <View className="flex-row" style={{ height: 44 }}>
-                <Pressable className="flex-1 items-center justify-center" disabled>
+                <Pressable
+                  className="flex-1 items-center justify-center"
+                  disabled
+                >
                   <Text className="text-[17px] font-normal text-blue-500/30">
                     Don{"'"}t Allow
                   </Text>

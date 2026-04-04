@@ -1,8 +1,9 @@
-import React, { useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import { Text, View } from "react-native";
 import { useLocalSearchParams } from "expo-router";
 
 import { FollowContextBanner } from "~/components/FollowContextBanner";
+import OnboardingOrbit from "~/components/OnboardingOrbit";
 import SignInWithOAuth from "~/components/SignInWithOAuth";
 import { useAppStore, usePendingFollowUsername } from "~/store";
 
@@ -48,19 +49,53 @@ export default function OnboardingSignInScreen() {
           </View>
         )}
 
-
         {showFollowBanner && <FollowContextBanner />}
       </View>
     ) : null;
+
+  // Progress continues from the earlier onboarding screens. Sign-in sits at
+  // totalSteps - 1 so the bar reads "almost done" — the final tick fills in
+  // once the account is created.
+  const totalSteps = pendingFollowUsername ? 7 : 6;
+  const currentStep = totalSteps - 1;
 
   return (
     <SignInWithOAuth
       banner={banner}
       headline="Start your Soonlist"
       subtitle="Sign up to capture every event in one place"
-      // eslint-disable-next-line @typescript-eslint/no-require-imports, @typescript-eslint/no-unsafe-assignment
-      imageSource={require("../../../assets/feed-alternate.png")}
+      imageSlot={<OrbitStage />}
+      dark
+      progress={{ current: currentStep, total: totalSteps }}
     />
+  );
+}
+
+// Visual nudge: shrinking the stage from the bottom makes the orbit sit
+// higher relative to the sign-in buttons below. The orbit auto-centers in
+// its own box, so a bottom-only margin ≈ 2× the desired upward shift.
+const ORBIT_BOTTOM_OFFSET = 72; // ≈ 36px visual upward shift
+
+function OrbitStage() {
+  const [size, setSize] = useState<{ width: number; height: number } | null>(
+    null,
+  );
+  return (
+    <View
+      style={{ flex: 1, marginBottom: ORBIT_BOTTOM_OFFSET }}
+      onLayout={(e) => {
+        const { width, height } = e.nativeEvent.layout;
+        setSize((prev) =>
+          prev?.width === width && prev.height === height
+            ? prev
+            : { width, height },
+        );
+      }}
+    >
+      {size ? (
+        <OnboardingOrbit width={size.width} height={size.height} />
+      ) : null}
+    </View>
   );
 }
 
