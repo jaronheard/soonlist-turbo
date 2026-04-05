@@ -515,31 +515,58 @@ export const removeListEventsFromUserFeed = internalMutation({
       // Check if event is in another list the user follows (using precomputed set)
       const isInOtherFollowedList = eventsInOtherFollowedLists.has(etl.eventId);
 
+      const existingFollowedListsEntry = await ctx.db
+        .query("userFeeds")
+        .withIndex("by_feed_event", (q) =>
+          q.eq("feedId", followedListsFeedId).eq("eventId", etl.eventId),
+        )
+        .first();
+
+      if (!existingFollowedListsEntry) {
+        continue;
+      }
+
       // Remove from followedLists feed only if event is not in any other followed list
       if (!isInOtherFollowedList) {
-        const existingFollowedListsEntry = await ctx.db
-          .query("userFeeds")
-          .withIndex("by_feed_event", (q) =>
-            q.eq("feedId", followedListsFeedId).eq("eventId", etl.eventId),
-          )
-          .first();
+        const similarityGroupId = existingFollowedListsEntry.similarityGroupId;
+        await userFeedsAggregate.deleteIfExists(
+          ctx,
+          existingFollowedListsEntry,
+        );
+        await ctx.db.delete(existingFollowedListsEntry._id);
 
-        if (existingFollowedListsEntry) {
-          const similarityGroupId =
-            existingFollowedListsEntry.similarityGroupId;
-          await userFeedsAggregate.deleteIfExists(
-            ctx,
-            existingFollowedListsEntry,
+        // Update grouped feed entry
+        if (similarityGroupId) {
+          await ctx.runMutation(
+            internal.feedGroupHelpers.upsertGroupedFeedEntry,
+            { feedId: followedListsFeedId, similarityGroupId },
           );
-          await ctx.db.delete(existingFollowedListsEntry._id);
-
-          // Update grouped feed entry
-          if (similarityGroupId) {
-            await ctx.runMutation(
-              internal.feedGroupHelpers.upsertGroupedFeedEntry,
-              { feedId: followedListsFeedId, similarityGroupId },
-            );
+        }
+      } else if (existingFollowedListsEntry.sourceListId === listId) {
+        // Keep the entry but update sourceListId to a different followed list
+        // that also contains this event so the source attribution doesn't go stale.
+        let newSourceListId: string | undefined = undefined;
+        for (const otherListId of followedListIds) {
+          const otherEtl = await ctx.db
+            .query("eventToLists")
+            .withIndex("by_event_and_list", (q) =>
+              q.eq("eventId", etl.eventId).eq("listId", otherListId),
+            )
+            .first();
+          if (otherEtl) {
+            newSourceListId = otherListId;
+            break;
           }
+        }
+        if (newSourceListId) {
+          const oldDoc = existingFollowedListsEntry;
+          await ctx.db.patch(existingFollowedListsEntry._id, {
+            sourceListId: newSourceListId,
+          });
+          const updatedDoc = (await ctx.db.get(
+            existingFollowedListsEntry._id,
+          ))!;
+          await userFeedsAggregate.replaceOrInsert(ctx, oldDoc, updatedDoc);
         }
       }
     }

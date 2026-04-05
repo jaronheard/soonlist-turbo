@@ -4,7 +4,10 @@ import { internal } from "../_generated/api";
 import { internalAction, internalMutation } from "../_generated/server";
 
 /**
- * Batch mutation: backfill sourceListId for followedLists_ feed entries that lack it
+ * Batch mutation: backfill sourceListId for followedLists_ feed entries that lack it.
+ * Caches listFollows per userId within a batch to avoid re-reading them
+ * for every entry, and uses a conservative batch size to stay under
+ * Convex transaction limits.
  */
 export const backfillSourceListIdBatch = internalMutation({
   args: {
@@ -23,6 +26,9 @@ export const backfillSourceListIdBatch = internalMutation({
       .paginate({ numItems: batchSize, cursor });
 
     let updated = 0;
+    // Cache a user's followed-list ids within this batch so we only query
+    // listFollows once per user per batch.
+    const followedListsByUser = new Map<string, Set<string>>();
 
     for (const entry of result.page) {
       // Only process followedLists_ entries that lack sourceListId
@@ -33,28 +39,40 @@ export const backfillSourceListIdBatch = internalMutation({
       // Extract userId from feedId
       const userId = entry.feedId.replace("followedLists_", "");
 
-      // Find the event's lists
-      const eventToLists = await ctx.db
-        .query("eventToLists")
-        .withIndex("by_event", (q) => q.eq("eventId", entry.eventId))
-        .collect();
+      let followedListIds = followedListsByUser.get(userId);
+      if (!followedListIds) {
+        const userListFollows = await ctx.db
+          .query("listFollows")
+          .withIndex("by_user", (q) => q.eq("userId", userId))
+          .collect();
+        followedListIds = new Set(userListFollows.map((f) => f.listId));
+        followedListsByUser.set(userId, followedListIds);
+      }
 
-      // Find which of those lists the user follows
-      const userListFollows = await ctx.db
-        .query("listFollows")
-        .withIndex("by_user", (q) => q.eq("userId", userId))
-        .collect();
+      if (followedListIds.size === 0) {
+        continue;
+      }
 
-      const followedListIds = new Set(userListFollows.map((f) => f.listId));
+      // Find which list (that the user follows) the event is in.
+      // Query per-followed-list instead of fetching all eventToLists for the
+      // event, so we stay bounded by the user's follow set.
+      let matchingListId: string | undefined = undefined;
+      for (const listId of followedListIds) {
+        const etl = await ctx.db
+          .query("eventToLists")
+          .withIndex("by_event_and_list", (q) =>
+            q.eq("eventId", entry.eventId).eq("listId", listId),
+          )
+          .first();
+        if (etl) {
+          matchingListId = listId;
+          break;
+        }
+      }
 
-      // Find the first matching list
-      const matchingEtl = eventToLists.find((etl) =>
-        followedListIds.has(etl.listId),
-      );
-
-      if (matchingEtl) {
+      if (matchingListId) {
         await ctx.db.patch(entry._id, {
-          sourceListId: matchingEtl.listId,
+          sourceListId: matchingListId,
         });
         updated++;
       }
@@ -79,7 +97,7 @@ export const runBackfillSourceListId = internalAction({
     let totalProcessed = 0;
     let totalUpdated = 0;
     let cursor: string | null = null;
-    const batchSize = 200;
+    const batchSize = 50;
 
     while (true) {
       const result: {

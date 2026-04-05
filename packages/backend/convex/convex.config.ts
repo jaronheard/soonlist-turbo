@@ -15,5 +15,6 @@ app.use(aggregate, { name: "eventsByCreation" }); // For capturesThisWeek
 app.use(aggregate, { name: "eventsByStartTime" }); // For upcomingEvents (own only)
 app.use(aggregate, { name: "eventFollowsAggregate" }); // For follow counts
 app.use(aggregate, { name: "userFeedsAggregate" }); // For upcoming events (own + followed)
+app.use(aggregate, { name: "listFollowsAggregate" }); // For list follower counts
 
 export default app;
