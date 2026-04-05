@@ -27,8 +27,8 @@ function makeDemoEvent(
   category: string,
   image?: ImageSource,
 ): EventWithSimilarity {
-  const startDateTime = `${startDate}T${startTime}:00-07:00`;
-  const endDateTime = `${startDate}T${endTime}:00-07:00`;
+  const startDateTime = `${startDate}T${startTime}:00`;
+  const endDateTime = `${startDate}T${endTime}:00`;
   // Demo events use mock data that doesn't fully match Convex branded types
   // eslint-disable-next-line @typescript-eslint/consistent-type-assertions
   return {

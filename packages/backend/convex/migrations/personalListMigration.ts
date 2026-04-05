@@ -114,6 +114,10 @@ export const backfillUserEventsBatch = internalMutation({
           cursor: result.continueCursor,
         },
       );
+    } else if (!result.isDone) {
+      console.error(
+        `backfillUserEventsBatch: cursor stalled for user ${userId} list ${listId} at cursor ${cursor} — aborting`,
+      );
     }
 
     return { linked, isDone: result.isDone };

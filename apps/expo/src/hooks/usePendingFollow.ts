@@ -60,8 +60,8 @@ export function usePendingFollow() {
       }
 
       if (!cancelled) {
-        // Clear the pending follow AFTER the mutation and navigation so the
-        // effect cleanup doesn't flip `cancelled` to true before we navigate.
+        // Clear the pending follow BEFORE navigating so the effect cannot
+        // re-trigger between the state update and the push.
         setPendingFollowUsername(null);
         router.push("/(tabs)/feed");
       }

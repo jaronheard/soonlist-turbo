@@ -64,8 +64,8 @@ function getDemoEvent(): Event {
   const month = String(demoDay.getMonth() + 1).padStart(2, "0");
   const day = String(demoDay.getDate()).padStart(2, "0");
   const startDate = `${year}-${month}-${day}`;
-  const startDateTime = new Date(`${startDate}T12:00:00-07:00`).toISOString();
-  const endDateTime = new Date(`${startDate}T17:00:00-07:00`).toISOString();
+  const startDateTime = new Date(`${startDate}T12:00:00`).toISOString();
+  const endDateTime = new Date(`${startDate}T17:00:00`).toISOString();
 
   return {
     _id: "demo-1",
