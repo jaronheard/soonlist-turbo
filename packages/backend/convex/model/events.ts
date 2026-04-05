@@ -815,20 +815,10 @@ export async function createEvent(
     }
   }
 
-  // Link event to creator's personal list
+  // Link event to creator's personal list. Use addEventToList so that
+  // followers of the personal list get the event propagated to their feed.
   const personalList = await getOrCreatePersonalList(ctx, userId);
-  const existingPersonalLink = await ctx.db
-    .query("eventToLists")
-    .withIndex("by_event_and_list", (q) =>
-      q.eq("eventId", eventId).eq("listId", personalList.id),
-    )
-    .first();
-  if (!existingPersonalLink) {
-    await ctx.db.insert("eventToLists", {
-      eventId,
-      listId: personalList.id,
-    });
-  }
+  await addEventToList(ctx, eventId, personalList.id, userId);
 
   // Add event to feeds (with similarity group for grouped feed support)
   await ctx.runMutation(internal.feedHelpers.updateEventInFeeds, {

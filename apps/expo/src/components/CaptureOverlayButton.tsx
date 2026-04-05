@@ -105,7 +105,7 @@ export function CaptureOverlayButton({
         accessibilityLabel={accessibilityLabel}
         accessibilityHint="Opens photo picker to create an event"
         accessibilityState={{
-          disabled: !isOnline,
+          disabled: !isOnline || isCapturing,
           busy: isCapturing,
         }}
         style={({ pressed }) => ({

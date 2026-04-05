@@ -404,6 +404,8 @@ export const useAppStore = create<AppState>()(
           lastPaywallShownAtView: 0,
           hasShownRatingPrompt: false,
           pendingFollowUsername: null,
+          myListBadgeCount: 0,
+          communityBadgeCount: 0,
         }),
 
       // Reset for logout - preserves onboarding state
@@ -453,6 +455,8 @@ export const useAppStore = create<AppState>()(
           hasShownRatingPrompt: false,
           // Keep pendingFollowUsername in case user is re-authenticating
           pendingFollowUsername: state.pendingFollowUsername,
+          myListBadgeCount: 0,
+          communityBadgeCount: 0,
         })),
 
       // Stable timestamp for query filtering

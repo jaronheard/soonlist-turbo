@@ -10,8 +10,9 @@ import { toast } from "~/utils/feedback";
 
 /**
  * Hook to manage the flow of adding new events via the image picker.
- * Launches the photo picker immediately, then checks the paywall
- * after the user selects photos (before creating events).
+ * Launches the native photo picker immediately and creates events for
+ * the selected photos. Capture-count-based paywalls are surfaced
+ * downstream (e.g. on event view) rather than being enforced here.
  */
 export function useAddEventFlow() {
   const { user } = useUser();

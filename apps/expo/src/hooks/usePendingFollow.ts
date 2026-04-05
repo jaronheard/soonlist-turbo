@@ -36,7 +36,6 @@ export function usePendingFollow() {
     let cancelled = false;
 
     const usernameToFollow = pendingFollowUsername;
-    setPendingFollowUsername(null);
 
     logDebug("Processing pending follow", {
       username: usernameToFollow,
@@ -61,6 +60,9 @@ export function usePendingFollow() {
       }
 
       if (!cancelled) {
+        // Clear the pending follow BEFORE navigating so the effect cannot
+        // re-trigger between the state update and the push.
+        setPendingFollowUsername(null);
         router.push("/(tabs)/feed");
       }
     })();

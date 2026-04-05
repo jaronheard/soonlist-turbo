@@ -9,6 +9,7 @@ import {
   mutation,
   query,
 } from "./_generated/server";
+import { listFollowsAggregate } from "./aggregates";
 import { generatePublicId } from "./utils";
 
 // Helper function to get the current user ID from auth
@@ -183,7 +184,7 @@ export async function getOrCreatePersonalList(
 export const getPersonalListForUser = query({
   args: { userId: v.string() },
   handler: async (ctx, { userId }) => {
-    return await ctx.db
+    const personalList = await ctx.db
       .query("lists")
       .withIndex("by_user_and_isSystemList_and_systemListType", (q) =>
         q
@@ -192,6 +193,22 @@ export const getPersonalListForUser = query({
           .eq("systemListType", "personal"),
       )
       .first();
+
+    if (!personalList) {
+      return null;
+    }
+
+    const viewerUserId = await getUserId(ctx);
+    const accessResult = await checkListAccess(
+      ctx,
+      personalList.id,
+      viewerUserId,
+    );
+    if (accessResult.status !== "ok") {
+      return null;
+    }
+
+    return personalList;
   },
 });
 
@@ -246,14 +263,14 @@ export const getListsForUser = query({
       return a.name.localeCompare(b.name);
     });
 
-    // Add follower count per list
+    // Add follower count per list (O(log n) via aggregate)
     const listsWithCounts = await Promise.all(
       allLists.map(async (list) => {
-        const followers = await ctx.db
-          .query("listFollows")
-          .withIndex("by_list", (q) => q.eq("listId", list.id))
-          .collect();
-        return { ...list, followerCount: followers.length };
+        const followerCount = await listFollowsAggregate.count(ctx, {
+          namespace: list.id,
+          bounds: {},
+        });
+        return { ...list, followerCount };
       }),
     );
 
@@ -324,10 +341,12 @@ export const followList = mutation({
       return { success: true };
     }
 
-    await ctx.db.insert("listFollows", {
+    const followId = await ctx.db.insert("listFollows", {
       userId,
       listId,
     });
+    const followDoc = (await ctx.db.get(followId))!;
+    await listFollowsAggregate.insert(ctx, followDoc);
 
     await ctx.runMutation(internal.feedHelpers.addListEventsToUserFeed, {
       userId,
@@ -377,6 +396,14 @@ export const followUserByUsername = mutation({
 
     const listId = personalList.id;
 
+    const accessResult = await checkListAccess(ctx, listId, userId);
+    if (accessResult.status !== "ok") {
+      return {
+        success: false as const,
+        reason: "Cannot follow this list: access denied",
+      };
+    }
+
     // Check if already following
     const existingFollow = await ctx.db
       .query("listFollows")
@@ -389,10 +416,12 @@ export const followUserByUsername = mutation({
       return { success: true as const };
     }
 
-    await ctx.db.insert("listFollows", {
+    const followId = await ctx.db.insert("listFollows", {
       userId,
       listId,
     });
+    const followDoc = (await ctx.db.get(followId))!;
+    await listFollowsAggregate.insert(ctx, followDoc);
 
     await ctx.runMutation(internal.feedHelpers.addListEventsToUserFeed, {
       userId,
@@ -424,6 +453,7 @@ export const unfollowList = mutation({
       .first();
 
     if (existingFollow) {
+      await listFollowsAggregate.deleteIfExists(ctx, existingFollow);
       await ctx.db.delete(existingFollow._id);
       await ctx.runMutation(internal.feedHelpers.removeListEventsFromUserFeed, {
         userId,
@@ -443,7 +473,7 @@ export const getFollowedLists = query({
   handler: async (ctx) => {
     const userId = await getUserId(ctx);
     if (!userId) {
-      throw new ConvexError("Authentication required");
+      return [];
     }
 
     const follows = await ctx.db
@@ -703,10 +733,10 @@ export const getBySlug = query({
         )
         .collect();
 
-      const followers = await ctx.db
-        .query("listFollows")
-        .withIndex("by_list", (q) => q.eq("listId", list.id))
-        .collect();
+      const followerCount = await listFollowsAggregate.count(ctx, {
+        namespace: list.id,
+        bounds: {},
+      });
 
       const sanitizedOwner = owner
         ? {
@@ -731,7 +761,7 @@ export const getBySlug = query({
         ...list,
         owner: sanitizedOwner,
         contributorCount: contributors.length,
-        followerCount: followers.length,
+        followerCount,
       };
     }
 
@@ -950,7 +980,11 @@ export const removeContributorEventsBatch = internalMutation({
       if (event?.userId === contributorUserId) {
         await ctx.db.delete(entry._id);
 
-        await ctx.runMutation(
+        // Schedule fan-out removal in a separate transaction to avoid
+        // hitting transaction limits when there are many followers
+        // (mirrors the add-path's use of scheduler.runAfter).
+        await ctx.scheduler.runAfter(
+          0,
           internal.feedHelpers.removeEventFromListFollowersFeeds,
           {
             eventId: entry.eventId,

@@ -2,6 +2,7 @@ import { v } from "convex/values";
 
 import { internal } from "../_generated/api";
 import { internalAction, internalMutation } from "../_generated/server";
+import { listFollowsAggregate } from "../aggregates";
 import { getOrCreatePersonalList } from "../lists";
 
 /**
@@ -41,10 +42,12 @@ export const userFollowsToListFollowsBatch = internalMutation({
         .first();
 
       if (!existingListFollow) {
-        await ctx.db.insert("listFollows", {
+        const followId = await ctx.db.insert("listFollows", {
           userId: userFollow.followerId,
           listId: personalList.id,
         });
+        const followDoc = (await ctx.db.get(followId))!;
+        await listFollowsAggregate.insert(ctx, followDoc);
 
         // Schedule feed population
         await ctx.scheduler.runAfter(

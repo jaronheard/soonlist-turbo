@@ -240,7 +240,10 @@ function EventDetail({ id }: { id: string }) {
             headerRight: () => null,
           }}
         />
-        <View className="flex-1 bg-white">
+        <View
+          className="flex-1 bg-white"
+          style={{ paddingTop: insets.top + 56 }}
+        >
           <Text>Invalid or missing event id</Text>
         </View>
       </>
@@ -259,7 +262,10 @@ function EventDetail({ id }: { id: string }) {
             headerRight: () => null,
           }}
         />
-        <View className="flex-1 bg-white">
+        <View
+          className="flex-1 bg-white"
+          style={{ paddingTop: insets.top + 56 }}
+        >
           <LoadingSpinner />
         </View>
       </>
@@ -278,7 +284,10 @@ function EventDetail({ id }: { id: string }) {
             headerRight: () => null,
           }}
         />
-        <View className="flex-1 bg-white">
+        <View
+          className="flex-1 bg-white"
+          style={{ paddingTop: insets.top + 56 }}
+        >
           <Text>Event not found</Text>
         </View>
       </>

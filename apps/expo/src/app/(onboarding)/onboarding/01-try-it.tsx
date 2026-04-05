@@ -1,5 +1,11 @@
 import type { ImageSource } from "expo-image";
-import React, { useCallback, useEffect, useRef, useState } from "react";
+import React, {
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
 import { ActivityIndicator, Pressable, Text, View } from "react-native";
 import Animated, { FadeIn } from "react-native-reanimated";
 import * as Haptics from "expo-haptics";
@@ -48,62 +54,76 @@ function ParsingAnimation() {
 }
 
 // Demo event data for the onboarding try-it flow. Cast as Event since
-// this is synthetic data that doesn't come from the backend.
-const DEMO_EVENT = {
-  _id: "demo-1",
-  _creationTime: Date.now(),
-  id: "demo-1",
-  userId: "demo-user",
-  userName: "demo",
-  event: {
+// this is synthetic data that doesn't come from the backend. Dates are
+// generated relative to today so the demo never shows as a past event.
+function getDemoEvent(): Event {
+  const today = new Date();
+  const demoDay = new Date(today);
+  demoDay.setDate(demoDay.getDate() + 7);
+  const year = demoDay.getFullYear();
+  const month = String(demoDay.getMonth() + 1).padStart(2, "0");
+  const day = String(demoDay.getDate()).padStart(2, "0");
+  const startDate = `${year}-${month}-${day}`;
+  const startDateTime = new Date(`${startDate}T12:00:00`).toISOString();
+  const endDateTime = new Date(`${startDate}T17:00:00`).toISOString();
+
+  return {
+    _id: "demo-1",
+    _creationTime: Date.now(),
+    id: "demo-1",
+    userId: "demo-user",
+    userName: "demo",
+    event: {
+      name: "Lloyd Mall Crawl",
+      startDate,
+      endDate: startDate,
+      startTime: "12:00",
+      endTime: "17:00",
+      timeZone: "America/Los_Angeles",
+      location: "Lloyd Center",
+      description:
+        "A mall crawl featuring local shops, organizations, nerdy fun, and family activities. Attendees can expect deals, games, art, food, and animals.",
+
+      images: [null, null, null, lloydMallCrawlImage],
+    },
+    eventMetadata: {
+      category: "community",
+      type: "social",
+      source: "Instagram",
+    },
     name: "Lloyd Mall Crawl",
-    startDate: "2026-07-12",
-    endDate: "2026-07-12",
+    image: null,
+    location: "Lloyd Center",
+    startDate,
+    endDate: startDate,
     startTime: "12:00",
     endTime: "17:00",
     timeZone: "America/Los_Angeles",
-    location: "Lloyd Center",
     description:
       "A mall crawl featuring local shops, organizations, nerdy fun, and family activities. Attendees can expect deals, games, art, food, and animals.",
-
-    images: [null, null, null, lloydMallCrawlImage],
-  },
-  eventMetadata: {
-    category: "community",
-    type: "social",
-    source: "Instagram",
-  },
-  name: "Lloyd Mall Crawl",
-  image: null,
-  location: "Lloyd Center",
-  startDate: "2026-07-12",
-  endDate: "2026-07-12",
-  startTime: "12:00",
-  endTime: "17:00",
-  timeZone: "America/Los_Angeles",
-  description:
-    "A mall crawl featuring local shops, organizations, nerdy fun, and family activities. Attendees can expect deals, games, art, food, and animals.",
-  startDateTime: "2026-07-12T19:00:00.000Z",
-  endDateTime: "2026-07-13T00:00:00.000Z",
-  visibility: "public" as const,
-  created_at: new Date().toISOString(),
-  updatedAt: null,
-  user: {
-    id: "demo-user",
-    username: "demouser",
-    displayName: "You",
-    userImage: "",
-  },
-  eventFollows: [],
-  comments: [],
-  eventToLists: [],
-  lists: [],
-} as unknown as Event;
+    startDateTime,
+    endDateTime,
+    visibility: "public" as const,
+    created_at: new Date().toISOString(),
+    updatedAt: null,
+    user: {
+      id: "demo-user",
+      username: "demouser",
+      displayName: "You",
+      userImage: "",
+    },
+    eventFollows: [],
+    comments: [],
+    eventToLists: [],
+    lists: [],
+  } as unknown as Event;
+}
 
 export default function TryItScreen() {
   const [phase, setPhase] = useState<Phase>("screenshot");
   const { saveStep } = useOnboarding();
   const pendingFollowUsername = usePendingFollowUsername();
+  const demoEvent = useMemo(() => getDemoEvent(), []);
 
   const totalSteps = pendingFollowUsername ? 7 : 6;
 
@@ -186,7 +206,7 @@ export default function TryItScreen() {
             className="-mx-2 flex-1 justify-center"
           >
             <UserEventListItem
-              event={DEMO_EVENT}
+              event={demoEvent}
               showCreator="never"
               isSaved={false}
               demoMode={true}

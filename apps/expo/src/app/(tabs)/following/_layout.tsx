@@ -7,16 +7,18 @@ import { ProfileMenu } from "~/components/ProfileMenu";
 
 export default function FollowingLayout() {
   const { user } = useUser();
+  const username = user?.username;
 
   const handleShare = useCallback(async () => {
+    if (!username) return;
     try {
       await Share.share({
-        url: `https://soonlist.com/${user?.username ?? ""}/my-scene`,
+        url: `https://soonlist.com/${username}/my-scene`,
       });
     } catch {
       // ignore
     }
-  }, [user?.username]);
+  }, [username]);
 
   return (
     <Stack

@@ -270,6 +270,9 @@ catalogs:
     expo-localization:
       specifier: ~55.0.7
       version: 55.0.7
+    expo-location:
+      specifier: ~55.1.6
+      version: 55.1.6
     expo-media-library:
       specifier: ~55.0.8
       version: 55.0.8
@@ -676,7 +679,7 @@ importers:
         specifier: 'catalog:'
         version: 55.0.7(expo@55.0.0-preview.12)(react@19.2.0)
       expo-location:
-        specifier: ^55.1.4
+        specifier: 'catalog:'
         version: 55.1.6(expo@55.0.0-preview.12)
       expo-media-library:
         specifier: 'catalog:'
