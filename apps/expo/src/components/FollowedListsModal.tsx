@@ -10,7 +10,6 @@ import {
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { router } from "expo-router";
-import * as WebBrowser from "expo-web-browser";
 import { useMutation, useQuery } from "convex/react";
 
 import type { Doc } from "@soonlist/backend/convex/_generated/dataModel";
@@ -81,25 +80,8 @@ export function FollowedListsModal({
             className="flex-1 flex-row items-center gap-3"
             onPress={() => {
               onClose();
-              // Personal lists use a `user-${username}` slug and map to the
-              // in-app profile route. Other lists don't have a native route
-              // yet, so open the soonlist.com list page in a web browser
-              // instead of pushing to an unmatched route.
-              if (
-                item.isSystemList &&
-                item.systemListType === "personal" &&
-                item.slug?.startsWith("user-")
-              ) {
-                const username = item.slug.slice("user-".length);
-                if (username) {
-                  router.push(`/${username}`);
-                  return;
-                }
-              }
               if (item.slug) {
-                void WebBrowser.openBrowserAsync(
-                  `https://soonlist.com/list/${item.slug}`,
-                );
+                router.push(`/list/${item.slug}`);
               }
             }}
             activeOpacity={0.7}

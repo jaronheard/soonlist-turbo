@@ -1,6 +1,6 @@
 import { StyleSheet, Text, View } from "react-native";
 import appsFlyer from "react-native-appsflyer";
-import { SafeAreaProvider } from "react-native-safe-area-context";
+
 import {
   Stack,
   useGlobalSearchParams,
@@ -22,7 +22,7 @@ import { RevenueCatProvider } from "~/providers/RevenueCatProvider";
 import "../styles.css";
 
 import { useEffect } from "react";
-import { GestureHandlerRootView } from "react-native-gesture-handler";
+
 import { KeyboardProvider } from "react-native-keyboard-controller";
 import { NotifierWrapper } from "react-native-notifier";
 import Constants, { AppOwnership } from "expo-constants";
@@ -156,10 +156,8 @@ function RootLayout() {
   const isDev = Constants.expoConfig?.scheme === "soonlist.dev";
 
   return (
-    <GestureHandlerRootView style={{ flex: 1 }}>
-      <SafeAreaProvider>
-        <NotifierWrapper>
-          <KeyboardProvider>
+    <NotifierWrapper>
+      <KeyboardProvider>
             <ClerkProvider
               publishableKey={clerkPublishableKey}
               tokenCache={tokenCache}
@@ -195,10 +193,8 @@ function RootLayout() {
                 </QueryClientProvider>
               </ConvexProviderWithClerk>
             </ClerkProvider>
-          </KeyboardProvider>
-        </NotifierWrapper>
-      </SafeAreaProvider>
-    </GestureHandlerRootView>
+      </KeyboardProvider>
+    </NotifierWrapper>
   );
 }
 
