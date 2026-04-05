@@ -492,9 +492,8 @@ export const removeListEventsFromUserFeed = internalMutation({
     const followedListIds = new Set(userListFollows.map((f) => f.listId));
     followedListIds.delete(listId); // Exclude the list being unfollowed
 
-    // Precompute which events from this list are also in other followed lists,
-    // and cache the first replacement list encountered for each event so we can
-    // reattribute sourceListId below without re-querying per event.
+    // Cache the first replacement list per event during this scan so the
+    // sourceListId reattribution below is a map lookup instead of a re-query.
     const eventIdsInThisList = new Set(eventToLists.map((etl) => etl.eventId));
     const eventsInOtherFollowedLists = new Set<string>();
     const eventToReplacementList = new Map<string, string>();
@@ -551,7 +550,6 @@ export const removeListEventsFromUserFeed = internalMutation({
       } else if (existingFollowedListsEntry.sourceListId === listId) {
         // Keep the entry but update sourceListId to a different followed list
         // that also contains this event so the source attribution doesn't go stale.
-        // Uses the replacement map precomputed above to avoid per-event DB reads.
         const newSourceListId = eventToReplacementList.get(etl.eventId);
         if (newSourceListId) {
           const oldDoc = existingFollowedListsEntry;
