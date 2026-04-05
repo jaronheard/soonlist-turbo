@@ -79,9 +79,15 @@ export function FollowedListsModal({
           <TouchableOpacity
             className="flex-1 flex-row items-center gap-3"
             onPress={() => {
-              onClose();
-              if (item.slug) {
-                router.push(`/list/${item.slug}`);
+              // Personal list slugs are `user-<username>`; navigate to the
+              // owning user's profile screen since we don't have a native
+              // list detail screen in the app.
+              if (item.slug?.startsWith("user-")) {
+                const username = item.slug.slice("user-".length);
+                if (username) {
+                  onClose();
+                  router.push(`/${username}`);
+                }
               }
             }}
             activeOpacity={0.7}

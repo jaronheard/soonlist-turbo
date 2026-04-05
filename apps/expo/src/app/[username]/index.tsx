@@ -396,7 +396,10 @@ export default function UserProfilePage() {
     }
   };
 
-  const followedLists = useQuery(api.lists.getFollowedLists);
+  const followedLists = useQuery(
+    api.lists.getFollowedLists,
+    isAuthenticated ? {} : "skip",
+  );
   const followingIds = useMemo(
     () => new Set(followedLists?.map((l: Doc<"lists">) => l.id) ?? []),
     [followedLists],

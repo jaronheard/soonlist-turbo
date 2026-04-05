@@ -628,47 +628,52 @@ export function UserEventListItem(props: UserEventListItemProps) {
             <View className="-mb-2 mt-1.5 flex-row items-center justify-start gap-3">
               {ActionButton && <ActionButton event={event} />}
 
-              {primaryAction === "addToCalendar" ? (
-                <TouchableOpacity
-                  className="-mb-0.5 -ml-2.5 flex-row items-center gap-1 py-2.5 pl-4 pr-1"
-                  onPress={handleAddToCal}
-                  hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
-                >
-                  <CalendarPlus size={iconSize * 1.1} color="#5A32FB" />
-                  <Text className="text-base font-bold text-interactive-1">
-                    Add
-                  </Text>
-                </TouchableOpacity>
-              ) : isOwner ? (
-                <TouchableOpacity
-                  className="-mb-0.5 -ml-2.5 flex-row items-center gap-1 py-2.5 pl-4 pr-1"
-                  onPress={handleShare}
-                  hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
-                >
-                  <ShareIcon size={iconSize * 1.1} color="#5A32FB" />
-                  <Text className="text-base font-bold text-interactive-1">
-                    Share
-                  </Text>
-                </TouchableOpacity>
-              ) : isSaved ? (
-                <View className="-mb-0.5 -ml-2.5 flex-row items-center gap-1 py-2.5 pl-4 pr-1 opacity-60">
-                  <Heart size={iconSize * 1.1} color="#5A32FB" fill="#5A32FB" />
-                  <Text className="text-base font-bold text-interactive-1">
-                    Saved
-                  </Text>
-                </View>
-              ) : (
-                <TouchableOpacity
-                  className="-mb-0.5 -ml-2.5 flex-row items-center gap-1 py-2.5 pl-4 pr-1"
-                  onPress={() => void handleFollow()}
-                  hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
-                >
-                  <Heart size={iconSize * 1.1} color="#5A32FB" />
-                  <Text className="text-base font-bold text-interactive-1">
-                    Save
-                  </Text>
-                </TouchableOpacity>
-              )}
+              {!ActionButton &&
+                (primaryAction === "addToCalendar" ? (
+                  <TouchableOpacity
+                    className="-mb-0.5 -ml-2.5 flex-row items-center gap-1 py-2.5 pl-4 pr-1"
+                    onPress={handleAddToCal}
+                    hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+                  >
+                    <CalendarPlus size={iconSize * 1.1} color="#5A32FB" />
+                    <Text className="text-base font-bold text-interactive-1">
+                      Add
+                    </Text>
+                  </TouchableOpacity>
+                ) : isOwner ? (
+                  <TouchableOpacity
+                    className="-mb-0.5 -ml-2.5 flex-row items-center gap-1 py-2.5 pl-4 pr-1"
+                    onPress={handleShare}
+                    hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+                  >
+                    <ShareIcon size={iconSize * 1.1} color="#5A32FB" />
+                    <Text className="text-base font-bold text-interactive-1">
+                      Share
+                    </Text>
+                  </TouchableOpacity>
+                ) : isSaved ? (
+                  <View className="-mb-0.5 -ml-2.5 flex-row items-center gap-1 py-2.5 pl-4 pr-1 opacity-60">
+                    <Heart
+                      size={iconSize * 1.1}
+                      color="#5A32FB"
+                      fill="#5A32FB"
+                    />
+                    <Text className="text-base font-bold text-interactive-1">
+                      Saved
+                    </Text>
+                  </View>
+                ) : (
+                  <TouchableOpacity
+                    className="-mb-0.5 -ml-2.5 flex-row items-center gap-1 py-2.5 pl-4 pr-1"
+                    onPress={() => void handleFollow()}
+                    hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+                  >
+                    <Heart size={iconSize * 1.1} color="#5A32FB" />
+                    <Text className="text-base font-bold text-interactive-1">
+                      Save
+                    </Text>
+                  </TouchableOpacity>
+                ))}
 
               {!isDiscoverFeed &&
                 (isOwner && primaryAction !== "addToCalendar" ? (

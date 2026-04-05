@@ -1,5 +1,6 @@
 import { StyleSheet, Text, View } from "react-native";
 import appsFlyer from "react-native-appsflyer";
+import { SafeAreaProvider } from "react-native-safe-area-context";
 import {
   Stack,
   useGlobalSearchParams,
@@ -21,6 +22,9 @@ import { RevenueCatProvider } from "~/providers/RevenueCatProvider";
 import "../styles.css";
 
 import { useEffect } from "react";
+import { GestureHandlerRootView } from "react-native-gesture-handler";
+import { KeyboardProvider } from "react-native-keyboard-controller";
+import { NotifierWrapper } from "react-native-notifier";
 import Constants, { AppOwnership } from "expo-constants";
 import { Kalam_700Bold, useFonts } from "@expo-google-fonts/kalam";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
@@ -126,7 +130,7 @@ appsFlyer.initSdk(
 );
 
 function RootLayout() {
-  useFonts({ Kalam_700Bold });
+  const [fontsLoaded] = useFonts({ Kalam_700Bold });
   const clerkPublishableKey = Config.clerkPublishableKey;
   const { setUserTimezone } = useAppStore();
 
@@ -143,46 +147,58 @@ function RootLayout() {
     );
   }
 
+  // Wait for fonts to load to avoid flash of unstyled text. The Kalam font
+  // is used in the app shell so we block the initial render until it's ready.
+  if (!fontsLoaded) {
+    return <View style={{ flex: 1 }} />;
+  }
+
   const isDev = Constants.expoConfig?.scheme === "soonlist.dev";
 
   return (
-    <View style={{ flex: 1 }}>
-      <ClerkProvider
-        publishableKey={clerkPublishableKey}
-        tokenCache={tokenCache}
-        __experimental_resourceCache={resourceCache}
-      >
-        {/* eslint-disable-next-line react-compiler/react-compiler */}
-        <ConvexProviderWithClerk client={convex} useAuth={useAuth}>
-          <QueryClientProvider client={queryClient}>
-            <PostHogProvider
-              apiKey={Config.posthogApiKey}
-              options={{
-                host: "https://us.i.posthog.com",
-                disabled: isDev,
-                enableSessionReplay: !isDev,
-                sessionReplayConfig: {
-                  maskAllTextInputs: false,
-                  maskAllImages: false,
-                  captureLog: false,
-                  captureNetworkTelemetry: true,
-                  androidDebouncerDelayMs: 500,
-                  iOSdebouncerDelayMs: 1000,
-                },
-              }}
+    <GestureHandlerRootView style={{ flex: 1 }}>
+      <SafeAreaProvider>
+        <NotifierWrapper>
+          <KeyboardProvider>
+            <ClerkProvider
+              publishableKey={clerkPublishableKey}
+              tokenCache={tokenCache}
+              __experimental_resourceCache={resourceCache}
             >
-              <PostHogIdentityTracker />
-              <OneSignalProvider>
-                <RevenueCatProvider>
-                  <AuthAndTokenSync />
-                  <RootLayoutContent />
-                </RevenueCatProvider>
-              </OneSignalProvider>
-            </PostHogProvider>
-          </QueryClientProvider>
-        </ConvexProviderWithClerk>
-      </ClerkProvider>
-    </View>
+              {/* eslint-disable-next-line react-compiler/react-compiler */}
+              <ConvexProviderWithClerk client={convex} useAuth={useAuth}>
+                <QueryClientProvider client={queryClient}>
+                  <PostHogProvider
+                    apiKey={Config.posthogApiKey}
+                    options={{
+                      host: "https://us.i.posthog.com",
+                      disabled: isDev,
+                      enableSessionReplay: !isDev,
+                      sessionReplayConfig: {
+                        maskAllTextInputs: false,
+                        maskAllImages: false,
+                        captureLog: false,
+                        captureNetworkTelemetry: true,
+                        androidDebouncerDelayMs: 500,
+                        iOSdebouncerDelayMs: 1000,
+                      },
+                    }}
+                  >
+                    <PostHogIdentityTracker />
+                    <OneSignalProvider>
+                      <RevenueCatProvider>
+                        <AuthAndTokenSync />
+                        <RootLayoutContent />
+                      </RevenueCatProvider>
+                    </OneSignalProvider>
+                  </PostHogProvider>
+                </QueryClientProvider>
+              </ConvexProviderWithClerk>
+            </ClerkProvider>
+          </KeyboardProvider>
+        </NotifierWrapper>
+      </SafeAreaProvider>
+    </GestureHandlerRootView>
   );
 }
 
@@ -354,7 +370,7 @@ function RootLayoutContent() {
     <View style={{ flex: 1 }}>
       <InitialLayout />
       <CaptureOverlayButton />
-      <StatusBar style="dark" />
+      <StatusBar style="auto" />
     </View>
   );
 }

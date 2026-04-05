@@ -36,7 +36,6 @@ export function usePendingFollow() {
     let cancelled = false;
 
     const usernameToFollow = pendingFollowUsername;
-    setPendingFollowUsername(null);
 
     logDebug("Processing pending follow", {
       username: usernameToFollow,
@@ -61,6 +60,9 @@ export function usePendingFollow() {
       }
 
       if (!cancelled) {
+        // Clear the pending follow AFTER the mutation and navigation so the
+        // effect cleanup doesn't flip `cancelled` to true before we navigate.
+        setPendingFollowUsername(null);
         router.push("/(tabs)/feed");
       }
     })();
