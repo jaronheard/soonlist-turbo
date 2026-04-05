@@ -980,9 +980,9 @@ export const removeContributorEventsBatch = internalMutation({
       if (event?.userId === contributorUserId) {
         await ctx.db.delete(entry._id);
 
-        // Schedule fan-out removal in a separate transaction to avoid
-        // hitting transaction limits when there are many followers
-        // (mirrors the add-path's use of scheduler.runAfter).
+        // Schedule feed cleanup in a separate transaction to reduce bandwidth
+        // of this batch mutation — removeEventFromListFollowersFeeds does
+        // multiple queries per follower
         await ctx.scheduler.runAfter(
           0,
           internal.feedHelpers.removeEventFromListFollowersFeeds,

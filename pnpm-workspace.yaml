@@ -23,6 +23,8 @@ catalog:
   zod: ^3.23.0
   superjson: 2.2.1
   nanoid: ^5.0.7
+  gray-matter: ^4.0.3
+  next-mdx-remote: ^6.0.0
   clsx: ^2.1.0
   uuid: ^9.0.1
 

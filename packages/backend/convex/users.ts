@@ -3,7 +3,12 @@ import { ConvexError, v } from "convex/values";
 
 import type { DatabaseReader } from "./_generated/server";
 import { internal } from "./_generated/api";
-import { internalMutation, mutation, query } from "./_generated/server";
+import {
+  internalAction,
+  internalMutation,
+  mutation,
+  query,
+} from "./_generated/server";
 import { getOrCreatePersonalList } from "./lists";
 import { onboardingDataValidator, userAdditionalInfoValidator } from "./schema";
 
@@ -802,12 +807,6 @@ export const syncFromClerk = internalMutation({
     };
 
     if (existing) {
-      // Only update username if the user doesn't already have one
-      if (existing.username && existing.username.trim() !== "") {
-        const { username: _, ...userDataWithoutUsername } = userData;
-        await ctx.db.patch(existing._id, userDataWithoutUsername);
-        return;
-      }
       await ctx.db.patch(existing._id, userData);
     } else {
       await ctx.db.insert("users", {
@@ -905,10 +904,14 @@ export const updatePublicListSettings = mutation({
       args.publicListEnabled !== user.publicListEnabled
     ) {
       const newVisibility = args.publicListEnabled ? "public" : "private";
-      await ctx.runMutation(internal.users.bulkUpdateEventVisibility, {
-        userId: args.userId,
-        visibility: newVisibility,
-      });
+      await ctx.scheduler.runAfter(
+        0,
+        internal.users.bulkUpdateEventVisibilityAction,
+        {
+          userId: args.userId,
+          visibility: newVisibility,
+        },
+      );
     }
 
     return null;
@@ -1343,52 +1346,127 @@ export const getFollowerCount = query({
  * INTERNAL: Bulk update visibility of all events for a user and their feed entries
  * Called when publicListEnabled is toggled
  */
-export const bulkUpdateEventVisibility = internalMutation({
+/**
+ * Batch mutation: update visibility for one page of events.
+ * Feed updates are scheduled asynchronously to keep each transaction lightweight.
+ */
+export const bulkUpdateEventVisibilityBatch = internalMutation({
+  args: {
+    userId: v.string(),
+    visibility: v.union(v.literal("public"), v.literal("private")),
+    cursor: v.union(v.string(), v.null()),
+    batchSize: v.number(),
+  },
+  returns: v.object({
+    processed: v.number(),
+    updated: v.number(),
+    nextCursor: v.union(v.string(), v.null()),
+    isDone: v.boolean(),
+  }),
+  handler: async (ctx, { userId, visibility, cursor, batchSize }) => {
+    const result = await ctx.db
+      .query("events")
+      .withIndex("by_user", (q) => q.eq("userId", userId))
+      .paginate({ numItems: batchSize, cursor });
+
+    let updated = 0;
+
+    for (const event of result.page) {
+      if (event.visibility === visibility) continue;
+
+      await ctx.db.patch(event._id, {
+        visibility,
+        updatedAt: new Date().toISOString(),
+      });
+
+      // Schedule feed visibility update in a separate transaction
+      await ctx.scheduler.runAfter(
+        0,
+        internal.feedHelpers.updateEventVisibilityInFeeds,
+        { eventId: event.id, visibility },
+      );
+
+      if (visibility === "private") {
+        // Schedule removal from discover/follower feeds
+        await ctx.scheduler.runAfter(
+          0,
+          internal.feedHelpers.removeEventFromFeeds,
+          { eventId: event.id, keepCreatorFeed: true },
+        );
+      } else {
+        // Schedule adding to appropriate feeds
+        await ctx.scheduler.runAfter(
+          0,
+          internal.feedHelpers.updateEventInFeeds,
+          {
+            eventId: event.id,
+            userId: event.userId,
+            visibility,
+            startDateTime: event.startDateTime,
+            endDateTime: event.endDateTime,
+            similarityGroupId: event.similarityGroupId,
+          },
+        );
+      }
+
+      updated++;
+    }
+
+    return {
+      processed: result.page.length,
+      updated,
+      nextCursor: result.continueCursor,
+      isDone: result.isDone,
+    };
+  },
+});
+
+/**
+ * Action: orchestrate paginated bulk visibility update.
+ */
+export const bulkUpdateEventVisibilityAction = internalAction({
   args: {
     userId: v.string(),
     visibility: v.union(v.literal("public"), v.literal("private")),
   },
   returns: v.null(),
   handler: async (ctx, { userId, visibility }) => {
-    const events = await ctx.db
-      .query("events")
-      .withIndex("by_user", (q) => q.eq("userId", userId))
-      .collect();
+    let totalProcessed = 0;
+    let totalUpdated = 0;
+    let cursor: string | null = null;
+    const batchSize = 50;
 
-    for (const event of events) {
-      // Skip if already has the same visibility
-      if (event.visibility === visibility) continue;
-
-      // Update the event visibility
-      await ctx.db.patch(event._id, {
+    while (true) {
+      const result: {
+        processed: number;
+        updated: number;
+        nextCursor: string | null;
+        isDone: boolean;
+      } = await ctx.runMutation(internal.users.bulkUpdateEventVisibilityBatch, {
+        userId,
         visibility,
-        updatedAt: new Date().toISOString(),
+        cursor,
+        batchSize,
       });
 
-      // Update visibility in all feed entries for this event
-      await ctx.runMutation(internal.feedHelpers.updateEventVisibilityInFeeds, {
-        eventId: event.id,
-        visibility,
-      });
+      totalProcessed += result.processed;
+      totalUpdated += result.updated;
 
-      // When making private, remove from discover and follower feeds (but keep creator feed)
-      if (visibility === "private") {
-        await ctx.runMutation(internal.feedHelpers.removeEventFromFeeds, {
-          eventId: event.id,
-          keepCreatorFeed: true,
-        });
-      } else {
-        // When making public, add to appropriate feeds
-        await ctx.runMutation(internal.feedHelpers.updateEventInFeeds, {
-          eventId: event.id,
-          userId: event.userId,
-          visibility,
-          startDateTime: event.startDateTime,
-          endDateTime: event.endDateTime,
-          similarityGroupId: event.similarityGroupId,
-        });
+      if (result.isDone) {
+        break;
       }
+      if (result.nextCursor === cursor) {
+        console.error(
+          `bulkUpdateEventVisibilityAction: cursor stalled at ${cursor} for user ${userId} — aborting`,
+        );
+        break;
+      }
+      cursor = result.nextCursor;
     }
+
+    console.log(
+      `Bulk updated visibility to ${visibility} for user ${userId}: ${totalUpdated} events updated (${totalProcessed} processed)`,
+    );
 
     return null;
   },

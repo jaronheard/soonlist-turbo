@@ -175,7 +175,7 @@ export const updateEventVisibilityInFeeds = internalMutation({
       if (entry.eventVisibility !== visibility) {
         const oldDoc = entry;
         await ctx.db.patch(entry._id, { eventVisibility: visibility });
-        const updatedDoc = (await ctx.db.get(entry._id))!;
+        const updatedDoc = { ...entry, eventVisibility: visibility };
         await userFeedsAggregate.replaceOrInsert(ctx, oldDoc, updatedDoc);
 
         // Track the group for later update
@@ -289,7 +289,7 @@ export const updateEventTimesInAllFeeds = internalMutation({
         eventEndTime,
         hasEnded,
       });
-      const updatedDoc = (await ctx.db.get(entry._id))!;
+      const updatedDoc = { ...entry, eventStartTime, eventEndTime, hasEnded };
       await userFeedsAggregate.replaceOrInsert(ctx, oldDoc, updatedDoc);
 
       // Track the group for later update
@@ -377,6 +377,7 @@ export async function upsertFeedEntry(
       sourceListId,
     };
     const id = await ctx.db.insert("userFeeds", doc);
+    // Read back to get _id and _creationTime needed by aggregate
     const insertedDoc = (await ctx.db.get(id))!;
     await userFeedsAggregate.replaceOrInsert(ctx, insertedDoc, insertedDoc);
 
@@ -391,15 +392,16 @@ export async function upsertFeedEntry(
     const oldDoc = existingEntry;
     // Also update similarityGroupId and eventVisibility if provided (for migration scenarios)
     // Don't overwrite sourceListId — first source wins
-    await ctx.db.patch(existingEntry._id, {
+    const patchFields = {
       eventStartTime,
       eventEndTime,
       hasEnded,
       ...(similarityGroupId && { similarityGroupId }),
       ...(eventVisibility && { eventVisibility }),
       ...(!existingEntry.sourceListId && sourceListId ? { sourceListId } : {}),
-    });
-    const updatedDoc = (await ctx.db.get(existingEntry._id))!;
+    };
+    await ctx.db.patch(existingEntry._id, patchFields);
+    const updatedDoc = { ...existingEntry, ...patchFields };
     await userFeedsAggregate.replaceOrInsert(ctx, oldDoc, updatedDoc);
 
     // Update grouped feed entry if similarityGroupId exists
@@ -632,6 +634,8 @@ export const removeEventFromListFollowersFeeds = internalMutation({
       .withIndex("by_list", (q) => q.eq("listId", listId))
       .collect();
 
+    if (listFollows.length === 0) return;
+
     const event = await ctx.db
       .query("events")
       .withIndex("by_custom_id", (q) => q.eq("id", eventId))
@@ -640,6 +644,15 @@ export const removeEventFromListFollowersFeeds = internalMutation({
     if (!event) {
       return;
     }
+
+    // Hoist eventToLists query outside the loop — the event's list memberships
+    // are the same regardless of which follower we're processing
+    const eventListMemberships = await ctx.db
+      .query("eventToLists")
+      .withIndex("by_event", (q) => q.eq("eventId", eventId))
+      .collect();
+    const eventListIds = new Set(eventListMemberships.map((etl) => etl.listId));
+    eventListIds.delete(listId); // Exclude the list being removed from
 
     for (const follow of listFollows) {
       const followedListsFeedId = `followedLists_${follow.userId}`;
@@ -651,19 +664,11 @@ export const removeEventFromListFollowersFeeds = internalMutation({
         .collect();
 
       const followedListIds = new Set(userListFollows.map((f) => f.listId));
-      followedListIds.delete(listId);
 
-      let isInOtherFollowedList = false;
-      if (followedListIds.size > 0) {
-        const otherEventToLists = await ctx.db
-          .query("eventToLists")
-          .withIndex("by_event", (q) => q.eq("eventId", eventId))
-          .collect();
-
-        isInOtherFollowedList = otherEventToLists.some((otherEtl) =>
-          followedListIds.has(otherEtl.listId),
-        );
-      }
+      // Check intersection of user's followed lists with event's other lists
+      const isInOtherFollowedList = [...eventListIds].some((lid) =>
+        followedListIds.has(lid),
+      );
 
       // Remove from followedLists feed only if event is not in any other followed list
       if (!isInOtherFollowedList) {

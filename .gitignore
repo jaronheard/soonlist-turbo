@@ -63,3 +63,7 @@ dist/
 
 # turbo
 .turbo
+
+# claude code
+.claude/worktrees/
+.claude/settings.local.json
