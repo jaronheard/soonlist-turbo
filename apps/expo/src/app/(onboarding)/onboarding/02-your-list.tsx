@@ -1,12 +1,12 @@
 import type { ImageSource } from "expo-image";
 import React, { useMemo } from "react";
 import { Pressable, Text, View } from "react-native";
-import { router } from "expo-router";
 import { SymbolView } from "expo-symbols";
 
 import type { EventWithSimilarity } from "~/utils/similarEvents";
 import { QuestionContainer } from "~/components/QuestionContainer";
 import UserEventsList from "~/components/UserEventsList";
+import { useOnboarding } from "~/hooks/useOnboarding";
 import { usePendingFollowUsername } from "~/store";
 import { hapticLight } from "~/utils/feedback";
 
@@ -77,47 +77,61 @@ function makeDemoEvent(
   } as unknown as EventWithSimilarity;
 }
 
-const DEMO_EVENTS: EventWithSimilarity[] = [
-  makeDemoEvent(
-    "demo-1",
-    "Lloyd Mall Crawl",
-    "2026-07-12",
-    "12:00",
-    "17:00",
-    "Lloyd Center",
-    "community",
-    lloydMallCrawlImage,
-  ),
-  makeDemoEvent(
-    "demo-2",
-    "Jamie XX",
-    "2026-08-08",
-    "19:00",
-    "22:00",
-    "Pioneer Courthouse Square",
-    "music",
-    jamieXxImage,
-  ),
-  makeDemoEvent(
-    "demo-3",
-    "Sharpie Smile",
-    "2026-08-13",
-    "19:00",
-    "22:00",
-    "Holocene, Portland, OR",
-    "music",
-    sharpieSmileImage,
-  ),
-];
+// Generate demo dates relative to today so the onboarding preview never goes stale.
+function addDays(date: Date, days: number): string {
+  const next = new Date(date);
+  next.setDate(next.getDate() + days);
+  const year = next.getFullYear();
+  const month = String(next.getMonth() + 1).padStart(2, "0");
+  const day = String(next.getDate()).padStart(2, "0");
+  return `${year}-${month}-${day}`;
+}
+
+function getDemoEvents(): EventWithSimilarity[] {
+  const today = new Date();
+  return [
+    makeDemoEvent(
+      "demo-1",
+      "Lloyd Mall Crawl",
+      addDays(today, 7),
+      "12:00",
+      "17:00",
+      "Lloyd Center",
+      "community",
+      lloydMallCrawlImage,
+    ),
+    makeDemoEvent(
+      "demo-2",
+      "Jamie XX",
+      addDays(today, 21),
+      "19:00",
+      "22:00",
+      "Pioneer Courthouse Square",
+      "music",
+      jamieXxImage,
+    ),
+    makeDemoEvent(
+      "demo-3",
+      "Sharpie Smile",
+      addDays(today, 28),
+      "19:00",
+      "22:00",
+      "Holocene, Portland, OR",
+      "music",
+      sharpieSmileImage,
+    ),
+  ];
+}
 
 export default function YourListScreen() {
   const pendingFollowUsername = usePendingFollowUsername();
+  const { saveStep } = useOnboarding();
   const totalSteps = pendingFollowUsername ? 7 : 6;
-  const groupedEvents = useMemo(() => DEMO_EVENTS, []);
+  const groupedEvents = useMemo(() => getDemoEvents(), []);
 
   const handleContinue = () => {
     void hapticLight();
-    router.navigate("/(onboarding)/onboarding/03-notifications");
+    saveStep("yourList", {}, "/(onboarding)/onboarding/03-notifications");
   };
 
   return (

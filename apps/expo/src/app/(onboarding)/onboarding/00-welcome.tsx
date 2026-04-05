@@ -46,11 +46,24 @@ function ReferrerEventRow({
 function ReferralWelcome({ username }: { username: string }) {
   const userData = useQuery(api.users.getByUsername, { userName: username });
 
-  const feedData = useQuery(api.feeds.getPublicUserFeed, {
-    username,
-    paginationOpts: { numItems: 3, cursor: null },
-    filter: "upcoming",
-  });
+  // Only query the feed after we've confirmed the user exists — otherwise
+  // getPublicUserFeed throws for unknown usernames and breaks this screen.
+  const feedData = useQuery(
+    api.feeds.getPublicUserFeed,
+    userData
+      ? {
+          username,
+          paginationOpts: { numItems: 3, cursor: null },
+          filter: "upcoming",
+        }
+      : "skip",
+  );
+
+  // If the referral username doesn't resolve to a user, fall back to the
+  // organic welcome screen so the onboarding flow still works.
+  if (userData === null) {
+    return <OrganicWelcome />;
+  }
 
   const displayName = userData?.displayName ?? `@${username}`;
   const avatarUrl = userData?.userImage;
