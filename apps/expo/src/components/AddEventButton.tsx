@@ -33,7 +33,7 @@ export default function AddEventButton({
   showChevron = true,
   bottomOffset = 100,
 }: AddEventButtonProps) {
-  const { isCapturing } = useInFlightEventStore();
+  const isCapturing = useInFlightEventStore((s) => s.isCapturing);
   const isOnline = useNetworkStatus();
   const insets = useSafeAreaInsets();
 
@@ -98,7 +98,7 @@ export default function AddEventButton({
       {/* Main action button or offline indicator */}
       <TouchableOpacity
         onPress={handlePress}
-        disabled={!isOnline}
+        disabled={!isOnline || isCapturing}
         className="absolute self-center"
         style={{ bottom: bottomOffset + insets.bottom }}
       >
