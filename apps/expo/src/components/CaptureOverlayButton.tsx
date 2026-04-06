@@ -1,5 +1,10 @@
 import React, { useEffect, useRef } from "react";
 import { Image, Platform, Pressable, View } from "react-native";
+import Animated, {
+  FadeIn,
+  FadeOut,
+  LayoutAnimationConfig,
+} from "react-native-reanimated";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { usePathname } from "expo-router";
 
@@ -24,12 +29,14 @@ const TAB_PATH_ALLOWLIST = ["/feed", "/following", "/discover"] as const;
 
 const BUTTON_SIZE = 56;
 
+// Safety timeout to recover from stuck isCapturing state (e.g. unhandled edge cases)
+const CAPTURING_TIMEOUT_MS = 30_000;
+
 /**
  * CaptureOverlayButton
  * ---------------------
  * Floating capture entry point rendered at the root layout, sitting above
- * the native tab bar. Replaces the old `NativeTabs.Trigger name="add"
- * role="search"` tab, which navigated to a blank placeholder screen.
+ * the native tab bar.
  *
  * Visibility is gated to the main tab routes (feed, following, discover) so
  * the overlay hides automatically during modal presentations (event details,
@@ -48,16 +55,24 @@ export function CaptureOverlayButton({
   const isCapturing = useInFlightEventStore((s) => s.isCapturing);
   const { triggerAddEventFlow } = useAddEventFlow();
 
-  // Synchronous guard that closes the ~20ms race window between a tap
-  // firing and `setIsCapturing(true)` flushing through the store. The old
-  // `pickerActiveRef` in `(tabs)/_layout.tsx` did this same thing before
-  // this refactor. Reset when `isCapturing` falls back to false, which
-  // useAddEventFlow guarantees on cancel, success, and error.
-  const pressLockRef = useRef(false);
+  // Safety timeout: reset isCapturing if it gets stuck for 30s.
+  // This prevents permanent frozen state from any unhandled edge case.
+  const timeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   useEffect(() => {
-    if (!isCapturing) {
-      pressLockRef.current = false;
+    if (isCapturing) {
+      timeoutRef.current = setTimeout(() => {
+        useInFlightEventStore.getState().setIsCapturing(false);
+      }, CAPTURING_TIMEOUT_MS);
+    } else if (timeoutRef.current) {
+      clearTimeout(timeoutRef.current);
+      timeoutRef.current = null;
     }
+    return () => {
+      if (timeoutRef.current) {
+        clearTimeout(timeoutRef.current);
+        timeoutRef.current = null;
+      }
+    };
   }, [isCapturing]);
 
   const pathname = pathnameProp ?? currentPathname;
@@ -69,18 +84,9 @@ export function CaptureOverlayButton({
   const isOnTabRoute = TAB_PATH_ALLOWLIST.some(
     (prefix) => pathname === prefix || pathname.startsWith(`${prefix}/`),
   );
-  if (!isOnTabRoute) return null;
 
   const handlePress = () => {
-    // Two-layer double-tap guard:
-    // 1. `pressLockRef` closes the ~20ms window between the first tap and
-    //    `setIsCapturing(true)` becoming visible (useAddEventFlow awaits
-    //    `Haptics.selectionAsync()` before setting the store, so a rapid
-    //    second tap would otherwise see `isCapturing=false`).
-    // 2. `isCapturing` store read also blocks captures in flight from
-    //    other call sites like UserEventsList's empty-state CTAs.
-    if (pressLockRef.current || isCapturing) return;
-    pressLockRef.current = true;
+    if (isCapturing) return;
     void triggerAddEventFlow();
   };
 
@@ -98,49 +104,58 @@ export function CaptureOverlayButton({
         zIndex: 100,
       }}
     >
-      <Pressable
-        onPress={handlePress}
-        disabled={!isOnline || isCapturing}
-        accessibilityRole="button"
-        accessibilityLabel={accessibilityLabel}
-        accessibilityHint="Opens photo picker to create an event"
-        accessibilityState={{
-          disabled: !isOnline || isCapturing,
-          busy: isCapturing,
-        }}
-        style={({ pressed }) => ({
-          width: BUTTON_SIZE,
-          height: BUTTON_SIZE,
-          alignItems: "center",
-          justifyContent: "center",
-          opacity: !isOnline ? 0.4 : pressed ? 0.6 : 1,
-        })}
-      >
-        <Image
-          // eslint-disable-next-line @typescript-eslint/no-require-imports, @typescript-eslint/consistent-type-assertions
-          source={require("../assets/capture-tab.png") as number}
-          style={{ width: BUTTON_SIZE, height: BUTTON_SIZE }}
-          resizeMode="contain"
-        />
-        {isCapturing && (
-          <View
-            pointerEvents="none"
-            style={{
-              position: "absolute",
-              width: BUTTON_SIZE,
-              height: BUTTON_SIZE,
-              alignItems: "center",
-              justifyContent: "center",
-            }}
+      <LayoutAnimationConfig skipEntering>
+        {isOnTabRoute && (
+          <Animated.View
+            entering={FadeIn.duration(200).delay(100)}
+            exiting={FadeOut.duration(150)}
           >
-            <CircularSpinner
-              size={BUTTON_SIZE}
-              strokeWidth={3}
-              color="#5A32FB"
-            />
-          </View>
+            <Pressable
+              onPress={handlePress}
+              disabled={!isOnline || isCapturing}
+              accessibilityRole="button"
+              accessibilityLabel={accessibilityLabel}
+              accessibilityHint="Opens photo picker to create an event"
+              accessibilityState={{
+                disabled: !isOnline || isCapturing,
+                busy: isCapturing,
+              }}
+              style={({ pressed }) => ({
+                width: BUTTON_SIZE,
+                height: BUTTON_SIZE,
+                alignItems: "center",
+                justifyContent: "center",
+                opacity: !isOnline ? 0.4 : pressed ? 0.6 : 1,
+              })}
+            >
+              <Image
+                // eslint-disable-next-line @typescript-eslint/no-require-imports, @typescript-eslint/consistent-type-assertions
+                source={require("../assets/capture-tab.png") as number}
+                style={{ width: BUTTON_SIZE, height: BUTTON_SIZE }}
+                resizeMode="contain"
+              />
+              {isCapturing && (
+                <View
+                  pointerEvents="none"
+                  style={{
+                    position: "absolute",
+                    width: BUTTON_SIZE,
+                    height: BUTTON_SIZE,
+                    alignItems: "center",
+                    justifyContent: "center",
+                  }}
+                >
+                  <CircularSpinner
+                    size={BUTTON_SIZE}
+                    strokeWidth={3}
+                    color="#5A32FB"
+                  />
+                </View>
+              )}
+            </Pressable>
+          </Animated.View>
         )}
-      </Pressable>
+      </LayoutAnimationConfig>
     </View>
   );
 }
