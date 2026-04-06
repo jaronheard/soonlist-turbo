@@ -32,16 +32,38 @@ import { AppleSignInButton } from "./AppleSignInButton";
 import { EmailSignInButton } from "./EmailSignInButton"; // You'll need to create this component
 import { GoogleSignInButton } from "./GoogleSignInButton";
 import { Logo } from "./Logo";
+import { ProgressBar } from "./ProgressBar";
 
 const AnimatedView = Animated.createAnimatedComponent(View);
+
+// eslint-disable-next-line @typescript-eslint/consistent-type-assertions, @typescript-eslint/no-require-imports
+const DEFAULT_HERO_IMAGE = require("../assets/feed.png") as ImageSourcePropType;
 
 WebBrowser.maybeCompleteAuthSession();
 
 interface SignInWithOAuthProps {
   banner?: React.ReactNode;
+  headline?: React.ReactNode;
+  subtitle?: string;
+  hideImage?: boolean;
+  imageSource?: ImageSourcePropType;
+  imageSlot?: React.ReactNode;
+  /** Use the dark purple onboarding treatment (interactive-1 bg, white text). */
+  dark?: boolean;
+  /** Shows an onboarding progress bar at the top. Pass the step out of total. */
+  progress?: { current: number; total: number };
 }
 
-const SignInWithOAuth = ({ banner }: SignInWithOAuthProps) => {
+const SignInWithOAuth = ({
+  banner,
+  headline,
+  subtitle,
+  hideImage,
+  imageSource,
+  imageSlot,
+  dark,
+  progress,
+}: SignInWithOAuthProps) => {
   useWarmUpBrowser();
   const posthog = usePostHog();
   const convex = useConvex();
@@ -308,39 +330,73 @@ const SignInWithOAuth = ({ banner }: SignInWithOAuthProps) => {
     router.navigate("/sign-up-email");
   };
 
-  const Container = banner ? SafeAreaView : View;
+  // Progress bar must live inside the safe area so it clears the notch,
+  // so switch to SafeAreaView whenever a banner or progress bar is shown.
+  const Container = banner || progress ? SafeAreaView : View;
 
   return (
-    <Container className="flex-1 bg-interactive-3">
+    <Container
+      className={`flex-1 ${dark ? "bg-interactive-1" : "bg-interactive-3"}`}
+    >
       <Stack.Screen options={{ headerShown: false }} />
+      {progress && (
+        <View className="pt-2">
+          <ProgressBar
+            currentStep={progress.current}
+            totalSteps={progress.total}
+            backgroundColor="bg-neutral-3"
+            foregroundColor="bg-neutral-1"
+          />
+        </View>
+      )}
       {banner}
-      <View className={`flex-1 px-4 pb-8 ${banner ? "pt-0" : "pt-24"}`}>
+      <View
+        className={`flex-1 px-4 pb-8 ${
+          banner ? "pt-0" : progress ? "pt-10" : "pt-24"
+        }`}
+      >
         <View className="flex-1">
           <View className="shrink-0">
             <View className="mb-4 items-center">
-              <Logo className="h-10 w-40" variant="hidePreview" />
+              <Logo
+                className="h-10 w-40"
+                variant={dark ? "white" : "hidePreview"}
+              />
             </View>
             <View className="items-center">
-              <Text className="mb-2 text-center font-heading text-4xl font-bold text-gray-700">
-                Turn screenshots into{" "}
-                <Text className="text-interactive-1">plans</Text>
+              <Text
+                className={`mb-2 text-center font-heading text-4xl font-bold ${dark ? "text-white" : "text-gray-700"}`}
+              >
+                {headline ?? (
+                  <>
+                    Turn screenshots into{" "}
+                    <Text className="text-interactive-1">plans</Text>
+                  </>
+                )}
               </Text>
-              <Text className="mb-4 text-center text-lg text-gray-500">
-                Save events in one tap. All in one place.
+              <Text
+                className={`mb-4 text-center text-lg ${dark ? "text-white/80" : "text-gray-500"}`}
+              >
+                {subtitle ??
+                  "Save events in one tap, all in one shareable list"}
               </Text>
             </View>
           </View>
 
-          <View className="flex-1 justify-center">
-            <ExpoImage
-              // eslint-disable-next-line @typescript-eslint/consistent-type-assertions, @typescript-eslint/no-require-imports
-              source={require("../assets/feed.png") as ImageSourcePropType}
-              style={{ width: "100%", height: "100%" }}
-              contentFit="contain"
-              cachePolicy="disk"
-              transition={100}
-            />
-          </View>
+          {!hideImage && (
+            <View className="flex-1 justify-center">
+              {imageSlot ?? (
+                <ExpoImage
+                  source={imageSource ?? DEFAULT_HERO_IMAGE}
+                  style={{ width: "100%", height: "100%" }}
+                  contentFit="contain"
+                  cachePolicy="disk"
+                  transition={100}
+                />
+              )}
+            </View>
+          )}
+          {hideImage && <View className="flex-1" />}
 
           {oauthError && (
             <View className="mb-4 rounded-lg bg-red-100 p-4">
@@ -350,17 +406,17 @@ const SignInWithOAuth = ({ banner }: SignInWithOAuthProps) => {
             </View>
           )}
 
-          <View className="relative w-full shrink-0">
+          <View className="relative mt-4 w-full shrink-0">
             <AppleSignInButton
               onPress={() => void handleOAuthFlow("oauth_apple")}
             />
             <View className="h-3" />
             <Pressable
               onPress={toggleOtherOptions}
-              className="relative flex-row items-center justify-center rounded-full border border-gray-300 bg-white px-6 py-3 active:opacity-70"
+              className="relative flex-row items-center justify-center rounded-full border border-gray-300 bg-white px-6 py-3 active:scale-[0.98] active:bg-neutral-100"
             >
               <Text className="text-base font-medium text-gray-700">
-                Other Options
+                More ways to sign up
               </Text>
               {showOtherOptions && (
                 <View className="absolute right-6">

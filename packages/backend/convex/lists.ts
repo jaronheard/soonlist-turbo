@@ -1,7 +1,7 @@
 import { ConvexError, v } from "convex/values";
 
 import type { Doc } from "./_generated/dataModel";
-import type { QueryCtx } from "./_generated/server";
+import type { MutationCtx, QueryCtx } from "./_generated/server";
 import { internal } from "./_generated/api";
 import {
   internalAction,
@@ -9,6 +9,8 @@ import {
   mutation,
   query,
 } from "./_generated/server";
+import { listFollowsAggregate } from "./aggregates";
+import { generatePublicId } from "./utils";
 
 // Helper function to get the current user ID from auth
 async function getUserId(ctx: QueryCtx): Promise<string | null> {
@@ -128,6 +130,185 @@ async function _canUserContributeToList(
 }
 
 /**
+ * Internal helper: get or create a user's personal Soonlist.
+ * Used during event creation and user signup.
+ */
+export async function getOrCreatePersonalList(
+  ctx: MutationCtx,
+  userId: string,
+): Promise<Doc<"lists">> {
+  // Look up existing personal list
+  const existing = await ctx.db
+    .query("lists")
+    .withIndex("by_user_and_isSystemList_and_systemListType", (q) =>
+      q
+        .eq("userId", userId)
+        .eq("isSystemList", true)
+        .eq("systemListType", "personal"),
+    )
+    .first();
+
+  if (existing) {
+    return existing;
+  }
+
+  // Look up user for display name
+  const user = await ctx.db
+    .query("users")
+    .withIndex("by_custom_id", (q) => q.eq("id", userId))
+    .first();
+
+  const displayName = user?.displayName || user?.username || "User";
+  const username = user?.username || "user";
+  const listId = generatePublicId();
+
+  const docId = await ctx.db.insert("lists", {
+    id: listId,
+    userId,
+    name: `${displayName}'s Soonlist`,
+    description: `${displayName}'s Soonlist`,
+    visibility: "public",
+    isSystemList: true,
+    systemListType: "personal",
+    slug: `user-${username}`,
+    created_at: new Date().toISOString(),
+    updatedAt: null,
+  });
+
+  return (await ctx.db.get(docId))!;
+}
+
+/**
+ * Get the personal list for a user (public query)
+ */
+export const getPersonalListForUser = query({
+  args: { userId: v.string() },
+  handler: async (ctx, { userId }) => {
+    const personalList = await ctx.db
+      .query("lists")
+      .withIndex("by_user_and_isSystemList_and_systemListType", (q) =>
+        q
+          .eq("userId", userId)
+          .eq("isSystemList", true)
+          .eq("systemListType", "personal"),
+      )
+      .first();
+
+    if (!personalList) {
+      return null;
+    }
+
+    const viewerUserId = await getUserId(ctx);
+    const accessResult = await checkListAccess(
+      ctx,
+      personalList.id,
+      viewerUserId,
+    );
+    if (accessResult.status !== "ok") {
+      return null;
+    }
+
+    return personalList;
+  },
+});
+
+/**
+ * Get all public/unlisted lists for a user (personal list first), plus contributed lists.
+ * Includes follower count per list.
+ */
+export const getListsForUser = query({
+  args: { userId: v.string() },
+  handler: async (ctx, { userId }) => {
+    // Get user's own lists
+    const ownedLists = await ctx.db
+      .query("lists")
+      .withIndex("by_user", (q) => q.eq("userId", userId))
+      .collect();
+
+    // Filter to public/unlisted only
+    const visibleOwned = ownedLists.filter(
+      (l) => l.visibility === "public" || l.visibility === "unlisted",
+    );
+
+    // Get lists where user is a member (contributor)
+    const memberships = await ctx.db
+      .query("listMembers")
+      .withIndex("by_user", (q) => q.eq("userId", userId))
+      .collect();
+
+    const contributedLists = await Promise.all(
+      memberships.map(async (m) => {
+        const list = await ctx.db
+          .query("lists")
+          .withIndex("by_custom_id", (q) => q.eq("id", m.listId))
+          .first();
+        return list;
+      }),
+    );
+
+    const visibleContributed = contributedLists.filter(
+      (l): l is Doc<"lists"> =>
+        l !== null &&
+        (l.visibility === "public" || l.visibility === "unlisted") &&
+        l.userId !== userId, // Exclude owned lists (already in visibleOwned)
+    );
+
+    // Combine and deduplicate
+    const allLists = [...visibleOwned, ...visibleContributed];
+
+    // Sort: personal list first, then by name
+    allLists.sort((a, b) => {
+      if (a.isSystemList && a.systemListType === "personal") return -1;
+      if (b.isSystemList && b.systemListType === "personal") return 1;
+      return a.name.localeCompare(b.name);
+    });
+
+    // Add follower count per list (O(log n) via aggregate)
+    const listsWithCounts = await Promise.all(
+      allLists.map(async (list) => {
+        const followerCount = await listFollowsAggregate.count(ctx, {
+          namespace: list.id,
+          bounds: {},
+        });
+        return { ...list, followerCount };
+      }),
+    );
+
+    return listsWithCounts;
+  },
+});
+
+/**
+ * Get lists where the current user is a listMember (contributing to)
+ */
+export const getContributingLists = query({
+  args: {},
+  handler: async (ctx) => {
+    const userId = await getUserId(ctx);
+    if (!userId) {
+      return [];
+    }
+
+    const memberships = await ctx.db
+      .query("listMembers")
+      .withIndex("by_user", (q) => q.eq("userId", userId))
+      .collect();
+
+    const lists = await Promise.all(
+      memberships.map(async (m) => {
+        const list = await ctx.db
+          .query("lists")
+          .withIndex("by_custom_id", (q) => q.eq("id", m.listId))
+          .first();
+        return list;
+      }),
+    );
+
+    return lists.filter((l): l is Doc<"lists"> => l !== null);
+  },
+});
+
+/**
  * Follow a list
  */
 export const followList = mutation({
@@ -160,10 +341,12 @@ export const followList = mutation({
       return { success: true };
     }
 
-    await ctx.db.insert("listFollows", {
+    const followId = await ctx.db.insert("listFollows", {
       userId,
       listId,
     });
+    const followDoc = (await ctx.db.get(followId))!;
+    await listFollowsAggregate.insert(ctx, followDoc);
 
     await ctx.runMutation(internal.feedHelpers.addListEventsToUserFeed, {
       userId,
@@ -171,6 +354,81 @@ export const followList = mutation({
     });
 
     return { success: true };
+  },
+});
+
+/**
+ * Follow a user's personal list by username.
+ * Encapsulates user lookup, personal list lookup, and follow in one server-side call.
+ */
+export const followUserByUsername = mutation({
+  args: { username: v.string() },
+  handler: async (ctx, { username }) => {
+    const userId = await getUserId(ctx);
+    if (!userId) {
+      throw new ConvexError("Authentication required");
+    }
+
+    // Look up target user by username
+    const targetUser = await ctx.db
+      .query("users")
+      .withIndex("by_username", (q) => q.eq("username", username))
+      .unique();
+
+    if (!targetUser) {
+      return { success: false as const, reason: "User not found" };
+    }
+
+    // Get their personal list
+    const personalList = await ctx.db
+      .query("lists")
+      .withIndex("by_user_and_isSystemList_and_systemListType", (q) =>
+        q
+          .eq("userId", targetUser.id)
+          .eq("isSystemList", true)
+          .eq("systemListType", "personal"),
+      )
+      .first();
+
+    if (!personalList) {
+      return { success: false as const, reason: "User has no personal list" };
+    }
+
+    const listId = personalList.id;
+
+    const accessResult = await checkListAccess(ctx, listId, userId);
+    if (accessResult.status !== "ok") {
+      return {
+        success: false as const,
+        reason: "Cannot follow this list: access denied",
+      };
+    }
+
+    // Check if already following
+    const existingFollow = await ctx.db
+      .query("listFollows")
+      .withIndex("by_user_and_list", (q) =>
+        q.eq("userId", userId).eq("listId", listId),
+      )
+      .first();
+
+    if (existingFollow) {
+      return { success: true as const };
+    }
+
+    const followId = await ctx.db.insert("listFollows", {
+      userId,
+      listId,
+    });
+    const followDoc = (await ctx.db.get(followId))!;
+    await listFollowsAggregate.insert(ctx, followDoc);
+
+    await ctx.runMutation(internal.feedHelpers.addListEventsToUserFeed, {
+      userId,
+      listId,
+    });
+
+    return { success: true as const };
   },
 });
 
@@ -195,6 +453,7 @@ export const unfollowList = mutation({
       .first();
 
     if (existingFollow) {
+      await listFollowsAggregate.deleteIfExists(ctx, existingFollow);
       await ctx.db.delete(existingFollow._id);
       await ctx.runMutation(internal.feedHelpers.removeListEventsFromUserFeed, {
         userId,
@@ -214,7 +473,7 @@ export const getFollowedLists = query({
   handler: async (ctx) => {
     const userId = await getUserId(ctx);
     if (!userId) {
-      throw new ConvexError("Authentication required");
+      return [];
     }
 
     const follows = await ctx.db
@@ -474,10 +733,10 @@ export const getBySlug = query({
         )
         .collect();
 
-      const followers = await ctx.db
-        .query("listFollows")
-        .withIndex("by_list", (q) => q.eq("listId", list.id))
-        .collect();
+      const followerCount = await listFollowsAggregate.count(ctx, {
+        namespace: list.id,
+        bounds: {},
+      });
 
       const sanitizedOwner = owner
         ? {
@@ -502,7 +761,7 @@ export const getBySlug = query({
         ...list,
         owner: sanitizedOwner,
         contributorCount: contributors.length,
-        followerCount: followers.length,
+        followerCount,
       };
     }
 

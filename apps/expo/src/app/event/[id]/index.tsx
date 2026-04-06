@@ -234,16 +234,16 @@ function EventDetail({ id }: { id: string }) {
       <>
         <Stack.Screen
           options={{
-            headerTransparent: false,
-            headerBackground: () => (
-              <View style={{ flex: 1, backgroundColor: "#E0D9FF" }} />
-            ),
+            headerTransparent: true,
             headerTintColor: "#5A32FB",
             headerTitleStyle: { color: "#5A32FB" },
             headerRight: () => null,
           }}
         />
-        <View className="flex-1 bg-white">
+        <View
+          className="flex-1 bg-white"
+          style={{ paddingTop: insets.top + 56 }}
+        >
           <Text>Invalid or missing event id</Text>
         </View>
       </>
@@ -256,16 +256,16 @@ function EventDetail({ id }: { id: string }) {
       <>
         <Stack.Screen
           options={{
-            headerTransparent: false,
-            headerBackground: () => (
-              <View style={{ flex: 1, backgroundColor: "#E0D9FF" }} />
-            ),
+            headerTransparent: true,
             headerTintColor: "#5A32FB",
             headerTitleStyle: { color: "#5A32FB" },
             headerRight: () => null,
           }}
         />
-        <View className="flex-1 bg-white">
+        <View
+          className="flex-1 bg-white"
+          style={{ paddingTop: insets.top + 56 }}
+        >
           <LoadingSpinner />
         </View>
       </>
@@ -278,16 +278,16 @@ function EventDetail({ id }: { id: string }) {
       <>
         <Stack.Screen
           options={{
-            headerTransparent: false,
-            headerBackground: () => (
-              <View style={{ flex: 1, backgroundColor: "#E0D9FF" }} />
-            ),
+            headerTransparent: true,
             headerTintColor: "#5A32FB",
             headerTitleStyle: { color: "#5A32FB" },
             headerRight: () => null,
           }}
         />
-        <View className="flex-1 bg-white">
+        <View
+          className="flex-1 bg-white"
+          style={{ paddingTop: insets.top + 56 }}
+        >
           <Text>Event not found</Text>
         </View>
       </>
@@ -337,16 +337,14 @@ function EventDetail({ id }: { id: string }) {
         options={{
           headerRight: HeaderRight,
           headerLeft: !canGoBack ? HeaderLeft : undefined,
-          headerTransparent: false,
-          headerBackground: () => (
-            <View style={{ flex: 1, backgroundColor: "#E0D9FF" }} />
-          ),
+          headerTransparent: true,
           headerTintColor: "#5A32FB",
           headerTitleStyle: { color: "#5A32FB" },
         }}
       />
       <ScrollView
         className="flex-1 bg-white"
+        contentInsetAdjustmentBehavior="automatic"
         contentContainerStyle={{
           paddingBottom: insets.bottom + 36,
         }}

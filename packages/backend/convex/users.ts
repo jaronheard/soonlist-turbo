@@ -9,6 +9,7 @@ import {
   mutation,
   query,
 } from "./_generated/server";
+import { getOrCreatePersonalList } from "./lists";
 import { onboardingDataValidator, userAdditionalInfoValidator } from "./schema";
 
 const MAX_USERNAME_LENGTH = 64;
@@ -820,6 +821,9 @@ export const syncFromClerk = internalMutation({
         onboardingData: null,
         onboardingCompletedAt: null,
       });
+
+      // Create personal list for new user
+      await getOrCreatePersonalList(ctx, args.id);
     }
   },
 });

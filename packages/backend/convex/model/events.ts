@@ -13,6 +13,7 @@ import {
   userFeedsAggregate,
 } from "../aggregates";
 import { DEFAULT_TIMEZONE } from "../constants";
+import { getOrCreatePersonalList } from "../lists";
 import { generateNumericId, generatePublicId } from "../utils";
 import {
   determineNewSimilarityGroup,
@@ -813,6 +814,11 @@ export async function createEvent(
       }
     }
   }
+
+  // Link event to creator's personal list. Use addEventToList so that
+  // followers of the personal list get the event propagated to their feed.
+  const personalList = await getOrCreatePersonalList(ctx, userId);
+  await addEventToList(ctx, eventId, personalList.id, userId);
 
   // Add event to feeds (with similarity group for grouped feed support)
   await ctx.runMutation(internal.feedHelpers.updateEventInFeeds, {

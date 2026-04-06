@@ -1,6 +1,6 @@
-import { Platform, StyleSheet, Text, View } from "react-native";
+import { StyleSheet, Text, View } from "react-native";
 import appsFlyer from "react-native-appsflyer";
-import { SafeAreaProvider } from "react-native-safe-area-context";
+
 import {
   Stack,
   useGlobalSearchParams,
@@ -22,15 +22,16 @@ import { RevenueCatProvider } from "~/providers/RevenueCatProvider";
 import "../styles.css";
 
 import { useEffect } from "react";
-import { GestureHandlerRootView } from "react-native-gesture-handler";
+
 import { KeyboardProvider } from "react-native-keyboard-controller";
 import { NotifierWrapper } from "react-native-notifier";
 import Constants, { AppOwnership } from "expo-constants";
+import { Kalam_700Bold, useFonts } from "@expo-google-fonts/kalam";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 
 import AuthAndTokenSync from "~/components/AuthAndTokenSync";
+import { CaptureOverlayButton } from "~/components/CaptureOverlayButton";
 import { ForceUpdateScreen } from "~/components/ForceUpdateScreen";
-import { LiquidGlassHeader } from "~/components/LiquidGlassHeader";
 import { PostHogIdentityTracker } from "~/components/PostHogIdentityTracker";
 import { useAppsFlyerDeepLink } from "~/hooks/useAppsFlyerDeepLink";
 import { useCaptureCompletionFeedback } from "~/hooks/useCaptureCompletionFeedback";
@@ -129,6 +130,7 @@ appsFlyer.initSdk(
 );
 
 function RootLayout() {
+  const [fontsLoaded] = useFonts({ Kalam_700Bold });
   const clerkPublishableKey = Config.clerkPublishableKey;
   const { setUserTimezone } = useAppStore();
 
@@ -145,21 +147,25 @@ function RootLayout() {
     );
   }
 
+  // Wait for fonts to load to avoid flash of unstyled text. The Kalam font
+  // is used in the app shell so we block the initial render until it's ready.
+  if (!fontsLoaded) {
+    return <View style={{ flex: 1 }} />;
+  }
+
   const isDev = Constants.expoConfig?.scheme === "soonlist.dev";
 
   return (
-    <GestureHandlerRootView style={{ flex: 1 }}>
-      <NotifierWrapper>
-        <KeyboardProvider>
-          <ClerkProvider
-            publishableKey={clerkPublishableKey}
-            tokenCache={tokenCache}
-            __experimental_resourceCache={resourceCache}
-          >
-            {/* eslint-disable-next-line react-compiler/react-compiler */}
-            <ConvexProviderWithClerk client={convex} useAuth={useAuth}>
-              <QueryClientProvider client={queryClient}>
-                <SafeAreaProvider>
+    <NotifierWrapper>
+      <KeyboardProvider>
+            <ClerkProvider
+              publishableKey={clerkPublishableKey}
+              tokenCache={tokenCache}
+              __experimental_resourceCache={resourceCache}
+            >
+              {/* eslint-disable-next-line react-compiler/react-compiler */}
+              <ConvexProviderWithClerk client={convex} useAuth={useAuth}>
+                <QueryClientProvider client={queryClient}>
                   <PostHogProvider
                     apiKey={Config.posthogApiKey}
                     options={{
@@ -184,13 +190,11 @@ function RootLayout() {
                       </RevenueCatProvider>
                     </OneSignalProvider>
                   </PostHogProvider>
-                </SafeAreaProvider>
-              </QueryClientProvider>
-            </ConvexProviderWithClerk>
-          </ClerkProvider>
-        </KeyboardProvider>
-      </NotifierWrapper>
-    </GestureHandlerRootView>
+                </QueryClientProvider>
+              </ConvexProviderWithClerk>
+            </ClerkProvider>
+      </KeyboardProvider>
+    </NotifierWrapper>
   );
 }
 
@@ -202,8 +206,8 @@ const InitialLayout = () => {
     <Stack
       screenOptions={{
         headerTransparent: true,
-        headerBackground: () => <LiquidGlassHeader />,
-        headerTintColor: "#fff",
+        headerBlurEffect: "none",
+        headerTintColor: "#5A32FB",
         headerTitleStyle: {
           fontWeight: "bold",
         },
@@ -240,8 +244,6 @@ const InitialLayout = () => {
           presentation: "modal",
           title: "Event Details",
           headerShown: true,
-          headerTransparent: false,
-          headerBackground: () => <LiquidGlassHeader />,
         }}
       />
       <Stack.Screen
@@ -250,8 +252,6 @@ const InitialLayout = () => {
           presentation: "modal",
           title: "",
           headerShown: true,
-          headerTransparent: false,
-          headerBackground: () => <LiquidGlassHeader />,
         }}
       />
       <Stack.Screen
@@ -365,7 +365,8 @@ function RootLayoutContent() {
   return (
     <View style={{ flex: 1 }}>
       <InitialLayout />
-      <StatusBar style={Platform.OS === "ios" ? "light" : "auto"} />
+      <CaptureOverlayButton />
+      <StatusBar style="auto" />
     </View>
   );
 }

@@ -33,9 +33,12 @@ export const useStableQuery = ((name, ...args) => {
 /**
  * Drop-in replacement for usePaginatedQuery for use with a parametrized query.
  * Unlike usePaginatedQuery, when query arguments change useStablePaginatedQuery
- * does not return empty results and 'LoadingMore' status. Instead, it continues
- * to return the previously loaded results until the new results have finished
- * loading.
+ * does not return empty results. Instead, it continues to return the
+ * previously loaded results until the new results have finished loading.
+ *
+ * Note: the returned `status` reflects the live status (including
+ * "LoadingMore") so callers can render load-more spinners while pagination
+ * is in flight. Only the `results` array is stabilized.
  *
  * See https://stack.convex.dev/help-my-app-is-overreacting for details.
  *
@@ -53,5 +56,11 @@ export const useStablePaginatedQuery = ((name, ...args) => {
     stored.current = result;
   }
 
-  return stored.current;
+  // Expose the live status so callers can detect LoadingMore, while keeping
+  // the stabilized `results` array (and other fields) from the stored ref.
+  return {
+    ...stored.current,
+    status: result.status,
+    loadMore: result.loadMore,
+  };
 }) as typeof usePaginatedQuery;

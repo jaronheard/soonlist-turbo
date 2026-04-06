@@ -1,7 +1,6 @@
 import React, { useCallback, useEffect, useState } from "react";
 import {
   ActivityIndicator,
-  Platform,
   Pressable,
   ScrollView,
   Text,
@@ -9,40 +8,42 @@ import {
 } from "react-native";
 import RevenueCatUI, { PAYWALL_RESULT } from "react-native-purchases-ui";
 import { SafeAreaView } from "react-native-safe-area-context";
-import Constants from "expo-constants";
 import { router } from "expo-router";
 
+import { ProgressBar } from "~/components/ProgressBar";
 import { useRevenueCat } from "~/providers/RevenueCatProvider";
-import { useAppStore, useSetHasSeenOnboarding } from "~/store";
+import {
+  useAppStore,
+  usePendingFollowUsername,
+  useSetHasSeenOnboarding,
+} from "~/store";
 import { AF_EVENTS, trackAFEvent } from "~/utils/appsflyerEvents";
-import { isSimulator, shouldMockPaywall } from "~/utils/deviceInfo";
+import { shouldMockPaywall } from "~/utils/deviceInfo";
+
+// Route path for the sign-in screen within the onboarding flow.
+// Expo Router's typed routes are generated from the file structure and may be stale.
+// Using a relative path avoids the strict typed-route check.
+const SIGN_IN_PATH = "./05-sign-in" as const;
 
 export default function PaywallScreen() {
   const { isInitialized, customerInfo } = useRevenueCat();
   const { setOnboardingData } = useAppStore();
+  const pendingFollowUsername = usePendingFollowUsername();
   const [showMockPaywall] = useState(() => shouldMockPaywall());
   const [paywallPresented, setPaywallPresented] = useState(false);
   const hasUnlimited =
     customerInfo?.entitlements.active.unlimited?.isActive ?? false;
+
+  // Paywall is the step after notifications. Sign-in sits at totalSteps - 1
+  // and final "done" is totalSteps, so paywall lands at totalSteps - 2.
+  const totalSteps = pendingFollowUsername ? 7 : 6;
+  const currentStep = totalSteps - 2;
 
   const setHasSeenOnboarding = useSetHasSeenOnboarding();
 
   const completeOnboarding = useCallback(() => {
     setHasSeenOnboarding(true);
   }, [setHasSeenOnboarding]);
-
-  // Debug logging
-  console.log("Paywall Debug:", {
-    isDevice: Constants.isDevice as boolean | undefined,
-    deviceName: String(Constants.deviceName ?? "unknown"),
-    platform: Platform.OS,
-    model: String(Constants.platform?.ios?.model ?? "unknown"),
-    isSimulator: isSimulator(),
-    shouldMockPaywall: shouldMockPaywall(),
-    showMockPaywall,
-    isInitialized,
-    hasUnlimited,
-  });
 
   const presentPaywall = useCallback(async () => {
     try {
@@ -64,7 +65,7 @@ export default function PaywallScreen() {
           completeOnboarding();
           // Navigate to sign-in screen with subscription status
           router.navigate({
-            pathname: "/sign-in",
+            pathname: SIGN_IN_PATH,
             params: { fromPaywall: "true", subscribed: "true" },
           });
           break;
@@ -79,7 +80,7 @@ export default function PaywallScreen() {
           completeOnboarding();
           // Navigate to sign-in screen with subscription status
           router.navigate({
-            pathname: "/sign-in",
+            pathname: SIGN_IN_PATH,
             params: {
               fromPaywall: "true",
               subscribed: "true",
@@ -101,7 +102,7 @@ export default function PaywallScreen() {
           completeOnboarding();
           // Navigate to sign-in screen in trial mode
           router.navigate({
-            pathname: "/sign-in",
+            pathname: SIGN_IN_PATH,
             params: { fromPaywall: "true", trial: "true" },
           });
           break;
@@ -117,7 +118,7 @@ export default function PaywallScreen() {
       // Mark onboarding as seen
       completeOnboarding();
       router.navigate({
-        pathname: "/sign-in",
+        pathname: SIGN_IN_PATH,
         params: { fromPaywall: "true", trial: "true" },
       });
     }
@@ -135,7 +136,7 @@ export default function PaywallScreen() {
       completeOnboarding();
       // Navigate to sign-in screen with subscription status
       router.navigate({
-        pathname: "/sign-in",
+        pathname: SIGN_IN_PATH,
         params: {
           fromPaywall: "true",
           subscribed: "true",
@@ -183,7 +184,7 @@ export default function PaywallScreen() {
 
     // Navigate to sign-in screen
     router.navigate({
-      pathname: "/sign-in",
+      pathname: SIGN_IN_PATH,
       params: { fromPaywall: "true", trial: "true" },
     });
   };
@@ -199,7 +200,7 @@ export default function PaywallScreen() {
     completeOnboarding();
     // Navigate to sign-in screen
     router.navigate({
-      pathname: "/sign-in",
+      pathname: SIGN_IN_PATH,
       params: { fromPaywall: "true", subscribed: "true", plan },
     });
   };
@@ -208,6 +209,14 @@ export default function PaywallScreen() {
   if (showMockPaywall) {
     return (
       <SafeAreaView className="flex-1 bg-interactive-1">
+        <View className="pt-2">
+          <ProgressBar
+            currentStep={currentStep}
+            totalSteps={totalSteps}
+            backgroundColor="bg-neutral-3"
+            foregroundColor="bg-neutral-1"
+          />
+        </View>
         <ScrollView className="flex-1 px-6">
           <View className="py-8">
             <Text className="mb-2 text-center text-3xl font-bold text-white">
@@ -273,7 +282,7 @@ export default function PaywallScreen() {
             {/* Try Free Button */}
             <Pressable onPress={handleSkip} className="py-2">
               <Text className="text-center text-white/80 underline">
-                Try 3 events free
+                Continue for free
               </Text>
             </Pressable>
           </View>
@@ -286,6 +295,14 @@ export default function PaywallScreen() {
   // The RevenueCat paywall will appear as a modal over this screen
   return (
     <SafeAreaView className="flex-1 bg-interactive-1">
+      <View className="pt-2">
+        <ProgressBar
+          currentStep={currentStep}
+          totalSteps={totalSteps}
+          backgroundColor="bg-neutral-3"
+          foregroundColor="bg-neutral-1"
+        />
+      </View>
       <View className="flex-1 items-center justify-center px-6">
         <ActivityIndicator size="large" color="white" />
         <Text className="mt-4 text-lg text-white">

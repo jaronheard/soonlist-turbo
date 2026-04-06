@@ -1,7 +1,14 @@
 import type { OnboardingData } from "@soonlist/validators";
 
 export type OnboardingStep =
+  // New flow steps
   | "welcome"
+  | "tryIt"
+  | "yourList"
+  | "notifications"
+  | "paywall"
+  | "signIn"
+  // Legacy steps (kept for backward compatibility with existing data)
   | "intro"
   | "goals"
   | "screenshot"
@@ -9,12 +16,11 @@ export type OnboardingStep =
   | "age"
   | "source"
   | "readyNotifications"
-  | "notifications"
   | "demo"
   | "demoIntro"
   | "screenshotDemo"
   | "addScreenshot"
   | "success"
-  | "paywall";
+  | "shareDemoTryIt";
 
 export type { OnboardingData };

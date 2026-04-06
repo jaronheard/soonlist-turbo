@@ -73,3 +73,19 @@ export const userFeedsAggregate = new TableAggregate<{
   namespace: (doc) => doc.feedId,
   sortKey: (doc) => (doc.hasEnded ? 1 : 0),
 });
+
+/**
+ * Aggregate for list follows
+ * Used for: efficient follower counts per list
+ * Namespace: listId - separate data per list
+ * SortKey: null (we only need counts)
+ */
+export const listFollowsAggregate = new TableAggregate<{
+  Namespace: string; // listId
+  Key: null;
+  DataModel: DataModel;
+  TableName: "listFollows";
+}>(components.listFollowsAggregate, {
+  namespace: (doc) => doc.listId,
+  sortKey: () => null,
+});

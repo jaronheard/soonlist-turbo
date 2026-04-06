@@ -153,6 +153,11 @@ export default defineSchema({
     .index("by_isSystemList_and_systemListType", [
       "isSystemList",
       "systemListType",
+    ])
+    .index("by_user_and_isSystemList_and_systemListType", [
+      "userId",
+      "isSystemList",
+      "systemListType",
     ]),
 
   listMembers: defineTable({
@@ -222,6 +227,8 @@ export default defineSchema({
     eventVisibility: v.optional(
       v.union(v.literal("public"), v.literal("private")),
     ),
+    // Source list tracking — which list surfaced this event into this feed
+    sourceListId: v.optional(v.string()),
   })
     .index("by_feed_hasEnded_startTime", [
       "feedId",

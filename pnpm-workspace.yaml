@@ -85,6 +85,9 @@ catalog:
   nativewind: ~4.2.1
 
   # Additional Expo packages
+  "@expo-google-fonts/kalam": ^0.4.1
+  "expo-font": ~55.0.4
+  "expo-symbols": ~1.0.8
   "expo-apple-authentication": ~55.0.7
   "expo-application": ~55.0.7
   "expo-asset": ~55.0.6
@@ -102,7 +105,7 @@ catalog:
   "expo-linear-gradient": ~55.0.7
   "expo-linking": ~55.0.6
   "expo-localization": ~55.0.7
-  "expo-location": ~19.0.10
+  "expo-location": ~55.1.6
   "expo-media-library": ~55.0.8
   "expo-notifications": ~55.0.9
   "expo-splash-screen": ~55.0.8

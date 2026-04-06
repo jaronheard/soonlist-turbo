@@ -42,7 +42,9 @@ const transformConvexUser = (user: Doc<"users">): User => {
 
 // Transform Convex events to EventWithUser format (for feed events)
 function transformConvexEventsAsPublic(
-  events: FunctionReturnType<typeof api.feeds.getMyFeed>["page"] | undefined,
+  events:
+    | FunctionReturnType<typeof api.feeds.getPublicUserFeed>["page"]
+    | undefined,
 ): EventWithUser[] {
   if (!events) return [];
 

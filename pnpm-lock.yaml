@@ -45,6 +45,9 @@ catalogs:
     '@convex-dev/workpool':
       specifier: ^0.2.10
       version: 0.2.19
+    '@expo-google-fonts/kalam':
+      specifier: ^0.4.1
+      version: 0.4.1
     '@expo/metro-runtime':
       specifier: ~55.0.6
       version: 55.0.6
@@ -249,6 +252,9 @@ catalogs:
     expo-file-system:
       specifier: ~55.0.8
       version: 55.0.8
+    expo-font:
+      specifier: ~55.0.4
+      version: 55.0.4
     expo-haptics:
       specifier: ~55.0.7
       version: 55.0.7
@@ -270,6 +276,9 @@ catalogs:
     expo-localization:
       specifier: ~55.0.7
       version: 55.0.7
+    expo-location:
+      specifier: ~55.1.6
+      version: 55.1.6
     expo-media-library:
       specifier: ~55.0.8
       version: 55.0.8
@@ -294,6 +303,9 @@ catalogs:
     expo-store-review:
       specifier: ~55.0.7
       version: 55.0.7
+    expo-symbols:
+      specifier: ~1.0.8
+      version: 1.0.8
     expo-task-manager:
       specifier: ~55.0.8
       version: 55.0.8
@@ -558,6 +570,9 @@ importers:
       '@clerk/clerk-expo':
         specifier: 'catalog:'
         version: 2.19.17(xxet56npmss6npapsvl4vyhime)
+      '@expo-google-fonts/kalam':
+        specifier: 'catalog:'
+        version: 0.4.1
       '@expo/metro-runtime':
         specifier: 'catalog:'
         version: 55.0.6(@expo/dom-webview@55.0.3)(expo@55.0.0-preview.12)(react-dom@19.2.0(react@19.2.0))(react-native@0.83.2(@babel/core@7.28.5)(@types/react@19.2.14)(bufferutil@4.1.0)(react@19.2.0)(utf-8-validate@5.0.10))(react@19.2.0)
@@ -654,6 +669,9 @@ importers:
       expo-file-system:
         specifier: 'catalog:'
         version: 55.0.8(expo@55.0.0-preview.12)(react-native@0.83.2(@babel/core@7.28.5)(@types/react@19.2.14)(bufferutil@4.1.0)(react@19.2.0)(utf-8-validate@5.0.10))
+      expo-font:
+        specifier: 'catalog:'
+        version: 55.0.4(expo@55.0.0-preview.12)(react-native@0.83.2(@babel/core@7.28.5)(@types/react@19.2.14)(bufferutil@4.1.0)(react@19.2.0)(utf-8-validate@5.0.10))(react@19.2.0)
       expo-haptics:
         specifier: 'catalog:'
         version: 55.0.7(expo@55.0.0-preview.12)
@@ -675,6 +693,9 @@ importers:
       expo-localization:
         specifier: 'catalog:'
         version: 55.0.7(expo@55.0.0-preview.12)(react@19.2.0)
+      expo-location:
+        specifier: 'catalog:'
+        version: 55.1.6(expo@55.0.0-preview.12)
       expo-media-library:
         specifier: 'catalog:'
         version: 55.0.8(expo@55.0.0-preview.12)(react-native@0.83.2(@babel/core@7.28.5)(@types/react@19.2.14)(bufferutil@4.1.0)(react@19.2.0)(utf-8-validate@5.0.10))
@@ -699,6 +720,9 @@ importers:
       expo-store-review:
         specifier: 'catalog:'
         version: 55.0.7(expo@55.0.0-preview.12)(react-native@0.83.2(@babel/core@7.28.5)(@types/react@19.2.14)(bufferutil@4.1.0)(react@19.2.0)(utf-8-validate@5.0.10))
+      expo-symbols:
+        specifier: 'catalog:'
+        version: 1.0.8(expo@55.0.0-preview.12)(react-native@0.83.2(@babel/core@7.28.5)(@types/react@19.2.14)(bufferutil@4.1.0)(react@19.2.0)(utf-8-validate@5.0.10))
       expo-task-manager:
         specifier: 'catalog:'
         version: 55.0.8(expo@55.0.0-preview.12)(react-native@0.83.2(@babel/core@7.28.5)(@types/react@19.2.14)(bufferutil@4.1.0)(react@19.2.0)(utf-8-validate@5.0.10))
@@ -2567,6 +2591,9 @@ packages:
   '@eslint/plugin-kit@0.4.1':
     resolution: {integrity: sha512-43/qtrDUokr7LJqoF2c3+RInu/t4zfrpYdoSDfYyhg52rwLV6TnOvdG4fXm7IkSB3wErkcmJS9iEhjVtOSEjjA==}
     engines: {node: ^18.18.0 || ^20.9.0 || >=21.1.0}
+
+  '@expo-google-fonts/kalam@0.4.1':
+    resolution: {integrity: sha512-A5LZoojqb9OCzOI/2WDRofaIQGGzC5zzmKxqxCFIx1jSYOO8g7q+5fZdd+QfJ6pY6VLzO4j5xoJq0ptcHFpQSg==}
 
   '@expo-google-fonts/material-symbols@0.4.23':
     resolution: {integrity: sha512-bxKaz8l+vLwSvl/hT9anLt32l4lSocqnDoDhPrpLF+FS0imJ+Kuw+2wtXSVMJqYm4fkVF19fDJo6OwmSJY1wvg==}
@@ -6801,6 +6828,11 @@ packages:
       expo: '*'
       react: 19.2.0
 
+  expo-location@55.1.6:
+    resolution: {integrity: sha512-GDzZmfiAWsfOVHpF4a5h/MGYAO3LotB2nyN+waxwK81Du4gNg+ALHNi+yeLSv3oy7LNcNfbdLAvEneQQgRvYLg==}
+    peerDependencies:
+      expo: '*'
+
   expo-manifests@55.0.8:
     resolution: {integrity: sha512-1YAbEvr8qmYoWNQAgmcAjTYF8nJNjka/CkPM2WgHMW5NyfQ4qzaJIFGXxqhY9B8U5eP4cGc5R8/hJ8IL3pVVKg==}
     peerDependencies:
@@ -6897,6 +6929,12 @@ packages:
 
   expo-structured-headers@55.0.0:
     resolution: {integrity: sha512-udaNvuWb45/Sryq9FLC/blwgOChhznuqlTrUzVjC0T83pMdcmscKJX23lnNDW6hCec8p81Y3z1DIFwIyk0g/PQ==}
+
+  expo-symbols@1.0.8:
+    resolution: {integrity: sha512-7bNjK350PaQgxBf0owpmSYkdZIpdYYmaPttDBb2WIp6rIKtcEtdzdfmhsc2fTmjBURHYkg36+eCxBFXO25/1hw==}
+    peerDependencies:
+      expo: '*'
+      react-native: '*'
 
   expo-symbols@55.0.4:
     resolution: {integrity: sha512-w9rxPlpta3gks0G4Tvpq/qQdiMp4R/XOeOzyjSruYUQakmsWbQBKA+Sd/fCVXs7qFJSvVTOGXiOhZm+YJRYZVg==}
@@ -12279,6 +12317,8 @@ snapshots:
       '@eslint/core': 0.17.0
       levn: 0.4.1
 
+  '@expo-google-fonts/kalam@0.4.1': {}
+
   '@expo-google-fonts/material-symbols@0.4.23': {}
 
   '@expo/cli@55.0.10(@expo/dom-webview@55.0.3)(@expo/metro-runtime@55.0.6)(bufferutil@4.1.0)(expo-constants@55.0.6)(expo-font@55.0.4)(expo-router@55.0.0-preview.9)(expo@55.0.0-preview.12)(react-dom@19.2.0(react@19.2.0))(react-native@0.83.2(@babel/core@7.28.5)(@types/react@19.2.14)(bufferutil@4.1.0)(react@19.2.0)(utf-8-validate@5.0.10))(react@19.2.0)(typescript@5.9.3)(utf-8-validate@5.0.10)':
@@ -14241,7 +14281,7 @@ snapshots:
       debug: 4.4.3
       invariant: 2.2.4
       metro: 0.83.3(bufferutil@4.1.0)(utf-8-validate@5.0.10)
-      metro-config: 0.83.3(bufferutil@4.1.0)(utf-8-validate@5.0.10)
+      metro-config: 0.83.3
       metro-core: 0.83.3
       semver: 7.7.3
     transitivePeerDependencies:
@@ -17367,6 +17407,11 @@ snapshots:
       react: 19.2.0
       rtl-detect: 1.1.2
 
+  expo-location@55.1.6(expo@55.0.0-preview.12):
+    dependencies:
+      '@expo/image-utils': 0.8.12
+      expo: 55.0.0-preview.12(@babel/core@7.28.5)(@expo/dom-webview@55.0.3)(@expo/metro-runtime@55.0.6)(bufferutil@4.1.0)(expo-router@55.0.0-preview.9)(react-dom@19.2.0(react@19.2.0))(react-native@0.83.2(@babel/core@7.28.5)(@types/react@19.2.14)(bufferutil@4.1.0)(react@19.2.0)(utf-8-validate@5.0.10))(react@19.2.0)(typescript@5.9.3)(utf-8-validate@5.0.10)
+
   expo-manifests@55.0.8(expo@55.0.0-preview.12)(typescript@5.9.3):
     dependencies:
       '@expo/config': 55.0.7(typescript@5.9.3)
@@ -17490,6 +17535,12 @@ snapshots:
       react-native: 0.83.2(@babel/core@7.28.5)(@types/react@19.2.14)(bufferutil@4.1.0)(react@19.2.0)(utf-8-validate@5.0.10)
 
   expo-structured-headers@55.0.0: {}
+
+  expo-symbols@1.0.8(expo@55.0.0-preview.12)(react-native@0.83.2(@babel/core@7.28.5)(@types/react@19.2.14)(bufferutil@4.1.0)(react@19.2.0)(utf-8-validate@5.0.10)):
+    dependencies:
+      expo: 55.0.0-preview.12(@babel/core@7.28.5)(@expo/dom-webview@55.0.3)(@expo/metro-runtime@55.0.6)(bufferutil@4.1.0)(expo-router@55.0.0-preview.9)(react-dom@19.2.0(react@19.2.0))(react-native@0.83.2(@babel/core@7.28.5)(@types/react@19.2.14)(bufferutil@4.1.0)(react@19.2.0)(utf-8-validate@5.0.10))(react@19.2.0)(typescript@5.9.3)(utf-8-validate@5.0.10)
+      react-native: 0.83.2(@babel/core@7.28.5)(@types/react@19.2.14)(bufferutil@4.1.0)(react@19.2.0)(utf-8-validate@5.0.10)
+      sf-symbols-typescript: 2.2.0
 
   expo-symbols@55.0.4(expo-font@55.0.4)(expo@55.0.0-preview.12)(react-native@0.83.2(@babel/core@7.28.5)(@types/react@19.2.14)(bufferutil@4.1.0)(react@19.2.0)(utf-8-validate@5.0.10))(react@19.2.0):
     dependencies:
@@ -18955,6 +19006,19 @@ snapshots:
       flow-enums-runtime: 0.0.6
       https-proxy-agent: 7.0.6
       metro-core: 0.83.3
+    transitivePeerDependencies:
+      - supports-color
+
+  metro-config@0.83.3:
+    dependencies:
+      connect: 3.7.0
+      flow-enums-runtime: 0.0.6
+      jest-validate: 29.7.0
+      metro: 0.83.3(bufferutil@4.1.0)(utf-8-validate@5.0.10)
+      metro-cache: 0.83.3
+      metro-core: 0.83.3
+      metro-runtime: 0.83.3
+      yaml: 2.8.2
     transitivePeerDependencies:
       - supports-color
 

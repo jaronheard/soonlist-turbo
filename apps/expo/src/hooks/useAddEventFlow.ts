@@ -10,7 +10,9 @@ import { toast } from "~/utils/feedback";
 
 /**
  * Hook to manage the flow of adding new events via the image picker.
- * Encapsulates paywall checks, image selection, and event creation.
+ * Launches the native photo picker immediately and creates events for
+ * the selected photos. Capture-count-based paywalls are surfaced
+ * downstream (e.g. on event view) rather than being enforced here.
  */
 export function useAddEventFlow() {
   const { user } = useUser();
@@ -49,11 +51,8 @@ export function useAddEventFlow() {
           return;
         }
 
-        // Respect the 20‑image limit in case the platform ignores selectionLimit
+        // 2. Create events for all selected images
         const assets = result.assets.slice(0, 20);
-
-        // Create events for all selected images
-        // Medium impact to confirm jobs queued
         await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
 
         try {
@@ -65,7 +64,6 @@ export function useAddEventFlow() {
             })),
           );
         } catch (err) {
-          // Handle potential errors during event creation
           logError("Failed to create events", err, { userId, username });
           toast.error("Failed to add events", "Please try again");
         } finally {
@@ -76,7 +74,6 @@ export function useAddEventFlow() {
         setIsCapturing(false);
       }
     } catch (err) {
-      // Permissions shouldn't be an issue here, but we'll log it
       logError("Error in triggerAddEventFlow photo picker", err);
       toast.error("Failed to open photo picker", "Please try again");
       setIsCapturing(false);

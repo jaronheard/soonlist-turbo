@@ -13,6 +13,7 @@ import {
   eventFollowsAggregate,
   eventsByCreation,
   eventsByStartTime,
+  listFollowsAggregate,
 } from "../aggregates";
 
 const BATCH_SIZE = 100;
@@ -141,6 +142,68 @@ export const initializeEventFollowsAggregates = internalMutation({
 });
 
 /**
+ * Initialize aggregates for a batch of listFollows
+ */
+export const initializeListFollowsAggregatesBatch = internalMutation({
+  args: {
+    cursor: v.union(v.string(), v.null()),
+  },
+  returns: v.object({
+    isDone: v.boolean(),
+    cursor: v.union(v.string(), v.null()),
+    processedCount: v.number(),
+  }),
+  handler: async (ctx, args) => {
+    const result = await ctx.db.query("listFollows").paginate({
+      numItems: BATCH_SIZE,
+      cursor: args.cursor,
+    });
+
+    console.log(`Processing batch of ${result.page.length} list follows...`);
+
+    for (const follow of result.page) {
+      await listFollowsAggregate.replaceOrInsert(ctx, follow, follow);
+    }
+
+    // If there are more pages, schedule the next batch
+    if (!result.isDone) {
+      await ctx.scheduler.runAfter(
+        0,
+        internal.migrations.initializeAggregates
+          .initializeListFollowsAggregatesBatch,
+        { cursor: result.continueCursor },
+      );
+    }
+
+    return {
+      isDone: result.isDone,
+      cursor: result.continueCursor,
+      processedCount: result.page.length,
+    };
+  },
+});
+
+/**
+ * Initialize aggregates for all existing listFollows (orchestrator)
+ */
+export const initializeListFollowsAggregates = internalMutation({
+  args: {},
+  returns: v.null(),
+  handler: async (ctx) => {
+    console.log("Starting listFollows aggregates initialization...");
+
+    // Kick off the first batch; subsequent batches self-schedule
+    await ctx.scheduler.runAfter(
+      0,
+      internal.migrations.initializeAggregates
+        .initializeListFollowsAggregatesBatch,
+      { cursor: null },
+    );
+    return null;
+  },
+});
+
+/**
  * Run all aggregate initializations
  */
 export const initializeAllAggregates = internalMutation({
@@ -152,6 +215,7 @@ export const initializeAllAggregates = internalMutation({
     await ctx.runMutation(components.eventsByStartTime.public.clear, {});
     await ctx.runMutation(components.eventFollowsAggregate.public.clear, {});
     await ctx.runMutation(components.userFeedsAggregate.public.clear, {});
+    await ctx.runMutation(components.listFollowsAggregate.public.clear, {});
 
     await ctx.scheduler.runAfter(
       0,
@@ -161,6 +225,11 @@ export const initializeAllAggregates = internalMutation({
     await ctx.scheduler.runAfter(
       0,
       internal.migrations.initializeAggregates.initializeEventFollowsAggregates,
+      {},
+    );
+    await ctx.scheduler.runAfter(
+      0,
+      internal.migrations.initializeAggregates.initializeListFollowsAggregates,
       {},
     );
     await ctx.scheduler.runAfter(

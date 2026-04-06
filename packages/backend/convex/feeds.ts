@@ -22,6 +22,35 @@ async function getUserId(ctx: QueryCtx): Promise<string | null> {
   return identity.subject;
 }
 
+// Helper to batch-resolve sourceListId → list name
+async function resolveSourceListNames(
+  ctx: QueryCtx,
+  feedEntries: { sourceListId?: string }[],
+): Promise<Map<string, string>> {
+  const listIds = [
+    ...new Set(
+      feedEntries.map((e) => e.sourceListId).filter((id): id is string => !!id),
+    ),
+  ];
+  if (listIds.length === 0) return new Map();
+
+  const lists = await Promise.all(
+    listIds.map((id) =>
+      ctx.db
+        .query("lists")
+        .withIndex("by_custom_id", (q) => q.eq("id", id))
+        .first(),
+    ),
+  );
+
+  const map = new Map<string, string>();
+  listIds.forEach((id, i) => {
+    const list = lists[i];
+    if (list) map.set(id, list.name);
+  });
+  return map;
+}
+
 // Helper function to query feed with common logic
 async function queryFeed(
   ctx: QueryCtx,
@@ -43,11 +72,21 @@ async function queryFeed(
   // Paginate
   const feedResults = await feedQuery.paginate(paginationOpts);
 
+  // Resolve source list names
+  const sourceListNameMap = await resolveSourceListNames(ctx, feedResults.page);
+
   // Map feed entries to full events with users and eventFollows, preserving order
   const events = await Promise.all(
     feedResults.page.map(async (feedEntry) => {
-      // Use getEventById for full enrichment including eventFollows with user data
-      return await getEventById(ctx, feedEntry.eventId);
+      const event = await getEventById(ctx, feedEntry.eventId);
+      if (!event) return null;
+      return {
+        ...event,
+        sourceListId: feedEntry.sourceListId,
+        sourceListName: feedEntry.sourceListId
+          ? sourceListNameMap.get(feedEntry.sourceListId)
+          : undefined,
+      };
     }),
   );
 
@@ -81,9 +120,27 @@ async function queryGroupedFeed(
   // Paginate
   const groupedResults = await groupedQuery.paginate(paginationOpts);
 
+  // For each group entry, look up the primary event's feed entry for sourceListId
+  const primaryFeedEntries = await Promise.all(
+    groupedResults.page.map((groupEntry) =>
+      ctx.db
+        .query("userFeeds")
+        .withIndex("by_feed_event", (q) =>
+          q.eq("feedId", feedId).eq("eventId", groupEntry.primaryEventId),
+        )
+        .first(),
+    ),
+  );
+
+  // Resolve source list names
+  const sourceEntries = primaryFeedEntries
+    .filter((e): e is NonNullable<typeof e> => e !== null)
+    .map((e) => ({ sourceListId: e.sourceListId }));
+  const sourceListNameMap = await resolveSourceListNames(ctx, sourceEntries);
+
   // Enrich each group entry with the primary event data
   const enrichedGroups = await Promise.all(
-    groupedResults.page.map(async (groupEntry) => {
+    groupedResults.page.map(async (groupEntry, idx) => {
       // Get the primary event with full enrichment
       const event = await getEventById(ctx, groupEntry.primaryEventId);
 
@@ -91,10 +148,17 @@ async function queryGroupedFeed(
         return null;
       }
 
+      const feedEntry = primaryFeedEntries[idx];
+      const sourceListId = feedEntry?.sourceListId;
+
       return {
         event,
         similarEventsCount: groupEntry.similarEventsCount,
         similarityGroupId: groupEntry.similarityGroupId,
+        sourceListId,
+        sourceListName: sourceListId
+          ? sourceListNameMap.get(sourceListId)
+          : undefined,
       };
     }),
   );
