@@ -91,7 +91,7 @@ export const updateEventInFeeds = internalMutation({
     if (visibility === "public") {
       await ctx.scheduler.runAfter(
         0,
-        internal.feedHelpers.addEventToContributorListsAction,
+        internal.feedHelpers.addEventToContributorLists,
         { eventId, userId },
       );
     }
@@ -860,12 +860,13 @@ export const addUserEventsToUserFeed = internalMutation({
     return null;
   },
 });
+
 export const addEventToContributorLists = internalMutation({
   args: {
     eventId: v.string(),
     userId: v.string(),
   },
-  returns: v.array(v.string()),
+  returns: v.null(),
   handler: async (ctx, { eventId, userId }) => {
     const contributorMemberships = await ctx.db
       .query("listMembers")
@@ -875,10 +876,8 @@ export const addEventToContributorLists = internalMutation({
       .collect();
 
     if (contributorMemberships.length === 0) {
-      return [];
+      return null;
     }
-
-    const addedListIds: string[] = [];
 
     for (const membership of contributorMemberships) {
       const list = await ctx.db
@@ -902,29 +901,22 @@ export const addEventToContributorLists = internalMutation({
           eventId,
           listId: membership.listId,
         });
-        addedListIds.push(membership.listId);
+
+        // Schedule follower feed fan-out atomically with the insert.
+        // Both the insert and this schedule commit in the same transaction,
+        // matching the pattern in backfillContributorEventsBatch (lists.ts).
+        await ctx.scheduler.runAfter(
+          0,
+          internal.feedHelpers.addEventToListFollowersFeeds,
+          {
+            eventId,
+            listId: membership.listId,
+          },
+        );
       }
     }
 
-    return addedListIds;
-  },
-});
-export const addEventToContributorListsAction = internalAction({
-  args: {
-    eventId: v.string(),
-    userId: v.string(),
-  },
-  handler: async (ctx, { eventId, userId }) => {
-    const addedListIds: string[] = await ctx.runMutation(
-      internal.feedHelpers.addEventToContributorLists,
-      { eventId, userId },
-    );
-    for (const listId of addedListIds) {
-      await ctx.runMutation(internal.feedHelpers.addEventToListFollowersFeeds, {
-        eventId,
-        listId,
-      });
-    }
+    return null;
   },
 });
 
