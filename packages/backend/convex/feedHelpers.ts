@@ -915,15 +915,38 @@ export const addEventToContributorListsAction = internalAction({
     userId: v.string(),
   },
   handler: async (ctx, { eventId, userId }) => {
-    const addedListIds: string[] = await ctx.runMutation(
-      internal.feedHelpers.addEventToContributorLists,
-      { eventId, userId },
-    );
-    for (const listId of addedListIds) {
-      await ctx.runMutation(internal.feedHelpers.addEventToListFollowersFeeds, {
-        eventId,
-        listId,
-      });
+    try {
+      const addedListIds: string[] = await ctx.runMutation(
+        internal.feedHelpers.addEventToContributorLists,
+        { eventId, userId },
+      );
+      for (const listId of addedListIds) {
+        try {
+          await ctx.runMutation(
+            internal.feedHelpers.addEventToListFollowersFeeds,
+            {
+              eventId,
+              listId,
+            },
+          );
+        } catch (error) {
+          console.error(
+            `Failed to fan out event ${eventId} to followers of list ${listId}:`,
+            error,
+          );
+        }
+      }
+      if (addedListIds.length > 0) {
+        console.log(
+          `Added event ${eventId} to ${addedListIds.length} contributor list(s): ${addedListIds.join(", ")}`,
+        );
+      }
+    } catch (error) {
+      console.error(
+        `Failed to add event ${eventId} (user ${userId}) to contributor lists:`,
+        error,
+      );
+      throw error;
     }
   },
 });
