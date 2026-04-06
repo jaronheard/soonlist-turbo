@@ -29,7 +29,6 @@ import { Kalam_700Bold, useFonts } from "@expo-google-fonts/kalam";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 
 import AuthAndTokenSync from "~/components/AuthAndTokenSync";
-import { CaptureOverlayButton } from "~/components/CaptureOverlayButton";
 import { ForceUpdateScreen } from "~/components/ForceUpdateScreen";
 import { PostHogIdentityTracker } from "~/components/PostHogIdentityTracker";
 import { useAppsFlyerDeepLink } from "~/hooks/useAppsFlyerDeepLink";
@@ -366,7 +365,6 @@ function RootLayoutContent() {
   return (
     <View style={{ flex: 1 }}>
       <InitialLayout />
-      <CaptureOverlayButton />
       <StatusBar style="auto" />
     </View>
   );

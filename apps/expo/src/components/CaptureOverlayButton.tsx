@@ -1,14 +1,13 @@
 import React, { useEffect, useRef } from "react";
-import { Image, Platform, Pressable, View } from "react-native";
-import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { ActivityIndicator, Platform, Pressable, View } from "react-native";
 
-import { CircularSpinner } from "~/components/ui/CircularSpinner";
+import { PlusIcon } from "~/components/icons";
 import { useAddEventFlow } from "~/hooks/useAddEventFlow";
 import { useNetworkStatus } from "~/hooks/useNetworkStatus";
 import { useInFlightEventStore } from "~/store/useInFlightEventStore";
 
 interface CaptureOverlayButtonProps {
-  /** Distance above the safe-area bottom inset. Tunable empirically. */
+  /** Distance from the bottom of the containing layout. */
   bottomOffset?: number;
   /** Distance from the right edge of the screen. */
   rightOffset?: number;
@@ -22,17 +21,15 @@ const CAPTURING_TIMEOUT_MS = 30_000;
 /**
  * CaptureOverlayButton
  * ---------------------
- * Floating capture entry point rendered inside the tab layout, sitting above
- * the native tab bar. Modals present over the tab layout so this button is
- * naturally covered during modal presentations — no pathname gating needed.
+ * Floating capture entry point rendered inside the tab screen layouts (feed
+ * and following). Positioned relative to the tab content area.
  *
  * iOS-only — the app does not ship Android.
  */
 export function CaptureOverlayButton({
-  bottomOffset = -10,
+  bottomOffset = 24,
   rightOffset = 16,
 }: CaptureOverlayButtonProps = {}) {
-  const insets = useSafeAreaInsets();
   const isOnline = useNetworkStatus();
   const isCapturing = useInFlightEventStore((s) => s.isCapturing);
   const { triggerAddEventFlow } = useAddEventFlow();
@@ -69,7 +66,7 @@ export function CaptureOverlayButton({
       style={{
         position: "absolute",
         right: rightOffset,
-        bottom: bottomOffset + insets.bottom,
+        bottom: bottomOffset,
         zIndex: 100,
       }}
     >
@@ -91,30 +88,22 @@ export function CaptureOverlayButton({
           opacity: !isOnline ? 0.4 : pressed ? 0.6 : 1,
         })}
       >
-        <Image
-          // eslint-disable-next-line @typescript-eslint/no-require-imports, @typescript-eslint/consistent-type-assertions
-          source={require("../assets/capture-tab.png") as number}
-          style={{ width: BUTTON_SIZE, height: BUTTON_SIZE }}
-          resizeMode="contain"
-        />
-        {isCapturing && (
-          <View
-            pointerEvents="none"
-            style={{
-              position: "absolute",
-              width: BUTTON_SIZE,
-              height: BUTTON_SIZE,
-              alignItems: "center",
-              justifyContent: "center",
-            }}
-          >
-            <CircularSpinner
-              size={BUTTON_SIZE}
-              strokeWidth={3}
-              color="#5A32FB"
-            />
-          </View>
-        )}
+        <View
+          style={{
+            width: BUTTON_SIZE,
+            height: BUTTON_SIZE,
+            borderRadius: BUTTON_SIZE / 2,
+            backgroundColor: "#5A32FB",
+            alignItems: "center",
+            justifyContent: "center",
+          }}
+        >
+          {isCapturing ? (
+            <ActivityIndicator color="#FFF" />
+          ) : (
+            <PlusIcon size={28} color="#FFF" strokeWidth={2.5} />
+          )}
+        </View>
       </Pressable>
     </View>
   );
