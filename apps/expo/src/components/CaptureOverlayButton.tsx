@@ -45,9 +45,6 @@ export function CaptureOverlayButton({
       timeoutRef.current = setTimeout(() => {
         useInFlightEventStore.getState().setIsCapturing(false);
       }, CAPTURING_TIMEOUT_MS);
-    } else if (timeoutRef.current) {
-      clearTimeout(timeoutRef.current);
-      timeoutRef.current = null;
     }
     return () => {
       if (timeoutRef.current) {
@@ -60,10 +57,7 @@ export function CaptureOverlayButton({
   // Platform gate — Android is not a supported platform on this project.
   if (Platform.OS !== "ios") return null;
 
-  const handlePress = () => {
-    if (isCapturing) return;
-    void triggerAddEventFlow();
-  };
+  const handlePress = () => void triggerAddEventFlow();
 
   const accessibilityLabel = isOnline
     ? "Capture event from photos"

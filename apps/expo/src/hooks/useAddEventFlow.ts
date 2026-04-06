@@ -26,10 +26,8 @@ export function useAddEventFlow() {
     // Set capturing state first, before any async work — eliminates dead zone
     setIsCapturing(true);
 
-    // Fire-and-forget haptic feedback
     void Haptics.selectionAsync();
 
-    // 1. Launch native photo picker directly
     try {
       const result = await ImagePicker.launchImageLibraryAsync({
         mediaTypes: ["images"],
@@ -54,7 +52,6 @@ export function useAddEventFlow() {
           return;
         }
 
-        // 2. Create events for all selected images
         const assets = result.assets.slice(0, 20);
         await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
 
@@ -74,7 +71,6 @@ export function useAddEventFlow() {
           setIsCapturing(false);
         }
       } else {
-        // User canceled or didn't select any images
         setIsCapturing(false);
       }
     } catch (err) {
