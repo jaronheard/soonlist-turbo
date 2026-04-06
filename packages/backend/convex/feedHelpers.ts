@@ -860,6 +860,7 @@ export const addUserEventsToUserFeed = internalMutation({
     return null;
   },
 });
+
 export const addEventToContributorLists = internalMutation({
   args: {
     eventId: v.string(),
