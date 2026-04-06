@@ -1,6 +1,5 @@
 import { StyleSheet, Text, View } from "react-native";
 import appsFlyer from "react-native-appsflyer";
-
 import {
   Stack,
   useGlobalSearchParams,
@@ -22,7 +21,6 @@ import { RevenueCatProvider } from "~/providers/RevenueCatProvider";
 import "../styles.css";
 
 import { useEffect } from "react";
-
 import { KeyboardProvider } from "react-native-keyboard-controller";
 import { NotifierWrapper } from "react-native-notifier";
 import Constants, { AppOwnership } from "expo-constants";
@@ -158,41 +156,41 @@ function RootLayout() {
   return (
     <NotifierWrapper>
       <KeyboardProvider>
-            <ClerkProvider
-              publishableKey={clerkPublishableKey}
-              tokenCache={tokenCache}
-              __experimental_resourceCache={resourceCache}
-            >
-              {/* eslint-disable-next-line react-compiler/react-compiler */}
-              <ConvexProviderWithClerk client={convex} useAuth={useAuth}>
-                <QueryClientProvider client={queryClient}>
-                  <PostHogProvider
-                    apiKey={Config.posthogApiKey}
-                    options={{
-                      host: "https://us.i.posthog.com",
-                      disabled: isDev,
-                      enableSessionReplay: !isDev,
-                      sessionReplayConfig: {
-                        maskAllTextInputs: false,
-                        maskAllImages: false,
-                        captureLog: false,
-                        captureNetworkTelemetry: true,
-                        androidDebouncerDelayMs: 500,
-                        iOSdebouncerDelayMs: 1000,
-                      },
-                    }}
-                  >
-                    <PostHogIdentityTracker />
-                    <OneSignalProvider>
-                      <RevenueCatProvider>
-                        <AuthAndTokenSync />
-                        <RootLayoutContent />
-                      </RevenueCatProvider>
-                    </OneSignalProvider>
-                  </PostHogProvider>
-                </QueryClientProvider>
-              </ConvexProviderWithClerk>
-            </ClerkProvider>
+        <ClerkProvider
+          publishableKey={clerkPublishableKey}
+          tokenCache={tokenCache}
+          __experimental_resourceCache={resourceCache}
+        >
+          {/* eslint-disable-next-line react-compiler/react-compiler */}
+          <ConvexProviderWithClerk client={convex} useAuth={useAuth}>
+            <QueryClientProvider client={queryClient}>
+              <PostHogProvider
+                apiKey={Config.posthogApiKey}
+                options={{
+                  host: "https://us.i.posthog.com",
+                  disabled: isDev,
+                  enableSessionReplay: !isDev,
+                  sessionReplayConfig: {
+                    maskAllTextInputs: false,
+                    maskAllImages: false,
+                    captureLog: false,
+                    captureNetworkTelemetry: true,
+                    androidDebouncerDelayMs: 500,
+                    iOSdebouncerDelayMs: 1000,
+                  },
+                }}
+              >
+                <PostHogIdentityTracker />
+                <OneSignalProvider>
+                  <RevenueCatProvider>
+                    <AuthAndTokenSync />
+                    <RootLayoutContent />
+                  </RevenueCatProvider>
+                </OneSignalProvider>
+              </PostHogProvider>
+            </QueryClientProvider>
+          </ConvexProviderWithClerk>
+        </ClerkProvider>
       </KeyboardProvider>
     </NotifierWrapper>
   );
