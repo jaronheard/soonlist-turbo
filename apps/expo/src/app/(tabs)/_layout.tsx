@@ -1,5 +1,6 @@
 import { NativeTabs } from "expo-router/unstable-native-tabs";
 
+import { CaptureOverlayButton } from "~/components/CaptureOverlayButton";
 import { useAppStore } from "~/store";
 
 // Export Expo Router's error boundary
@@ -52,6 +53,7 @@ export default function TabsLayout() {
           sf={{ default: "binoculars", selected: "binoculars.fill" }}
         />
       </NativeTabs.Trigger>
+      <CaptureOverlayButton />
     </NativeTabs>
   );
 }
