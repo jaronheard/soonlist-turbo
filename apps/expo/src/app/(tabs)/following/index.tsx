@@ -259,10 +259,10 @@ function FollowingFeedContent() {
       })
       .map((event) => ({
         ...event,
-        eventFollows: [],
-        comments: [],
-        eventToLists: [],
-        lists: [],
+        eventFollows: event.eventFollows ?? [],
+        comments: event.comments ?? [],
+        eventToLists: event.eventToLists ?? [],
+        lists: event.lists ?? [],
       }));
   }, [events, stableTimestamp, selectedSegment]);
 
