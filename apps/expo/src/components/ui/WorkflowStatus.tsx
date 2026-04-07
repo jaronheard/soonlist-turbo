@@ -105,7 +105,7 @@ export function WorkflowStatus({ workflowId }: WorkflowStatusProps) {
         typeof status.progress === "number" &&
         status.progress > 0 && (
           <View className="mt-2">
-            <View className="h-2 rounded-full bg-gray-200">
+            <View className="h-2 rounded-full bg-neutral-200">
               <View
                 className="h-2 rounded-full bg-blue-500 transition-all duration-300"
                 style={{ width: `${Math.round(status.progress)}%` }}

@@ -359,7 +359,7 @@ function EventDetail({ id }: { id: string }) {
                 {eventTime && (
                   <>
                     {" "}
-                    <Text style={{ fontStyle: "italic" }}>{eventTime}</Text>
+                    <Text className="italic">{eventTime}</Text>
                   </>
                 )}
               </Text>
@@ -416,7 +416,7 @@ function EventDetail({ id }: { id: string }) {
                       {event.user?.userImage ? (
                         <ExpoImage
                           source={{ uri: event.user.userImage }}
-                          style={{ width: 20, height: 20, borderRadius: 10 }}
+                          className="h-5 w-5 rounded-full"
                           contentFit="cover"
                           contentPosition="center"
                           cachePolicy="disk"
@@ -570,7 +570,7 @@ function EventDetail({ id }: { id: string }) {
           {imageUri && !imageAspectRatio && (
             <ExpoImage
               source={{ uri: imageUri }}
-              style={{ position: "absolute", width: 1, height: 1, opacity: 0 }}
+              className="absolute h-px w-px opacity-0"
               onLoad={(e) => {
                 setImageAspectRatio(
                   e.source.height > 0
@@ -599,7 +599,7 @@ function EventDetail({ id }: { id: string }) {
                 source={{ uri: imageUri }}
                 placeholder={thumbnailUri ? { uri: thumbnailUri } : undefined}
                 placeholderContentFit="cover"
-                style={{ width: "100%", height: "100%" }}
+                className="h-full w-full"
                 contentFit="contain"
                 contentPosition="center"
                 transition={200}

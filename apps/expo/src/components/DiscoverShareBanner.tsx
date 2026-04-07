@@ -60,10 +60,8 @@ Use code DISCOVER to join the Portland-only, invite-only Discover list with even
         accessibilityLabel="Invite a friend to Discover"
       >
         <View
-          className="mx-4 rounded-2xl bg-accent-yellow/80 p-4"
+          className="mx-4 rounded-2xl border-[3px] border-white bg-accent-yellow/80 p-4"
           style={{
-            borderWidth: 3,
-            borderColor: "white",
             shadowColor: "#5A32FB",
             shadowOffset: { width: 0, height: 1 },
             shadowOpacity: 0.15,

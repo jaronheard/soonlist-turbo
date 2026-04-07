@@ -15,6 +15,7 @@ import { QuestionContainer } from "~/components/QuestionContainer";
 import { useOnboarding } from "~/hooks/useOnboarding";
 import { useOneSignal } from "~/providers/OneSignalProvider";
 import { usePendingFollowUsername } from "~/store";
+import { cn } from "~/utils/cn";
 import { logError } from "~/utils/errorLogging";
 import { hapticLight, toast } from "~/utils/feedback";
 
@@ -92,10 +93,8 @@ export default function NotificationsScreen() {
       <View className="flex-1">
         <View className="flex-1 items-center justify-center px-12">
           <View
-            className="relative"
+            className="relative overflow-hidden rounded-[14px]"
             style={{
-              borderRadius: 14,
-              overflow: "hidden",
               shadowColor: "#000",
               shadowOffset: { width: 0, height: 2 },
               shadowOpacity: 0.15,
@@ -121,13 +120,8 @@ export default function NotificationsScreen() {
                   updates from shared lists
                 </Text>
               </View>
-              <View
-                style={{
-                  height: 0.5,
-                  backgroundColor: "rgba(60,60,67,0.36)",
-                }}
-              />
-              <View className="flex-row" style={{ height: 44 }}>
+              <View className="h-[0.5px] bg-[rgba(60,60,67,0.36)]" />
+              <View className="h-[44px] flex-row">
                 <Pressable
                   className="flex-1 items-center justify-center"
                   disabled
@@ -136,12 +130,7 @@ export default function NotificationsScreen() {
                     Don{"'"}t Allow
                   </Text>
                 </Pressable>
-                <View
-                  style={{
-                    width: 0.5,
-                    backgroundColor: "rgba(60,60,67,0.36)",
-                  }}
-                />
+                <View className="w-[0.5px] bg-[rgba(60,60,67,0.36)]" />
                 <View className="flex-1">
                   <Pressable
                     className="flex-1 items-center justify-center"
@@ -150,9 +139,10 @@ export default function NotificationsScreen() {
                     disabled={isLoading}
                   >
                     <Text
-                      className={`text-[17px] font-semibold ${
-                        isLoading ? "text-blue-500/50" : "text-blue-500"
-                      }`}
+                      className={cn(
+                        "text-[17px] font-semibold",
+                        isLoading ? "text-blue-500/50" : "text-blue-500",
+                      )}
                     >
                       {isLoading ? "Loading..." : "Allow"}
                     </Text>

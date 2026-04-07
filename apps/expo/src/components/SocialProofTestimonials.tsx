@@ -47,16 +47,13 @@ interface TestimonialCardProps {
 function TestimonialCard({ testimonial }: TestimonialCardProps) {
   return (
     <View
-      className="mb-6 rounded-xl bg-accent-yellow p-4"
+      className="relative mb-6 rounded-xl border-[3px] border-white bg-accent-yellow p-4"
       style={{
-        borderWidth: 3,
-        borderColor: "white",
         shadowColor: "#5A32FB",
         shadowOffset: { width: 0, height: 1 },
         shadowOpacity: 0.15,
         shadowRadius: 2.5,
         elevation: 2,
-        position: "relative",
       }}
     >
       <Text className="mb-3 text-left font-heading text-base font-bold text-neutral-1">
@@ -77,19 +74,8 @@ function TestimonialCard({ testimonial }: TestimonialCardProps) {
             cachePolicy="disk"
           />
         ) : (
-          <View
-            style={{
-              width: 48,
-              height: 48,
-              borderRadius: 24,
-              borderWidth: 2,
-              borderColor: "#ff6b35",
-              backgroundColor: "#5A32FB",
-              justifyContent: "center",
-              alignItems: "center",
-            }}
-          >
-            <Text style={{ color: "white", fontSize: 18, fontWeight: "bold" }}>
+          <View className="h-12 w-12 items-center justify-center rounded-full border-2 border-[#ff6b35] bg-interactive-1">
+            <Text className="text-lg font-bold text-white">
               {testimonial.author.name
                 .split(" ")
                 .map((n) => n[0])
@@ -106,23 +92,10 @@ function TestimonialCard({ testimonial }: TestimonialCardProps) {
           </Text>
         </View>
       </View>
-      <View
-        style={{
-          position: "absolute",
-          bottom: -10,
-          left: 0,
-          right: 0,
-          zIndex: 20,
-          flexDirection: "row",
-          justifyContent: "center",
-          alignItems: "center",
-        }}
-      >
+      <View className="absolute -bottom-[10px] left-0 right-0 z-20 flex-row items-center justify-center">
         <View
-          className="rounded-full bg-interactive-2 px-2 py-0.5"
+          className="rounded-full border-2 border-white bg-interactive-2 px-2 py-0.5"
           style={{
-            borderWidth: 2,
-            borderColor: "white",
             shadowColor: "#5A32FB",
             shadowOffset: { width: 0, height: 1 },
             shadowOpacity: 0.15,

@@ -113,50 +113,20 @@ function FollowingEmptyState() {
 
   return (
     <ScrollView
+      className="flex-1 bg-interactive-3"
       contentInsetAdjustmentBehavior="automatic"
-      style={{ flex: 1, backgroundColor: "#F4F1FF" }}
-      contentContainerStyle={{
-        flexGrow: 1,
-      }}
+      contentContainerClassName="grow"
     >
-      <View className="px-3 pb-2" style={{ marginTop: -4 }}>
-        <Text
-          className="mb-1 text-base font-medium text-neutral-2"
-          style={{ paddingLeft: 6 }}
-        >
+      <View className="-mt-1 px-3 pb-2">
+        <Text className="mb-1 pl-1.5 text-base font-medium text-neutral-2">
           Events from lists I follow
         </Text>
       </View>
-      <View
-        style={{
-          flex: 1,
-          justifyContent: "center",
-          alignItems: "center",
-          paddingHorizontal: 32,
-          paddingBottom: 200,
-        }}
-      >
-        <Text
-          style={{
-            fontSize: 18,
-            fontWeight: "600",
-            color: "#627496",
-            textAlign: "center",
-            marginBottom: 8,
-            lineHeight: 26,
-          }}
-        >
+      <View className="flex-1 items-center justify-center px-8 pb-[200px]">
+        <Text className="mb-2 text-center text-lg font-semibold leading-[26px] text-neutral-2">
           Your scene starts with a list
         </Text>
-        <Text
-          style={{
-            fontSize: 15,
-            color: "#8E99A4",
-            textAlign: "center",
-            marginBottom: 24,
-            lineHeight: 22,
-          }}
-        >
+        <Text className="mb-6 text-center text-[15px] leading-[22px] text-[#8E99A4]">
           Follow other lists to see their events here
         </Text>
         <TouchableOpacity
@@ -165,25 +135,9 @@ function FollowingEmptyState() {
           accessibilityRole="button"
           accessibilityLabel="Invite friends to Soonlist"
         >
-          <View
-            style={{
-              flexDirection: "row",
-              alignItems: "center",
-              gap: 8,
-              backgroundColor: "#5A32FB",
-              paddingHorizontal: 24,
-              paddingVertical: 14,
-              borderRadius: 999,
-            }}
-          >
+          <View className="flex-row items-center gap-2 rounded-full bg-interactive-1 px-6 py-3.5">
             <ShareIcon size={18} color="#FFFFFF" />
-            <Text
-              style={{
-                fontSize: 17,
-                fontWeight: "700",
-                color: "#FFFFFF",
-              }}
-            >
+            <Text className="text-[17px] font-bold text-white">
               Invite friends
             </Text>
           </View>
@@ -297,11 +251,8 @@ function FollowingFeedContent() {
 
   const HeaderComponent = useCallback(() => {
     return (
-      <View className="px-3 pb-2" style={{ marginTop: -4 }}>
-        <Text
-          className="mb-1 text-base font-medium text-neutral-2"
-          style={{ paddingLeft: 6 }}
-        >
+      <View className="-mt-1 px-3 pb-2">
+        <Text className="mb-1 pl-1.5 text-base font-medium text-neutral-2">
           Events from lists I follow
         </Text>
         {followedListCount > 0 && (
@@ -317,8 +268,7 @@ function FollowingFeedContent() {
               }
             }}
             activeOpacity={0.7}
-            className="mb-2"
-            style={{ paddingLeft: 6 }}
+            className="mb-2 pl-1.5"
           >
             <View className="flex-row items-center">
               <Text className="text-sm text-neutral-2">Includes: </Text>
@@ -332,7 +282,7 @@ function FollowingFeedContent() {
             </View>
           </TouchableOpacity>
         )}
-        <View style={{ width: 260 }}>
+        <View className="w-[260px]">
           {Platform.OS === "ios" ? (
             <Host matchContents>
               <Picker

@@ -29,20 +29,34 @@ export function GlassButton({
 }: GlassButtonProps) {
   return (
     <View
+      className="overflow-hidden"
       style={[
-        styles.iconContainer,
-        { width: size, height: size, borderRadius: size / 2 },
+        {
+          width: size,
+          height: size,
+          borderRadius: size / 2,
+          // iOS 26: shadow radius 18
+          shadowColor: "#5A32FB",
+          shadowOffset: { width: 0, height: 4 },
+          shadowOpacity: 0.25,
+          shadowRadius: 18,
+          elevation: 8,
+        },
         style,
       ]}
     >
       {SUPPORTS_LIQUID_GLASS ? (
         <>
           {/* iOS 26 blur: intensity 60 */}
-          <BlurView intensity={60} tint="light" style={styles.blur} />
+          <BlurView
+            intensity={60}
+            tint="light"
+            style={StyleSheet.absoluteFillObject}
+          />
           {/* Color tint */}
           <View
             style={[
-              styles.tint,
+              StyleSheet.absoluteFillObject,
               { backgroundColor: tintColor, opacity: tintOpacity },
             ]}
           />
@@ -50,11 +64,14 @@ export function GlassButton({
       ) : (
         /* Fallback: solid background for devices without blur support */
         <View
-          style={[styles.fallbackBackground, { backgroundColor: tintColor }]}
+          style={[
+            StyleSheet.absoluteFillObject,
+            { backgroundColor: tintColor },
+          ]}
         />
       )}
       {/* Content */}
-      <View style={styles.content}>{children}</View>
+      <View className="flex-1 items-center justify-center p-3">{children}</View>
     </View>
   );
 }
@@ -74,15 +91,32 @@ export function GlassPill({
   style,
 }: Omit<GlassButtonProps, "size">) {
   return (
-    <View style={[styles.pillContainer, style]}>
+    <View
+      className="overflow-hidden rounded-[28px]"
+      style={[
+        {
+          // iOS 26: shadow radius 18
+          shadowColor: "#5A32FB",
+          shadowOffset: { width: 0, height: 4 },
+          shadowOpacity: 0.25,
+          shadowRadius: 18,
+          elevation: 8,
+        },
+        style,
+      ]}
+    >
       {SUPPORTS_LIQUID_GLASS ? (
         <>
           {/* iOS 26 blur: intensity 60 */}
-          <BlurView intensity={60} tint="light" style={styles.blur} />
+          <BlurView
+            intensity={60}
+            tint="light"
+            style={StyleSheet.absoluteFillObject}
+          />
           {/* Color tint */}
           <View
             style={[
-              styles.tint,
+              StyleSheet.absoluteFillObject,
               { backgroundColor: tintColor, opacity: tintOpacity },
             ]}
           />
@@ -90,58 +124,14 @@ export function GlassPill({
       ) : (
         /* Fallback: solid background for devices without blur support */
         <View
-          style={[styles.fallbackBackground, { backgroundColor: tintColor }]}
+          style={[
+            StyleSheet.absoluteFillObject,
+            { backgroundColor: tintColor },
+          ]}
         />
       )}
       {/* Content */}
-      <View style={styles.pillContent}>{children}</View>
+      <View className="flex-row items-center gap-4 px-6 py-4">{children}</View>
     </View>
   );
 }
-
-const styles = StyleSheet.create({
-  iconContainer: {
-    overflow: "hidden",
-    // iOS 26: shadow radius 18
-    shadowColor: "#5A32FB",
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.25,
-    shadowRadius: 18,
-    elevation: 8,
-  },
-  blur: {
-    ...StyleSheet.absoluteFillObject,
-  },
-  tint: {
-    ...StyleSheet.absoluteFillObject,
-  },
-  fallbackBackground: {
-    ...StyleSheet.absoluteFillObject,
-  },
-  content: {
-    flex: 1,
-    alignItems: "center",
-    justifyContent: "center",
-    // iOS 26: padding 12 for icon buttons
-    padding: 12,
-  },
-  pillContainer: {
-    overflow: "hidden",
-    // iOS 26: corner radius 28
-    borderRadius: 28,
-    // iOS 26: shadow radius 18
-    shadowColor: "#5A32FB",
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.25,
-    shadowRadius: 18,
-    elevation: 8,
-  },
-  pillContent: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 16,
-    // iOS 26: padding 16
-    paddingHorizontal: 24,
-    paddingVertical: 16,
-  },
-});

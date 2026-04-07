@@ -75,22 +75,12 @@ export default function AddEventButton({
           <LinearGradient
             colors={["transparent", "#5A32FB"]}
             locations={[0, 1]}
-            style={{
-              position: "absolute",
-              height: "100%",
-              width: "100%",
-              opacity: 0.3,
-            }}
+            className="absolute h-full w-full opacity-30"
           />
           <LinearGradient
             colors={["transparent", "#E0D9FF"]}
             locations={[0, 1]}
-            style={{
-              position: "absolute",
-              height: "100%",
-              width: "100%",
-              opacity: 0.1,
-            }}
+            className="absolute h-full w-full opacity-10"
           />
         </View>
       </View>
@@ -112,7 +102,6 @@ export default function AddEventButton({
                 shadowOffset: { width: 0, height: 3 },
                 shadowOpacity: 0.2,
                 shadowRadius: 6,
-                elevation: 8,
               }}
             >
               <CloudOff size={44} color="#FFF" strokeWidth={2} />

@@ -159,12 +159,10 @@ function EventSaversRow({
                 {user.userImage ? (
                   <ExpoImage
                     source={{ uri: user.userImage }}
+                    className="rounded-full border-2 border-white"
                     style={{
                       width: avatarSize,
                       height: avatarSize,
-                      borderRadius: 9999,
-                      borderWidth: 2,
-                      borderColor: "white",
                     }}
                     contentFit="cover"
                     contentPosition="center"
@@ -174,15 +172,10 @@ function EventSaversRow({
                   />
                 ) : (
                   <View
+                    className="items-center justify-center rounded-full border-2 border-white bg-interactive-3"
                     style={{
                       width: avatarSize,
                       height: avatarSize,
-                      borderRadius: 9999,
-                      borderWidth: 2,
-                      borderColor: "white",
-                      backgroundColor: "#E0D9FF",
-                      alignItems: "center",
-                      justifyContent: "center",
                     }}
                   >
                     <User size={avatarSize * 0.6} color="#627496" />
@@ -274,12 +267,10 @@ function EventSaversRow({
               {user.userImage ? (
                 <ExpoImage
                   source={{ uri: user.userImage }}
+                  className="rounded-full border-2 border-white"
                   style={{
                     width: avatarSize,
                     height: avatarSize,
-                    borderRadius: 9999,
-                    borderWidth: 2,
-                    borderColor: "white",
                   }}
                   contentFit="cover"
                   contentPosition="center"
@@ -289,15 +280,10 @@ function EventSaversRow({
                 />
               ) : (
                 <View
+                  className="items-center justify-center rounded-full border-2 border-white bg-interactive-3"
                   style={{
                     width: avatarSize,
                     height: avatarSize,
-                    borderRadius: 9999,
-                    borderWidth: 2,
-                    borderColor: "white",
-                    backgroundColor: "#E0D9FF",
-                    alignItems: "center",
-                    justifyContent: "center",
                   }}
                 >
                   <User size={avatarSize * 0.6} color="#627496" />
@@ -519,23 +505,12 @@ export function UserEventListItem(props: UserEventListItemProps) {
       >
         <View className={cn("relative mb-6 px-4")}>
           <View
-            style={{
-              position: "absolute",
-              right: 10,
-              top: -5,
-              zIndex: 10,
-              transform: [{ rotate: imageRotation }],
-              backgroundColor: "transparent",
-            }}
+            className="absolute right-[10px] -top-[5px] z-10 bg-transparent"
+            style={{ transform: [{ rotate: imageRotation }] }}
           >
             <View
-              style={{
-                width: imageWidth,
-                height: imageHeight,
-                borderRadius: 20,
-                overflow: "hidden",
-                backgroundColor: "white",
-              }}
+              className="overflow-hidden rounded-[20px] bg-white"
+              style={{ width: imageWidth, height: imageHeight }}
             >
               {e.images?.[3] ? (
                 <ExpoImage
@@ -561,16 +536,11 @@ export function UserEventListItem(props: UserEventListItemProps) {
                 />
               ) : (
                 <View
-                  className={cn("border border-purple-300", bgColor)}
-                  style={{
-                    width: imageWidth,
-                    height: imageHeight,
-                    justifyContent: "center",
-                    alignItems: "center",
-                    borderRadius: 20,
-                    borderWidth: 3,
-                    borderColor: "white",
-                  }}
+                  className={cn(
+                    "items-center justify-center rounded-[20px] border-[3px] border-white",
+                    bgColor,
+                  )}
+                  style={{ width: imageWidth, height: imageHeight }}
                 >
                   <Text style={{ fontSize: 32 * fontScale }}>{emoji}</Text>
                 </View>
@@ -588,9 +558,7 @@ export function UserEventListItem(props: UserEventListItemProps) {
                   {dateString.eventTime && (
                     <>
                       {" "}
-                      <Text style={{ fontStyle: "italic" }}>
-                        {dateString.eventTime}
-                      </Text>
+                      <Text className="italic">{dateString.eventTime}</Text>
                     </>
                   )}
                 </Text>
@@ -767,26 +735,12 @@ export function UserEventListItem(props: UserEventListItemProps) {
           ) : null}
           <View className="absolute left-0 right-0 top-0 z-20 flex flex-row items-center justify-center space-x-2">
             {isRecent && (
-              <View
-                className={cn("rounded-full px-2 py-0.5", "bg-accent-purple")}
-                style={{
-                  borderWidth: 2,
-                  borderColor: "white",
-                  backgroundColor: "#E0D9FF",
-                }}
-              >
+              <View className="rounded-full border-2 border-white bg-[#E0D9FF] px-2 py-0.5">
                 <Text className="text-xs font-medium text-neutral-1">New</Text>
               </View>
             )}
             {relativeTime && (
-              <View
-                className={cn("rounded-full px-2 py-0.5", "bg-accent-yellow")}
-                style={{
-                  borderWidth: 2,
-                  borderColor: "white",
-                  backgroundColor: "#FEEA9F",
-                }}
-              >
+              <View className="rounded-full border-2 border-white bg-accent-yellow px-2 py-0.5">
                 <Text className="text-xs font-medium text-neutral-1">
                   {relativeTime}
                 </Text>
@@ -824,8 +778,8 @@ const SourceStickersRow = () => {
             style={{ width: iconSize, height: iconSize, marginRight: -4 }}
           />
           <Text
-            className="font-semibold"
-            style={{ fontSize: 20 * fontScale, color: "#5A32FB" }}
+            className="font-semibold text-interactive-1"
+            style={{ fontSize: 20 * fontScale }}
           >
             Add
           </Text>
@@ -1007,16 +961,7 @@ const EmptyStateHeader = () => {
       onPress={() => void triggerAddEventFlow()}
       activeOpacity={0.7}
     >
-      <View
-        className="items-center rounded-2xl p-3"
-        style={{
-          borderWidth: 3,
-          borderColor: "#E0D9FF",
-          borderStyle: "dashed",
-          backgroundColor: "transparent",
-          borderRadius: 20,
-        }}
-      >
+      <View className="items-center rounded-[20px] border-[3px] border-dashed border-[#E0D9FF] bg-transparent p-3">
         <Text
           className="text-center text-2xl font-bold text-neutral-1"
           style={{ fontSize }}
@@ -1024,14 +969,7 @@ const EmptyStateHeader = () => {
           Turn screenshots
         </Text>
         {/* App source icons in mini 9:16 dashed containers */}
-        <View
-          style={{
-            flexDirection: "row",
-            alignItems: "center",
-            gap: 6,
-            marginVertical: 8,
-          }}
-        >
+        <View className="my-2 flex-row items-center gap-1.5">
           {sources.map((s, i) => {
             const rotation = i % 2 === 0 ? "10deg" : "-10deg";
             const containerWidth = iconSize * 1.6;
@@ -1077,7 +1015,10 @@ const EmptyStateHeader = () => {
             style={{ fontSize, lineHeight: fontSize * 1.4 }}
           >
             into{" "}
-            <Text style={{ color: "#5A32FB", fontFamily: "Kalam_700Bold" }}>
+            <Text
+              className="text-interactive-1"
+              style={{ fontFamily: "Kalam_700Bold" }}
+            >
               possibilities
             </Text>
           </Text>
@@ -1142,7 +1083,7 @@ export default function UserEventsList(props: UserEventsListProps) {
     return (
       <ScrollView
         contentInsetAdjustmentBehavior="automatic"
-        style={{ backgroundColor: "#F4F1FF" }}
+        className="bg-[#F4F1FF]"
         contentContainerStyle={{
           paddingTop: inline ? 8 : 16,
           paddingBottom: 120,
@@ -1166,7 +1107,7 @@ export default function UserEventsList(props: UserEventsListProps) {
     return (
       <ScrollView
         contentInsetAdjustmentBehavior="automatic"
-        style={{ flex: 1, backgroundColor: "#F4F1FF" }}
+        className="flex-1 bg-[#F4F1FF]"
         contentContainerStyle={{
           flexGrow: 1,
           justifyContent: "center",
@@ -1214,7 +1155,7 @@ export default function UserEventsList(props: UserEventsListProps) {
           />
         )}
         {/* when showing list items, add a bit of padding. not needed for empty state */}
-        <View style={{ height: 16 }} />
+        <View className="h-4" />
       </>
     );
   };
@@ -1264,7 +1205,7 @@ export default function UserEventsList(props: UserEventsListProps) {
       }}
       onEndReached={onEndReached}
       onEndReachedThreshold={0.5}
-      style={{ backgroundColor: "#F4F1FF" }}
+      className="bg-[#F4F1FF]"
       contentContainerStyle={{
         paddingBottom: 120,
         flexGrow: 1,

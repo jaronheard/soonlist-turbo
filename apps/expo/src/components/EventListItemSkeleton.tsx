@@ -10,6 +10,8 @@ import Animated, {
 } from "react-native-reanimated";
 import { LinearGradient } from "expo-linear-gradient";
 
+import { cn } from "~/utils/cn";
+
 const AnimatedLinearGradient = Animated.createAnimatedComponent(LinearGradient);
 
 interface SkeletonProps {
@@ -41,8 +43,8 @@ function Skeleton({ width, height, className }: SkeletonProps) {
       colors={["#E5E7EB", "#F3F4F6"]}
       start={{ x: 0, y: 0 }}
       end={{ x: 1, y: 0 }}
-      style={[{ width, height, borderRadius: 4 }, animatedStyle]}
-      className={className}
+      style={[{ width, height }, animatedStyle]}
+      className={cn("rounded", className)}
     />
   );
 }

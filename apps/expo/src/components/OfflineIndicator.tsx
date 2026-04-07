@@ -1,5 +1,5 @@
 import { useEffect, useRef } from "react";
-import { Animated, StyleSheet, View } from "react-native";
+import { Animated, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { CloudOff } from "~/components/icons";
@@ -34,13 +34,11 @@ export function OfflineIndicator() {
 
   return (
     <Animated.View
-      style={[
-        styles.container,
-        {
-          bottom: insets.bottom + 16,
-          opacity: fadeAnim,
-        },
-      ]}
+      className="absolute left-4 z-[1000]"
+      style={{
+        bottom: insets.bottom + 16,
+        opacity: fadeAnim,
+      }}
       pointerEvents="none" // Allow touches to pass through
     >
       <View className="rounded-full bg-neutral-1 p-2">
@@ -49,11 +47,3 @@ export function OfflineIndicator() {
     </Animated.View>
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    position: "absolute",
-    left: 16,
-    zIndex: 1000,
-  },
-});

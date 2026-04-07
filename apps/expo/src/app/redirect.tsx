@@ -45,7 +45,7 @@ export default function RedirectScreen() {
           headerShown: false,
         }}
       />
-      <View style={{ flex: 1, justifyContent: "center", alignItems: "center" }}>
+      <View className="flex-1 items-center justify-center">
         <ActivityIndicator size="large" color="#5A32FB" />
       </View>
     </>

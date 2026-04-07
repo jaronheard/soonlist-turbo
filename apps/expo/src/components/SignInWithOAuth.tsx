@@ -23,6 +23,7 @@ import { api } from "@soonlist/backend/convex/_generated/api";
 import { X } from "~/components/icons";
 import { useGuestUser } from "~/hooks/useGuestUser";
 import { useAppStore } from "~/store";
+import { cn } from "~/utils/cn";
 import { useWarmUpBrowser } from "../hooks/useWarmUpBrowser";
 import { AF_EVENTS, trackAFEvent } from "../utils/appsflyerEvents";
 import { logError } from "../utils/errorLogging";
@@ -336,7 +337,7 @@ const SignInWithOAuth = ({
 
   return (
     <Container
-      className={`flex-1 ${dark ? "bg-interactive-1" : "bg-interactive-3"}`}
+      className={cn("flex-1", dark ? "bg-interactive-1" : "bg-interactive-3")}
     >
       <Stack.Screen options={{ headerShown: false }} />
       {progress && (
@@ -351,9 +352,10 @@ const SignInWithOAuth = ({
       )}
       {banner}
       <View
-        className={`flex-1 px-4 pb-8 ${
-          banner ? "pt-0" : progress ? "pt-10" : "pt-24"
-        }`}
+        className={cn(
+          "flex-1 px-4 pb-8",
+          banner ? "pt-0" : progress ? "pt-10" : "pt-24",
+        )}
       >
         <View className="flex-1">
           <View className="shrink-0">
@@ -365,7 +367,10 @@ const SignInWithOAuth = ({
             </View>
             <View className="items-center">
               <Text
-                className={`mb-2 text-center font-heading text-4xl font-bold ${dark ? "text-white" : "text-gray-700"}`}
+                className={cn(
+                  "mb-2 text-center font-heading text-4xl font-bold",
+                  dark ? "text-white" : "text-gray-700",
+                )}
               >
                 {headline ?? (
                   <>
@@ -375,7 +380,10 @@ const SignInWithOAuth = ({
                 )}
               </Text>
               <Text
-                className={`mb-4 text-center text-lg ${dark ? "text-white/80" : "text-gray-500"}`}
+                className={cn(
+                  "mb-4 text-center text-lg",
+                  dark ? "text-white/80" : "text-gray-500",
+                )}
               >
                 {subtitle ??
                   "Save events in one tap, all in one shareable list"}

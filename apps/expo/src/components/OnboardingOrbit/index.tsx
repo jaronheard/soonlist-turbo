@@ -79,12 +79,8 @@ export default function OnboardingOrbit({ width, height }: Props) {
 
   return (
     <View
-      style={{
-        width,
-        height,
-        alignItems: "center",
-        justifyContent: "center",
-      }}
+      className="items-center justify-center"
+      style={{ width, height }}
     >
       {IMAGES.map((image, i) => {
         const baseAngle = (i / CONFIG.cardCount) * Math.PI * 2;
@@ -172,15 +168,7 @@ function OrbitCard({
         style,
       ]}
     >
-      <View
-        style={{
-          width: "100%",
-          height: "100%",
-          borderRadius: 10,
-          overflow: "hidden",
-          backgroundColor: "#000",
-        }}
-      >
+      <View className="h-full w-full overflow-hidden rounded-[10px] bg-black">
         <Image
           source={image}
           style={{ width: "100%", height: "100%" }}

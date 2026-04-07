@@ -62,12 +62,7 @@ export function EventStats({
 
   return (
     <View className="flex-row justify-around px-2">
-      <View
-        className="flex-1 items-center p-3"
-        style={{
-          maxWidth: "30%",
-        }}
-      >
+      <View className="max-w-[30%] flex-1 items-center p-3">
         <View className="flex-row items-center gap-1">
           <CircularProgress progress={progress} />
           <Text className="text-lg font-bold text-neutral-900">
@@ -77,12 +72,7 @@ export function EventStats({
         <Text className="text-xs text-neutral-500">This Week</Text>
       </View>
 
-      <View
-        className="flex-1 items-center p-3"
-        style={{
-          maxWidth: "30%",
-        }}
-      >
+      <View className="max-w-[30%] flex-1 items-center p-3">
         <View className="flex-row items-center gap-1">
           <Calendar size={16} color="#7ACEFC" />
           <Text className="text-lg font-bold text-neutral-900">
@@ -92,12 +82,7 @@ export function EventStats({
         <Text className="text-xs text-neutral-500">Upcoming</Text>
       </View>
 
-      <View
-        className="flex-1 items-center p-3"
-        style={{
-          maxWidth: "30%",
-        }}
-      >
+      <View className="max-w-[30%] flex-1 items-center p-3">
         <View className="flex-row items-center gap-1">
           <History size={16} color="#C4DA9D" />
           <Text className="text-lg font-bold text-neutral-900">

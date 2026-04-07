@@ -384,12 +384,12 @@ export default function EditProfileScreen() {
   return (
     <KeyboardAvoidingView
       behavior={Platform.OS === "ios" ? "padding" : "height"}
-      style={{ flex: 1 }}
+      className="flex-1"
       keyboardVerticalOffset={Platform.OS === "ios" ? 100 : 0}
     >
       <ScrollView
         className="flex-1 bg-white"
-        contentContainerStyle={{ padding: 16, paddingBottom: 100 }}
+        contentContainerClassName="p-4 pb-[100px]"
         keyboardShouldPersistTaps="handled"
       >
         <View className="flex-col">
@@ -400,12 +400,8 @@ export default function EditProfileScreen() {
           >
             <TouchableOpacity
               onPress={pickImage}
-              className="relative"
+              className="relative h-24 w-24"
               activeOpacity={0.7}
-              style={{
-                width: 96,
-                height: 96,
-              }}
               hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
             >
               <Image

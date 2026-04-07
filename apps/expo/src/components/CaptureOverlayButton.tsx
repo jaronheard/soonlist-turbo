@@ -13,8 +13,6 @@ interface CaptureOverlayButtonProps {
   rightOffset?: number;
 }
 
-const BUTTON_SIZE = 56;
-
 // Safety timeout to recover from stuck isCapturing state (e.g. unhandled edge cases)
 const CAPTURING_TIMEOUT_MS = 30_000;
 
@@ -63,11 +61,10 @@ export function CaptureOverlayButton({
   return (
     <View
       pointerEvents="box-none"
+      className="absolute z-[100]"
       style={{
-        position: "absolute",
         right: rightOffset,
         bottom: bottomOffset,
-        zIndex: 100,
       }}
     >
       <Pressable
@@ -80,24 +77,12 @@ export function CaptureOverlayButton({
           disabled: !isOnline || isCapturing,
           busy: isCapturing,
         }}
+        className="h-14 w-14 items-center justify-center"
         style={({ pressed }) => ({
-          width: BUTTON_SIZE,
-          height: BUTTON_SIZE,
-          alignItems: "center",
-          justifyContent: "center",
           opacity: !isOnline ? 0.4 : pressed ? 0.6 : 1,
         })}
       >
-        <View
-          style={{
-            width: BUTTON_SIZE,
-            height: BUTTON_SIZE,
-            borderRadius: BUTTON_SIZE / 2,
-            backgroundColor: "#5A32FB",
-            alignItems: "center",
-            justifyContent: "center",
-          }}
-        >
+        <View className="h-14 w-14 items-center justify-center rounded-full bg-interactive-1">
           {isCapturing ? (
             <ActivityIndicator color="#FFF" />
           ) : (

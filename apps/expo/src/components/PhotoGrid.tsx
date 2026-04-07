@@ -125,10 +125,7 @@ const GridItem = React.memo(
                 ? { uri: item.uri }
                 : item.uri
           }
-          style={{
-            width: "100%",
-            height: "100%",
-          }}
+          className="h-full w-full bg-muted/10"
           contentFit="cover"
           contentPosition="center"
           transition={200}
@@ -136,7 +133,6 @@ const GridItem = React.memo(
           recyclingKey={item.id}
           placeholder={null}
           placeholderContentFit="cover"
-          className="bg-muted/10"
         />
       </Pressable>
     );

@@ -29,12 +29,7 @@ export default function QRModal() {
         <View className="absolute inset-0 h-full w-full overflow-hidden">
           <Image
             source={{ uri: eventImage }}
-            style={{
-              width: "100%",
-              height: "100%",
-              position: "absolute",
-              opacity: 0.9,
-            }}
+            className="absolute h-full w-full opacity-90"
             resizeMode="cover"
             blurRadius={10}
           />

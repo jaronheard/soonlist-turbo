@@ -183,18 +183,12 @@ function MyFeedContent() {
 
   const HeaderComponent = useCallback(() => {
     return (
-      <View className="px-3 pb-2" style={{ marginTop: -4 }}>
-        <Text
-          className="mb-1 text-base font-medium text-neutral-2"
-          style={{ paddingLeft: 6 }}
-        >
+      <View className="-mt-1 px-3 pb-2">
+        <Text className="mb-1 pl-1.5 text-base font-medium text-neutral-2">
           Events I&apos;m tracking
         </Text>
         {contributingCount > 0 && (
-          <View
-            className="mb-2 flex-row items-center"
-            style={{ paddingLeft: 6 }}
-          >
+          <View className="mb-2 flex-row items-center pl-1.5">
             <Text className="text-sm text-neutral-2">
               Sharing public events to:{" "}
             </Text>
@@ -207,7 +201,7 @@ function MyFeedContent() {
             </Text>
           </View>
         )}
-        <View style={{ width: 260 }}>
+        <View className="w-[260px]">
           {Platform.OS === "ios" ? (
             <Host matchContents>
               <Picker

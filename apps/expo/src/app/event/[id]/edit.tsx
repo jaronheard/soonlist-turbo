@@ -459,7 +459,7 @@ export default function EditEventScreen() {
       />
       <KeyboardAvoidingView
         behavior={Platform.OS === "ios" ? "padding" : "height"}
-        style={{ flex: 1 }}
+        className="flex-1"
         keyboardVerticalOffset={Platform.OS === "ios" ? 100 : 0}
       >
         <ScrollView
@@ -640,11 +640,7 @@ export default function EditEventScreen() {
                   <View className="rounded-md border border-neutral-300 p-2">
                     <ExpoImage
                       source={{ uri: selectedImage }}
-                      style={{
-                        width: "100%",
-                        height: 300,
-                        borderRadius: 6,
-                      }}
+                      className="h-[300px] w-full rounded-md"
                       contentFit="contain"
                     />
                     <View className="mt-2 flex-row justify-between">

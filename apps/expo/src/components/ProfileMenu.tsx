@@ -59,20 +59,14 @@ export function ProfileMenu() {
       {user?.imageUrl ? (
         <ExpoImage
           source={{ uri: user.imageUrl }}
-          style={{
-            width: 40,
-            height: 40,
-            borderRadius: 9999,
-            borderWidth: 2,
-            borderColor: "#FEEA9F",
-          }}
+          className="h-10 w-10 rounded-full border-2 border-accent-yellow"
           contentFit="cover"
           contentPosition="center"
           cachePolicy="disk"
           transition={100}
         />
       ) : (
-        <View className="h-10 w-10 items-center justify-center rounded-full bg-gray-200">
+        <View className="h-10 w-10 items-center justify-center rounded-full bg-neutral-200">
           <User size={20} color="#5A32FB" />
         </View>
       )}

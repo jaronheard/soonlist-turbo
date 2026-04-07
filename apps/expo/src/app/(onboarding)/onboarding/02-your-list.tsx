@@ -142,13 +142,7 @@ export default function YourListScreen() {
       totalSteps={totalSteps}
     >
       <View className="flex-1 justify-between">
-        <View
-          className="-mx-2 flex-1 overflow-hidden rounded-2xl bg-interactive-3"
-          style={{
-            borderWidth: 3,
-            borderColor: "#FFFFFF",
-          }}
-        >
+        <View className="-mx-2 flex-1 overflow-hidden rounded-2xl border-[3px] border-white bg-interactive-3">
           {/* Share hint */}
           <View className="flex-row items-center justify-between bg-interactive-2 px-4 py-2">
             <Text className="text-sm font-semibold text-interactive-1">
@@ -160,7 +154,7 @@ export default function YourListScreen() {
               tintColor="#5A32FB"
             />
           </View>
-          <View style={{ marginLeft: -6, marginRight: 6 }} className="flex-1">
+          <View className="-ml-[6px] mr-[6px] flex-1">
             <UserEventsList
               groupedEvents={groupedEvents}
               demoMode={true}

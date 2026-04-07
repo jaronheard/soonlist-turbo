@@ -8,6 +8,7 @@ import { api } from "@soonlist/backend/convex/_generated/api";
 
 import { DISCOVER_CODE_KEY } from "~/constants";
 import { useAppStore } from "~/store";
+import { cn } from "~/utils/cn";
 
 // Moved DISCOVER_CODE_KEY to shared constants
 
@@ -156,8 +157,7 @@ export function CodeEntryModal({
                 clearButtonMode="while-editing"
                 keyboardAppearance="light"
                 enablesReturnKeyAutomatically={true}
-                className="mb-4 w-full rounded-xl border border-neutral-200 bg-white px-4 py-3 text-base"
-                style={{ textAlign: "center", fontSize: 18, height: 48 }}
+                className="mb-4 h-[48px] w-full rounded-xl border border-neutral-200 bg-white px-4 py-3 text-center text-[18px]"
                 maxLength={32}
                 returnKeyType="done"
                 onSubmitEditing={() => void handleRedeem()}
@@ -189,11 +189,12 @@ export function CodeEntryModal({
                   accessibilityLabel="Redeem code"
                   onPress={() => void handleRedeem()}
                   disabled={isRedeeming || !code.trim() || isLoading}
-                  className={`flex-1 rounded-full py-4 ${
+                  className={cn(
+                    "flex-1 rounded-full py-4",
                     isRedeeming || !code.trim() || isLoading
                       ? "bg-gray-400"
-                      : "bg-interactive-1"
-                  }`}
+                      : "bg-interactive-1",
+                  )}
                 >
                   <Text className="text-center font-semibold text-white">
                     {isRedeeming ? "Redeeming..." : "Redeem"}

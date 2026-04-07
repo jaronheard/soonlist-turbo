@@ -86,7 +86,7 @@ function ScenePreviewThreeUp({
           {uri ? (
             <Image
               source={{ uri }}
-              style={{ width: "100%", height: "100%" }}
+              className="h-full w-full"
               contentFit="cover"
               cachePolicy="disk"
             />
@@ -630,7 +630,7 @@ function ProfileIdentityHeader({
           {user.userImage ? (
             <Image
               source={{ uri: user.userImage }}
-              style={{ width: 56, height: 56, borderRadius: 28 }}
+              className="h-14 w-14 rounded-full"
               contentFit="cover"
               cachePolicy="disk"
             />

@@ -82,7 +82,8 @@ function OrbitStage() {
   );
   return (
     <View
-      style={{ flex: 1, marginBottom: ORBIT_BOTTOM_OFFSET }}
+      className="flex-1"
+      style={{ marginBottom: ORBIT_BOTTOM_OFFSET }}
       onLayout={(e) => {
         const { width, height } = e.nativeEvent.layout;
         setSize((prev) =>

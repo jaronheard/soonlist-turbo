@@ -64,14 +64,13 @@ export function EventPreview({
                   ? { uri: imagePreview }
                   : imagePreview
             }
-            style={{ width: "100%", height: "100%" }}
+            className="h-full w-full bg-muted/10"
             contentFit="contain"
             contentPosition="center"
             transition={200}
             cachePolicy="memory-disk"
             placeholder={null}
             placeholderContentFit="contain"
-            className="bg-muted/10"
           />
           {clearPreview && (
             <Pressable
