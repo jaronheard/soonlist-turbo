@@ -213,13 +213,18 @@ export function useCreateEvent() {
 
   // Batch creation with smart notifications
   const createMultipleEvents = useCallback(
-    async (tasks: CreateEventOptions[]): Promise<string | undefined> => {
+    async (
+      tasks: CreateEventOptions[],
+      { suppressCapturing = false }: { suppressCapturing?: boolean } = {},
+    ): Promise<string | undefined> => {
       if (!tasks.length) return undefined;
 
       const batchId = generateBatchId();
 
       try {
-        setIsCapturing(true);
+        if (!suppressCapturing) {
+          setIsCapturing(true);
+        }
         setIsImageLoading(true, "add");
         setIsImageLoading(true, "new");
 
@@ -296,7 +301,9 @@ export function useCreateEvent() {
         void hapticError();
         throw error;
       } finally {
-        setIsCapturing(false);
+        if (!suppressCapturing) {
+          setIsCapturing(false);
+        }
         setIsImageLoading(false, "add");
         setIsImageLoading(false, "new");
       }

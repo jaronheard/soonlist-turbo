@@ -17,16 +17,17 @@ import { toast } from "~/utils/feedback";
 export function useAddEventFlow() {
   const { user } = useUser();
   const { createMultipleEvents } = useCreateEvent();
-  const { setIsCapturing } = useInFlightEventStore();
+  const setIsCapturing = useInFlightEventStore((s) => s.setIsCapturing);
 
   const triggerAddEventFlow = useCallback(async () => {
-    // Light feedback on intent to capture
-    await Haptics.selectionAsync();
+    // Early guard: prevent concurrent captures using fresh store read
+    if (useInFlightEventStore.getState().isCapturing) return;
 
-    // Set capturing state to true immediately when photo selector opens
+    // Set capturing state first, before any async work — eliminates dead zone
     setIsCapturing(true);
 
-    // 1. Launch native photo picker directly
+    void Haptics.selectionAsync();
+
     try {
       const result = await ImagePicker.launchImageLibraryAsync({
         mediaTypes: ["images"],
@@ -51,7 +52,6 @@ export function useAddEventFlow() {
           return;
         }
 
-        // 2. Create events for all selected images
         const assets = result.assets.slice(0, 20);
         await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
 
@@ -62,6 +62,7 @@ export function useAddEventFlow() {
               userId,
               username,
             })),
+            { suppressCapturing: true },
           );
         } catch (err) {
           logError("Failed to create events", err, { userId, username });
@@ -70,7 +71,6 @@ export function useAddEventFlow() {
           setIsCapturing(false);
         }
       } else {
-        // User canceled or didn't select any images
         setIsCapturing(false);
       }
     } catch (err) {

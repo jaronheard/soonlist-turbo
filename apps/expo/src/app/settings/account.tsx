@@ -53,14 +53,18 @@ type ProfileFormData = z.infer<typeof profileSchema>;
 // Settings section component
 function SettingsSection({
   title,
+  titleClassName,
   children,
 }: {
   title: string;
+  titleClassName?: string;
   children: React.ReactNode;
 }) {
   return (
     <View className="mt-8">
-      <Text className="mb-3 text-lg font-semibold">{title}</Text>
+      <Text className={`mb-3 text-lg font-semibold ${titleClassName ?? ""}`}>
+        {title}
+      </Text>
       {children}
     </View>
   );
@@ -78,12 +82,14 @@ function SettingsOption({
 }) {
   return (
     <TouchableOpacity
-      className="mb-2 flex-row items-center rounded-lg border border-gray-200 p-4"
+      className="mb-2 flex-row items-center rounded-lg border border-neutral-200 p-4"
       onPress={onPress}
     >
       <View className="flex-1">
         <Text className="text-base font-semibold">{title}</Text>
-        {subtitle && <Text className="text-sm text-gray-500">{subtitle}</Text>}
+        {subtitle && (
+          <Text className="text-sm text-neutral-500">{subtitle}</Text>
+        )}
       </View>
     </TouchableOpacity>
   );
@@ -386,7 +392,7 @@ export default function EditProfileScreen() {
         contentContainerStyle={{ padding: 16, paddingBottom: 100 }}
         keyboardShouldPersistTaps="handled"
       >
-        <View className="flex-col gap-4 space-y-6">
+        <View className="flex-col">
           <UserProfileFlair
             className="mx-auto h-24 w-24 items-center"
             username={user?.username ?? ""}
@@ -409,70 +415,70 @@ export default function EditProfileScreen() {
             </TouchableOpacity>
           </UserProfileFlair>
 
-          <View className="flex-col gap-4 space-y-4">
-            <View>
-              <Text className="text-lg font-semibold">Account Information</Text>
-            </View>
-
-            <View>
-              <Text className="mb-2 text-base font-semibold">Display Name</Text>
-              <Text className="mb-2 text-sm text-neutral-500">
-                How you'll appear on events
-              </Text>
-              <Controller
-                control={control}
-                name="displayName"
-                render={({ field: { onChange, onBlur, value } }) => (
-                  <TextInput
-                    ref={displayNameRef}
-                    className="rounded-md border border-neutral-300 px-3 py-2 text-base"
-                    placeholder="Enter display name"
-                    value={value}
-                    onChangeText={onChange}
-                    onBlur={onBlur}
-                    maxLength={50}
-                  />
-                )}
-              />
-              {errors.displayName && (
-                <Text className="mt-1 text-sm text-red-500">
-                  {errors.displayName.message}
+          <SettingsSection title="Account Information">
+            <View className="flex-col gap-4">
+              <View>
+                <Text className="mb-2 text-base font-semibold">
+                  Display Name
                 </Text>
+                <Text className="mb-2 text-sm text-neutral-500">
+                  How you'll appear on events
+                </Text>
+                <Controller
+                  control={control}
+                  name="displayName"
+                  render={({ field: { onChange, onBlur, value } }) => (
+                    <TextInput
+                      ref={displayNameRef}
+                      className="rounded-md border border-neutral-300 px-3 py-2 text-base"
+                      placeholder="Enter display name"
+                      value={value}
+                      onChangeText={onChange}
+                      onBlur={onBlur}
+                      maxLength={50}
+                    />
+                  )}
+                />
+                {errors.displayName && (
+                  <Text className="mt-1 text-sm text-red-500">
+                    {errors.displayName.message}
+                  </Text>
+                )}
+              </View>
+
+              <View className="rounded-md bg-neutral-50 p-4">
+                <Text className="mb-2 text-sm font-medium text-neutral-700">
+                  Preview
+                </Text>
+                <Text className="text-sm text-neutral-500">
+                  On events, you'll appear as:{" "}
+                  <Text className="font-medium text-neutral-700">
+                    {watchedDisplayName?.trim() || user?.username || "Unknown"}
+                  </Text>
+                </Text>
+              </View>
+
+              {isDirty && (
+                <Button
+                  onPress={handleSubmit(onSubmit)}
+                  disabled={isSubmitting || !isValid}
+                  className="mt-4"
+                >
+                  {isSubmitting ? "Saving..." : "Save Profile"}
+                </Button>
               )}
             </View>
-
-            <View className="rounded-md bg-neutral-50 p-4">
-              <Text className="mb-2 text-sm font-medium text-neutral-700">
-                Preview
-              </Text>
-              <Text className="text-sm text-neutral-500">
-                On events, you'll appear as:{" "}
-                <Text className="font-medium text-neutral-700">
-                  {watchedDisplayName?.trim() || user?.username || "Unknown"}
-                </Text>
-              </Text>
-            </View>
-
-            {isDirty && (
-              <Button
-                onPress={handleSubmit(onSubmit)}
-                disabled={isSubmitting || !isValid}
-                className="mt-4"
-              >
-                {isSubmitting ? "Saving..." : "Save Profile"}
-              </Button>
-            )}
-          </View>
+          </SettingsSection>
 
           {!showDiscover && (
             <SettingsSection title="Share Your Events">
-              <View className="mb-4 rounded-lg border border-gray-200 p-4">
+              <View className="mb-4 rounded-lg border border-neutral-200 p-4">
                 <View className="mb-4 flex-row items-center justify-between">
                   <View className="flex-1 pr-4">
                     <Text className="mb-1 text-base font-semibold">
                       Public List
                     </Text>
-                    <Text className="text-sm text-gray-500">
+                    <Text className="text-sm text-neutral-500">
                       Share all your events with anyone via a public link
                     </Text>
                   </View>
@@ -492,8 +498,8 @@ export default function EditProfileScreen() {
                 </View>
 
                 {publicListEnabled && (
-                  <View className="mt-4 border-t border-gray-100 pt-4">
-                    <Text className="mb-2 text-sm font-medium text-gray-700">
+                  <View className="mt-4 border-t border-neutral-100 pt-4">
+                    <Text className="mb-2 text-sm font-medium text-neutral-700">
                       List Name
                     </Text>
                     <TextInput
@@ -507,13 +513,13 @@ export default function EditProfileScreen() {
                       maxLength={50}
                     />
 
-                    <Text className="mb-2 text-sm font-medium text-gray-700">
+                    <Text className="mb-2 text-sm font-medium text-neutral-700">
                       Your public link
                     </Text>
                     <View className="flex-row items-center gap-2">
-                      <View className="min-w-0 flex-1 rounded-lg border border-gray-200 bg-gray-50 px-4 py-3">
+                      <View className="min-w-0 flex-1 rounded-lg border border-neutral-200 bg-neutral-50 px-4 py-3">
                         <Text
-                          className="text-base text-gray-700"
+                          className="text-base text-neutral-700"
                           numberOfLines={1}
                         >
                           {(getPublicListUrl() || "").replace("https://", "")}
@@ -548,8 +554,7 @@ export default function EditProfileScreen() {
             </SettingsSection>
           )}
 
-          <View className="mt-8">
-            <Text className="text-lg font-semibold">Preferences</Text>
+          <SettingsSection title="Preferences">
             <View className="mt-4">
               <Text className="mb-2 text-base font-medium">
                 Default Timezone
@@ -563,7 +568,7 @@ export default function EditProfileScreen() {
                 placeholder="Select a timezone"
               />
             </View>
-          </View>
+          </SettingsSection>
 
           <SettingsSection title="App Settings">
             <SettingsOption
@@ -573,8 +578,7 @@ export default function EditProfileScreen() {
             />
           </SettingsSection>
 
-          <View className="mt-12">
-            <Text className="text-lg font-semibold">Subscription</Text>
+          <SettingsSection title="Subscription">
             {(() => {
               if (!user) return null;
               const hasUnlimited =
@@ -628,13 +632,13 @@ export default function EditProfileScreen() {
                 </TouchableOpacity>
               );
             })()}
-          </View>
+          </SettingsSection>
 
           {__DEV__ && (
-            <View className="mt-12">
-              <Text className="mb-2 text-base font-semibold text-blue-600">
-                Development Testing
-              </Text>
+            <SettingsSection
+              title="Development Testing"
+              titleClassName="text-blue-600"
+            >
               <TouchableOpacity
                 onPress={() => router.navigate("/settings/workflow-test")}
                 className="mt-2 rounded-md bg-blue-100 p-4"
@@ -646,14 +650,11 @@ export default function EditProfileScreen() {
                   Test workflow failure notifications
                 </Text>
               </TouchableOpacity>
-            </View>
+            </SettingsSection>
           )}
 
-          <View className="mt-12">
-            <Text className="mb-2 text-base font-semibold text-red-500">
-              Danger Zone
-            </Text>
-            <View>
+          <SettingsSection title="Danger Zone" titleClassName="text-red-500">
+            <View className="gap-4">
               <Button
                 onPress={handleRestartOnboarding}
                 variant="destructive"
@@ -661,7 +662,6 @@ export default function EditProfileScreen() {
               >
                 Restart Onboarding
               </Button>
-              <View className="h-4" />
               <Button
                 onPress={handleDeleteAccount}
                 variant="destructive"
@@ -669,12 +669,12 @@ export default function EditProfileScreen() {
               >
                 Delete Account
               </Button>
-              <Text className="mt-2 text-xs text-neutral-500">
+              <Text className="text-xs text-neutral-500">
                 This will permanently delete your account and all associated
                 data.
               </Text>
             </View>
-          </View>
+          </SettingsSection>
         </View>
       </ScrollView>
     </KeyboardAvoidingView>
