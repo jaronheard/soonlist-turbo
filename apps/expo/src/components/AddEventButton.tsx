@@ -102,6 +102,7 @@ export default function AddEventButton({
                 shadowOffset: { width: 0, height: 3 },
                 shadowOpacity: 0.2,
                 shadowRadius: 6,
+                elevation: 6,
               }}
             >
               <CloudOff size={44} color="#FFF" strokeWidth={2} />

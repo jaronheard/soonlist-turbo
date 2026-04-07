@@ -106,7 +106,7 @@ The Expo app's styling is inconsistent: 55 files use inline `style=`, 41 mix bot
   - StyleSheet.create removed from files where all styles were static
   - Remaining inline styles are only for runtime-dynamic values
 
-- [ ] **Unit 2: Inline-style-only files (14 files)**
+- [ ] **Unit 2: Inline-style-only files (12 files)**
 
   **Goal:** Fully convert files that use inline `style=` but no `className` to NativeWind-only.
 
@@ -209,7 +209,7 @@ The Expo app's styling is inconsistent: 55 files use inline `style=`, 41 mix bot
   - Zero convertible static inline styles remaining
   - `pnpm check` passes
 
-- [ ] **Unit 5: Remaining components — banners, modals, and UI (16 files)**
+- [ ] **Unit 5: Remaining components — banners, modals, and UI (18 files)**
 
   **Goal:** Migrate mixed inline styles in all remaining component files.
 

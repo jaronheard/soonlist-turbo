@@ -43,8 +43,8 @@ The Expo app's styling is in an inconsistent hybrid state. AGENTS.md declares Na
 ## Outstanding Questions
 
 ### Deferred to Planning
-- [Affects R2][Technical] For the 6 StyleSheet.create files, which specific styles are dynamic vs static and can be split?
-- [Affects R4][Technical] What's the best approach for verifying no visual regressions — manual review, screenshots, or snapshot tests?
+- [Affects R2] (Technical) For the 6 StyleSheet.create files, which specific styles are dynamic vs static and can be split?
+- [Affects R4] (Technical) What's the best approach for verifying no visual regressions — manual review, screenshots, or snapshot tests?
 
 ## Next Steps
 

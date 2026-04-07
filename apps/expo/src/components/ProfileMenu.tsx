@@ -66,7 +66,7 @@ export function ProfileMenu() {
           transition={100}
         />
       ) : (
-        <View className="h-10 w-10 items-center justify-center rounded-full bg-neutral-200">
+        <View className="h-10 w-10 items-center justify-center rounded-full bg-neutral-3">
           <User size={20} color="#5A32FB" />
         </View>
       )}

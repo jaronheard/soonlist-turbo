@@ -172,7 +172,7 @@ function EventSaversRow({
                   />
                 ) : (
                   <View
-                    className="items-center justify-center rounded-full border-2 border-white bg-interactive-3"
+                    className="items-center justify-center rounded-full border-2 border-white bg-interactive-2"
                     style={{
                       width: avatarSize,
                       height: avatarSize,
@@ -280,7 +280,7 @@ function EventSaversRow({
                 />
               ) : (
                 <View
-                  className="items-center justify-center rounded-full border-2 border-white bg-interactive-3"
+                  className="items-center justify-center rounded-full border-2 border-white bg-interactive-2"
                   style={{
                     width: avatarSize,
                     height: avatarSize,
@@ -1083,12 +1083,11 @@ export default function UserEventsList(props: UserEventsListProps) {
     return (
       <ScrollView
         contentInsetAdjustmentBehavior="automatic"
-        className="bg-[#F4F1FF]"
+        className="bg-interactive-3"
         contentContainerStyle={{
           paddingTop: inline ? 8 : 16,
           paddingBottom: 120,
           flexGrow: 1,
-          backgroundColor: "#F4F1FF",
         }}
         showsVerticalScrollIndicator={false}
       >
@@ -1107,7 +1106,7 @@ export default function UserEventsList(props: UserEventsListProps) {
     return (
       <ScrollView
         contentInsetAdjustmentBehavior="automatic"
-        className="flex-1 bg-[#F4F1FF]"
+        className="flex-1 bg-interactive-3"
         contentContainerStyle={{
           flexGrow: 1,
           justifyContent: "center",
@@ -1205,11 +1204,10 @@ export default function UserEventsList(props: UserEventsListProps) {
       }}
       onEndReached={onEndReached}
       onEndReachedThreshold={0.5}
-      className="bg-[#F4F1FF]"
+      className="bg-interactive-3"
       contentContainerStyle={{
         paddingBottom: 120,
         flexGrow: 1,
-        backgroundColor: "#F4F1FF",
       }}
       ListFooterComponent={renderFooter()}
     />
