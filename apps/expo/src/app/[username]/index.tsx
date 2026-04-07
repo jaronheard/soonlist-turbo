@@ -630,7 +630,7 @@ function ProfileIdentityHeader({
           {user.userImage ? (
             <Image
               source={{ uri: user.userImage }}
-              style={{ width: 56, height: 56, borderRadius: 28 }}
+              className="h-14 w-14 rounded-full"
               contentFit="cover"
               cachePolicy="disk"
             />

@@ -34,7 +34,7 @@ function SampleScreenshot() {
     <View className="mx-4 flex-1 overflow-hidden rounded-2xl">
       <ExpoImage
         source={lloydMallCrawlImage}
-        style={{ flex: 1 }}
+        className="flex-1"
         contentFit="cover"
       />
     </View>

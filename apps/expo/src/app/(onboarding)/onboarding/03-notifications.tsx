@@ -92,10 +92,8 @@ export default function NotificationsScreen() {
       <View className="flex-1">
         <View className="flex-1 items-center justify-center px-12">
           <View
-            className="relative"
+            className="relative overflow-hidden rounded-[14px]"
             style={{
-              borderRadius: 14,
-              overflow: "hidden",
               shadowColor: "#000",
               shadowOffset: { width: 0, height: 2 },
               shadowOpacity: 0.15,
@@ -127,7 +125,7 @@ export default function NotificationsScreen() {
                   backgroundColor: "rgba(60,60,67,0.36)",
                 }}
               />
-              <View className="flex-row" style={{ height: 44 }}>
+              <View className="h-11 flex-row">
                 <Pressable
                   className="flex-1 items-center justify-center"
                   disabled

@@ -1,4 +1,4 @@
-import { StyleSheet, Text, View } from "react-native";
+import { Text, View } from "react-native";
 import appsFlyer from "react-native-appsflyer";
 import {
   Stack,
@@ -44,14 +44,6 @@ import Config from "~/utils/config";
 import { getUserTimeZone } from "~/utils/dates";
 import { logDebug, logError } from "~/utils/errorLogging";
 import { getAccessGroup } from "~/utils/getAccessGroup";
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    justifyContent: "center",
-    alignItems: "center",
-  },
-});
 
 const queryClient = new QueryClient();
 
@@ -139,7 +131,7 @@ function RootLayout() {
 
   if (!clerkPublishableKey) {
     return (
-      <View style={styles.container}>
+      <View className="flex-1 items-center justify-center">
         <Text>Missing Clerk Publishable Key</Text>
       </View>
     );
@@ -148,7 +140,7 @@ function RootLayout() {
   // Wait for fonts to load to avoid flash of unstyled text. The Kalam font
   // is used in the app shell so we block the initial render until it's ready.
   if (!fontsLoaded) {
-    return <View style={{ flex: 1 }} />;
+    return <View className="flex-1" />;
   }
 
   const isDev = Constants.expoConfig?.scheme === "soonlist.dev";

@@ -1,5 +1,5 @@
 import React from "react";
-import { Modal, Pressable, StyleSheet, Text, View } from "react-native";
+import { Modal, Pressable, Text, View } from "react-native";
 
 interface DialogProps {
   isVisible: boolean;
@@ -29,17 +29,23 @@ export function Dialog({
       animationType="fade"
       onRequestClose={onDismiss}
     >
-      <View style={styles.overlay}>
-        <View style={styles.container}>
-          {icon && <View style={styles.iconContainer}>{icon}</View>}
-          <Text style={styles.title}>{title}</Text>
-          <View style={styles.content}>{children}</View>
-          <View style={styles.buttonContainer}>
-            <Pressable onPress={onDismiss} style={styles.cancelButton}>
-              <Text style={styles.cancelButtonText}>{cancelText}</Text>
+      <View className="flex-1 items-center justify-center bg-black/50 p-4">
+        <View className="w-full max-w-80 rounded-lg bg-white p-6">
+          {icon && <View className="mb-2 items-center">{icon}</View>}
+          <Text className="mb-4 text-center text-xl font-bold">{title}</Text>
+          <View className="mb-6">{children}</View>
+          <View className="flex-row justify-end gap-3">
+            <Pressable
+              onPress={onDismiss}
+              className="rounded-lg border border-neutral-300 px-4 py-2"
+            >
+              <Text className="text-gray-600">{cancelText}</Text>
             </Pressable>
-            <Pressable onPress={onConfirm} style={styles.confirmButton}>
-              <Text style={styles.confirmButtonText}>{confirmText}</Text>
+            <Pressable
+              onPress={onConfirm}
+              className="rounded-lg bg-interactive-1 px-4 py-2"
+            >
+              <Text className="font-medium text-white">{confirmText}</Text>
             </Pressable>
           </View>
         </View>
@@ -47,58 +53,3 @@ export function Dialog({
     </Modal>
   );
 }
-
-const styles = StyleSheet.create({
-  overlay: {
-    flex: 1,
-    alignItems: "center",
-    justifyContent: "center",
-    backgroundColor: "rgba(0, 0, 0, 0.5)",
-    padding: 16,
-  },
-  container: {
-    width: "100%",
-    maxWidth: 320,
-    backgroundColor: "white",
-    borderRadius: 8,
-    padding: 24,
-  },
-  iconContainer: {
-    alignItems: "center",
-    marginBottom: 8,
-  },
-  title: {
-    fontSize: 20,
-    fontWeight: "bold",
-    textAlign: "center",
-    marginBottom: 16,
-  },
-  content: {
-    marginBottom: 24,
-  },
-  buttonContainer: {
-    flexDirection: "row",
-    justifyContent: "flex-end",
-    gap: 12,
-  },
-  cancelButton: {
-    borderRadius: 8,
-    borderWidth: 1,
-    borderColor: "#D1D5DB",
-    paddingHorizontal: 16,
-    paddingVertical: 8,
-  },
-  cancelButtonText: {
-    color: "#4B5563",
-  },
-  confirmButton: {
-    backgroundColor: "#5A32FB", // interactive-1 color
-    borderRadius: 8,
-    paddingHorizontal: 16,
-    paddingVertical: 8,
-  },
-  confirmButtonText: {
-    color: "white",
-    fontWeight: "500",
-  },
-});

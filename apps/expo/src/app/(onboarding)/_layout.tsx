@@ -22,7 +22,7 @@ export default function OnboardingLayout() {
   }
 
   return (
-    <View style={{ flex: 1 }}>
+    <View className="flex-1">
       <Stack
         screenOptions={{
           headerShown: false,

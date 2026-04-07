@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { Pressable, StyleSheet, Text } from "react-native";
+import { Pressable, Text } from "react-native";
 import { router, usePathname } from "expo-router";
 
 import { Dialog } from "~/components/Dialog";
@@ -30,10 +30,13 @@ export function ResetAuthButton({ style }: ResetAuthButtonProps) {
     <>
       <Pressable
         onPress={() => setShowConfirmation(true)}
-        style={[styles.button, style]}
+        className="flex-row items-center justify-center p-2"
+        style={style}
       >
         <RefreshCw size={16} color="#6B7280" />
-        <Text style={styles.buttonText}>Stuck? Return to sign-in</Text>
+        <Text className="ml-2 text-sm text-gray-500">
+          Stuck? Return to sign-in
+        </Text>
       </Pressable>
 
       <Dialog
@@ -45,7 +48,7 @@ export function ResetAuthButton({ style }: ResetAuthButtonProps) {
         onConfirm={handleReset}
         icon={<AlertTriangle size={24} color="#F59E0B" />}
       >
-        <Text style={styles.dialogText}>
+        <Text className="text-center text-base text-gray-600">
           This will clear your current authentication progress and return you to
           the welcome screen.
         </Text>
@@ -53,22 +56,3 @@ export function ResetAuthButton({ style }: ResetAuthButtonProps) {
     </>
   );
 }
-
-const styles = StyleSheet.create({
-  button: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "center",
-    padding: 8,
-  },
-  buttonText: {
-    marginLeft: 8,
-    fontSize: 14,
-    color: "#6B7280",
-  },
-  dialogText: {
-    textAlign: "center",
-    fontSize: 16,
-    color: "#4B5563",
-  },
-});

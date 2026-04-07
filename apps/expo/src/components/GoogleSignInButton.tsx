@@ -24,7 +24,7 @@ export const GoogleSignInButton: React.FC<GoogleSignInButtonProps> = ({
         <Image
           // eslint-disable-next-line @typescript-eslint/consistent-type-assertions, @typescript-eslint/no-require-imports
           source={require("../assets/google-logo.png") as ImageSourcePropType}
-          style={{ width: 24, height: 24, marginRight: 10 }}
+          className="mr-2.5 h-6 w-6"
           contentFit="contain"
           cachePolicy="disk"
           transition={100}

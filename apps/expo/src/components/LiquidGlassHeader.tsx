@@ -20,30 +20,18 @@ import { SUPPORTS_LIQUID_GLASS } from "~/hooks/useLiquidGlass";
 export function LiquidGlassHeader() {
   if (!SUPPORTS_LIQUID_GLASS) {
     // Fallback: solid purple background for devices without blur support
-    return <View style={styles.fallbackContainer} />;
+    return <View className="absolute inset-0 bg-[#5A32FB]" />;
   }
 
   return (
-    <View style={styles.container}>
+    <View className="absolute inset-0 overflow-hidden">
       {/* Blur layer - content behind shows through blurred */}
       <BlurView intensity={10} tint="light" style={StyleSheet.absoluteFill} />
       {/* Light purple tint overlay */}
-      <View style={styles.purpleTint} />
+      <View
+        className="absolute inset-0"
+        style={{ backgroundColor: "rgba(90, 50, 251, 0.9)" }}
+      />
     </View>
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    ...StyleSheet.absoluteFillObject,
-    overflow: "hidden",
-  },
-  fallbackContainer: {
-    ...StyleSheet.absoluteFillObject,
-    backgroundColor: "#5A32FB", // Solid brand purple
-  },
-  purpleTint: {
-    ...StyleSheet.absoluteFillObject,
-    backgroundColor: "rgba(90, 50, 251, 0.9)", // #5A32FB at 90% opacity
-  },
-});

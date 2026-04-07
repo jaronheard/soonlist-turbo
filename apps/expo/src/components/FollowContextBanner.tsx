@@ -27,7 +27,7 @@ export function FollowContextBanner() {
       {avatarUrl ? (
         <Image
           source={{ uri: avatarUrl }}
-          style={{ width: 32, height: 32, borderRadius: 16 }}
+          className="h-8 w-8 rounded-full"
           contentFit="cover"
           cachePolicy="disk"
         />

@@ -388,7 +388,7 @@ const SignInWithOAuth = ({
               {imageSlot ?? (
                 <ExpoImage
                   source={imageSource ?? DEFAULT_HERO_IMAGE}
-                  style={{ width: "100%", height: "100%" }}
+                  className="h-full w-full"
                   contentFit="contain"
                   cachePolicy="disk"
                   transition={100}

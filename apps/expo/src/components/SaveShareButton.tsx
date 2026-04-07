@@ -96,8 +96,7 @@ export default function SaveShareButton({
 
   return (
     <TouchableOpacity
-      className="-mb-0.5 -ml-2.5 flex-row items-center gap-2 bg-interactive-2 px-4 py-2.5"
-      style={{ borderRadius: 16 }}
+      className="-mb-0.5 -ml-2.5 flex-row items-center gap-2 rounded-2xl bg-interactive-2 px-4 py-2.5"
       onPress={handlePress}
       disabled={!isLoaded}
       accessibilityLabel={effectiveIsSaved ? "Share" : "Save"}

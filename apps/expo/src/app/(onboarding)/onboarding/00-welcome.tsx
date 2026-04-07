@@ -80,7 +80,7 @@ function ReferralWelcome({ username }: { username: string }) {
         {avatarUrl ? (
           <ExpoImage
             source={{ uri: avatarUrl }}
-            style={{ width: 64, height: 64, borderRadius: 32 }}
+            className="h-16 w-16 rounded-full"
             contentFit="cover"
             cachePolicy="disk"
           />
@@ -128,7 +128,7 @@ function OrganicWelcome() {
       <ExpoImage
         // eslint-disable-next-line @typescript-eslint/no-require-imports, @typescript-eslint/no-unsafe-assignment
         source={require("../../../assets/feed.png")}
-        style={{ width: "100%", height: "100%" }}
+        className="h-full w-full"
         contentFit="contain"
         cachePolicy="disk"
         transition={100}

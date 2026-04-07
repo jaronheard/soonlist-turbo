@@ -33,9 +33,8 @@ export function NotificationBanner({
     >
       <Pressable onPress={handlePress}>
         <View
-          className="w-full flex-row items-center gap-3 rounded-[20px] px-3 py-3"
+          className="w-full flex-row items-center gap-3 rounded-[20px] bg-[#F8F8F8] px-3 py-3"
           style={{
-            backgroundColor: "#F8F8F8",
             shadowColor: "#000",
             shadowOffset: { width: 0, height: 4 },
             shadowOpacity: 0.15,
@@ -45,11 +44,7 @@ export function NotificationBanner({
         >
           <Image
             source={appIcon}
-            style={{
-              width: 40,
-              height: 40,
-              borderRadius: 10,
-            }}
+            className="h-10 w-10 rounded-[10px]"
             contentFit="cover"
           />
 

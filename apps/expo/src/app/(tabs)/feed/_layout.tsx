@@ -21,7 +21,7 @@ export default function FeedLayout() {
   }, [user?.username]);
 
   return (
-    <View style={{ flex: 1 }}>
+    <View className="flex-1">
       <Stack
         screenOptions={{
           headerLargeTitle: true,
