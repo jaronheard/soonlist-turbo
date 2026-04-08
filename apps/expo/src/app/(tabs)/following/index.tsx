@@ -259,7 +259,6 @@ function FollowingFeedContent() {
       })
       .map((event) => ({
         ...event,
-        eventFollows: [],
         comments: [],
         eventToLists: [],
         lists: [],
