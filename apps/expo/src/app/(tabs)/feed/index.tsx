@@ -142,10 +142,8 @@ function MyFeedContent() {
     const events = groupedEvents.map((group) => ({
       event: {
         ...group.event,
-        eventFollows: [],
         comments: [],
         eventToLists: [],
-        lists: [],
       },
       // Server-computed count (already shows just similar events, not including primary)
       similarEvents: Array(group.similarEventsCount).fill({
