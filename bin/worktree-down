@@ -97,13 +97,15 @@ if [[ "$KEEP_DEPLOYMENT" == "true" ]]; then
   echo "--- Skipping Convex deployment deletion (--keep-deployment)"
 elif [[ -z "$DEPLOYMENT" ]]; then
   echo "--- No CONVEX_DEPLOYMENT found in .env.local, skipping deletion."
+elif [[ "$DEPLOYMENT" != dev:* ]]; then
+  echo "--- SAFETY: deployment '$DEPLOYMENT' is not a dev deployment. Refusing to delete."
 else
-  # Production safeguard: refuse to delete non-dev deployments
-  if [[ ! "$DEPLOYMENT" =~ ^dev: ]]; then
-    echo "ERROR: Deployment '$DEPLOYMENT' does not start with 'dev:' prefix."
-    echo "Refusing to delete what may be a production deployment."
-    echo "If this is safe to delete, do it manually at https://dashboard.convex.dev"
-    exit 1
+  # Safety: refuse to delete the main repo's deployment
+  MAIN_DEPLOYMENT=$(grep '^CONVEX_DEPLOYMENT=' "$REPO_ROOT/.env.local" 2>/dev/null | cut -d= -f2- | sed 's/"//g; s/ *#.*//' || true)
+  if [[ "$DEPLOYMENT" == "$MAIN_DEPLOYMENT" ]]; then
+    echo "--- SAFETY: deployment '$DEPLOYMENT' matches the main repo's deployment."
+    echo "   Refusing to delete the main deployment."
+    DEPLOYMENT=""
   fi
 
   echo "--- Deleting Convex deployment: $DEPLOYMENT"

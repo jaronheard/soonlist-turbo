@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-# Usage: bin/worktree-up <name> [--port PORT] [--expo-port PORT] [--no-data]
+# Usage: bin/worktree-up <name> [--branch BRANCH] [--port PORT] [--expo-port PORT] [--no-data]
 # Creates an isolated worktree with its own Convex dev deployment, Next.js port,
 # Expo port, and environment configuration.
 
@@ -21,7 +21,7 @@ fi
 MAIN_BACKEND_ENV="$(dirname "$MAIN_ENV")/packages/backend/.env.local"
 
 usage() {
-  echo "Usage: bin/worktree-up <name> [--port PORT] [--expo-port PORT] [--no-data]"
+  echo "Usage: bin/worktree-up <name> [--branch BRANCH] [--port PORT] [--expo-port PORT] [--no-data]"
   echo ""
   echo "Creates a parallel dev environment in a git worktree with:"
   echo "  - Isolated Convex dev deployment"
@@ -30,6 +30,7 @@ usage() {
   echo "  - Data snapshot from main deployment"
   echo ""
   echo "Options:"
+  echo "  --branch BRANCH   Check out an existing branch instead of creating a new one"
   echo "  --port PORT       Specify the Next.js dev server port (default: auto-assign)"
   echo "  --expo-port PORT  Specify the Expo dev server port (default: auto-assign)"
   echo "  --no-data         Skip data snapshot from main deployment"
@@ -45,8 +46,10 @@ NAME=""
 PORT=""
 EXPO_PORT=""
 NO_DATA=false
+BRANCH_REF=""
 while [[ $# -gt 0 ]]; do
   case "$1" in
+    --branch) BRANCH_REF="$2"; shift 2 ;;
     --port) PORT="$2"; shift 2 ;;
     --expo-port) EXPO_PORT="$2"; shift 2 ;;
     --no-data) NO_DATA=true; shift ;;
@@ -62,7 +65,24 @@ if [[ -z "$NAME" ]]; then
 fi
 
 WT_PATH="$REPO_ROOT/.claude/worktrees/$NAME"
-BRANCH="$NAME"
+
+# Determine branch: use --branch if provided, otherwise create new branch from HEAD
+if [[ -n "$BRANCH_REF" ]]; then
+  BRANCH="$BRANCH_REF"
+  # Fetch the branch from origin
+  echo "--- Fetching branch $BRANCH_REF from origin..."
+  git -C "$REPO_ROOT" fetch origin "$BRANCH_REF" 2>/dev/null || true
+
+  # Check if this branch is already checked out in another worktree
+  EXISTING_WT=$(git -C "$REPO_ROOT" worktree list --porcelain | grep -B1 "branch refs/heads/$BRANCH_REF" | head -1 | sed 's/worktree //' || true)
+  if [[ -n "$EXISTING_WT" ]]; then
+    echo "Error: branch '$BRANCH_REF' is already checked out at: $EXISTING_WT"
+    echo "Close that worktree first (bin/worktree-down), or use the existing one."
+    exit 1
+  fi
+else
+  BRANCH="$NAME"
+fi
 
 # --- Check preconditions ---
 if [[ -d "$WT_PATH" ]]; then
@@ -111,7 +131,14 @@ echo "==> Creating worktree '$NAME' at $WT_PATH (Next.js port $PORT, Expo port $
 # --- 1. Create worktree ---
 echo "--- Creating git worktree..."
 cd "$REPO_ROOT"
-git worktree add "$WT_PATH" -b "$BRANCH"
+if [[ -n "$BRANCH_REF" ]]; then
+  # Check out existing branch (e.g. a PR branch)
+  git worktree add "$WT_PATH" -b "$NAME" "origin/$BRANCH_REF"
+  BRANCH="$BRANCH_REF"
+else
+  # Create new branch from HEAD
+  git worktree add "$WT_PATH" -b "$BRANCH"
+fi
 
 # --- 2. Install dependencies ---
 echo "--- Installing dependencies..."
