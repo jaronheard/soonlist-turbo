@@ -1,0 +1,67 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+# Usage: bin/worktree-list
+# Lists all worktrees created by worktree-up with their port assignments and Convex deployments.
+
+SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
+REPO_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
+
+usage() {
+  echo "Usage: bin/worktree-list"
+  echo ""
+  echo "Lists all worktrees in .claude/worktrees/ with their port assignments"
+  echo "and Convex deployment information."
+  exit 1
+}
+
+if [[ "${1:-}" == "--help" || "${1:-}" == "-h" ]]; then
+  usage
+fi
+
+WT_BASE="$REPO_ROOT/.claude/worktrees"
+
+if [[ ! -d "$WT_BASE" ]]; then
+  echo "No worktrees found."
+  exit 0
+fi
+
+# Check if any worktree directories exist
+shopt -s nullglob
+WT_DIRS=("$WT_BASE"/*)
+shopt -u nullglob
+
+if [[ ${#WT_DIRS[@]} -eq 0 ]]; then
+  echo "No worktrees found."
+  exit 0
+fi
+
+# Print header
+printf "%-25s %-25s %-10s %-12s %s\n" "NAME" "BRANCH" "NEXT.JS" "EXPO" "CONVEX DEPLOYMENT"
+printf "%-25s %-25s %-10s %-12s %s\n" "----" "------" "-------" "----" "-----------------"
+
+for wt_dir in "${WT_DIRS[@]}"; do
+  if [[ ! -d "$wt_dir" ]]; then
+    continue
+  fi
+
+  name=$(basename "$wt_dir")
+  branch=$(git -C "$wt_dir" branch --show-current 2>/dev/null || echo "N/A")
+
+  if [[ -f "$wt_dir/.env.local" ]]; then
+    port=$(grep '^PORT=' "$wt_dir/.env.local" 2>/dev/null | tail -1 | cut -d= -f2- | sed 's/"//g' || true)
+    expo_port=$(grep '^EXPO_PORT=' "$wt_dir/.env.local" 2>/dev/null | tail -1 | cut -d= -f2- | sed 's/"//g' || true)
+    deployment=$(grep '^CONVEX_DEPLOYMENT=' "$wt_dir/.env.local" 2>/dev/null | tail -1 | cut -d= -f2- | sed 's/"//g; s/ *#.*//' || true)
+  else
+    port=""
+    expo_port=""
+    deployment=""
+  fi
+
+  printf "%-25s %-25s %-10s %-12s %s\n" \
+    "$name" \
+    "$branch" \
+    "${port:-N/A}" \
+    "${expo_port:-N/A}" \
+    "${deployment:-N/A}"
+done

@@ -1,0 +1,167 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+# Usage: bin/worktree-down <name> [--keep-deployment]
+# Tears down a worktree session: kills processes, deletes Convex deployment, removes worktree.
+
+SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
+REPO_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
+
+usage() {
+  echo "Usage: bin/worktree-down <name> [--keep-deployment]"
+  echo ""
+  echo "Tears down a parallel dev environment created by worktree-up:"
+  echo "  - Kills dev processes running from the worktree"
+  echo "  - Deletes the Convex dev deployment (requires CONVEX_TEAM_ACCESS_TOKEN)"
+  echo "  - Removes the git worktree and branch"
+  echo ""
+  echo "Options:"
+  echo "  --keep-deployment   Skip Convex deployment deletion"
+  exit 1
+}
+
+# --- Parse args ---
+NAME=""
+KEEP_DEPLOYMENT=false
+while [[ $# -gt 0 ]]; do
+  case "$1" in
+    --keep-deployment) KEEP_DEPLOYMENT=true; shift ;;
+    --help|-h) usage ;;
+    -*) echo "Unknown option: $1"; usage ;;
+    *) NAME="$1"; shift ;;
+  esac
+done
+
+if [[ -z "$NAME" ]]; then
+  echo "Error: worktree name is required."
+  usage
+fi
+
+WT_PATH="$REPO_ROOT/.claude/worktrees/$NAME"
+BRANCH="$NAME"
+
+if [[ ! -d "$WT_PATH" ]]; then
+  echo "Error: worktree not found at $WT_PATH"
+  exit 1
+fi
+
+echo "==> Tearing down worktree '$NAME' at $WT_PATH"
+
+# --- 1. Kill dev server processes ---
+echo "--- Killing dev processes..."
+WT_ENV="$WT_PATH/.env.local"
+
+if [[ -f "$WT_ENV" ]]; then
+  # Kill processes on the worktree's Next.js port
+  WT_PORT=$(grep '^PORT=' "$WT_ENV" | tail -1 | cut -d= -f2- | sed 's/"//g' || true)
+  if [[ -n "$WT_PORT" ]]; then
+    PORT_PID=$(lsof -ti :"$WT_PORT" 2>/dev/null || true)
+    if [[ -n "$PORT_PID" ]]; then
+      echo "  Killing process on Next.js port $WT_PORT (PID: $PORT_PID)"
+      kill "$PORT_PID" 2>/dev/null || true
+    fi
+  fi
+
+  # Kill processes on the worktree's Expo port
+  WT_EXPO_PORT=$(grep '^EXPO_PORT=' "$WT_ENV" | tail -1 | cut -d= -f2- | sed 's/"//g' || true)
+  if [[ -n "$WT_EXPO_PORT" ]]; then
+    EXPO_PID=$(lsof -ti :"$WT_EXPO_PORT" 2>/dev/null || true)
+    if [[ -n "$EXPO_PID" ]]; then
+      echo "  Killing process on Expo port $WT_EXPO_PORT (PID: $EXPO_PID)"
+      kill "$EXPO_PID" 2>/dev/null || true
+    fi
+  fi
+fi
+
+# Kill node/convex processes whose CWD is inside the worktree
+PIDS=$(lsof +D "$WT_PATH" 2>/dev/null | awk 'NR>1{print $1, $2}' | grep -iE '^(node|bun|next|convex|expo)' | awk '{print $2}' | sort -u || true)
+if [[ -n "$PIDS" ]]; then
+  echo "  Killing dev PIDs: $PIDS"
+  echo "$PIDS" | xargs kill 2>/dev/null || true
+  sleep 1
+  echo "$PIDS" | xargs kill -9 2>/dev/null || true
+else
+  echo "  No dev processes found."
+fi
+
+# --- 2. Delete Convex deployment ---
+DEPLOYMENT=""
+CONVEX_DELETED=false
+
+if [[ -f "$WT_ENV" ]]; then
+  # Extract deployment name, stripping double quotes and trailing comments
+  DEPLOYMENT=$(grep '^CONVEX_DEPLOYMENT=' "$WT_ENV" | tail -1 | cut -d= -f2- | sed 's/"//g; s/ *#.*//')
+fi
+
+if [[ "$KEEP_DEPLOYMENT" == "true" ]]; then
+  echo "--- Skipping Convex deployment deletion (--keep-deployment)"
+elif [[ -z "$DEPLOYMENT" ]]; then
+  echo "--- No CONVEX_DEPLOYMENT found in .env.local, skipping deletion."
+else
+  # Production safeguard: refuse to delete non-dev deployments
+  if [[ ! "$DEPLOYMENT" =~ ^dev: ]]; then
+    echo "ERROR: Deployment '$DEPLOYMENT' does not start with 'dev:' prefix."
+    echo "Refusing to delete what may be a production deployment."
+    echo "If this is safe to delete, do it manually at https://dashboard.convex.dev"
+    exit 1
+  fi
+
+  echo "--- Deleting Convex deployment: $DEPLOYMENT"
+  # Source token from the worktree's .env.local
+  CONVEX_TEAM_ACCESS_TOKEN=$(grep '^CONVEX_TEAM_ACCESS_TOKEN=' "$WT_ENV" 2>/dev/null | cut -d= -f2- | sed 's/"//g' || true)
+
+  if [[ -n "$CONVEX_TEAM_ACCESS_TOKEN" ]]; then
+    # Slug is the part after "dev:" prefix
+    DEPLOYMENT_SLUG="${DEPLOYMENT#dev:}"
+    HTTP_STATUS=$(curl -s -o /dev/null -w "%{http_code}" \
+      -X POST "https://api.convex.dev/v1/deployments/${DEPLOYMENT_SLUG}/delete" \
+      -H "Authorization: Bearer $CONVEX_TEAM_ACCESS_TOKEN" \
+      2>/dev/null || echo "000")
+
+    if [[ "$HTTP_STATUS" == "200" ]]; then
+      echo "  Convex deployment deleted successfully."
+      CONVEX_DELETED=true
+    else
+      echo "  Warning: Convex API returned HTTP $HTTP_STATUS."
+      echo "  You may need to delete the deployment manually."
+      echo "  Dashboard: https://dashboard.convex.dev"
+    fi
+  else
+    echo "  CONVEX_TEAM_ACCESS_TOKEN not set — cannot delete deployment via API."
+    echo "  Please delete '$DEPLOYMENT' manually:"
+    echo "  https://dashboard.convex.dev"
+  fi
+fi
+
+# --- 3. Remove worktree ---
+echo "--- Removing git worktree..."
+cd "$REPO_ROOT"
+git worktree remove "$WT_PATH" --force
+
+# --- 4. Clean up branch ---
+echo "--- Cleaning up branch..."
+if git rev-parse --verify "$BRANCH" &>/dev/null; then
+  git branch -D "$BRANCH" 2>/dev/null || echo "  Could not delete branch $BRANCH (may need manual cleanup)"
+else
+  echo "  Branch $BRANCH not found (already cleaned up)"
+fi
+
+# --- 5. Print summary ---
+echo ""
+echo "============================================="
+echo " Worktree '$NAME' torn down."
+echo "============================================="
+echo ""
+echo " Worktree removed:  $WT_PATH"
+echo " Branch deleted:    $BRANCH"
+if [[ "$KEEP_DEPLOYMENT" == "true" ]]; then
+  echo " Convex deployment: KEPT ($DEPLOYMENT)"
+elif [[ "$CONVEX_DELETED" == "true" ]]; then
+  echo " Convex deployment: DELETED ($DEPLOYMENT)"
+elif [[ -n "$DEPLOYMENT" ]]; then
+  echo " Convex deployment: NEEDS MANUAL DELETION ($DEPLOYMENT)"
+  echo "                    https://dashboard.convex.dev"
+else
+  echo " Convex deployment: N/A"
+fi
+echo "============================================="

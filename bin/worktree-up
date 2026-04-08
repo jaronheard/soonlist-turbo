@@ -1,0 +1,259 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+# Usage: bin/worktree-up <name> [--port PORT] [--expo-port PORT] [--no-data]
+# Creates an isolated worktree with its own Convex dev deployment, Next.js port,
+# Expo port, and environment configuration.
+
+SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
+REPO_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
+
+# Find .env.local: try this repo first, then the main worktree
+MAIN_ENV="$REPO_ROOT/.env.local"
+if [[ ! -f "$MAIN_ENV" ]]; then
+  MAIN_WORKTREE=$(git -C "$REPO_ROOT" worktree list --porcelain | head -1 | sed 's/worktree //')
+  if [[ -n "$MAIN_WORKTREE" && -f "$MAIN_WORKTREE/.env.local" ]]; then
+    MAIN_ENV="$MAIN_WORKTREE/.env.local"
+  fi
+fi
+
+# Find packages/backend/.env.local from main repo
+MAIN_BACKEND_ENV="$(dirname "$MAIN_ENV")/packages/backend/.env.local"
+
+usage() {
+  echo "Usage: bin/worktree-up <name> [--port PORT] [--expo-port PORT] [--no-data]"
+  echo ""
+  echo "Creates a parallel dev environment in a git worktree with:"
+  echo "  - Isolated Convex dev deployment"
+  echo "  - Unique Next.js port (auto-assigned from 3400+ if not specified)"
+  echo "  - Unique Expo port (auto-assigned from 8181+ if not specified)"
+  echo "  - Data snapshot from main deployment"
+  echo ""
+  echo "Options:"
+  echo "  --port PORT       Specify the Next.js dev server port (default: auto-assign)"
+  echo "  --expo-port PORT  Specify the Expo dev server port (default: auto-assign)"
+  echo "  --no-data         Skip data snapshot from main deployment"
+  echo ""
+  echo "Prerequisites:"
+  echo "  CONVEX_TEAM_ACCESS_TOKEN must be in .env.local for deploy key creation."
+  echo "  Get it from https://dashboard.convex.dev → Settings → Team Access Tokens."
+  exit 1
+}
+
+# --- Parse args ---
+NAME=""
+PORT=""
+EXPO_PORT=""
+NO_DATA=false
+while [[ $# -gt 0 ]]; do
+  case "$1" in
+    --port) PORT="$2"; shift 2 ;;
+    --expo-port) EXPO_PORT="$2"; shift 2 ;;
+    --no-data) NO_DATA=true; shift ;;
+    --help|-h) usage ;;
+    -*) echo "Unknown option: $1"; usage ;;
+    *) NAME="$1"; shift ;;
+  esac
+done
+
+if [[ -z "$NAME" ]]; then
+  echo "Error: worktree name is required."
+  usage
+fi
+
+WT_PATH="$REPO_ROOT/.claude/worktrees/$NAME"
+BRANCH="$NAME"
+
+# --- Check preconditions ---
+if [[ -d "$WT_PATH" ]]; then
+  echo "Error: worktree path already exists: $WT_PATH"
+  exit 1
+fi
+
+if ! [[ -f "$MAIN_ENV" ]]; then
+  echo "Error: main repo .env.local not found at $MAIN_ENV"
+  echo "Please set up the main repo first."
+  exit 1
+fi
+
+# --- Auto-assign Next.js port if not specified ---
+if [[ -z "$PORT" ]]; then
+  PORT=3400
+  while IFS= read -r wt_line; do
+    wt_dir="${wt_line#worktree }"
+    if [[ -f "$wt_dir/.env.local" ]]; then
+      existing_port=$(grep -o '^PORT=[0-9]*' "$wt_dir/.env.local" 2>/dev/null | cut -d= -f2 || true)
+      if [[ -n "$existing_port" && "$existing_port" -ge "$PORT" ]]; then
+        PORT=$((existing_port + 1))
+      fi
+    fi
+  done < <(git -C "$REPO_ROOT" worktree list --porcelain | grep '^worktree ')
+  echo "Auto-assigned Next.js port: $PORT"
+fi
+
+# --- Auto-assign Expo port if not specified ---
+if [[ -z "$EXPO_PORT" ]]; then
+  EXPO_PORT=8181
+  while IFS= read -r wt_line; do
+    wt_dir="${wt_line#worktree }"
+    if [[ -f "$wt_dir/.env.local" ]]; then
+      existing_port=$(grep -o '^EXPO_PORT=[0-9]*' "$wt_dir/.env.local" 2>/dev/null | cut -d= -f2 || true)
+      if [[ -n "$existing_port" && "$existing_port" -ge "$EXPO_PORT" ]]; then
+        EXPO_PORT=$((existing_port + 1))
+      fi
+    fi
+  done < <(git -C "$REPO_ROOT" worktree list --porcelain | grep '^worktree ')
+  echo "Auto-assigned Expo port: $EXPO_PORT"
+fi
+
+echo "==> Creating worktree '$NAME' at $WT_PATH (Next.js port $PORT, Expo port $EXPO_PORT, branch $BRANCH)"
+
+# --- 1. Create worktree ---
+echo "--- Creating git worktree..."
+cd "$REPO_ROOT"
+git worktree add "$WT_PATH" -b "$BRANCH"
+
+# --- 2. Install dependencies ---
+echo "--- Installing dependencies..."
+cd "$WT_PATH"
+pnpm install --ignore-scripts
+
+# --- 3. Seed .env.local from main repo ---
+echo "--- Seeding .env.local from main repo..."
+cp "$MAIN_ENV" "$WT_PATH/.env.local"
+WT_ENV="$WT_PATH/.env.local"
+
+# --- 4. Seed packages/backend/.env.local from main repo ---
+echo "--- Seeding packages/backend/.env.local..."
+if [[ -f "$MAIN_BACKEND_ENV" ]]; then
+  cp "$MAIN_BACKEND_ENV" "$WT_PATH/packages/backend/.env.local"
+else
+  echo "  Warning: main repo packages/backend/.env.local not found at $MAIN_BACKEND_ENV"
+  echo "  Convex CLI may not have project context."
+fi
+
+# --- 5. Create Convex deployment and pin it with a deploy key ---
+echo "--- Creating Convex dev deployment..."
+cd "$WT_PATH/packages/backend"
+npx convex deployment create "dev/wt-$NAME" --type dev --select
+
+# Extract new values from packages/backend/.env.local (last occurrence wins)
+BACKEND_ENV="$WT_PATH/packages/backend/.env.local"
+NEW_DEPLOYMENT=$(tail -r "$BACKEND_ENV" | grep -m1 '^CONVEX_DEPLOYMENT=' | cut -d= -f2- | sed 's/"//g' | sed 's/ *#.*//')
+NEW_URL=$(tail -r "$BACKEND_ENV" | grep -m1 '^CONVEX_URL=' | cut -d= -f2- | sed 's/"//g')
+
+# Clean up backend .env.local: remove old values, keep only new ones
+sed -i.bak '/^CONVEX_DEPLOYMENT=/d; /^CONVEX_URL=/d' "$BACKEND_ENV" && rm -f "${BACKEND_ENV}.bak"
+echo "CONVEX_DEPLOYMENT=$NEW_DEPLOYMENT" >> "$BACKEND_ENV"
+echo "CONVEX_URL=$NEW_URL" >> "$BACKEND_ENV"
+
+# --- 6. Propagate Convex vars to root .env.local ---
+echo "--- Updating root .env.local with new Convex deployment..."
+sed -i.bak '/^CONVEX_DEPLOYMENT=/d; /^NEXT_PUBLIC_CONVEX_URL=/d; /^EXPO_PUBLIC_CONVEX_URL=/d; /^CONVEX_URL=/d' "$WT_ENV" && rm -f "${WT_ENV}.bak"
+# Also remove double-quoted versions
+sed -i.bak '/^CONVEX_DEPLOYMENT="/d; /^NEXT_PUBLIC_CONVEX_URL="/d; /^EXPO_PUBLIC_CONVEX_URL="/d; /^CONVEX_URL="/d' "$WT_ENV" && rm -f "${WT_ENV}.bak"
+echo "" >> "$WT_ENV"
+echo "# Worktree Convex deployment" >> "$WT_ENV"
+echo "CONVEX_DEPLOYMENT=$NEW_DEPLOYMENT" >> "$WT_ENV"
+echo "NEXT_PUBLIC_CONVEX_URL=$NEW_URL" >> "$WT_ENV"
+echo "EXPO_PUBLIC_CONVEX_URL=$NEW_URL" >> "$WT_ENV"
+echo "CONVEX_URL=$NEW_URL" >> "$WT_ENV"
+
+# Extract deployment slug for deploy key creation
+DEPLOYMENT_SLUG=$(echo "$NEW_DEPLOYMENT" | sed 's/^dev://')
+
+# --- 7. Create deploy key ---
+TEAM_TOKEN=$(grep '^CONVEX_TEAM_ACCESS_TOKEN=' "$WT_ENV" 2>/dev/null | cut -d= -f2- | sed 's/"//g' || true)
+if [[ -z "$TEAM_TOKEN" ]]; then
+  # Also try without quotes prefix
+  TEAM_TOKEN=$(grep '^CONVEX_TEAM_ACCESS_TOKEN="' "$WT_ENV" 2>/dev/null | cut -d= -f2- | sed 's/"//g' || true)
+fi
+
+if [[ -n "$TEAM_TOKEN" && -n "$DEPLOYMENT_SLUG" ]]; then
+  echo "--- Creating deploy key to pin convex CLI to this deployment..."
+  DEPLOY_KEY_RESPONSE=$(curl -s -X POST \
+    "https://api.convex.dev/v1/deployments/$DEPLOYMENT_SLUG/create_deploy_key" \
+    -H "Authorization: Bearer $TEAM_TOKEN" \
+    -H "Content-Type: application/json" \
+    -d "{\"name\": \"wt-$NAME\"}")
+  DEPLOY_KEY=$(echo "$DEPLOY_KEY_RESPONSE" | sed 's/.*"deployKey":"\([^"]*\)".*/\1/')
+  if [[ -n "$DEPLOY_KEY" && "$DEPLOY_KEY" != "$DEPLOY_KEY_RESPONSE" ]]; then
+    echo "" >> "$WT_ENV"
+    echo "# Deploy key pins all convex CLI commands to this specific deployment" >> "$WT_ENV"
+    echo "CONVEX_DEPLOY_KEY=$DEPLOY_KEY" >> "$WT_ENV"
+    echo "  Deploy key created and saved to .env.local"
+  else
+    echo "  Warning: failed to create deploy key. convex dev may target the wrong deployment."
+    echo "  Response: $DEPLOY_KEY_RESPONSE"
+  fi
+else
+  echo "  Warning: missing CONVEX_TEAM_ACCESS_TOKEN or deployment slug, skipping deploy key."
+  echo "  Get a token from https://dashboard.convex.dev → Settings → Team Access Tokens."
+fi
+
+# --- 8. Set worktree ports ---
+echo "--- Setting worktree ports..."
+sed -i.bak '/^PORT=/d; /^EXPO_PORT=/d' "$WT_ENV" && rm -f "${WT_ENV}.bak"
+echo "" >> "$WT_ENV"
+echo "# Worktree ports" >> "$WT_ENV"
+echo "PORT=$PORT" >> "$WT_ENV"
+echo "EXPO_PORT=$EXPO_PORT" >> "$WT_ENV"
+
+# --- 9. Copy env vars from main Convex deployment to worktree deployment ---
+echo "--- Copying env vars from main deployment..."
+MAIN_BACKEND_DIR="$(dirname "$MAIN_ENV")/packages/backend"
+MAIN_ENV_VARS=$(cd "$MAIN_BACKEND_DIR" && npx convex env list 2>/dev/null || true)
+cd "$WT_PATH/packages/backend"
+if [[ -n "$MAIN_ENV_VARS" ]]; then
+  while IFS='=' read -r key value; do
+    if [[ -n "$key" && -n "$value" ]]; then
+      npx convex env set "$key" "$value" 2>/dev/null || echo "  Warning: failed to set $key"
+    fi
+  done <<< "$MAIN_ENV_VARS"
+  echo "  Env vars copied."
+else
+  echo "  Warning: could not read env vars from main deployment."
+fi
+
+# --- 10. Push schema, functions, and auth config to Convex ---
+echo "--- Pushing schema and functions to Convex deployment..."
+cd "$WT_PATH/packages/backend"
+npx convex dev --once
+
+# --- 11. Snapshot main deployment data into worktree ---
+if [[ "$NO_DATA" == "true" ]]; then
+  echo "--- Skipping data snapshot (--no-data)"
+else
+  echo "--- Exporting data from main deployment..."
+  SNAPSHOT_PATH="/tmp/convex-snapshot-$NAME.zip"
+  cd "$MAIN_BACKEND_DIR"
+  npx convex export --path "$SNAPSHOT_PATH"
+  echo "--- Importing data into worktree deployment..."
+  cd "$WT_PATH/packages/backend"
+  npx convex import --replace-all "$SNAPSHOT_PATH" -y
+  rm -f "$SNAPSHOT_PATH"
+fi
+
+# --- 12. Print summary ---
+DEPLOYMENT=$(grep '^CONVEX_DEPLOYMENT=' "$WT_ENV" | tail -1 | cut -d= -f2- | sed 's/"//g; s/ *#.*//')
+
+echo ""
+echo "============================================="
+echo " Worktree '$NAME' is ready!"
+echo "============================================="
+echo ""
+echo " Path:        $WT_PATH"
+echo " Branch:      $BRANCH"
+echo " Next.js:     port $PORT"
+echo " Expo:        port $EXPO_PORT"
+echo " Convex:      $DEPLOYMENT"
+echo ""
+echo " Start dev servers:"
+echo "   cd $WT_PATH"
+echo "   pnpm dev:backend                                              # Convex"
+echo "   cd apps/web && pnpm with-env next dev --turbopack --port $PORT  # Next.js"
+echo "   cd apps/expo && pnpm with-env expo start --port $EXPO_PORT     # Expo"
+echo ""
+echo " Tear down when done:"
+echo "   bin/worktree-down $NAME"
+echo "============================================="
