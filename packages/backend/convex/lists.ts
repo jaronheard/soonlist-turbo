@@ -10,6 +10,7 @@ import {
   query,
 } from "./_generated/server";
 import { listFollowsAggregate } from "./aggregates";
+import { getEventById } from "./model/events";
 import { generatePublicId } from "./utils";
 
 // Helper function to get the current user ID from auth
@@ -1117,6 +1118,49 @@ export const backfillContributorEventsBatch = internalMutation({
       added,
       nextCursor: result.continueCursor,
       isDone: result.isDone,
+    };
+  },
+});
+
+/**
+ * Get a list by slug along with all its events (public/unlisted only)
+ */
+export const getEventsForList = query({
+  args: { slug: v.string() },
+  handler: async (ctx, { slug }) => {
+    // Find the list by slug
+    const list = await ctx.db
+      .query("lists")
+      .withIndex("by_slug", (q) => q.eq("slug", slug))
+      .first();
+
+    if (!list) return null;
+
+    // Only allow access to public/unlisted lists
+    if (list.visibility === "private") return null;
+
+    // Get all eventToLists entries for this list
+    const eventToLists = await ctx.db
+      .query("eventToLists")
+      .withIndex("by_list", (q) => q.eq("listId", list.id))
+      .collect();
+
+    // Fetch and enrich each event
+    const events = await Promise.all(
+      eventToLists.map(async (etl) => {
+        const event = await getEventById(ctx, etl.eventId);
+        return event;
+      }),
+    );
+
+    // Filter nulls
+    const validEvents = events.filter(
+      (event): event is NonNullable<typeof event> => event !== null,
+    );
+
+    return {
+      list,
+      events: validEvents,
     };
   },
 });
