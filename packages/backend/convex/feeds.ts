@@ -22,11 +22,11 @@ async function getUserId(ctx: QueryCtx): Promise<string | null> {
   return identity.subject;
 }
 
-// Helper to batch-resolve sourceListId → list name
-async function resolveSourceListNames(
+// Helper to batch-resolve sourceListId → list details (name and slug)
+async function resolveSourceListDetails(
   ctx: QueryCtx,
   feedEntries: { sourceListId?: string }[],
-): Promise<Map<string, string>> {
+): Promise<Map<string, { name: string; slug?: string }>> {
   const listIds = [
     ...new Set(
       feedEntries.map((e) => e.sourceListId).filter((id): id is string => !!id),
@@ -43,10 +43,10 @@ async function resolveSourceListNames(
     ),
   );
 
-  const map = new Map<string, string>();
+  const map = new Map<string, { name: string; slug?: string }>();
   listIds.forEach((id, i) => {
     const list = lists[i];
-    if (list) map.set(id, list.name);
+    if (list) map.set(id, { name: list.name, slug: list.slug ?? undefined });
   });
   return map;
 }
@@ -72,20 +72,26 @@ async function queryFeed(
   // Paginate
   const feedResults = await feedQuery.paginate(paginationOpts);
 
-  // Resolve source list names
-  const sourceListNameMap = await resolveSourceListNames(ctx, feedResults.page);
+  // Resolve source list details
+  const sourceListDetailsMap = await resolveSourceListDetails(
+    ctx,
+    feedResults.page,
+  );
 
   // Map feed entries to full events with users and eventFollows, preserving order
   const events = await Promise.all(
     feedResults.page.map(async (feedEntry) => {
       const event = await getEventById(ctx, feedEntry.eventId);
       if (!event) return null;
+      const sourceListDetails = feedEntry.sourceListId
+        ? sourceListDetailsMap.get(feedEntry.sourceListId)
+        : undefined;
       return {
         ...event,
         sourceListId: feedEntry.sourceListId,
-        sourceListName: feedEntry.sourceListId
-          ? sourceListNameMap.get(feedEntry.sourceListId)
-          : undefined,
+        sourceListName: sourceListDetails?.name,
+        sourceListSlug: sourceListDetails?.slug,
+        additionalSourceCount: Math.max(0, (event.lists?.length ?? 1) - 1),
       };
     }),
   );
@@ -132,11 +138,14 @@ async function queryGroupedFeed(
     ),
   );
 
-  // Resolve source list names
+  // Resolve source list details
   const sourceEntries = primaryFeedEntries
     .filter((e): e is NonNullable<typeof e> => e !== null)
     .map((e) => ({ sourceListId: e.sourceListId }));
-  const sourceListNameMap = await resolveSourceListNames(ctx, sourceEntries);
+  const sourceListDetailsMap = await resolveSourceListDetails(
+    ctx,
+    sourceEntries,
+  );
 
   // Enrich each group entry with the primary event data
   const enrichedGroups = await Promise.all(
@@ -150,15 +159,18 @@ async function queryGroupedFeed(
 
       const feedEntry = primaryFeedEntries[idx];
       const sourceListId = feedEntry?.sourceListId;
+      const sourceListDetails = sourceListId
+        ? sourceListDetailsMap.get(sourceListId)
+        : undefined;
 
       return {
         event,
         similarEventsCount: groupEntry.similarEventsCount,
         similarityGroupId: groupEntry.similarityGroupId,
         sourceListId,
-        sourceListName: sourceListId
-          ? sourceListNameMap.get(sourceListId)
-          : undefined,
+        sourceListName: sourceListDetails?.name,
+        sourceListSlug: sourceListDetails?.slug,
+        additionalSourceCount: Math.max(0, (event.lists?.length ?? 1) - 1),
       };
     }),
   );
