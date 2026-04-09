@@ -6,19 +6,16 @@ set -euo pipefail
 # Expo port, and environment configuration.
 
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
-REPO_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
 
-# Find .env.local: try this repo first, then the main worktree
+# Always resolve to the main worktree root (not a worktree we may be running from)
+MAIN_WORKTREE=$(git -C "$SCRIPT_DIR" worktree list --porcelain | head -1 | sed 's/worktree //')
+REPO_ROOT="${MAIN_WORKTREE:-$(cd "$SCRIPT_DIR/.." && pwd)}"
+
+# Find .env.local from main worktree root
 MAIN_ENV="$REPO_ROOT/.env.local"
-if [[ ! -f "$MAIN_ENV" ]]; then
-  MAIN_WORKTREE=$(git -C "$REPO_ROOT" worktree list --porcelain | head -1 | sed 's/worktree //')
-  if [[ -n "$MAIN_WORKTREE" && -f "$MAIN_WORKTREE/.env.local" ]]; then
-    MAIN_ENV="$MAIN_WORKTREE/.env.local"
-  fi
-fi
 
 # Find packages/backend/.env.local from main repo
-MAIN_BACKEND_ENV="$(dirname "$MAIN_ENV")/packages/backend/.env.local"
+MAIN_BACKEND_ENV="$REPO_ROOT/packages/backend/.env.local"
 
 usage() {
   echo "Usage: bin/worktree-up <name> [--branch BRANCH] [--port PORT] [--expo-port PORT] [--no-data]"
@@ -74,7 +71,7 @@ if [[ -n "$BRANCH_REF" ]]; then
   git -C "$REPO_ROOT" fetch origin "$BRANCH_REF" 2>/dev/null || true
 
   # Check if this branch is already checked out in another worktree
-  EXISTING_WT=$(git -C "$REPO_ROOT" worktree list --porcelain | grep -B1 "branch refs/heads/$BRANCH_REF" | head -1 | sed 's/worktree //' || true)
+  EXISTING_WT=$(git -C "$REPO_ROOT" worktree list --porcelain | grep -B2 "branch refs/heads/$BRANCH_REF" | head -1 | sed 's/worktree //' || true)
   if [[ -n "$EXISTING_WT" ]]; then
     echo "Error: branch '$BRANCH_REF' is already checked out at: $EXISTING_WT"
     echo "Close that worktree first (bin/worktree-down), or use the existing one."
@@ -133,7 +130,7 @@ echo "--- Creating git worktree..."
 cd "$REPO_ROOT"
 if [[ -n "$BRANCH_REF" ]]; then
   # Check out existing branch (e.g. a PR branch)
-  git worktree add "$WT_PATH" -b "$NAME" "origin/$BRANCH_REF"
+  git worktree add "$WT_PATH" "$BRANCH_REF"
   BRANCH="$BRANCH_REF"
 else
   # Create new branch from HEAD
@@ -166,8 +163,10 @@ npx convex deployment create "dev/wt-$NAME" --type dev --select
 
 # Extract new values from packages/backend/.env.local (last occurrence wins)
 BACKEND_ENV="$WT_PATH/packages/backend/.env.local"
-NEW_DEPLOYMENT=$(tail -r "$BACKEND_ENV" | grep -m1 '^CONVEX_DEPLOYMENT=' | cut -d= -f2- | sed 's/"//g' | sed 's/ *#.*//')
-NEW_URL=$(tail -r "$BACKEND_ENV" | grep -m1 '^CONVEX_URL=' | cut -d= -f2- | sed 's/"//g')
+# Use awk to reverse lines (portable across macOS and Linux, unlike tail -r or tac)
+_reverse() { awk '{a[NR]=$0} END {for(i=NR;i>=1;i--) print a[i]}' "$1"; }
+NEW_DEPLOYMENT=$(_reverse "$BACKEND_ENV" | grep -m1 '^CONVEX_DEPLOYMENT=' | cut -d= -f2- | sed 's/"//g' | sed 's/ *#.*//')
+NEW_URL=$(_reverse "$BACKEND_ENV" | grep -m1 '^CONVEX_URL=' | cut -d= -f2- | sed 's/"//g')
 
 # Clean up backend .env.local: remove old values, keep only new ones
 sed -i.bak '/^CONVEX_DEPLOYMENT=/d; /^CONVEX_URL=/d' "$BACKEND_ENV" && rm -f "${BACKEND_ENV}.bak"
@@ -203,8 +202,8 @@ if [[ -n "$TEAM_TOKEN" && -n "$DEPLOYMENT_SLUG" ]]; then
     -H "Authorization: Bearer $TEAM_TOKEN" \
     -H "Content-Type: application/json" \
     -d "{\"name\": \"wt-$NAME\"}")
-  DEPLOY_KEY=$(echo "$DEPLOY_KEY_RESPONSE" | sed 's/.*"deployKey":"\([^"]*\)".*/\1/')
-  if [[ -n "$DEPLOY_KEY" && "$DEPLOY_KEY" != "$DEPLOY_KEY_RESPONSE" ]]; then
+  DEPLOY_KEY=$(echo "$DEPLOY_KEY_RESPONSE" | jq -r '.deployKey // empty')
+  if [[ -n "$DEPLOY_KEY" ]]; then
     echo "" >> "$WT_ENV"
     echo "# Deploy key pins all convex CLI commands to this specific deployment" >> "$WT_ENV"
     echo "CONVEX_DEPLOY_KEY=$DEPLOY_KEY" >> "$WT_ENV"

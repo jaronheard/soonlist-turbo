@@ -5,7 +5,12 @@ set -euo pipefail
 # Tears down a worktree session: kills processes, deletes Convex deployment, removes worktree.
 
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
-REPO_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
+CURRENT_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
+# Resolve to main worktree (first entry is always the main repo)
+REPO_ROOT="$(git -C "$CURRENT_ROOT" worktree list --porcelain | head -1 | sed 's/worktree //')"
+if [[ -z "$REPO_ROOT" ]]; then
+  REPO_ROOT="$CURRENT_ROOT"
+fi
 
 usage() {
   echo "Usage: bin/worktree-down <name> [--keep-deployment]"
@@ -106,32 +111,32 @@ else
     echo "--- SAFETY: deployment '$DEPLOYMENT' matches the main repo's deployment."
     echo "   Refusing to delete the main deployment."
     DEPLOYMENT=""
-  fi
-
-  echo "--- Deleting Convex deployment: $DEPLOYMENT"
-  # Source token from the worktree's .env.local
-  CONVEX_TEAM_ACCESS_TOKEN=$(grep '^CONVEX_TEAM_ACCESS_TOKEN=' "$WT_ENV" 2>/dev/null | cut -d= -f2- | sed 's/"//g' || true)
-
-  if [[ -n "$CONVEX_TEAM_ACCESS_TOKEN" ]]; then
-    # Slug is the part after "dev:" prefix
-    DEPLOYMENT_SLUG="${DEPLOYMENT#dev:}"
-    HTTP_STATUS=$(curl -s -o /dev/null -w "%{http_code}" \
-      -X POST "https://api.convex.dev/v1/deployments/${DEPLOYMENT_SLUG}/delete" \
-      -H "Authorization: Bearer $CONVEX_TEAM_ACCESS_TOKEN" \
-      2>/dev/null || echo "000")
-
-    if [[ "$HTTP_STATUS" == "200" ]]; then
-      echo "  Convex deployment deleted successfully."
-      CONVEX_DELETED=true
-    else
-      echo "  Warning: Convex API returned HTTP $HTTP_STATUS."
-      echo "  You may need to delete the deployment manually."
-      echo "  Dashboard: https://dashboard.convex.dev"
-    fi
   else
-    echo "  CONVEX_TEAM_ACCESS_TOKEN not set — cannot delete deployment via API."
-    echo "  Please delete '$DEPLOYMENT' manually:"
-    echo "  https://dashboard.convex.dev"
+    echo "--- Deleting Convex deployment: $DEPLOYMENT"
+    # Source token from the worktree's .env.local
+    CONVEX_TEAM_ACCESS_TOKEN=$(grep '^CONVEX_TEAM_ACCESS_TOKEN=' "$WT_ENV" 2>/dev/null | cut -d= -f2- | sed 's/"//g' || true)
+
+    if [[ -n "$CONVEX_TEAM_ACCESS_TOKEN" ]]; then
+      # Slug is the part after "dev:" prefix
+      DEPLOYMENT_SLUG="${DEPLOYMENT#dev:}"
+      HTTP_STATUS=$(curl -s -o /dev/null -w "%{http_code}" \
+        -X POST "https://api.convex.dev/v1/deployments/${DEPLOYMENT_SLUG}/delete" \
+        -H "Authorization: Bearer $CONVEX_TEAM_ACCESS_TOKEN" \
+        2>/dev/null || echo "000")
+
+      if [[ "$HTTP_STATUS" == "200" ]]; then
+        echo "  Convex deployment deleted successfully."
+        CONVEX_DELETED=true
+      else
+        echo "  Warning: Convex API returned HTTP $HTTP_STATUS."
+        echo "  You may need to delete the deployment manually."
+        echo "  Dashboard: https://dashboard.convex.dev"
+      fi
+    else
+      echo "  CONVEX_TEAM_ACCESS_TOKEN not set — cannot delete deployment via API."
+      echo "  Please delete '$DEPLOYMENT' manually:"
+      echo "  https://dashboard.convex.dev"
+    fi
   fi
 fi
 

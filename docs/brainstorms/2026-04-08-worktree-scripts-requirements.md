@@ -13,7 +13,7 @@ The goal is three scripts (`bin/worktree-up`, `bin/worktree-down`, `bin/worktree
 
 Reference implementation: `~/ez-pilot-app/bin/worktree-up` and `~/ez-pilot-app/bin/worktree-down`.
 
-```
+```text
                     bin/worktree-up <name>
                            |
           +----------------+----------------+
@@ -136,10 +136,10 @@ Reference implementation: `~/ez-pilot-app/bin/worktree-up` and `~/ez-pilot-app/b
 
 ### Deferred to Planning
 
-- [Affects R4, R20][Technical] `deployment create --select` writes to whichever `.env.local` is in CWD. Since we run from `packages/backend/`, it writes there -- then the script must also propagate the new URL vars to root `.env.local`. Follow the same sed-delete-then-append pattern as the reference.
-- [Affects R5, R14][Technical] Use `CONVEX_TEAM_ACCESS_TOKEN` for API auth, same as the reference. Add it to `.env.local` with a setup instruction. Fall back to warning if missing (reference pattern).
-- [Affects R11][Technical] For data export/import, `cd` between main and worktree `packages/backend/` dirs -- same pattern as reference. Each dir's `.env.local` targets the right deployment.
-- [Affects R4][Prerequisite] Bump Convex CLI to latest (>= 1.34.0) in `pnpm-workspace.yaml` catalog before implementation.
+- [Affects R4, R20] **Technical:** `deployment create --select` writes to whichever `.env.local` is in CWD. Since we run from `packages/backend/`, it writes there -- then the script must also propagate the new URL vars to root `.env.local`. Follow the same sed-delete-then-append pattern as the reference.
+- [Affects R5, R14] **Technical:** Use `CONVEX_TEAM_ACCESS_TOKEN` for API auth, same as the reference. Add it to `.env.local` with a setup instruction. Fall back to warning if missing (reference pattern).
+- [Affects R11] **Technical:** For data export/import, `cd` between main and worktree `packages/backend/` dirs -- same pattern as reference. Each dir's `.env.local` targets the right deployment.
+- [Affects R4] **Prerequisite:** Bump Convex CLI to latest (>= 1.34.0) in `pnpm-workspace.yaml` catalog before implementation.
 
 ## Next Steps
 

@@ -2,6 +2,7 @@ packages:
   - apps/*
   - packages/*
   - tooling/*
+  - "!.claude/worktrees/**"
 
 catalog:
   # Dev tooling

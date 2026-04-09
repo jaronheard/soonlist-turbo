@@ -5,7 +5,12 @@ set -euo pipefail
 # Lists all worktrees created by worktree-up with their port assignments and Convex deployments.
 
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
-REPO_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
+CURRENT_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
+# Resolve to main worktree (first entry is always the main repo)
+REPO_ROOT="$(git -C "$CURRENT_ROOT" worktree list --porcelain | head -1 | sed 's/worktree //')"
+if [[ -z "$REPO_ROOT" ]]; then
+  REPO_ROOT="$CURRENT_ROOT"
+fi
 
 usage() {
   echo "Usage: bin/worktree-list"
@@ -37,8 +42,8 @@ if [[ ${#WT_DIRS[@]} -eq 0 ]]; then
 fi
 
 # Print header
-printf "%-25s %-25s %-10s %-12s %s\n" "NAME" "BRANCH" "NEXT.JS" "EXPO" "CONVEX DEPLOYMENT"
-printf "%-25s %-25s %-10s %-12s %s\n" "----" "------" "-------" "----" "-----------------"
+printf "%-25s %-25s %-10s %-12s %-16s %s\n" "NAME" "BRANCH" "NEXT.JS" "EXPO" "PROCESS STATUS" "CONVEX DEPLOYMENT"
+printf "%-25s %-25s %-10s %-12s %-16s %s\n" "----" "------" "-------" "----" "--------------" "-----------------"
 
 for wt_dir in "${WT_DIRS[@]}"; do
   if [[ ! -d "$wt_dir" ]]; then
@@ -58,10 +63,19 @@ for wt_dir in "${WT_DIRS[@]}"; do
     deployment=""
   fi
 
-  printf "%-25s %-25s %-10s %-12s %s\n" \
+  # Check process status by probing the Next.js and Expo ports
+  status="stopped"
+  if [[ -n "$port" ]] && lsof -ti :"$port" >/dev/null 2>&1; then
+    status="running"
+  elif [[ -n "$expo_port" ]] && lsof -ti :"$expo_port" >/dev/null 2>&1; then
+    status="running"
+  fi
+
+  printf "%-25s %-25s %-10s %-12s %-16s %s\n" \
     "$name" \
     "$branch" \
     "${port:-N/A}" \
     "${expo_port:-N/A}" \
+    "$status" \
     "${deployment:-N/A}"
 done
