@@ -95,7 +95,9 @@ export function SavedByModal({
         </View>
 
         {/* Scrollable content */}
-        <ScrollView contentContainerStyle={{ paddingBottom: insets.bottom + 16 }}>
+        <ScrollView
+          contentContainerStyle={{ paddingBottom: insets.bottom + 16 }}
+        >
           {/* People section */}
           <View className="px-4 pt-4">
             <Text className="mb-2 text-xs font-semibold uppercase tracking-wider text-neutral-2">
@@ -116,9 +118,7 @@ export function SavedByModal({
                     {user.displayName || user.username}
                   </Text>
                   <Text className="text-sm text-neutral-2">
-                    {user.id === creator.id
-                      ? "Captured this event"
-                      : "Saved"}
+                    {user.id === creator.id ? "Captured this event" : "Saved"}
                   </Text>
                 </View>
                 <ChevronRight size={16} color="#DCE0E8" />

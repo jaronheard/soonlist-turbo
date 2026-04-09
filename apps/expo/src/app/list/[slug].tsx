@@ -1,10 +1,5 @@
 import React, { useCallback, useMemo } from "react";
-import {
-  ActivityIndicator,
-  Text,
-  TouchableOpacity,
-  View,
-} from "react-native";
+import { ActivityIndicator, Text, TouchableOpacity, View } from "react-native";
 import { Stack, useLocalSearchParams } from "expo-router";
 import { useConvexAuth, useMutation, useQuery } from "convex/react";
 
@@ -20,15 +15,9 @@ export default function ListDetailScreen() {
   const { isAuthenticated } = useConvexAuth();
   const currentUser = useQuery(api.users.getCurrentUser);
 
-  const result = useQuery(
-    api.lists.getEventsForList,
-    slug ? { slug } : "skip",
-  );
+  const result = useQuery(api.lists.getEventsForList, slug ? { slug } : "skip");
 
-  const listData = useQuery(
-    api.lists.getBySlug,
-    slug ? { slug } : "skip",
-  );
+  const listData = useQuery(api.lists.getBySlug, slug ? { slug } : "skip");
 
   const followListMutation = useMutation(api.lists.followList);
   const unfollowListMutation = useMutation(api.lists.unfollowList);
@@ -56,7 +45,9 @@ export default function ListDetailScreen() {
       void hapticSuccess();
     } catch (error) {
       logError("Error toggling list follow", error);
-      toast.error(isFollowing ? "Failed to unfollow list" : "Failed to follow list");
+      toast.error(
+        isFollowing ? "Failed to unfollow list" : "Failed to follow list",
+      );
     }
   }, [listData, isFollowing, followListMutation, unfollowListMutation]);
 

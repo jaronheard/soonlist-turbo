@@ -18,6 +18,7 @@ import { router } from "expo-router";
 import { useUser } from "@clerk/clerk-expo";
 
 import type { api } from "@soonlist/backend/convex/_generated/api";
+import type { Doc } from "@soonlist/backend/convex/_generated/dataModel";
 import type { AddToCalendarButtonPropsRestricted } from "@soonlist/cal/types";
 import { getTimezoneAbbreviation } from "@soonlist/cal";
 
@@ -32,6 +33,7 @@ import {
   ShareIcon,
   User,
 } from "~/components/icons";
+import { SavedByModal } from "~/components/SavedByModal";
 import { useAddEventFlow } from "~/hooks/useAddEventFlow";
 import { useEventActions } from "~/hooks/useEventActions";
 import { useUserTimezone } from "~/store";
@@ -47,10 +49,7 @@ import { getEventEmoji } from "~/utils/eventEmoji";
 import { collapseSimilarEvents } from "~/utils/similarEvents";
 import { EventMenu } from "./EventMenu";
 import { EventStats } from "./EventStats";
-import { SavedByModal } from "~/components/SavedByModal";
 import { UserProfileFlair } from "./UserProfileFlair";
-
-import type { Doc } from "@soonlist/backend/convex/_generated/dataModel";
 
 type ShowCreatorOption = "always" | "otherUsers" | "never" | "savedFromOthers";
 
