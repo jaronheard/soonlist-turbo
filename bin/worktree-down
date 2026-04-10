@@ -43,12 +43,15 @@ if [[ -z "$NAME" ]]; then
 fi
 
 WT_PATH="$REPO_ROOT/.claude/worktrees/$NAME"
-BRANCH="$NAME"
+BRANCH=""
 
 if [[ ! -d "$WT_PATH" ]]; then
   echo "Error: worktree not found at $WT_PATH"
   exit 1
 fi
+
+# Read the actual checked-out branch before removing the worktree.
+BRANCH=$(git -C "$WT_PATH" symbolic-ref --quiet --short HEAD 2>/dev/null || true)
 
 echo "==> Tearing down worktree '$NAME' at $WT_PATH"
 
@@ -147,7 +150,9 @@ git worktree remove "$WT_PATH" --force
 
 # --- 4. Clean up branch ---
 echo "--- Cleaning up branch..."
-if git rev-parse --verify "$BRANCH" &>/dev/null; then
+if [[ -z "$BRANCH" ]]; then
+  echo "  No local branch checked out in worktree (detached HEAD or already unavailable)"
+elif git rev-parse --verify "$BRANCH" &>/dev/null; then
   git branch -D "$BRANCH" 2>/dev/null || echo "  Could not delete branch $BRANCH (may need manual cleanup)"
 else
   echo "  Branch $BRANCH not found (already cleaned up)"
@@ -160,7 +165,11 @@ echo " Worktree '$NAME' torn down."
 echo "============================================="
 echo ""
 echo " Worktree removed:  $WT_PATH"
-echo " Branch deleted:    $BRANCH"
+if [[ -n "$BRANCH" ]]; then
+  echo " Branch deleted:    $BRANCH"
+else
+  echo " Branch deleted:    N/A"
+fi
 if [[ "$KEEP_DEPLOYMENT" == "true" ]]; then
   echo " Convex deployment: KEPT ($DEPLOYMENT)"
 elif [[ "$CONVEX_DELETED" == "true" ]]; then
