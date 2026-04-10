@@ -43,6 +43,10 @@ export function SavedByModal({
     }
   }
 
+  // Hide system/personal lists from the viewer — those are implementation
+  // details, not meaningful lists users browse to.
+  const visibleLists = lists.filter((list) => !list.isSystemList);
+
   const handleUserPress = (user: UserForDisplay) => {
     onClose();
     if (currentUserId && user.id === currentUserId) {
@@ -127,12 +131,12 @@ export function SavedByModal({
           </View>
 
           {/* Lists section */}
-          {lists.length > 0 && (
+          {visibleLists.length > 0 && (
             <View className="px-4 pt-4">
               <Text className="mb-2 text-xs font-semibold uppercase tracking-wider text-neutral-2">
                 Lists
               </Text>
-              {lists.map((list) => (
+              {visibleLists.map((list) => (
                 <TouchableOpacity
                   key={list.id}
                   onPress={() => handleListPress(list)}

@@ -126,60 +126,98 @@ function EventSaversRow({
 
   const avatarSize = iconSize * 0.9;
 
+  const renderAvatar = (user: UserForDisplay, recyclingKey: string) => (
+    <UserProfileFlair username={user.username} size="xs">
+      {user.userImage ? (
+        <ExpoImage
+          source={{ uri: user.userImage }}
+          style={{
+            width: avatarSize,
+            height: avatarSize,
+            borderRadius: 9999,
+          }}
+          contentFit="cover"
+          cachePolicy="disk"
+          recyclingKey={recyclingKey}
+        />
+      ) : (
+        <View
+          style={{
+            width: avatarSize,
+            height: avatarSize,
+            borderRadius: 9999,
+            backgroundColor: "#E0D9FF",
+            alignItems: "center",
+            justifyContent: "center",
+          }}
+        >
+          <User size={avatarSize * 0.6} color="#627496" />
+        </View>
+      )}
+    </UserProfileFlair>
+  );
+
+  const listConnector = isOwnEvent ? "· Shared to" : "via";
+  const hasAnyListInfo = !!sourceListSlug || remainingListsCount > 0;
+
   return (
     <>
       <View className="mx-auto mt-1 flex-row flex-wrap items-center justify-center gap-1">
-        {isOwnEvent && sourceListName ? (
-          // Own event: "You · Shared to [ListName] +N"
-          <>
-            <View className="flex-row items-center gap-1">
-              <Pressable
-                onPress={() => handleUserPress(creator)}
-                hitSlop={{ top: 8, bottom: 8, left: 4, right: 4 }}
-                className="flex-row items-center gap-1"
-              >
-                <UserProfileFlair username={creator.username} size="xs">
-                  {creator.userImage ? (
-                    <ExpoImage
-                      source={{ uri: creator.userImage }}
-                      style={{
-                        width: avatarSize,
-                        height: avatarSize,
-                        borderRadius: 9999,
-                      }}
-                      contentFit="cover"
-                      cachePolicy="disk"
-                      recyclingKey={`${eventId}-creator-inline`}
-                    />
-                  ) : (
-                    <View
-                      style={{
-                        width: avatarSize,
-                        height: avatarSize,
-                        borderRadius: 9999,
-                        backgroundColor: "#E0D9FF",
-                        alignItems: "center",
-                        justifyContent: "center",
-                      }}
-                    >
-                      <User size={avatarSize * 0.6} color="#627496" />
-                    </View>
-                  )}
-                </UserProfileFlair>
-                <Text className="text-xs text-neutral-2">You</Text>
-              </Pressable>
-            </View>
-            <Text className="text-xs text-neutral-2">· Shared to</Text>
+        {isOwnEvent ? (
+          <Pressable
+            onPress={() => handleUserPress(creator)}
+            hitSlop={{ top: 8, bottom: 8, left: 4, right: 4 }}
+            className="flex-row items-center gap-1"
+          >
+            {renderAvatar(creator, `${eventId}-creator-inline`)}
+            <Text className="text-xs text-neutral-2">You</Text>
+          </Pressable>
+        ) : (
+          displayUsers.map((user, index) => (
             <Pressable
-              onPress={handleListPress}
+              key={user.id}
+              onPress={() => handleUserPress(user)}
               hitSlop={{ top: 8, bottom: 8, left: 4, right: 4 }}
-              className="flex-row items-center gap-0.5"
+              className="flex-row items-center gap-1"
             >
-              <List size={11} color="#5A32FB" />
-              <Text className="text-xs font-semibold text-interactive-1">
-                {sourceListName}
+              {renderAvatar(user, `${eventId}-saver-inline-${user.id}`)}
+              <Text className="text-xs text-neutral-2">
+                {user.displayName || user.username}
+                {index < displayUsers.length - 1 || remainingUsersCount > 0
+                  ? ","
+                  : ""}
               </Text>
             </Pressable>
+          ))
+        )}
+        {!isOwnEvent && remainingUsersCount > 0 && (
+          <Pressable
+            onPress={() => setShowModal(true)}
+            hitSlop={{ top: 8, bottom: 8, left: 4, right: 4 }}
+          >
+            <View className="rounded-full bg-interactive-3 px-1.5 py-0.5">
+              <Text className="text-xs font-medium text-interactive-1">
+                +{remainingUsersCount}
+              </Text>
+            </View>
+          </Pressable>
+        )}
+        {hasAnyListInfo && (
+          <>
+            <Text className="text-xs text-neutral-2">{listConnector}</Text>
+            {sourceListSlug ? (
+              <Pressable
+                onPress={handleListPress}
+                hitSlop={{ top: 8, bottom: 8, left: 4, right: 4 }}
+                accessibilityLabel={
+                  sourceListName ? `Open list ${sourceListName}` : "Open list"
+                }
+              >
+                <List size={13} color="#5A32FB" />
+              </Pressable>
+            ) : (
+              <List size={13} color="#5A32FB" />
+            )}
             {remainingListsCount > 0 && (
               <Pressable
                 onPress={() => setShowModal(true)}
@@ -192,92 +230,6 @@ function EventSaversRow({
                 </View>
               </Pressable>
             )}
-          </>
-        ) : (
-          // Others' events: "[avatar] Name, [avatar] Name +N via [ListName] +N"
-          <>
-            {displayUsers.map((user, index) => (
-              <Pressable
-                key={user.id}
-                onPress={() => handleUserPress(user)}
-                hitSlop={{ top: 8, bottom: 8, left: 4, right: 4 }}
-                className="flex-row items-center gap-1"
-              >
-                <UserProfileFlair username={user.username} size="xs">
-                  {user.userImage ? (
-                    <ExpoImage
-                      source={{ uri: user.userImage }}
-                      style={{
-                        width: avatarSize,
-                        height: avatarSize,
-                        borderRadius: 9999,
-                      }}
-                      contentFit="cover"
-                      cachePolicy="disk"
-                      recyclingKey={`${eventId}-saver-inline-${user.id}`}
-                    />
-                  ) : (
-                    <View
-                      style={{
-                        width: avatarSize,
-                        height: avatarSize,
-                        borderRadius: 9999,
-                        backgroundColor: "#E0D9FF",
-                        alignItems: "center",
-                        justifyContent: "center",
-                      }}
-                    >
-                      <User size={avatarSize * 0.6} color="#627496" />
-                    </View>
-                  )}
-                </UserProfileFlair>
-                <Text className="text-xs text-neutral-2">
-                  {user.displayName || user.username}
-                  {index < displayUsers.length - 1 || remainingUsersCount > 0
-                    ? ","
-                    : ""}
-                </Text>
-              </Pressable>
-            ))}
-            {remainingUsersCount > 0 && (
-              <Pressable
-                onPress={() => setShowModal(true)}
-                hitSlop={{ top: 8, bottom: 8, left: 4, right: 4 }}
-              >
-                <View className="rounded-full bg-interactive-3 px-1.5 py-0.5">
-                  <Text className="text-xs font-medium text-interactive-1">
-                    +{remainingUsersCount}
-                  </Text>
-                </View>
-              </Pressable>
-            )}
-            {sourceListName ? (
-              <>
-                <Text className="text-xs text-neutral-2">via</Text>
-                <Pressable
-                  onPress={handleListPress}
-                  hitSlop={{ top: 8, bottom: 8, left: 4, right: 4 }}
-                  className="flex-row items-center gap-0.5"
-                >
-                  <List size={11} color="#5A32FB" />
-                  <Text className="text-xs font-semibold text-interactive-1">
-                    {sourceListName}
-                  </Text>
-                </Pressable>
-                {remainingListsCount > 0 && (
-                  <Pressable
-                    onPress={() => setShowModal(true)}
-                    hitSlop={{ top: 8, bottom: 8, left: 4, right: 4 }}
-                  >
-                    <View className="rounded-full bg-interactive-3 px-1.5 py-0.5">
-                      <Text className="text-xs font-medium text-interactive-1">
-                        +{remainingListsCount}
-                      </Text>
-                    </View>
-                  </Pressable>
-                )}
-              </>
-            ) : null}
           </>
         )}
       </View>
@@ -733,21 +685,22 @@ export function UserEventListItem(props: UserEventListItemProps) {
               additionalSourceCount={additionalSourceCount}
               lists={(event as { lists?: Doc<"lists">[] }).lists}
             />
-          ) : sourceListName ? (
+          ) : sourceListSlug || (additionalSourceCount ?? 0) > 0 ? (
             <View className="mx-auto mt-1 flex-row items-center gap-1">
               <Text className="text-xs text-neutral-2">via</Text>
-              <Pressable
-                onPress={() => {
-                  if (sourceListSlug) router.push(`/list/${sourceListSlug}`);
-                }}
-                hitSlop={{ top: 8, bottom: 8, left: 4, right: 4 }}
-                className="flex-row items-center gap-0.5"
-              >
-                <List size={11} color="#5A32FB" />
-                <Text className="text-xs font-semibold text-interactive-1">
-                  {sourceListName}
-                </Text>
-              </Pressable>
+              {sourceListSlug ? (
+                <Pressable
+                  onPress={() => router.push(`/list/${sourceListSlug}`)}
+                  hitSlop={{ top: 8, bottom: 8, left: 4, right: 4 }}
+                  accessibilityLabel={
+                    sourceListName ? `Open list ${sourceListName}` : "Open list"
+                  }
+                >
+                  <List size={13} color="#5A32FB" />
+                </Pressable>
+              ) : (
+                <List size={13} color="#5A32FB" />
+              )}
               {additionalSourceCount && additionalSourceCount > 0 ? (
                 <View className="rounded-full bg-interactive-3 px-1.5 py-0.5">
                   <Text className="text-xs font-medium text-interactive-1">

@@ -1,11 +1,17 @@
 import React, { useCallback, useMemo } from "react";
-import { ActivityIndicator, Text, TouchableOpacity, View } from "react-native";
+import {
+  ActivityIndicator,
+  Share,
+  Text,
+  TouchableOpacity,
+  View,
+} from "react-native";
 import { Stack, useLocalSearchParams } from "expo-router";
 import { useConvexAuth, useMutation, useQuery } from "convex/react";
 
 import { api } from "@soonlist/backend/convex/_generated/api";
 
-import { List as ListIcon } from "~/components/icons";
+import { List as ListIcon, ShareIcon } from "~/components/icons";
 import UserEventsList from "~/components/UserEventsList";
 import { logError } from "~/utils/errorLogging";
 import { hapticSuccess, toast } from "~/utils/feedback";
@@ -50,6 +56,18 @@ export default function ListDetailScreen() {
       );
     }
   }, [listData, isFollowing, followListMutation, unfollowListMutation]);
+
+  const handleShare = useCallback(async () => {
+    if (!listData || !slug) return;
+    try {
+      await Share.share({
+        message: `Check out ${listData.name} on Soonlist`,
+        url: `https://soonlist.com/list/${slug}`,
+      });
+    } catch (error) {
+      logError("Error sharing list", error);
+    }
+  }, [listData, slug]);
 
   if (result === undefined || listData === undefined) {
     return (
@@ -119,6 +137,30 @@ export default function ListDetailScreen() {
           </View>
         )}
       />
+
+      {/* Floating Share button (primary action), matches event detail */}
+      <View
+        className="absolute bottom-8 flex-row items-center justify-center gap-4 self-center"
+        style={{
+          shadowColor: "#5A32FB",
+          shadowOffset: { width: 0, height: 3 },
+          shadowOpacity: 0.3,
+          shadowRadius: 6,
+          elevation: 8,
+        }}
+      >
+        <TouchableOpacity
+          onPress={() => void handleShare()}
+          accessibilityLabel="Share list"
+          accessibilityRole="button"
+          activeOpacity={0.8}
+        >
+          <View className="flex-row items-center gap-4 rounded-full bg-interactive-1 px-8 py-5">
+            <ShareIcon size={28} color="#FFFFFF" />
+            <Text className="text-xl font-bold text-white">Share</Text>
+          </View>
+        </TouchableOpacity>
+      </View>
     </>
   );
 }

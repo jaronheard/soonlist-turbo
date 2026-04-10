@@ -86,12 +86,18 @@ async function queryFeed(
       const sourceListDetails = feedEntry.sourceListId
         ? sourceListDetailsMap.get(feedEntry.sourceListId)
         : undefined;
+      // Count other non-system lists this event belongs to, excluding the
+      // source list. Personal/system lists are hidden so viewers don't see a
+      // stray +1 for the creator's auto-generated personal list.
+      const additionalSourceCount = (event.lists ?? []).filter(
+        (l) => !l.isSystemList && l.id !== feedEntry.sourceListId,
+      ).length;
       return {
         ...event,
         sourceListId: feedEntry.sourceListId,
         sourceListName: sourceListDetails?.name,
         sourceListSlug: sourceListDetails?.slug,
-        additionalSourceCount: Math.max(0, (event.lists?.length ?? 1) - 1),
+        additionalSourceCount,
       };
     }),
   );
@@ -162,6 +168,12 @@ async function queryGroupedFeed(
       const sourceListDetails = sourceListId
         ? sourceListDetailsMap.get(sourceListId)
         : undefined;
+      // Count other non-system lists this event belongs to, excluding the
+      // source list. Personal/system lists are hidden so viewers don't see a
+      // stray +1 for the creator's auto-generated personal list.
+      const additionalSourceCount = (event.lists ?? []).filter(
+        (l) => !l.isSystemList && l.id !== sourceListId,
+      ).length;
 
       return {
         event,
@@ -170,7 +182,7 @@ async function queryGroupedFeed(
         sourceListId,
         sourceListName: sourceListDetails?.name,
         sourceListSlug: sourceListDetails?.slug,
-        additionalSourceCount: Math.max(0, (event.lists?.length ?? 1) - 1),
+        additionalSourceCount,
       };
     }),
   );
