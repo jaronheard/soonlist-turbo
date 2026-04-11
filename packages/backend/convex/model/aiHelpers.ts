@@ -1,5 +1,6 @@
 import type { CoreMessage } from "ai";
 import { createOpenAI } from "@ai-sdk/openai";
+import { Temporal } from "@js-temporal/polyfill";
 import { waitUntil } from "@vercel/functions";
 import { generateObject, GenerateObjectResult } from "ai";
 import { ConvexError } from "convex/values";
@@ -13,6 +14,7 @@ import {
   getPrompt,
   getSystemMessage,
   getSystemMessageMetadata,
+  normalizeEventYear,
 } from "@soonlist/cal";
 
 import type { ActionCtx } from "../_generated/server";
@@ -571,7 +573,28 @@ export async function fetchAndProcessEvent({
   const generatedEvent = event.object;
   const generatedMetadata = EventMetadataSchema.parse(metadata.object);
 
-  const eventObject = { ...generatedEvent, eventMetadata: generatedMetadata };
+  // Deterministically compute the year from the MM-DD the model extracted.
+  // The model is unreliable at enforcing a year window in the prompt (see
+  // migrations/fix2027Dates.ts and fix2027FeedDates.ts for the history);
+  // this replaces the year whenever the source did not explicitly state one.
+  const today = Temporal.Now.instant()
+    .toZonedDateTimeISO(input.timezone)
+    .toPlainDate();
+  const normalized = normalizeEventYear(
+    {
+      startDate: generatedEvent.startDate,
+      endDate: generatedEvent.endDate,
+      hasExplicitYear: generatedEvent.hasExplicitYear ?? false,
+    },
+    today,
+  );
+
+  const eventObject = {
+    ...generatedEvent,
+    startDate: normalized.startDate,
+    endDate: normalized.endDate,
+    eventMetadata: generatedMetadata,
+  };
 
   const events = addCommonAddToCalendarProps([eventObject]);
   const response = `${
