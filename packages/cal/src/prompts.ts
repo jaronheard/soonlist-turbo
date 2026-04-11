@@ -388,7 +388,7 @@ Common pitfalls (avoid):
 - Guessing platform; when unsure, use "unknown".
 `;
 
-const formatOffsetAsIANASoft = (offset: string) => {
+export const formatOffsetAsIANASoft = (offset: string) => {
   const timezone = soft(offset)[0];
   return timezone?.iana || Intl.DateTimeFormat().resolvedOptions().timeZone;
 };

@@ -11,6 +11,7 @@ import {
   addCommonAddToCalendarProps,
   EventMetadataSchema,
   EventSchema,
+  formatOffsetAsIANASoft,
   getPrompt,
   getSystemMessage,
   getSystemMessageMetadata,
@@ -578,7 +579,7 @@ export async function fetchAndProcessEvent({
   // migrations/fix2027Dates.ts and fix2027FeedDates.ts for the history);
   // this replaces the year whenever the source did not explicitly state one.
   const today = Temporal.Now.instant()
-    .toZonedDateTimeISO(input.timezone)
+    .toZonedDateTimeISO(formatOffsetAsIANASoft(input.timezone))
     .toPlainDate();
   const normalized = normalizeEventYear(
     {
