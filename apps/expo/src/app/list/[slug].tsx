@@ -72,7 +72,7 @@ export default function ListDetailScreen() {
   if (result === undefined || listData === undefined) {
     return (
       <>
-        <Stack.Screen options={{ title: "List" }} />
+        <Stack.Screen options={{ title: "List Details" }} />
         <View className="flex-1 items-center justify-center bg-interactive-3">
           <ActivityIndicator size="large" color="#5A32FB" />
         </View>
@@ -83,7 +83,7 @@ export default function ListDetailScreen() {
   if (result === null || listData === null) {
     return (
       <>
-        <Stack.Screen options={{ title: "List" }} />
+        <Stack.Screen options={{ title: "List Details" }} />
         <View className="flex-1 items-center justify-center bg-interactive-3">
           <Text className="text-base text-neutral-2">List not found</Text>
         </View>
@@ -102,7 +102,7 @@ export default function ListDetailScreen() {
     <>
       <Stack.Screen
         options={{
-          title: result.list.name,
+          title: "List Details",
           headerRight: () =>
             isAuthenticated && !isOwnList ? (
               <TouchableOpacity
@@ -122,18 +122,26 @@ export default function ListDetailScreen() {
         onEndReached={() => undefined}
         isFetchingNextPage={false}
         HeaderComponent={() => (
-          <View className="items-center px-4 pb-2">
-            <View className="mb-2 h-12 w-12 items-center justify-center rounded-2xl bg-interactive-2">
+          <View className="flex-row items-start gap-4 px-4 pb-2">
+            <View className="h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-interactive-2">
               <ListIcon size={24} color="#5A32FB" />
             </View>
-            <Text className="text-lg font-bold text-neutral-1">
-              {result.list.name}
-            </Text>
-            {listData?.owner && (
-              <Text className="text-sm text-neutral-2">
-                by {listData.owner.displayName || listData.owner.username}
+            <View className="min-w-0 flex-1 justify-center pt-0.5">
+              <Text
+                className="text-lg font-bold text-neutral-1"
+                numberOfLines={2}
+              >
+                {result.list.name}
               </Text>
-            )}
+              {listData?.owner ? (
+                <Text
+                  className="mt-0.5 text-sm text-neutral-2"
+                  numberOfLines={1}
+                >
+                  by {listData.owner.displayName || listData.owner.username}
+                </Text>
+              ) : null}
+            </View>
           </View>
         )}
       />

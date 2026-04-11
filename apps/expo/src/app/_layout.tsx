@@ -247,6 +247,14 @@ const InitialLayout = () => {
         }}
       />
       <Stack.Screen
+        name="list/[slug]"
+        options={{
+          presentation: "modal",
+          title: "List Details",
+          headerShown: true,
+        }}
+      />
+      <Stack.Screen
         name="[username]/index"
         options={{
           presentation: "modal",
