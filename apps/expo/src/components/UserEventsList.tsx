@@ -158,7 +158,8 @@ function EventSaversRow({
   );
 
   const listConnector = isOwnEvent ? "· Shared to" : "via";
-  const hasAnyListInfo = !!sourceListSlug || remainingListsCount > 0;
+  const hasAnyListInfo =
+    !!sourceListSlug || !!sourceListName || remainingListsCount > 0;
 
   return (
     <>

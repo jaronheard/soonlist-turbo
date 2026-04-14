@@ -145,7 +145,7 @@ function MyFeedContent() {
         eventFollows: [],
         comments: [],
         eventToLists: [],
-        lists: [],
+        lists: group.event.lists ?? [],
       },
       // Server-computed count (already shows just similar events, not including primary)
       similarEvents: Array(group.similarEventsCount).fill({

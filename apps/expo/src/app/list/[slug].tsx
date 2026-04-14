@@ -33,7 +33,7 @@ export default function ListDetailScreen() {
     loadMore,
   } = useStablePaginatedQuery(
     api.lists.getEventsForList,
-    { slug: normalizedSlug },
+    normalizedSlug ? { slug: normalizedSlug } : "skip",
     { initialNumItems: 50 },
   );
 
