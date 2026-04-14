@@ -23,10 +23,11 @@ export default function ListDetailScreen() {
   const { isAuthenticated } = useConvexAuth();
   const currentUser = useQuery(api.users.getCurrentUser);
 
-  const listData = useQuery(
+  const listResult = useQuery(
     api.lists.getBySlug,
     normalizedSlug ? { slug: normalizedSlug } : "skip",
   );
+  const listData = listResult?.status === "ok" ? listResult.list : null;
   const {
     results: listEvents,
     status,
@@ -89,7 +90,7 @@ export default function ListDetailScreen() {
 
   if (
     !normalizedSlug ||
-    listData === undefined ||
+    listResult === undefined ||
     status === "LoadingFirstPage"
   ) {
     return (
@@ -102,7 +103,7 @@ export default function ListDetailScreen() {
     );
   }
 
-  if (listData === null) {
+  if (listResult.status === "notFound") {
     return (
       <>
         <Stack.Screen options={{ title: "List Details" }} />
@@ -111,6 +112,31 @@ export default function ListDetailScreen() {
         </View>
       </>
     );
+  }
+
+  if (listResult.status === "private") {
+    const ownerName =
+      listResult.owner?.displayName ??
+      listResult.owner?.username ??
+      "the owner";
+    return (
+      <>
+        <Stack.Screen options={{ title: "List Details" }} />
+        <View className="flex-1 items-center justify-center gap-2 bg-interactive-3 px-6">
+          <Text className="text-center text-lg font-semibold text-neutral-1">
+            This list is private
+          </Text>
+          <Text className="text-center text-base text-neutral-2">
+            Ask {ownerName} for access.
+          </Text>
+        </View>
+      </>
+    );
+  }
+
+  // listResult.status === "ok" — listData is non-null
+  if (!listData) {
+    return null;
   }
 
   const events = listEvents.map((event) => ({
