@@ -1,3 +1,4 @@
+import { paginationOptsValidator } from "convex/server";
 import { ConvexError, v } from "convex/values";
 
 import type { Doc } from "./_generated/dataModel";
@@ -10,8 +11,10 @@ import {
   query,
 } from "./_generated/server";
 import { listFollowsAggregate } from "./aggregates";
-import { getEventById } from "./model/events";
+import { enrichEventsAndFilterNulls } from "./model/events";
 import { generatePublicId } from "./utils";
+
+type EnrichedEvent = Awaited<ReturnType<typeof enrichEventsAndFilterNulls>>[number];
 
 // Helper function to get the current user ID from auth
 async function getUserId(ctx: QueryCtx): Promise<string | null> {
@@ -1123,44 +1126,66 @@ export const backfillContributorEventsBatch = internalMutation({
 });
 
 /**
- * Get a list by slug along with all its events (public/unlisted only)
+ * Get events for a list by slug, paginated to stay within Convex limits.
  */
 export const getEventsForList = query({
-  args: { slug: v.string() },
-  handler: async (ctx, { slug }) => {
+  args: {
+    slug: v.string(),
+    paginationOpts: paginationOptsValidator,
+  },
+  handler: async (ctx, { slug, paginationOpts }) => {
+    const emptyResults = async () => {
+      const emptyPage = await ctx.db
+        .query("eventToLists")
+        .withIndex("by_list", (q) => q.eq("listId", "__missing_list__"))
+        .paginate(paginationOpts);
+      return {
+        ...emptyPage,
+        page: [] as EnrichedEvent[],
+      };
+    };
+
     // Find the list by slug
     const list = await ctx.db
       .query("lists")
       .withIndex("by_slug", (q) => q.eq("slug", slug))
       .first();
 
-    if (!list) return null;
+    if (!list) {
+      return emptyResults();
+    }
 
     // Only allow access to public/unlisted lists
-    if (list.visibility === "private") return null;
+    if (list.visibility === "private") {
+      return emptyResults();
+    }
 
-    // Get all eventToLists entries for this list
+    // Paginate list memberships so large lists don't hydrate every event at once.
     const eventToLists = await ctx.db
       .query("eventToLists")
       .withIndex("by_list", (q) => q.eq("listId", list.id))
-      .collect();
+      .paginate(paginationOpts);
 
-    // Fetch and enrich each event
     const events = await Promise.all(
-      eventToLists.map(async (etl) => {
-        const event = await getEventById(ctx, etl.eventId);
-        return event;
-      }),
+      eventToLists.page.map((etl) =>
+        ctx.db
+          .query("events")
+          .withIndex("by_custom_id", (q) => q.eq("id", etl.eventId))
+          .unique(),
+      ),
     );
 
-    // Filter nulls
-    const validEvents = events.filter(
+    const visibleEvents = events.filter(
       (event): event is NonNullable<typeof event> => event !== null,
+    ).filter(
+      (event) => event.visibility !== "private",
     );
+
+    const enrichedEvents = await enrichEventsAndFilterNulls(ctx, visibleEvents);
 
     return {
-      list,
-      events: validEvents,
+      ...eventToLists,
+      page: enrichedEvents,
     };
   },
 });

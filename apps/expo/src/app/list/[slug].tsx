@@ -13,17 +13,29 @@ import { api } from "@soonlist/backend/convex/_generated/api";
 
 import { List as ListIcon, ShareIcon } from "~/components/icons";
 import UserEventsList from "~/components/UserEventsList";
+import { useStablePaginatedQuery } from "~/hooks/useStableQuery";
 import { logError } from "~/utils/errorLogging";
 import { hapticSuccess, toast } from "~/utils/feedback";
 
 export default function ListDetailScreen() {
   const { slug } = useLocalSearchParams<{ slug: string }>();
+  const normalizedSlug = typeof slug === "string" ? slug : "";
   const { isAuthenticated } = useConvexAuth();
   const currentUser = useQuery(api.users.getCurrentUser);
 
-  const result = useQuery(api.lists.getEventsForList, slug ? { slug } : "skip");
-
-  const listData = useQuery(api.lists.getBySlug, slug ? { slug } : "skip");
+  const listData = useQuery(
+    api.lists.getBySlug,
+    normalizedSlug ? { slug: normalizedSlug } : "skip",
+  );
+  const {
+    results: listEvents,
+    status,
+    loadMore,
+  } = useStablePaginatedQuery(
+    api.lists.getEventsForList,
+    { slug: normalizedSlug },
+    { initialNumItems: 50 },
+  );
 
   const followListMutation = useMutation(api.lists.followList);
   const unfollowListMutation = useMutation(api.lists.unfollowList);
@@ -34,8 +46,8 @@ export default function ListDetailScreen() {
   );
 
   const isFollowing = useMemo(
-    () => followedLists?.some((l) => l.slug === slug) ?? false,
-    [followedLists, slug],
+    () => followedLists?.some((l) => l.slug === normalizedSlug) ?? false,
+    [followedLists, normalizedSlug],
   );
 
   const isOwnList = listData?.userId === currentUser?.id;
@@ -58,18 +70,28 @@ export default function ListDetailScreen() {
   }, [listData, isFollowing, followListMutation, unfollowListMutation]);
 
   const handleShare = useCallback(async () => {
-    if (!listData || !slug) return;
+    if (!listData || !normalizedSlug) return;
     try {
       await Share.share({
         message: `Check out ${listData.name} on Soonlist`,
-        url: `https://soonlist.com/list/${slug}`,
+        url: `https://soonlist.com/list/${normalizedSlug}`,
       });
     } catch (error) {
       logError("Error sharing list", error);
     }
-  }, [listData, slug]);
+  }, [listData, normalizedSlug]);
 
-  if (result === undefined || listData === undefined) {
+  const handleLoadMore = useCallback(() => {
+    if (status === "CanLoadMore") {
+      loadMore(25);
+    }
+  }, [status, loadMore]);
+
+  if (
+    !normalizedSlug ||
+    listData === undefined ||
+    status === "LoadingFirstPage"
+  ) {
     return (
       <>
         <Stack.Screen options={{ title: "List Details" }} />
@@ -80,7 +102,7 @@ export default function ListDetailScreen() {
     );
   }
 
-  if (result === null || listData === null) {
+  if (listData === null) {
     return (
       <>
         <Stack.Screen options={{ title: "List Details" }} />
@@ -91,7 +113,7 @@ export default function ListDetailScreen() {
     );
   }
 
-  const events = result.events.map((event) => ({
+  const events = listEvents.map((event) => ({
     event,
     similarEvents: [],
     similarityGroupId: event.id,
@@ -119,8 +141,8 @@ export default function ListDetailScreen() {
       <UserEventsList
         groupedEvents={events}
         showCreator="always"
-        onEndReached={() => undefined}
-        isFetchingNextPage={false}
+        onEndReached={handleLoadMore}
+        isFetchingNextPage={status === "LoadingMore"}
         HeaderComponent={() => (
           <View className="flex-row items-start gap-4 px-4 pb-2">
             <View className="h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-interactive-2">
@@ -131,7 +153,7 @@ export default function ListDetailScreen() {
                 className="text-lg font-bold text-neutral-1"
                 numberOfLines={2}
               >
-                {result.list.name}
+                {listData.name}
               </Text>
               {listData?.owner ? (
                 <Text
