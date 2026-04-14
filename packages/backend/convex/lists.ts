@@ -14,7 +14,9 @@ import { listFollowsAggregate } from "./aggregates";
 import { enrichEventsAndFilterNulls } from "./model/events";
 import { generatePublicId } from "./utils";
 
-type EnrichedEvent = Awaited<ReturnType<typeof enrichEventsAndFilterNulls>>[number];
+type EnrichedEvent = Awaited<
+  ReturnType<typeof enrichEventsAndFilterNulls>
+>[number];
 
 // Helper function to get the current user ID from auth
 async function getUserId(ctx: QueryCtx): Promise<string | null> {
@@ -1175,11 +1177,9 @@ export const getEventsForList = query({
       ),
     );
 
-    const visibleEvents = events.filter(
-      (event): event is NonNullable<typeof event> => event !== null,
-    ).filter(
-      (event) => event.visibility !== "private",
-    );
+    const visibleEvents = events
+      .filter((event): event is NonNullable<typeof event> => event !== null)
+      .filter((event) => event.visibility !== "private");
 
     const enrichedEvents = await enrichEventsAndFilterNulls(ctx, visibleEvents);
 
