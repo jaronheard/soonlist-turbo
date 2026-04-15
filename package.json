@@ -31,13 +31,15 @@
     "stripe:webhook": "stripe listen --forward-to http://localhost:3000/api/webhooks/stripe",
     "typecheck": "turbo typecheck",
     "check": "turbo typecheck lint format --continue",
-    "ui-add": "pnpm -F ui ui-add"
+    "ui-add": "pnpm -F ui ui-add",
+    "prepare": "lefthook install"
   },
   "devDependencies": {
     "@soonlist/prettier-config": "workspace:*",
     "@turbo/gen": "catalog:",
     "@types/minimatch": "^6.0.0",
     "dotenv-cli": "catalog:",
+    "lefthook": "catalog:",
     "prettier": "catalog:",
     "turbo": "catalog:",
     "typescript": "catalog:"

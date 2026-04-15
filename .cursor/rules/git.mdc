@@ -15,7 +15,9 @@ alwaysApply: false
 
 ## Commit Process
 
-1. Run checks: `pnpm lint:fix && pnpm format:fix && pnpm check`
+1. Run checks: `pnpm lint:fix && pnpm check` (prettier runs automatically on
+   staged files via a lefthook pre-commit hook; `git commit --no-verify` to
+   bypass in emergencies)
 2. Commit with clear messages describing what changed
 3. Commit often as you work
 
