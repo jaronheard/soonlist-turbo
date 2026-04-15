@@ -1,0 +1,22 @@
+# Lockfiles — managed by their package manager
+pnpm-lock.yaml
+package-lock.json
+yarn.lock
+
+# Generated / vendored
+**/.next/
+**/.expo/
+**/.turbo/
+**/.cache/
+**/dist/
+**/build/
+**/coverage/
+**/node_modules/
+**/convex/_generated/
+**/.vercel/
+
+# Patches
+patches/
+
+# Misc
+*.tsbuildinfo
