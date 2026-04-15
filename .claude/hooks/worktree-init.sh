@@ -65,6 +65,17 @@ if [[ -f .env.local ]] && ! grep -q "^# worktree-ports" .env.local; then
     echo "PORT=${WEB_PORT}"
     echo "RCT_METRO_PORT=${METRO_PORT}"
   } >> .env.local
+  # Rewrite .claude/launch.json so `preview_start` picks the right port.
+  # Use --skip-worktree so the local port rewrite doesn't pollute `git status`
+  # or get committed from this worktree.
+  if [[ -f .claude/launch.json ]]; then
+    sed -i.bak \
+      -e "s|\"port\": 3000|\"port\": ${WEB_PORT}|g" \
+      -e "s|\"port\": 8081|\"port\": ${METRO_PORT}|g" \
+      .claude/launch.json
+    rm -f .claude/launch.json.bak
+    git update-index --skip-worktree .claude/launch.json 2>/dev/null || true
+  fi
   echo "worktree-init: assigned ports — web=${WEB_PORT}, metro=${METRO_PORT}" >&2
 fi
 
