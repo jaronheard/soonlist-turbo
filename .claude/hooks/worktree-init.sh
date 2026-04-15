@@ -22,13 +22,32 @@ if [[ -z "$MAIN_CHECKOUT" ]] || [[ "$MAIN_CHECKOUT" == "$WORKTREE_ROOT" ]]; then
   exit 0
 fi
 
-cd "$WORKTREE_ROOT"
+cd "$WORKTREE_ROOT" || { echo "worktree-init: cd to $WORKTREE_ROOT failed, skipping" >&2; exit 0; }
 
-# Compute a deterministic port offset (1-99) from the worktree directory name
-# so each worktree gets its own web + Metro ports and they don't clobber the
-# main checkout (offset 0).
+# Compute an initial port offset (1-99) from the worktree name, then probe for
+# a free port pair. Starting from the hash keeps allocation stable when ports
+# are free; probing avoids collisions when two worktree names hash to the same
+# offset or when a port is already in use.
 WORKTREE_NAME=$(basename "$WORKTREE_ROOT")
-PORT_OFFSET=$(printf '%s' "$WORKTREE_NAME" | cksum | awk '{print ($1 % 99) + 1}')
+START_OFFSET=$(printf '%s' "$WORKTREE_NAME" | cksum | awk '{print ($1 % 99) + 1}')
+
+port_free() {
+  # Pure-bash probe: /dev/tcp connect fails iff nothing is listening.
+  ! (exec 3<>/dev/tcp/127.0.0.1/"$1") 2>/dev/null
+}
+
+PORT_OFFSET=""
+for i in $(seq 0 98); do
+  offset=$(( (START_OFFSET - 1 + i) % 99 + 1 ))
+  if port_free $((3000 + offset)) && port_free $((8081 + offset)); then
+    PORT_OFFSET=$offset
+    break
+  fi
+done
+if [[ -z "$PORT_OFFSET" ]]; then
+  echo "worktree-init: no free port pair in 3001-3099/8082-8180; using hash offset" >&2
+  PORT_OFFSET=$START_OFFSET
+fi
 WEB_PORT=$((3000 + PORT_OFFSET))
 METRO_PORT=$((8081 + PORT_OFFSET))
 
