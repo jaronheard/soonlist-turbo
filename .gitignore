@@ -67,3 +67,4 @@ dist/
 # claude code
 .claude/worktrees/
 .claude/settings.local.json
+.claude/.worktree-ports
