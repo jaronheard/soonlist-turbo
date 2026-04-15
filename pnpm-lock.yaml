@@ -327,6 +327,9 @@ catalogs:
     langfuse:
       specifier: ^3.11.0
       version: 3.38.6
+    lefthook:
+      specifier: ^2.1.5
+      version: 2.1.5
     lucide-react:
       specifier: ^0.373.0
       version: 0.373.0
@@ -550,7 +553,7 @@ importers:
         specifier: 'catalog:'
         version: 7.4.4
       lefthook:
-        specifier: ^2.1.5
+        specifier: 'catalog:'
         version: 2.1.5
       prettier:
         specifier: 'catalog:'

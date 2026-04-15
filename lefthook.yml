@@ -2,6 +2,6 @@ pre-commit:
   parallel: true
   jobs:
     - name: prettier
-      glob: "*.{ts,tsx,js,jsx,cjs,mjs,json,md,mdx,css,yml,yaml}"
+      glob: "**/*.{ts,tsx,js,jsx,cjs,mjs,json,md,mdx,css,yml,yaml}"
       run: pnpm exec prettier --write --ignore-unknown --cache --cache-location .cache/.prettiercache {staged_files}
       stage_fixed: true

@@ -39,7 +39,7 @@
     "@turbo/gen": "catalog:",
     "@types/minimatch": "^6.0.0",
     "dotenv-cli": "catalog:",
-    "lefthook": "^2.1.5",
+    "lefthook": "catalog:",
     "prettier": "catalog:",
     "turbo": "catalog:",
     "typescript": "catalog:"
