@@ -44,8 +44,12 @@ export function SavedByModal({
   }
 
   // Hide system/personal lists from the viewer — those are implementation
-  // details, not meaningful lists users browse to.
-  const visibleLists = lists.filter((list) => !list.isSystemList);
+  // details, not meaningful lists users browse to. Also hide private lists
+  // so a viewer who can see the event but not the list cannot learn the
+  // private list's name or slug from this modal.
+  const visibleLists = lists.filter(
+    (list) => !list.isSystemList && list.visibility !== "private",
+  );
 
   const handleUserPress = (user: UserForDisplay) => {
     onClose();

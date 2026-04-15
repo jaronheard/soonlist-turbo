@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { cache } from "react";
 import { notFound } from "next/navigation";
 
 import { api } from "@soonlist/backend/convex/_generated/api";
@@ -15,10 +16,10 @@ const APP_STORE_ID = "6670222216";
 const APPLE_ITUNES_APP = (slug: string) =>
   `app-id=${APP_STORE_ID}, app-argument=https://www.soonlist.com/list/${slug}`;
 
-async function fetchListBySlug(slug: string) {
+const fetchListBySlug = cache(async (slug: string) => {
   const convex = await getAuthenticatedConvex();
   return convex.query(api.lists.getBySlug, { slug });
-}
+});
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { slug } = await params;

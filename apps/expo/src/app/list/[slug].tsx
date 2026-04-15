@@ -88,6 +88,27 @@ export default function ListDetailScreen() {
     }
   }, [status, loadMore]);
 
+  const ListHeader = useCallback(
+    () => (
+      <View className="flex-row items-start gap-4 px-4 pb-2">
+        <View className="h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-interactive-2">
+          <ListIcon size={24} color="#5A32FB" />
+        </View>
+        <View className="min-w-0 flex-1 justify-center pt-0.5">
+          <Text className="text-lg font-bold text-neutral-1" numberOfLines={2}>
+            {listData?.name}
+          </Text>
+          {listData?.owner ? (
+            <Text className="mt-0.5 text-sm text-neutral-2" numberOfLines={1}>
+              by {listData.owner.displayName || listData.owner.username}
+            </Text>
+          ) : null}
+        </View>
+      </View>
+    ),
+    [listData?.name, listData?.owner],
+  );
+
   if (
     !normalizedSlug ||
     listResult === undefined ||
@@ -169,29 +190,7 @@ export default function ListDetailScreen() {
         showCreator="always"
         onEndReached={handleLoadMore}
         isFetchingNextPage={status === "LoadingMore"}
-        HeaderComponent={() => (
-          <View className="flex-row items-start gap-4 px-4 pb-2">
-            <View className="h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-interactive-2">
-              <ListIcon size={24} color="#5A32FB" />
-            </View>
-            <View className="min-w-0 flex-1 justify-center pt-0.5">
-              <Text
-                className="text-lg font-bold text-neutral-1"
-                numberOfLines={2}
-              >
-                {listData.name}
-              </Text>
-              {listData?.owner ? (
-                <Text
-                  className="mt-0.5 text-sm text-neutral-2"
-                  numberOfLines={1}
-                >
-                  by {listData.owner.displayName || listData.owner.username}
-                </Text>
-              ) : null}
-            </View>
-          </View>
-        )}
+        HeaderComponent={ListHeader}
       />
 
       {/* Floating Share button (primary action), matches event detail */}

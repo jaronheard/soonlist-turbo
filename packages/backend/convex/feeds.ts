@@ -22,11 +22,63 @@ async function getUserId(ctx: QueryCtx): Promise<string | null> {
   return identity.subject;
 }
 
-// Helper to batch-resolve sourceListId → list details (name and slug)
+// Helper: determine whether the current viewer can see a list. Mirrors the
+// access rules used elsewhere (see lists.checkListAccess and
+// feedHelpers.canUserViewListForFeed) — public/unlisted lists are visible to
+// anyone, private lists only to their owner or to a member.
+async function getViewableListIds(
+  ctx: QueryCtx,
+  lists: { id: string; userId: string; visibility: string }[],
+  viewerId: string | null,
+): Promise<Set<string>> {
+  const viewableIds = new Set<string>();
+  const privateListsToCheck: string[] = [];
+
+  for (const list of lists) {
+    if (list.visibility === "public" || list.visibility === "unlisted") {
+      viewableIds.add(list.id);
+      continue;
+    }
+    // Private list — viewer must be owner or a member to see it.
+    if (viewerId && list.userId === viewerId) {
+      viewableIds.add(list.id);
+      continue;
+    }
+    if (viewerId) {
+      privateListsToCheck.push(list.id);
+    }
+  }
+
+  if (viewerId && privateListsToCheck.length > 0) {
+    const memberships = await Promise.all(
+      privateListsToCheck.map((listId) =>
+        ctx.db
+          .query("listMembers")
+          .withIndex("by_list_and_user", (q) =>
+            q.eq("listId", listId).eq("userId", viewerId),
+          )
+          .first(),
+      ),
+    );
+    privateListsToCheck.forEach((listId, i) => {
+      if (memberships[i]) viewableIds.add(listId);
+    });
+  }
+
+  return viewableIds;
+}
+
+// Helper to batch-resolve sourceListId → list details (name, slug, and
+// visibility metadata used to gate attribution).
 async function resolveSourceListDetails(
   ctx: QueryCtx,
   feedEntries: { sourceListId?: string }[],
-): Promise<Map<string, { name: string; slug?: string }>> {
+): Promise<
+  Map<
+    string,
+    { name: string; slug?: string; userId: string; visibility: string }
+  >
+> {
   const listIds = [
     ...new Set(
       feedEntries.map((e) => e.sourceListId).filter((id): id is string => !!id),
@@ -43,10 +95,19 @@ async function resolveSourceListDetails(
     ),
   );
 
-  const map = new Map<string, { name: string; slug?: string }>();
+  const map = new Map<
+    string,
+    { name: string; slug?: string; userId: string; visibility: string }
+  >();
   listIds.forEach((id, i) => {
     const list = lists[i];
-    if (list) map.set(id, { name: list.name, slug: list.slug ?? undefined });
+    if (list)
+      map.set(id, {
+        name: list.name,
+        slug: list.slug ?? undefined,
+        userId: list.userId,
+        visibility: list.visibility,
+      });
   });
   return map;
 }
@@ -72,7 +133,8 @@ async function queryFeed(
   // Paginate
   const feedResults = await feedQuery.paginate(paginationOpts);
 
-  // Resolve source list details
+  // Resolve source list details and capture viewer for visibility checks
+  const viewerId = await getUserId(ctx);
   const sourceListDetailsMap = await resolveSourceListDetails(
     ctx,
     feedResults.page,
@@ -83,20 +145,42 @@ async function queryFeed(
     feedResults.page.map(async (feedEntry) => {
       const event = await getEventById(ctx, feedEntry.eventId);
       if (!event) return null;
+
+      // Filter the event's lists down to ones the viewer can actually see
+      // before attributing them. Hidden private lists must not contribute to
+      // the +N badge or leak their existence (or name) to non-members.
+      const viewableListIds = await getViewableListIds(
+        ctx,
+        event.lists ?? [],
+        viewerId,
+      );
+
+      // Gate the primary attribution: if the viewer cannot see the source
+      // list, drop its name/slug so we don't leak metadata.
       const sourceListDetails = feedEntry.sourceListId
         ? sourceListDetailsMap.get(feedEntry.sourceListId)
         : undefined;
+      const sourceListVisible =
+        !!sourceListDetails &&
+        !!feedEntry.sourceListId &&
+        viewableListIds.has(feedEntry.sourceListId);
+
       // Count other non-system lists this event belongs to, excluding the
-      // source list. Personal/system lists are hidden so viewers don't see a
-      // stray +1 for the creator's auto-generated personal list.
+      // source list and any list the viewer cannot see. Personal/system lists
+      // are hidden so viewers don't see a stray +1 for the creator's
+      // auto-generated personal list, and private lists they don't have
+      // access to are hidden to avoid leaking membership metadata.
       const additionalSourceCount = (event.lists ?? []).filter(
-        (l) => !l.isSystemList && l.id !== feedEntry.sourceListId,
+        (l) =>
+          !l.isSystemList &&
+          l.id !== feedEntry.sourceListId &&
+          viewableListIds.has(l.id),
       ).length;
       return {
         ...event,
-        sourceListId: feedEntry.sourceListId,
-        sourceListName: sourceListDetails?.name,
-        sourceListSlug: sourceListDetails?.slug,
+        sourceListId: sourceListVisible ? feedEntry.sourceListId : undefined,
+        sourceListName: sourceListVisible ? sourceListDetails.name : undefined,
+        sourceListSlug: sourceListVisible ? sourceListDetails.slug : undefined,
         additionalSourceCount,
       };
     }),
@@ -144,7 +228,8 @@ async function queryGroupedFeed(
     ),
   );
 
-  // Resolve source list details
+  // Resolve source list details and capture viewer for visibility checks
+  const viewerId = await getUserId(ctx);
   const sourceEntries = primaryFeedEntries
     .filter((e): e is NonNullable<typeof e> => e !== null)
     .map((e) => ({ sourceListId: e.sourceListId }));
@@ -165,23 +250,43 @@ async function queryGroupedFeed(
 
       const feedEntry = primaryFeedEntries[idx];
       const sourceListId = feedEntry?.sourceListId;
+
+      // Filter the event's lists down to ones the viewer can actually see
+      // before attributing them. Hidden private lists must not contribute to
+      // the +N badge or leak their existence (or name) to non-members.
+      const viewableListIds = await getViewableListIds(
+        ctx,
+        event.lists ?? [],
+        viewerId,
+      );
+
+      // Gate the primary attribution: if the viewer cannot see the source
+      // list, drop its name/slug so we don't leak metadata.
       const sourceListDetails = sourceListId
         ? sourceListDetailsMap.get(sourceListId)
         : undefined;
+      const sourceListVisible =
+        !!sourceListDetails &&
+        !!sourceListId &&
+        viewableListIds.has(sourceListId);
+
       // Count other non-system lists this event belongs to, excluding the
-      // source list. Personal/system lists are hidden so viewers don't see a
-      // stray +1 for the creator's auto-generated personal list.
+      // source list and any list the viewer cannot see. Personal/system lists
+      // are hidden so viewers don't see a stray +1 for the creator's
+      // auto-generated personal list, and private lists they don't have
+      // access to are hidden to avoid leaking membership metadata.
       const additionalSourceCount = (event.lists ?? []).filter(
-        (l) => !l.isSystemList && l.id !== sourceListId,
+        (l) =>
+          !l.isSystemList && l.id !== sourceListId && viewableListIds.has(l.id),
       ).length;
 
       return {
         event,
         similarEventsCount: groupEntry.similarEventsCount,
         similarityGroupId: groupEntry.similarityGroupId,
-        sourceListId,
-        sourceListName: sourceListDetails?.name,
-        sourceListSlug: sourceListDetails?.slug,
+        sourceListId: sourceListVisible ? sourceListId : undefined,
+        sourceListName: sourceListVisible ? sourceListDetails.name : undefined,
+        sourceListSlug: sourceListVisible ? sourceListDetails.slug : undefined,
         additionalSourceCount,
       };
     }),

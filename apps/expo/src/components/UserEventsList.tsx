@@ -213,11 +213,24 @@ function EventSaversRow({
                 accessibilityLabel={
                   sourceListName ? `Open list ${sourceListName}` : "Open list"
                 }
+                className="flex-row items-center gap-1"
               >
                 <List size={13} color="#5A32FB" />
+                {sourceListName ? (
+                  <Text className="text-xs font-semibold text-interactive-1">
+                    {sourceListName}
+                  </Text>
+                ) : null}
               </Pressable>
             ) : (
-              <List size={13} color="#5A32FB" />
+              <View className="flex-row items-center gap-1">
+                <List size={13} color="#5A32FB" />
+                {sourceListName ? (
+                  <Text className="text-xs text-neutral-2">
+                    {sourceListName}
+                  </Text>
+                ) : null}
+              </View>
             )}
             {remainingListsCount > 0 && (
               <Pressable
@@ -357,6 +370,8 @@ export function UserEventListItem(props: UserEventListItemProps) {
 
   const { user: currentUser } = useUser();
   const eventUser = event.user;
+  const [showFallbackSavedByModal, setShowFallbackSavedByModal] =
+    useState(false);
 
   // Prefetch the full-size image for the detail screen so it loads instantly
   useEffect(() => {
@@ -686,7 +701,9 @@ export function UserEventListItem(props: UserEventListItemProps) {
               additionalSourceCount={additionalSourceCount}
               lists={(event as { lists?: Doc<"lists">[] }).lists}
             />
-          ) : sourceListSlug || (additionalSourceCount ?? 0) > 0 ? (
+          ) : sourceListSlug ||
+            sourceListName ||
+            (additionalSourceCount ?? 0) > 0 ? (
             <View className="mx-auto mt-1 flex-row items-center gap-1">
               <Text className="text-xs text-neutral-2">via</Text>
               {sourceListSlug ? (
@@ -696,21 +713,52 @@ export function UserEventListItem(props: UserEventListItemProps) {
                   accessibilityLabel={
                     sourceListName ? `Open list ${sourceListName}` : "Open list"
                   }
+                  className="flex-row items-center gap-1"
                 >
                   <List size={13} color="#5A32FB" />
+                  {sourceListName ? (
+                    <Text className="text-xs font-semibold text-interactive-1">
+                      {sourceListName}
+                    </Text>
+                  ) : null}
                 </Pressable>
               ) : (
-                <List size={13} color="#5A32FB" />
+                <View className="flex-row items-center gap-1">
+                  <List size={13} color="#5A32FB" />
+                  {sourceListName ? (
+                    <Text className="text-xs text-neutral-2">
+                      {sourceListName}
+                    </Text>
+                  ) : null}
+                </View>
               )}
               {additionalSourceCount && additionalSourceCount > 0 ? (
-                <View className="rounded-full bg-interactive-3 px-1.5 py-0.5">
-                  <Text className="text-xs font-medium text-interactive-1">
-                    +{additionalSourceCount}
-                  </Text>
-                </View>
+                <Pressable
+                  onPress={() => setShowFallbackSavedByModal(true)}
+                  hitSlop={{ top: 8, bottom: 8, left: 4, right: 4 }}
+                >
+                  <View className="rounded-full bg-interactive-3 px-1.5 py-0.5">
+                    <Text className="text-xs font-medium text-interactive-1">
+                      +{additionalSourceCount}
+                    </Text>
+                  </View>
+                </Pressable>
               ) : null}
             </View>
           ) : null}
+          <SavedByModal
+            visible={showFallbackSavedByModal}
+            onClose={() => setShowFallbackSavedByModal(false)}
+            creator={{
+              id: eventUser.id,
+              username: eventUser.username,
+              displayName: eventUser.displayName,
+              userImage: eventUser.userImage,
+            }}
+            savers={[]}
+            lists={(event as { lists?: Doc<"lists">[] }).lists ?? []}
+            currentUserId={currentUser?.id}
+          />
           <View className="absolute left-0 right-0 top-0 z-20 flex flex-row items-center justify-center space-x-2">
             {isRecent && (
               <View

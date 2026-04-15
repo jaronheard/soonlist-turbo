@@ -1,8 +1,8 @@
 import React, { useCallback, useState } from "react";
 import {
   ActivityIndicator,
+  FlatList,
   Modal,
-  ScrollView,
   Share,
   Text,
   TouchableOpacity,
@@ -109,68 +109,73 @@ export function FollowedListsModal({
             </Text>
           </View>
         ) : (
-          <ScrollView
-            contentContainerStyle={{ paddingBottom: insets.bottom + 16 }}
-          >
-            <View className="px-4 pt-4">
+          <FlatList
+            data={followedLists}
+            keyExtractor={(list) => list.id}
+            contentContainerStyle={{
+              paddingHorizontal: 16,
+              paddingTop: 16,
+              paddingBottom: insets.bottom + 16,
+            }}
+            ListHeaderComponent={
               <Text className="mb-2 text-xs font-semibold uppercase tracking-wider text-neutral-2">
                 Lists
               </Text>
-              {followedLists.map((list) => {
-                const isUnfollowing = unfollowingIds.has(list.id);
-                return (
-                  <View key={list.id} className="flex-row items-center py-3">
-                    <TouchableOpacity
-                      className="flex-1 flex-row items-center"
-                      onPress={() => handleListPress(list)}
-                      activeOpacity={0.7}
-                    >
-                      <View className="h-10 w-10 items-center justify-center rounded-xl bg-interactive-2">
-                        <List size={20} color="#5A32FB" />
-                      </View>
-                      <View className="ml-3 flex-1">
-                        <Text
-                          className="text-base font-semibold text-neutral-1"
-                          numberOfLines={1}
-                        >
-                          {list.name}
-                        </Text>
-                      </View>
-                      <ChevronRight size={16} color="#DCE0E8" />
-                    </TouchableOpacity>
+            }
+            renderItem={({ item: list }) => {
+              const isUnfollowing = unfollowingIds.has(list.id);
+              return (
+                <View className="flex-row items-center py-3">
+                  <TouchableOpacity
+                    className="flex-1 flex-row items-center"
+                    onPress={() => handleListPress(list)}
+                    activeOpacity={0.7}
+                  >
+                    <View className="h-10 w-10 items-center justify-center rounded-xl bg-interactive-2">
+                      <List size={20} color="#5A32FB" />
+                    </View>
+                    <View className="ml-3 flex-1">
+                      <Text
+                        className="text-base font-semibold text-neutral-1"
+                        numberOfLines={1}
+                      >
+                        {list.name}
+                      </Text>
+                    </View>
+                    <ChevronRight size={16} color="#DCE0E8" />
+                  </TouchableOpacity>
 
-                    <TouchableOpacity
-                      onPress={() =>
-                        void handleShareList(list.name, list.slug ?? undefined)
-                      }
-                      className="ml-2 rounded-full p-2"
-                      activeOpacity={0.7}
-                      accessibilityLabel={`Share ${list.name}`}
-                      hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
-                    >
-                      <ShareIcon size={18} color="#5A32FB" />
-                    </TouchableOpacity>
+                  <TouchableOpacity
+                    onPress={() =>
+                      void handleShareList(list.name, list.slug ?? undefined)
+                    }
+                    className="ml-2 rounded-full p-2"
+                    activeOpacity={0.7}
+                    accessibilityLabel={`Share ${list.name}`}
+                    hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+                  >
+                    <ShareIcon size={18} color="#5A32FB" />
+                  </TouchableOpacity>
 
-                    <TouchableOpacity
-                      onPress={() => void handleUnfollow(list.id)}
-                      disabled={isUnfollowing}
-                      className="ml-1 rounded-full bg-neutral-4 px-3 py-1.5"
-                      activeOpacity={0.7}
-                      accessibilityLabel={`Unfollow ${list.name}`}
-                    >
-                      {isUnfollowing ? (
-                        <ActivityIndicator size="small" color="#627496" />
-                      ) : (
-                        <Text className="text-xs font-semibold text-neutral-2">
-                          Unfollow
-                        </Text>
-                      )}
-                    </TouchableOpacity>
-                  </View>
-                );
-              })}
-            </View>
-          </ScrollView>
+                  <TouchableOpacity
+                    onPress={() => void handleUnfollow(list.id)}
+                    disabled={isUnfollowing}
+                    className="ml-1 rounded-full bg-neutral-4 px-3 py-1.5"
+                    activeOpacity={0.7}
+                    accessibilityLabel={`Unfollow ${list.name}`}
+                  >
+                    {isUnfollowing ? (
+                      <ActivityIndicator size="small" color="#627496" />
+                    ) : (
+                      <Text className="text-xs font-semibold text-neutral-2">
+                        Unfollow
+                      </Text>
+                    )}
+                  </TouchableOpacity>
+                </View>
+              );
+            }}
+          />
         )}
       </View>
     </Modal>
