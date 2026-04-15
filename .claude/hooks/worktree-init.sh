@@ -9,18 +9,14 @@
 set -uo pipefail
 
 # Only run inside a Claude worktree
-GIT_COMMON_DIR=$(git rev-parse --git-common-dir 2>/dev/null || echo "")
-case "$GIT_COMMON_DIR" in
-  *".claude/worktrees"*|*"/.git") ;;
-esac
-
 WORKTREE_ROOT=$(git rev-parse --show-toplevel 2>/dev/null || echo "")
 if [[ -z "$WORKTREE_ROOT" ]] || [[ "$WORKTREE_ROOT" != *".claude/worktrees/"* ]]; then
   exit 0
 fi
 
-# Resolve the main checkout (first entry in `git worktree list`)
-MAIN_CHECKOUT=$(git worktree list --porcelain | awk '/^worktree /{print $2; exit}')
+# Resolve the main checkout (first entry in `git worktree list`).
+# Use sub() instead of $2 so paths containing spaces aren't truncated.
+MAIN_CHECKOUT=$(git worktree list --porcelain | awk '/^worktree /{sub(/^worktree /, ""); print; exit}')
 if [[ -z "$MAIN_CHECKOUT" ]] || [[ "$MAIN_CHECKOUT" == "$WORKTREE_ROOT" ]]; then
   echo "worktree-init: could not resolve main checkout, skipping" >&2
   exit 0
