@@ -23,6 +23,12 @@ interface SavedByModalProps {
   savers: UserForDisplay[];
   lists: Doc<"lists">[];
   currentUserId?: string;
+  /**
+   * The source list already shown inline on the event card ("via [List]").
+   * Excluded from the modal's Lists section so the rendered count matches
+   * the "+N additional" badge semantic. When undefined, no exclusion runs.
+   */
+  sourceListId?: string;
 }
 
 export function SavedByModal({
@@ -32,6 +38,7 @@ export function SavedByModal({
   savers,
   lists,
   currentUserId,
+  sourceListId,
 }: SavedByModalProps) {
   const insets = useSafeAreaInsets();
 
@@ -43,17 +50,22 @@ export function SavedByModal({
     }
   }
 
-  // Hide system/personal lists from the viewer — those are implementation
-  // details, not meaningful lists users browse to.
+  // Filters applied to the Lists section:
+  // 1. Drop system/personal lists — implementation details, not browsable.
+  // 2. Drop the source list — it's already shown inline on the card as
+  //    "via [List]", and the "+N" badge on the card represents *additional*
+  //    lists beyond that one. Including it here would render N+1 items when
+  //    the badge says "+N", producing an off-by-one user-visible mismatch.
   //
   // Private-list access is enforced on the SERVER (see feeds.ts
   // `queryFeed`/`queryGroupedFeed`, which filter `event.lists` through
   // `getViewableListIds`). Do NOT re-add a blanket `visibility !== "private"`
   // filter here: that would hide private lists the viewer is the owner of or
-  // a member of, and — critically — it would desync this modal from the +N
-  // attribution badge (which is computed server-side on the same viewer-
-  // filtered set), showing "+1" with no matching entry in the modal.
-  const visibleLists = lists.filter((list) => !list.isSystemList);
+  // a member of. The server-side filter already guarantees we only receive
+  // lists the viewer can see.
+  const visibleLists = lists.filter(
+    (list) => !list.isSystemList && list.id !== sourceListId,
+  );
 
   const handleUserPress = (user: UserForDisplay) => {
     onClose();

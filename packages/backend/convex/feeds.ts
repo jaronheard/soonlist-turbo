@@ -182,10 +182,11 @@ async function queryFeed(
         viewableListIds.has(feedEntry.sourceListId);
 
       // Count other non-system lists this event belongs to, excluding the
-      // source list. This runs against `viewerFilteredLists` so the +N badge
-      // count matches the list of items SavedByModal will render (which
-      // further drops system/personal lists client-side). Keeping the two
-      // filters in lockstep prevents the "+N" badge ≠ modal-length mismatch.
+      // source list (which is already shown inline on the card as "via
+      // [List]"). The client-side `SavedByModal` mirrors this exact filter
+      // set — drops system lists AND the source list — so `+N` on the card
+      // always matches the number of items rendered in the modal's Lists
+      // section. Do not change one side without changing the other.
       const additionalSourceCount = viewerFilteredLists.filter(
         (l) => !l.isSystemList && l.id !== feedEntry.sourceListId,
       ).length;
@@ -292,9 +293,10 @@ async function queryGroupedFeed(
         !!sourceListId &&
         viewableListIds.has(sourceListId);
 
-      // Count other non-system lists, excluding the source list. Operates on
-      // the viewer-filtered list so the badge count equals what the modal
-      // will render (modal further drops system/personal lists client-side).
+      // Count other non-system lists, excluding the source list. See the
+      // matching note in `queryFeed` — `SavedByModal` applies the identical
+      // filter (drops system lists and the source list), so `+N` on the
+      // card always equals the rendered list count in the modal.
       const additionalSourceCount = viewerFilteredLists.filter(
         (l) => !l.isSystemList && l.id !== sourceListId,
       ).length;

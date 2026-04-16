@@ -80,6 +80,7 @@ function EventSaversRow({
   iconSize,
   eventId,
   currentUserId,
+  sourceListId,
   sourceListName,
   sourceListSlug,
   additionalSourceCount,
@@ -90,6 +91,7 @@ function EventSaversRow({
   iconSize: number;
   eventId: string;
   currentUserId?: string;
+  sourceListId?: string;
   sourceListName?: string;
   sourceListSlug?: string;
   additionalSourceCount?: number;
@@ -255,6 +257,7 @@ function EventSaversRow({
         savers={savers}
         lists={lists ?? []}
         currentUserId={currentUserId}
+        sourceListId={sourceListId}
       />
     </>
   );
@@ -281,6 +284,7 @@ interface UserEventListItemProps {
   isDiscoverFeed?: boolean;
   primaryAction?: "addToCalendar" | "save";
   source?: string;
+  sourceListId?: string;
   sourceListName?: string;
   sourceListSlug?: string;
   additionalSourceCount?: number;
@@ -299,6 +303,7 @@ export function UserEventListItem(props: UserEventListItemProps) {
     isDiscoverFeed = false,
     primaryAction = "addToCalendar",
     source,
+    sourceListId,
     sourceListName,
     sourceListSlug,
     additionalSourceCount,
@@ -696,6 +701,7 @@ export function UserEventListItem(props: UserEventListItemProps) {
               iconSize={iconSize}
               eventId={event.id}
               currentUserId={currentUser?.id}
+              sourceListId={sourceListId}
               sourceListName={sourceListName}
               sourceListSlug={sourceListSlug}
               additionalSourceCount={additionalSourceCount}
@@ -758,6 +764,7 @@ export function UserEventListItem(props: UserEventListItemProps) {
             savers={[]}
             lists={(event as { lists?: Doc<"lists">[] }).lists ?? []}
             currentUserId={currentUser?.id}
+            sourceListId={sourceListId}
           />
           <View className="absolute left-0 right-0 top-0 z-20 flex flex-row items-center justify-center space-x-2">
             {isRecent && (
@@ -1233,6 +1240,8 @@ export default function UserEventsList(props: UserEventsListProps) {
         const similarEventsCount = item.similarEvents.length;
 
         // Source attribution from feed entry
+        const sourceListId = (eventData as { sourceListId?: string })
+          .sourceListId;
         const sourceListName = (eventData as { sourceListName?: string })
           .sourceListName;
         const sourceListSlug = (eventData as { sourceListSlug?: string })
@@ -1257,6 +1266,7 @@ export default function UserEventsList(props: UserEventsListProps) {
             isDiscoverFeed={isDiscoverFeed}
             primaryAction={primaryAction}
             source={source}
+            sourceListId={sourceListId}
             sourceListName={sourceListName}
             sourceListSlug={sourceListSlug}
             additionalSourceCount={additionalSourceCount}
