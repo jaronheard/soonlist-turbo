@@ -24,10 +24,18 @@ fi
 
 cd "$WORKTREE_ROOT" || { echo "worktree-init: cd to $WORKTREE_ROOT failed, skipping" >&2; exit 0; }
 
-# Compute an initial port offset (1-99) from the worktree name, then probe for
-# a free port pair. Starting from the hash keeps allocation stable when ports
-# are free; probing avoids collisions when two worktree names hash to the same
-# offset or when a port is already in use.
+# Assign a unique port pair to this worktree.
+#
+# Algorithm:
+#   1. Acquire a cross-worktree lock (atomic mkdir) rooted at the main
+#      checkout, so simultaneous worktree initializations can't pick the
+#      same pair via a read-then-assign race.
+#   2. Enumerate sibling worktrees' marker files to collect ports already
+#      assigned to other worktrees — those are off-limits.
+#   3. Start at a hash-derived offset (stable reassignment across restarts)
+#      and linear-probe until we find a pair that is neither assigned to
+#      a sibling nor currently bound by a listening socket.
+#   4. Write our own marker inside the lock so the next initializer sees it.
 WORKTREE_NAME=$(basename "$WORKTREE_ROOT")
 START_OFFSET=$(printf '%s' "$WORKTREE_NAME" | cksum | awk '{print ($1 % 99) + 1}')
 
@@ -36,16 +44,50 @@ port_free() {
   ! (exec 3<>/dev/tcp/127.0.0.1/"$1") 2>/dev/null
 }
 
+LOCK_DIR="$MAIN_CHECKOUT/.claude/.worktree-ports.lock"
+mkdir -p "$(dirname "$LOCK_DIR")"
+lock_acquired=false
+for _ in $(seq 1 50); do
+  if mkdir "$LOCK_DIR" 2>/dev/null; then
+    lock_acquired=true
+    trap 'rmdir "$LOCK_DIR" 2>/dev/null || true' EXIT
+    break
+  fi
+  sleep 0.1
+done
+if ! $lock_acquired; then
+  echo "worktree-init: could not acquire port-allocation lock, proceeding without it" >&2
+fi
+
+# Collect ports already claimed by sibling worktrees.
+assigned_web=" "
+assigned_metro=" "
+if [[ -d "$MAIN_CHECKOUT/.claude/worktrees" ]]; then
+  for marker in "$MAIN_CHECKOUT"/.claude/worktrees/*/.claude/.worktree-ports; do
+    [[ -f "$marker" ]] || continue
+    [[ "$marker" == "$WORKTREE_ROOT/.claude/.worktree-ports" ]] && continue
+    while IFS='=' read -r k v; do
+      case "$k" in
+        WEB_PORT)   assigned_web+="$v " ;;
+        METRO_PORT) assigned_metro+="$v " ;;
+      esac
+    done < "$marker"
+  done
+fi
+
+web_claimable()   { case "$assigned_web"   in *" $1 "*) return 1 ;; esac; port_free "$1"; }
+metro_claimable() { case "$assigned_metro" in *" $1 "*) return 1 ;; esac; port_free "$1"; }
+
 PORT_OFFSET=""
 for i in $(seq 0 98); do
   offset=$(( (START_OFFSET - 1 + i) % 99 + 1 ))
-  if port_free $((3000 + offset)) && port_free $((8081 + offset)); then
+  if web_claimable $((3000 + offset)) && metro_claimable $((8081 + offset)); then
     PORT_OFFSET=$offset
     break
   fi
 done
 if [[ -z "$PORT_OFFSET" ]]; then
-  echo "worktree-init: no free port pair in 3001-3099/8082-8180; using hash offset" >&2
+  echo "worktree-init: no unclaimed free port pair; falling back to hash offset" >&2
   PORT_OFFSET=$START_OFFSET
 fi
 WEB_PORT=$((3000 + PORT_OFFSET))
@@ -67,17 +109,8 @@ if [[ ${#copied[@]} -gt 0 ]]; then
   echo "worktree-init: copied env files: ${copied[*]}" >&2
 fi
 
-# Apply per-worktree port isolation exactly once, gated by a dedicated marker
-# file so the rewrite runs regardless of which env files exist in this worktree.
+# Rewrite env files in place (destructive — gated by marker so it runs once).
 MARKER=".claude/.worktree-ports"
-
-# Back-compat: a previous version of this hook stored the marker as a comment
-# inside .env.local. Migrate by creating the new marker file.
-if [[ ! -f "$MARKER" ]] && [[ -f .env.local ]] && grep -q "^# worktree-ports" .env.local; then
-  mkdir -p .claude
-  printf 'WEB_PORT=%d\nMETRO_PORT=%d\n' "$WEB_PORT" "$METRO_PORT" > "$MARKER"
-fi
-
 if [[ ! -f "$MARKER" ]]; then
   for rel in .env.local apps/expo/.env apps/web/.env.local; do
     [[ -f "$rel" ]] || continue
@@ -97,20 +130,29 @@ if [[ ! -f "$MARKER" ]]; then
       echo "RCT_METRO_PORT=${METRO_PORT}"
     } >> .env.local
   fi
-  # Rewrite .claude/launch.json so `preview_start` picks the right port.
-  # Use --skip-worktree so the local port rewrite doesn't pollute `git status`
-  # or get committed from this worktree.
-  if [[ -f .claude/launch.json ]]; then
-    sed -i.bak \
-      -e "s|\"port\": 3000|\"port\": ${WEB_PORT}|g" \
-      -e "s|\"port\": 8081|\"port\": ${METRO_PORT}|g" \
-      .claude/launch.json
-    rm -f .claude/launch.json.bak
-    git update-index --skip-worktree .claude/launch.json 2>/dev/null || true
-  fi
   mkdir -p .claude
   printf 'WEB_PORT=%d\nMETRO_PORT=%d\n' "$WEB_PORT" "$METRO_PORT" > "$MARKER"
-  echo "worktree-init: assigned ports — web=${WEB_PORT}, metro=${METRO_PORT}" >&2
+  echo "worktree-init: env rewrites applied — web=${WEB_PORT}, metro=${METRO_PORT}" >&2
+fi
+
+# Generate .claude/launch.json from the committed template on every run.
+# This is safe to do repeatedly because the output is deterministic for a
+# given port pair, and the file is gitignored so local regeneration can't
+# pollute commits or hide upstream changes (which now land in launch.json.example).
+if [[ -f .claude/launch.json.example ]]; then
+  sed \
+    -e "s|\"port\": 3000|\"port\": ${WEB_PORT}|g" \
+    -e "s|\"port\": 8081|\"port\": ${METRO_PORT}|g" \
+    .claude/launch.json.example > .claude/launch.json
+fi
+
+# Release the port-allocation lock now that our marker is written. Doing this
+# before `pnpm install` means a concurrent worktree init isn't blocked for
+# minutes while we install dependencies.
+if $lock_acquired; then
+  rmdir "$LOCK_DIR" 2>/dev/null || true
+  lock_acquired=false
+  trap - EXIT
 fi
 
 # Install deps if missing
