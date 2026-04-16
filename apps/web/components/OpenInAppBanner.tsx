@@ -6,10 +6,9 @@ import { toast } from "sonner";
 
 import { Button } from "@soonlist/ui/button";
 
-import { createDeepLink } from "~/lib/urlScheme";
-
 interface OpenInAppBannerProps {
-  eventId: string;
+  deepLink: string;
+  label?: string;
 }
 
 // Detect if we're in an in-app browser (Instagram, Facebook, TikTok, etc.)
@@ -53,7 +52,7 @@ function isIOS(): boolean {
   return /iPad|iPhone|iPod/.test(ua);
 }
 
-export function OpenInAppBanner({ eventId }: OpenInAppBannerProps) {
+export function OpenInAppBanner({ deepLink, label }: OpenInAppBannerProps) {
   const [showBanner, setShowBanner] = useState(false);
   const [dismissed, setDismissed] = useState(false);
 
@@ -72,9 +71,6 @@ export function OpenInAppBanner({ eventId }: OpenInAppBannerProps) {
 
   const handleOpenInApp = () => {
     const isDev = process.env.NODE_ENV !== "production";
-
-    // Create environment-aware deep link
-    const deepLink = createDeepLink(`event/${eventId}`);
 
     // Try to open via deep link first
     window.location.href = deepLink;
@@ -105,7 +101,7 @@ export function OpenInAppBanner({ eventId }: OpenInAppBannerProps) {
       <div className="flex items-start justify-between gap-2">
         <div className="flex-1">
           <p className="mb-3 text-sm font-medium text-neutral-1">
-            For the best experience, open this event in the Soonlist app
+            {label ?? "For the best experience, open this in the Soonlist app"}
           </p>
           <Button
             onClick={handleOpenInApp}

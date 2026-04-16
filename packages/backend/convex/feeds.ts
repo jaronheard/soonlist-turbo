@@ -12,6 +12,7 @@ import {
 } from "./_generated/server";
 import { userFeedsAggregate } from "./aggregates";
 import { enrichEventsAndFilterNulls, getEventById } from "./model/events";
+import { getViewableListIds } from "./model/lists";
 
 // Helper function to get the current user ID from auth
 async function getUserId(ctx: QueryCtx): Promise<string | null> {
@@ -22,11 +23,17 @@ async function getUserId(ctx: QueryCtx): Promise<string | null> {
   return identity.subject;
 }
 
-// Helper to batch-resolve sourceListId → list name
-async function resolveSourceListNames(
+// Helper to batch-resolve sourceListId → list details (name, slug, and
+// visibility metadata used to gate attribution).
+async function resolveSourceListDetails(
   ctx: QueryCtx,
   feedEntries: { sourceListId?: string }[],
-): Promise<Map<string, string>> {
+): Promise<
+  Map<
+    string,
+    { name: string; slug?: string; userId: string; visibility: string }
+  >
+> {
   const listIds = [
     ...new Set(
       feedEntries.map((e) => e.sourceListId).filter((id): id is string => !!id),
@@ -43,10 +50,19 @@ async function resolveSourceListNames(
     ),
   );
 
-  const map = new Map<string, string>();
+  const map = new Map<
+    string,
+    { name: string; slug?: string; userId: string; visibility: string }
+  >();
   listIds.forEach((id, i) => {
     const list = lists[i];
-    if (list) map.set(id, list.name);
+    if (list)
+      map.set(id, {
+        name: list.name,
+        slug: list.slug ?? undefined,
+        userId: list.userId,
+        visibility: list.visibility,
+      });
   });
   return map;
 }
@@ -72,20 +88,65 @@ async function queryFeed(
   // Paginate
   const feedResults = await feedQuery.paginate(paginationOpts);
 
-  // Resolve source list names
-  const sourceListNameMap = await resolveSourceListNames(ctx, feedResults.page);
+  // Resolve source list details and capture viewer for visibility checks
+  const viewerId = await getUserId(ctx);
+  const sourceListDetailsMap = await resolveSourceListDetails(
+    ctx,
+    feedResults.page,
+  );
 
   // Map feed entries to full events with users and eventFollows, preserving order
   const events = await Promise.all(
     feedResults.page.map(async (feedEntry) => {
       const event = await getEventById(ctx, feedEntry.eventId);
       if (!event) return null;
+
+      // Filter the event's lists down to ones the viewer can actually see
+      // before attributing them. Hidden private lists must not contribute to
+      // the +N badge or leak their existence (or name) to non-members.
+      const viewableListIds = await getViewableListIds(
+        ctx,
+        event.lists ?? [],
+        viewerId,
+      );
+
+      // Strip private-unviewable lists from `event.lists` before sending to
+      // the client. The "Saved by" modal (SavedByModal) renders this array
+      // directly, so any private list that leaks here leaks its name/slug to
+      // viewers who can see the event but not the list. System/personal
+      // lists are left in place — those are hidden client-side and are not a
+      // privacy concern; they can still be useful for other consumers.
+      const viewerFilteredLists = (event.lists ?? []).filter((l) =>
+        viewableListIds.has(l.id),
+      );
+
+      // Gate the primary attribution: if the viewer cannot see the source
+      // list, drop its name/slug so we don't leak metadata.
+      const sourceListDetails = feedEntry.sourceListId
+        ? sourceListDetailsMap.get(feedEntry.sourceListId)
+        : undefined;
+      const sourceListVisible =
+        !!sourceListDetails &&
+        !!feedEntry.sourceListId &&
+        viewableListIds.has(feedEntry.sourceListId);
+
+      // Count non-system lists this event belongs to BEYOND the source list
+      // (the source is already shown inline on the card as "via [List]", so
+      // the badge is intentionally labeled "+N additional"). The modal
+      // itself is a complete "Saved by" view and renders ALL non-system
+      // lists — including the source list — so modal length = N + 1 by
+      // design. Don't change this invariant without updating SavedByModal's
+      // `visibleLists` and the "+" prefix on the card badge together.
+      const additionalSourceCount = viewerFilteredLists.filter(
+        (l) => !l.isSystemList && l.id !== feedEntry.sourceListId,
+      ).length;
       return {
         ...event,
-        sourceListId: feedEntry.sourceListId,
-        sourceListName: feedEntry.sourceListId
-          ? sourceListNameMap.get(feedEntry.sourceListId)
-          : undefined,
+        lists: viewerFilteredLists,
+        sourceListId: sourceListVisible ? feedEntry.sourceListId : undefined,
+        sourceListName: sourceListVisible ? sourceListDetails.name : undefined,
+        sourceListSlug: sourceListVisible ? sourceListDetails.slug : undefined,
+        additionalSourceCount,
       };
     }),
   );
@@ -132,11 +193,15 @@ async function queryGroupedFeed(
     ),
   );
 
-  // Resolve source list names
+  // Resolve source list details and capture viewer for visibility checks
+  const viewerId = await getUserId(ctx);
   const sourceEntries = primaryFeedEntries
     .filter((e): e is NonNullable<typeof e> => e !== null)
     .map((e) => ({ sourceListId: e.sourceListId }));
-  const sourceListNameMap = await resolveSourceListNames(ctx, sourceEntries);
+  const sourceListDetailsMap = await resolveSourceListDetails(
+    ctx,
+    sourceEntries,
+  );
 
   // Enrich each group entry with the primary event data
   const enrichedGroups = await Promise.all(
@@ -151,14 +216,49 @@ async function queryGroupedFeed(
       const feedEntry = primaryFeedEntries[idx];
       const sourceListId = feedEntry?.sourceListId;
 
+      // Filter the event's lists down to ones the viewer can actually see
+      // before attributing them. Hidden private lists must not contribute to
+      // the +N badge or leak their existence (or name) to non-members.
+      const viewableListIds = await getViewableListIds(
+        ctx,
+        event.lists ?? [],
+        viewerId,
+      );
+
+      // Strip private-unviewable lists from `event.lists` before sending to
+      // the client. See matching note in queryFeed — both the "Saved by"
+      // modal and the +N badge operate on this single pre-filtered set, so
+      // they can never disagree.
+      const viewerFilteredLists = (event.lists ?? []).filter((l) =>
+        viewableListIds.has(l.id),
+      );
+
+      // Gate the primary attribution: if the viewer cannot see the source
+      // list, drop its name/slug so we don't leak metadata.
+      const sourceListDetails = sourceListId
+        ? sourceListDetailsMap.get(sourceListId)
+        : undefined;
+      const sourceListVisible =
+        !!sourceListDetails &&
+        !!sourceListId &&
+        viewableListIds.has(sourceListId);
+
+      // Count non-system lists beyond the source list. See the matching note
+      // in `queryFeed` — the badge reads "+N additional" (source is shown
+      // inline on the card) and the modal renders the full set including
+      // the source, so modal length = N + 1 by design.
+      const additionalSourceCount = viewerFilteredLists.filter(
+        (l) => !l.isSystemList && l.id !== sourceListId,
+      ).length;
+
       return {
-        event,
+        event: { ...event, lists: viewerFilteredLists },
         similarEventsCount: groupEntry.similarEventsCount,
         similarityGroupId: groupEntry.similarityGroupId,
-        sourceListId,
-        sourceListName: sourceListId
-          ? sourceListNameMap.get(sourceListId)
-          : undefined,
+        sourceListId: sourceListVisible ? sourceListId : undefined,
+        sourceListName: sourceListVisible ? sourceListDetails.name : undefined,
+        sourceListSlug: sourceListVisible ? sourceListDetails.slug : undefined,
+        additionalSourceCount,
       };
     }),
   );

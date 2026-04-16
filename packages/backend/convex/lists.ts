@@ -1,3 +1,4 @@
+import { paginationOptsValidator } from "convex/server";
 import { ConvexError, v } from "convex/values";
 
 import type { Doc } from "./_generated/dataModel";
@@ -10,7 +11,13 @@ import {
   query,
 } from "./_generated/server";
 import { listFollowsAggregate } from "./aggregates";
+import { enrichEventsAndFilterNulls } from "./model/events";
+import { getViewableListIds } from "./model/lists";
 import { generatePublicId } from "./utils";
+
+type EnrichedEvent = Awaited<
+  ReturnType<typeof enrichEventsAndFilterNulls>
+>[number];
 
 // Helper function to get the current user ID from auth
 async function getUserId(ctx: QueryCtx): Promise<string | null> {
@@ -658,57 +665,78 @@ export const removeListMember = mutation({
 });
 
 /**
- * Get a list by its slug
+ * Get a list by its slug.
+ *
+ * Returns a discriminated union so callers can distinguish
+ * "not found" from "exists but private":
+ *   { status: "ok", list }       — public/unlisted or viewer has access
+ *   { status: "private", owner } — list exists but viewer cannot see contents
+ *   { status: "notFound" }       — no list with this slug
  */
+const listOwnerValidator = v.union(
+  v.object({
+    _id: v.id("users"),
+    _creationTime: v.number(),
+    id: v.string(),
+    username: v.string(),
+    displayName: v.string(),
+    userImage: v.string(),
+    bio: v.union(v.string(), v.null()),
+    publicEmail: v.union(v.string(), v.null()),
+    publicPhone: v.union(v.string(), v.null()),
+    publicInsta: v.union(v.string(), v.null()),
+    publicWebsite: v.union(v.string(), v.null()),
+    emoji: v.union(v.string(), v.null()),
+    publicListEnabled: v.optional(v.boolean()),
+    publicListName: v.optional(v.string()),
+  }),
+  v.null(),
+);
+
 export const getBySlug = query({
   args: { slug: v.string() },
   returns: v.union(
     v.object({
-      _id: v.id("lists"),
-      _creationTime: v.number(),
-      id: v.string(),
-      userId: v.string(),
-      name: v.string(),
-      description: v.string(),
-      visibility: v.union(
-        v.literal("public"),
-        v.literal("unlisted"),
-        v.literal("private"),
-      ),
-      contribution: v.optional(
-        v.union(v.literal("open"), v.literal("restricted"), v.literal("owner")),
-      ),
-      listType: v.optional(
-        v.union(v.literal("standard"), v.literal("contributor")),
-      ),
-      isSystemList: v.optional(v.boolean()),
-      systemListType: v.optional(v.string()),
-      slug: v.optional(v.string()),
-      created_at: v.string(),
-      updatedAt: v.union(v.string(), v.null()),
-      owner: v.union(
-        v.object({
-          _id: v.id("users"),
-          _creationTime: v.number(),
-          id: v.string(),
-          username: v.string(),
-          displayName: v.string(),
-          userImage: v.string(),
-          bio: v.union(v.string(), v.null()),
-          publicEmail: v.union(v.string(), v.null()),
-          publicPhone: v.union(v.string(), v.null()),
-          publicInsta: v.union(v.string(), v.null()),
-          publicWebsite: v.union(v.string(), v.null()),
-          emoji: v.union(v.string(), v.null()),
-          publicListEnabled: v.optional(v.boolean()),
-          publicListName: v.optional(v.string()),
-        }),
-        v.null(),
-      ),
-      contributorCount: v.number(),
-      followerCount: v.number(),
+      status: v.literal("ok"),
+      list: v.object({
+        _id: v.id("lists"),
+        _creationTime: v.number(),
+        id: v.string(),
+        userId: v.string(),
+        name: v.string(),
+        description: v.string(),
+        visibility: v.union(
+          v.literal("public"),
+          v.literal("unlisted"),
+          v.literal("private"),
+        ),
+        contribution: v.optional(
+          v.union(
+            v.literal("open"),
+            v.literal("restricted"),
+            v.literal("owner"),
+          ),
+        ),
+        listType: v.optional(
+          v.union(v.literal("standard"), v.literal("contributor")),
+        ),
+        isSystemList: v.optional(v.boolean()),
+        systemListType: v.optional(v.string()),
+        slug: v.optional(v.string()),
+        created_at: v.string(),
+        updatedAt: v.union(v.string(), v.null()),
+        owner: listOwnerValidator,
+        contributorCount: v.number(),
+        followerCount: v.number(),
+      }),
     }),
-    v.null(),
+    v.object({
+      status: v.literal("private"),
+      owner: listOwnerValidator,
+    }),
+    v.object({
+      status: v.literal("notFound"),
+    }),
   ),
   handler: async (ctx, { slug }) => {
     const list = await ctx.db
@@ -717,15 +745,40 @@ export const getBySlug = query({
       .first();
 
     if (!list) {
-      return null;
+      return { status: "notFound" as const };
     }
 
-    if (list.visibility === "public" || list.visibility === "unlisted") {
-      const owner = await ctx.db
-        .query("users")
-        .withIndex("by_custom_id", (q) => q.eq("id", list.userId))
-        .first();
+    const owner = await ctx.db
+      .query("users")
+      .withIndex("by_custom_id", (q) => q.eq("id", list.userId))
+      .first();
 
+    const sanitizedOwner = owner
+      ? {
+          _id: owner._id,
+          _creationTime: owner._creationTime,
+          id: owner.id,
+          username: owner.username,
+          displayName: owner.displayName,
+          userImage: owner.userImage,
+          bio: owner.bio,
+          publicEmail: owner.publicEmail,
+          publicPhone: owner.publicPhone,
+          publicInsta: owner.publicInsta,
+          publicWebsite: owner.publicWebsite,
+          emoji: owner.emoji,
+          publicListEnabled: owner.publicListEnabled,
+          publicListName: owner.publicListName,
+        }
+      : null;
+
+    // Use the same access rules as the rest of the backend so owners and
+    // members of a private list can still resolve its detail page (used by
+    // the saver-attribution flow which deep-links to `/list/[slug]`).
+    const viewerId = await getUserId(ctx);
+    const accessResult = await checkListAccess(ctx, list.id, viewerId);
+
+    if (accessResult.status === "ok") {
       const contributors = await ctx.db
         .query("listMembers")
         .withIndex("by_list_and_role", (q) =>
@@ -738,34 +791,21 @@ export const getBySlug = query({
         bounds: {},
       });
 
-      const sanitizedOwner = owner
-        ? {
-            _id: owner._id,
-            _creationTime: owner._creationTime,
-            id: owner.id,
-            username: owner.username,
-            displayName: owner.displayName,
-            userImage: owner.userImage,
-            bio: owner.bio,
-            publicEmail: owner.publicEmail,
-            publicPhone: owner.publicPhone,
-            publicInsta: owner.publicInsta,
-            publicWebsite: owner.publicWebsite,
-            emoji: owner.emoji,
-            publicListEnabled: owner.publicListEnabled,
-            publicListName: owner.publicListName,
-          }
-        : null;
-
       return {
-        ...list,
-        owner: sanitizedOwner,
-        contributorCount: contributors.length,
-        followerCount,
+        status: "ok" as const,
+        list: {
+          ...list,
+          owner: sanitizedOwner,
+          contributorCount: contributors.length,
+          followerCount,
+        },
       };
     }
 
-    return null;
+    return {
+      status: "private" as const,
+      owner: sanitizedOwner,
+    };
   },
 });
 
@@ -1117,6 +1157,89 @@ export const backfillContributorEventsBatch = internalMutation({
       added,
       nextCursor: result.continueCursor,
       isDone: result.isDone,
+    };
+  },
+});
+
+/**
+ * Get events for a list by slug, paginated to stay within Convex limits.
+ */
+export const getEventsForList = query({
+  args: {
+    slug: v.string(),
+    paginationOpts: paginationOptsValidator,
+  },
+  handler: async (ctx, { slug, paginationOpts }) => {
+    const emptyResults = async () => {
+      const emptyPage = await ctx.db
+        .query("eventToLists")
+        .withIndex("by_list", (q) => q.eq("listId", "__missing_list__"))
+        .paginate(paginationOpts);
+      return {
+        ...emptyPage,
+        page: [] as EnrichedEvent[],
+      };
+    };
+
+    // Find the list by slug
+    const list = await ctx.db
+      .query("lists")
+      .withIndex("by_slug", (q) => q.eq("slug", slug))
+      .first();
+
+    if (!list) {
+      return emptyResults();
+    }
+
+    // Private lists are still viewable by their owner or members — mirror
+    // getBySlug / checkListAccess so authorized viewers see the events.
+    const viewerId = await getUserId(ctx);
+    const accessResult = await checkListAccess(ctx, list.id, viewerId);
+    if (accessResult.status !== "ok") {
+      return emptyResults();
+    }
+
+    // Paginate list memberships so large lists don't hydrate every event at once.
+    const eventToLists = await ctx.db
+      .query("eventToLists")
+      .withIndex("by_list", (q) => q.eq("listId", list.id))
+      .paginate(paginationOpts);
+
+    const events = await Promise.all(
+      eventToLists.page.map((etl) =>
+        ctx.db
+          .query("events")
+          .withIndex("by_custom_id", (q) => q.eq("id", etl.eventId))
+          .unique(),
+      ),
+    );
+
+    const visibleEvents = events
+      .filter((event): event is NonNullable<typeof event> => event !== null)
+      .filter((event) => event.visibility !== "private");
+
+    const enrichedEvents = await enrichEventsAndFilterNulls(ctx, visibleEvents);
+
+    // Strip private-unviewable lists from each event.lists before returning.
+    // enrichEventsAndFilterNulls hydrates event.lists with ALL lists the
+    // event belongs to, including ones this viewer can't see. The client
+    // (SavedByModal) trusts the server's filtering, so we must enforce
+    // visibility here — same contract as queryFeed/queryGroupedFeed in
+    // feeds.ts.
+    const allListsAcrossEvents = enrichedEvents.flatMap((e) => e.lists ?? []);
+    const viewableListIds = await getViewableListIds(
+      ctx,
+      allListsAcrossEvents,
+      viewerId,
+    );
+    const filteredEvents = enrichedEvents.map((event) => ({
+      ...event,
+      lists: (event.lists ?? []).filter((l) => viewableListIds.has(l.id)),
+    }));
+
+    return {
+      ...eventToLists,
+      page: filteredEvents,
     };
   },
 });

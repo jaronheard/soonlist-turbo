@@ -18,6 +18,7 @@ import { router } from "expo-router";
 import { useUser } from "@clerk/clerk-expo";
 
 import type { api } from "@soonlist/backend/convex/_generated/api";
+import type { Doc } from "@soonlist/backend/convex/_generated/dataModel";
 import type { AddToCalendarButtonPropsRestricted } from "@soonlist/cal/types";
 import { getTimezoneAbbreviation } from "@soonlist/cal";
 
@@ -32,6 +33,7 @@ import {
   ShareIcon,
   User,
 } from "~/components/icons";
+import { SavedByModal } from "~/components/SavedByModal";
 import { useAddEventFlow } from "~/hooks/useAddEventFlow";
 import { useEventActions } from "~/hooks/useEventActions";
 import { useUserTimezone } from "~/store";
@@ -71,7 +73,7 @@ interface UserForDisplay {
   userImage?: string | null;
 }
 
-// Stacked avatars component for showing multiple users who saved an event
+// Inline avatars component for showing multiple users who saved an event
 function EventSaversRow({
   creator,
   savers,
@@ -79,7 +81,9 @@ function EventSaversRow({
   eventId,
   currentUserId,
   sourceListName,
+  sourceListSlug,
   additionalSourceCount,
+  lists,
 }: {
   creator: UserForDisplay;
   savers: UserForDisplay[];
@@ -87,12 +91,14 @@ function EventSaversRow({
   eventId: string;
   currentUserId?: string;
   sourceListName?: string;
+  sourceListSlug?: string;
   additionalSourceCount?: number;
+  lists?: Doc<"lists">[];
 }) {
-  const [isExpanded, setIsExpanded] = useState(false);
+  const [showModal, setShowModal] = useState(false);
   const isOwnEvent = currentUserId === creator.id;
 
-  // Combine creator with savers, deduplicate by id, and limit to first 2
+  // Combine creator with savers, deduplicate by id
   const allUsers: UserForDisplay[] = [creator];
   for (const saver of savers) {
     if (!allUsers.some((u) => u.id === saver.id)) {
@@ -101,10 +107,10 @@ function EventSaversRow({
   }
 
   const displayUsers = allUsers.slice(0, 2);
-  const remainingCount = allUsers.length - displayUsers.length;
+  const remainingUsersCount = allUsers.length - displayUsers.length;
+  const remainingListsCount = additionalSourceCount ?? 0;
 
   const handleUserPress = (user: UserForDisplay) => {
-    // If clicking on yourself, go to account settings
     if (currentUserId && user.id === currentUserId) {
       router.push("/settings/account");
     } else {
@@ -112,205 +118,145 @@ function EventSaversRow({
     }
   };
 
-  const avatarSize = iconSize * 1.1;
-  const overlap = avatarSize * 0.3;
-
-  // Render individual tappable name
-  const renderTappableName = (user: UserForDisplay, isLast: boolean) => {
-    const displayName = user.displayName || user.username || "unknown";
-    return (
-      <Pressable
-        key={user.id}
-        onPress={() => handleUserPress(user)}
-        hitSlop={{ top: 8, bottom: 8, left: 4, right: 4 }}
-      >
-        <Text className="text-xs text-neutral-2">
-          {displayName}
-          {!isLast && ", "}
-        </Text>
-      </Pressable>
-    );
+  const handleListPress = () => {
+    if (sourceListSlug) {
+      router.push(`/list/${sourceListSlug}`);
+    }
   };
 
-  // Collapsed view
-  if (!isExpanded) {
-    return (
-      <View className="mx-auto mt-1 flex-row items-center gap-1">
-        {/* Stacked avatars */}
-        <View
-          className="flex-row items-center"
+  const avatarSize = iconSize * 0.9;
+
+  const renderAvatar = (user: UserForDisplay, recyclingKey: string) => (
+    <UserProfileFlair username={user.username} size="xs">
+      {user.userImage ? (
+        <ExpoImage
+          source={{ uri: user.userImage }}
           style={{
-            width:
-              avatarSize + (displayUsers.length - 1) * (avatarSize - overlap),
+            width: avatarSize,
+            height: avatarSize,
+            borderRadius: 9999,
+          }}
+          contentFit="cover"
+          cachePolicy="disk"
+          recyclingKey={recyclingKey}
+        />
+      ) : (
+        <View
+          style={{
+            width: avatarSize,
+            height: avatarSize,
+            borderRadius: 9999,
+            backgroundColor: "#E0D9FF",
+            alignItems: "center",
+            justifyContent: "center",
           }}
         >
-          {displayUsers.map((user, index) => (
+          <User size={avatarSize * 0.6} color="#627496" />
+        </View>
+      )}
+    </UserProfileFlair>
+  );
+
+  const listConnector = isOwnEvent ? "· Shared to" : "via";
+  const hasAnyListInfo =
+    !!sourceListSlug || !!sourceListName || remainingListsCount > 0;
+
+  return (
+    <>
+      <View className="mx-auto mt-1 flex-row flex-wrap items-center justify-center gap-1">
+        {isOwnEvent ? (
+          <Pressable
+            onPress={() => handleUserPress(creator)}
+            hitSlop={{ top: 8, bottom: 8, left: 4, right: 4 }}
+            className="flex-row items-center gap-1"
+          >
+            {renderAvatar(creator, `${eventId}-creator-inline`)}
+            <Text className="text-xs text-neutral-2">You</Text>
+          </Pressable>
+        ) : (
+          displayUsers.map((user, index) => (
             <Pressable
               key={user.id}
               onPress={() => handleUserPress(user)}
-              hitSlop={{ top: 12, bottom: 12, left: 8, right: 8 }}
-              style={{
-                position: index === 0 ? "relative" : "absolute",
-                left: index * (avatarSize - overlap),
-                zIndex: displayUsers.length - index,
-              }}
+              hitSlop={{ top: 8, bottom: 8, left: 4, right: 4 }}
+              className="flex-row items-center gap-1"
             >
-              <UserProfileFlair username={user.username} size="xs">
-                {user.userImage ? (
-                  <ExpoImage
-                    source={{ uri: user.userImage }}
-                    style={{
-                      width: avatarSize,
-                      height: avatarSize,
-                      borderRadius: 9999,
-                      borderWidth: 2,
-                      borderColor: "white",
-                    }}
-                    contentFit="cover"
-                    contentPosition="center"
-                    cachePolicy="disk"
-                    transition={100}
-                    recyclingKey={`${eventId}-saver-${user.id}`}
-                  />
-                ) : (
-                  <View
-                    style={{
-                      width: avatarSize,
-                      height: avatarSize,
-                      borderRadius: 9999,
-                      borderWidth: 2,
-                      borderColor: "white",
-                      backgroundColor: "#E0D9FF",
-                      alignItems: "center",
-                      justifyContent: "center",
-                    }}
-                  >
-                    <User size={avatarSize * 0.6} color="#627496" />
-                  </View>
-                )}
-              </UserProfileFlair>
-            </Pressable>
-          ))}
-        </View>
-
-        {/* Names and source attribution */}
-        <View className="flex-row flex-wrap items-center">
-          {isOwnEvent && sourceListName ? (
-            // Own event: show "Shared to [list] Name"
-            <View className="flex-row items-center">
-              <Text className="text-xs text-neutral-2">Shared to </Text>
-              <List size={11} color="#5A32FB" />
-              <Text className="text-xs font-semibold text-interactive-1">
-                {" "}
-                {sourceListName}
+              {renderAvatar(user, `${eventId}-saver-inline-${user.id}`)}
+              <Text className="text-xs text-neutral-2">
+                {user.displayName || user.username}
+                {index < displayUsers.length - 1 || remainingUsersCount > 0
+                  ? ","
+                  : ""}
               </Text>
-              {additionalSourceCount && additionalSourceCount > 0 ? (
-                <Text className="text-xs text-neutral-2">
-                  {" "}
-                  +{additionalSourceCount} more
-                </Text>
-              ) : null}
+            </Pressable>
+          ))
+        )}
+        {!isOwnEvent && remainingUsersCount > 0 && (
+          <Pressable
+            onPress={() => setShowModal(true)}
+            hitSlop={{ top: 8, bottom: 8, left: 4, right: 4 }}
+          >
+            <View className="rounded-full bg-interactive-3 px-1.5 py-0.5">
+              <Text className="text-xs font-medium text-interactive-1">
+                +{remainingUsersCount}
+              </Text>
             </View>
-          ) : (
-            <>
-              {displayUsers.map((user, index) =>
-                renderTappableName(
-                  user,
-                  index === displayUsers.length - 1 && remainingCount === 0,
-                ),
-              )}
-              {remainingCount > 0 && (
-                <Pressable
-                  onPress={() => setIsExpanded(true)}
-                  hitSlop={{ top: 8, bottom: 8, left: 4, right: 4 }}
-                >
-                  <Text className="text-xs text-interactive-1">
-                    +{remainingCount} more
-                  </Text>
-                </Pressable>
-              )}
-              {sourceListName ? (
-                <View className="flex-row items-center">
-                  <Text className="text-xs text-neutral-2"> via </Text>
-                  <List size={11} color="#5A32FB" />
+          </Pressable>
+        )}
+        {hasAnyListInfo && (
+          <>
+            <Text className="text-xs text-neutral-2">{listConnector}</Text>
+            {sourceListSlug ? (
+              <Pressable
+                onPress={handleListPress}
+                hitSlop={{ top: 8, bottom: 8, left: 4, right: 4 }}
+                accessibilityLabel={
+                  sourceListName ? `Open list ${sourceListName}` : "Open list"
+                }
+                className="flex-row items-center gap-1"
+              >
+                <List size={13} color="#5A32FB" />
+                {sourceListName ? (
                   <Text className="text-xs font-semibold text-interactive-1">
-                    {" "}
                     {sourceListName}
                   </Text>
-                  {additionalSourceCount && additionalSourceCount > 0 ? (
-                    <Text className="text-xs text-neutral-2">
-                      {" "}
-                      +{additionalSourceCount} more
-                    </Text>
-                  ) : null}
+                ) : null}
+              </Pressable>
+            ) : (
+              <View className="flex-row items-center gap-1">
+                <List size={13} color="#5A32FB" />
+                {sourceListName ? (
+                  <Text className="text-xs text-neutral-2">
+                    {sourceListName}
+                  </Text>
+                ) : null}
+              </View>
+            )}
+            {remainingListsCount > 0 && (
+              <Pressable
+                onPress={() => setShowModal(true)}
+                hitSlop={{ top: 8, bottom: 8, left: 4, right: 4 }}
+              >
+                <View className="rounded-full bg-interactive-3 px-1.5 py-0.5">
+                  <Text className="text-xs font-medium text-interactive-1">
+                    +{remainingListsCount}
+                  </Text>
                 </View>
-              ) : null}
-            </>
-          )}
-        </View>
+              </Pressable>
+            )}
+          </>
+        )}
       </View>
-    );
-  }
 
-  // Expanded view - show all users in a vertical list
-  return (
-    <View className="mx-auto mt-1">
-      <TouchableOpacity
-        onPress={() => setIsExpanded(false)}
-        className="mb-2 items-center"
-        activeOpacity={0.7}
-      >
-        <Text className="text-xs text-interactive-1">Hide</Text>
-      </TouchableOpacity>
-      <View className="space-y-2">
-        {allUsers.map((user) => (
-          <TouchableOpacity
-            key={user.id}
-            onPress={() => handleUserPress(user)}
-            className="flex-row items-center py-1"
-            activeOpacity={0.7}
-          >
-            <UserProfileFlair username={user.username} size="xs">
-              {user.userImage ? (
-                <ExpoImage
-                  source={{ uri: user.userImage }}
-                  style={{
-                    width: avatarSize,
-                    height: avatarSize,
-                    borderRadius: 9999,
-                    borderWidth: 2,
-                    borderColor: "white",
-                  }}
-                  contentFit="cover"
-                  contentPosition="center"
-                  cachePolicy="disk"
-                  transition={100}
-                  recyclingKey={`${eventId}-saver-expanded-${user.id}`}
-                />
-              ) : (
-                <View
-                  style={{
-                    width: avatarSize,
-                    height: avatarSize,
-                    borderRadius: 9999,
-                    borderWidth: 2,
-                    borderColor: "white",
-                    backgroundColor: "#E0D9FF",
-                    alignItems: "center",
-                    justifyContent: "center",
-                  }}
-                >
-                  <User size={avatarSize * 0.6} color="#627496" />
-                </View>
-              )}
-            </UserProfileFlair>
-            <Text className="ml-2 text-xs text-neutral-2">
-              {user.displayName || user.username}
-            </Text>
-          </TouchableOpacity>
-        ))}
-      </View>
-    </View>
+      <SavedByModal
+        visible={showModal}
+        onClose={() => setShowModal(false)}
+        creator={creator}
+        savers={savers}
+        lists={lists ?? []}
+        currentUserId={currentUserId}
+      />
+    </>
   );
 }
 
@@ -336,6 +282,7 @@ interface UserEventListItemProps {
   primaryAction?: "addToCalendar" | "save";
   source?: string;
   sourceListName?: string;
+  sourceListSlug?: string;
   additionalSourceCount?: number;
 }
 
@@ -353,6 +300,7 @@ export function UserEventListItem(props: UserEventListItemProps) {
     primaryAction = "addToCalendar",
     source,
     sourceListName,
+    sourceListSlug,
     additionalSourceCount,
   } = props;
   const { fontScale } = useWindowDimensions();
@@ -422,6 +370,8 @@ export function UserEventListItem(props: UserEventListItemProps) {
 
   const { user: currentUser } = useUser();
   const eventUser = event.user;
+  const [showFallbackSavedByModal, setShowFallbackSavedByModal] =
+    useState(false);
 
   // Prefetch the full-size image for the detail screen so it loads instantly
   useEffect(() => {
@@ -747,24 +697,68 @@ export function UserEventListItem(props: UserEventListItemProps) {
               eventId={event.id}
               currentUserId={currentUser?.id}
               sourceListName={sourceListName}
+              sourceListSlug={sourceListSlug}
               additionalSourceCount={additionalSourceCount}
+              lists={(event as { lists?: Doc<"lists">[] }).lists}
             />
-          ) : sourceListName ? (
-            <View className="mx-auto mt-1 flex-row items-center">
-              <Text className="text-xs text-neutral-2">via </Text>
-              <List size={11} color="#5A32FB" />
-              <Text className="text-xs font-semibold text-interactive-1">
-                {" "}
-                {sourceListName}
-              </Text>
+          ) : sourceListSlug ||
+            sourceListName ||
+            (additionalSourceCount ?? 0) > 0 ? (
+            <View className="mx-auto mt-1 flex-row items-center gap-1">
+              <Text className="text-xs text-neutral-2">via</Text>
+              {sourceListSlug ? (
+                <Pressable
+                  onPress={() => router.push(`/list/${sourceListSlug}`)}
+                  hitSlop={{ top: 8, bottom: 8, left: 4, right: 4 }}
+                  accessibilityLabel={
+                    sourceListName ? `Open list ${sourceListName}` : "Open list"
+                  }
+                  className="flex-row items-center gap-1"
+                >
+                  <List size={13} color="#5A32FB" />
+                  {sourceListName ? (
+                    <Text className="text-xs font-semibold text-interactive-1">
+                      {sourceListName}
+                    </Text>
+                  ) : null}
+                </Pressable>
+              ) : (
+                <View className="flex-row items-center gap-1">
+                  <List size={13} color="#5A32FB" />
+                  {sourceListName ? (
+                    <Text className="text-xs text-neutral-2">
+                      {sourceListName}
+                    </Text>
+                  ) : null}
+                </View>
+              )}
               {additionalSourceCount && additionalSourceCount > 0 ? (
-                <Text className="text-xs text-neutral-2">
-                  {" "}
-                  +{additionalSourceCount} more
-                </Text>
+                <Pressable
+                  onPress={() => setShowFallbackSavedByModal(true)}
+                  hitSlop={{ top: 8, bottom: 8, left: 4, right: 4 }}
+                >
+                  <View className="rounded-full bg-interactive-3 px-1.5 py-0.5">
+                    <Text className="text-xs font-medium text-interactive-1">
+                      +{additionalSourceCount}
+                    </Text>
+                  </View>
+                </Pressable>
               ) : null}
             </View>
           ) : null}
+          <SavedByModal
+            visible={showFallbackSavedByModal}
+            onClose={() => setShowFallbackSavedByModal(false)}
+            creator={{
+              id: eventUser.id,
+              username: eventUser.username,
+              displayName: eventUser.displayName,
+              userImage: eventUser.userImage,
+            }}
+            savers={[]}
+            lists={(event as { lists?: Doc<"lists">[] }).lists ?? []}
+            currentUserId={currentUser?.id}
+          />
           <View className="absolute left-0 right-0 top-0 z-20 flex flex-row items-center justify-center space-x-2">
             {isRecent && (
               <View
@@ -1241,6 +1235,11 @@ export default function UserEventsList(props: UserEventsListProps) {
         // Source attribution from feed entry
         const sourceListName = (eventData as { sourceListName?: string })
           .sourceListName;
+        const sourceListSlug = (eventData as { sourceListSlug?: string })
+          .sourceListSlug;
+        const additionalSourceCount = (
+          eventData as { additionalSourceCount?: number }
+        ).additionalSourceCount;
 
         return (
           <UserEventListItem
@@ -1259,6 +1258,8 @@ export default function UserEventsList(props: UserEventsListProps) {
             primaryAction={primaryAction}
             source={source}
             sourceListName={sourceListName}
+            sourceListSlug={sourceListSlug}
+            additionalSourceCount={additionalSourceCount}
           />
         );
       }}

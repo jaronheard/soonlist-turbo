@@ -261,7 +261,7 @@ function FollowingFeedContent() {
         ...event,
         comments: [],
         eventToLists: [],
-        lists: [],
+        lists: event.lists ?? [],
       }));
   }, [events, stableTimestamp, selectedSegment]);
 

@@ -11,7 +11,8 @@ import { api } from "@soonlist/backend/convex/_generated/api";
 import { Skeleton } from "@soonlist/ui/skeleton";
 
 import { EventPage } from "~/components/EventDisplays";
-import { OpenInAppBanner } from "./OpenInAppBanner";
+import { OpenInAppBanner } from "~/components/OpenInAppBanner";
+import { createDeepLink } from "~/lib/urlScheme";
 
 function normalizePublicMetadata(value: unknown): User["publicMetadata"] {
   return (value ?? null) as User["publicMetadata"];
@@ -48,11 +49,13 @@ export default function EventPageClient({ eventId }: { eventId: string }) {
     window.scrollTo(0, 0);
   }, [eventId]);
 
+  const deepLink = createDeepLink(`event/${eventId}`);
+
   // Loading state - useQuery returns undefined while loading
   if (event === undefined) {
     return (
       <div className="flex flex-col gap-6">
-        <OpenInAppBanner eventId={eventId} />
+        <OpenInAppBanner deepLink={deepLink} />
         {/* Event image skeleton */}
         <Skeleton className="aspect-[9/16] w-full max-w-md rounded-2xl" />
         {/* Event details skeleton */}
@@ -82,7 +85,7 @@ export default function EventPageClient({ eventId }: { eventId: string }) {
 
   return (
     <>
-      <OpenInAppBanner eventId={eventId} />
+      <OpenInAppBanner deepLink={deepLink} />
       <EventPage
         user={user}
         eventFollows={event.eventFollows ?? []}
