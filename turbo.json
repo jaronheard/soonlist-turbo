@@ -38,7 +38,7 @@
     "STRIPE_WEBHOOK_SECRET"
   ],
   "globalPassThroughEnv": ["COREPACK_HOME"],
-  "ui": "stream",
+  "ui": "tui",
   "tasks": {
     "topo": {
       "dependsOn": ["^topo"]
