@@ -12,6 +12,7 @@ import {
 } from "./_generated/server";
 import { userFeedsAggregate } from "./aggregates";
 import { enrichEventsAndFilterNulls, getEventById } from "./model/events";
+import { getViewableListIds } from "./model/lists";
 
 // Helper function to get the current user ID from auth
 async function getUserId(ctx: QueryCtx): Promise<string | null> {
@@ -20,58 +21,6 @@ async function getUserId(ctx: QueryCtx): Promise<string | null> {
     return null;
   }
   return identity.subject;
-}
-
-// Helper: determine whether the current viewer can see a list. Mirrors the
-// access rules used elsewhere (see lists.checkListAccess and
-// feedHelpers.canUserViewListForFeed) — public/unlisted lists are visible to
-// anyone, private lists only to their owner or to a member.
-//
-// IMPORTANT: This is the single source of truth for what lists a viewer may
-// know about. The result is used to (a) strip private-unviewable lists from
-// `event.lists` before returning it to the client, and (b) compute the
-// `additionalSourceCount` badge. Both must operate on the same set so the
-// badge count and the "Saved by" modal list stay in sync.
-async function getViewableListIds(
-  ctx: QueryCtx,
-  lists: { id: string; userId: string; visibility: string }[],
-  viewerId: string | null,
-): Promise<Set<string>> {
-  const viewableIds = new Set<string>();
-  const privateListsToCheck: string[] = [];
-
-  for (const list of lists) {
-    if (list.visibility === "public" || list.visibility === "unlisted") {
-      viewableIds.add(list.id);
-      continue;
-    }
-    // Private list — viewer must be owner or a member to see it.
-    if (viewerId && list.userId === viewerId) {
-      viewableIds.add(list.id);
-      continue;
-    }
-    if (viewerId) {
-      privateListsToCheck.push(list.id);
-    }
-  }
-
-  if (viewerId && privateListsToCheck.length > 0) {
-    const memberships = await Promise.all(
-      privateListsToCheck.map((listId) =>
-        ctx.db
-          .query("listMembers")
-          .withIndex("by_list_and_user", (q) =>
-            q.eq("listId", listId).eq("userId", viewerId),
-          )
-          .first(),
-      ),
-    );
-    privateListsToCheck.forEach((listId, i) => {
-      if (memberships[i]) viewableIds.add(listId);
-    });
-  }
-
-  return viewableIds;
 }
 
 // Helper to batch-resolve sourceListId → list details (name, slug, and

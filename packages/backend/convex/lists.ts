@@ -12,6 +12,7 @@ import {
 } from "./_generated/server";
 import { listFollowsAggregate } from "./aggregates";
 import { enrichEventsAndFilterNulls } from "./model/events";
+import { getViewableListIds } from "./model/lists";
 import { generatePublicId } from "./utils";
 
 type EnrichedEvent = Awaited<
@@ -1219,9 +1220,26 @@ export const getEventsForList = query({
 
     const enrichedEvents = await enrichEventsAndFilterNulls(ctx, visibleEvents);
 
+    // Strip private-unviewable lists from each event.lists before returning.
+    // enrichEventsAndFilterNulls hydrates event.lists with ALL lists the
+    // event belongs to, including ones this viewer can't see. The client
+    // (SavedByModal) trusts the server's filtering, so we must enforce
+    // visibility here — same contract as queryFeed/queryGroupedFeed in
+    // feeds.ts.
+    const allListsAcrossEvents = enrichedEvents.flatMap((e) => e.lists ?? []);
+    const viewableListIds = await getViewableListIds(
+      ctx,
+      allListsAcrossEvents,
+      viewerId,
+    );
+    const filteredEvents = enrichedEvents.map((event) => ({
+      ...event,
+      lists: (event.lists ?? []).filter((l) => viewableListIds.has(l.id)),
+    }));
+
     return {
       ...eventToLists,
-      page: enrichedEvents,
+      page: filteredEvents,
     };
   },
 });
