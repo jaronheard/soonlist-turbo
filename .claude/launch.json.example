@@ -1,0 +1,17 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "dev:no-expo",
+      "runtimeExecutable": "pnpm",
+      "runtimeArgs": ["dev:no-expo"],
+      "port": 3000
+    },
+    {
+      "name": "dev:expo",
+      "runtimeExecutable": "pnpm",
+      "runtimeArgs": ["dev:expo"],
+      "port": 8081
+    }
+  ]
+}
