@@ -771,7 +771,13 @@ export const getBySlug = query({
         }
       : null;
 
-    if (list.visibility === "public" || list.visibility === "unlisted") {
+    // Use the same access rules as the rest of the backend so owners and
+    // members of a private list can still resolve its detail page (used by
+    // the saver-attribution flow which deep-links to `/list/[slug]`).
+    const viewerId = await getUserId(ctx);
+    const accessResult = await checkListAccess(ctx, list.id, viewerId);
+
+    if (accessResult.status === "ok") {
       const contributors = await ctx.db
         .query("listMembers")
         .withIndex("by_list_and_role", (q) =>
@@ -1184,8 +1190,11 @@ export const getEventsForList = query({
       return emptyResults();
     }
 
-    // Only allow access to public/unlisted lists
-    if (list.visibility === "private") {
+    // Private lists are still viewable by their owner or members — mirror
+    // getBySlug / checkListAccess so authorized viewers see the events.
+    const viewerId = await getUserId(ctx);
+    const accessResult = await checkListAccess(ctx, list.id, viewerId);
+    if (accessResult.status !== "ok") {
       return emptyResults();
     }
 

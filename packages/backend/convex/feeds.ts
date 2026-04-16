@@ -26,6 +26,12 @@ async function getUserId(ctx: QueryCtx): Promise<string | null> {
 // access rules used elsewhere (see lists.checkListAccess and
 // feedHelpers.canUserViewListForFeed) — public/unlisted lists are visible to
 // anyone, private lists only to their owner or to a member.
+//
+// IMPORTANT: This is the single source of truth for what lists a viewer may
+// know about. The result is used to (a) strip private-unviewable lists from
+// `event.lists` before returning it to the client, and (b) compute the
+// `additionalSourceCount` badge. Both must operate on the same set so the
+// badge count and the "Saved by" modal list stay in sync.
 async function getViewableListIds(
   ctx: QueryCtx,
   lists: { id: string; userId: string; visibility: string }[],
@@ -155,6 +161,16 @@ async function queryFeed(
         viewerId,
       );
 
+      // Strip private-unviewable lists from `event.lists` before sending to
+      // the client. The "Saved by" modal (SavedByModal) renders this array
+      // directly, so any private list that leaks here leaks its name/slug to
+      // viewers who can see the event but not the list. System/personal
+      // lists are left in place — those are hidden client-side and are not a
+      // privacy concern; they can still be useful for other consumers.
+      const viewerFilteredLists = (event.lists ?? []).filter((l) =>
+        viewableListIds.has(l.id),
+      );
+
       // Gate the primary attribution: if the viewer cannot see the source
       // list, drop its name/slug so we don't leak metadata.
       const sourceListDetails = feedEntry.sourceListId
@@ -166,18 +182,16 @@ async function queryFeed(
         viewableListIds.has(feedEntry.sourceListId);
 
       // Count other non-system lists this event belongs to, excluding the
-      // source list and any list the viewer cannot see. Personal/system lists
-      // are hidden so viewers don't see a stray +1 for the creator's
-      // auto-generated personal list, and private lists they don't have
-      // access to are hidden to avoid leaking membership metadata.
-      const additionalSourceCount = (event.lists ?? []).filter(
-        (l) =>
-          !l.isSystemList &&
-          l.id !== feedEntry.sourceListId &&
-          viewableListIds.has(l.id),
+      // source list. This runs against `viewerFilteredLists` so the +N badge
+      // count matches the list of items SavedByModal will render (which
+      // further drops system/personal lists client-side). Keeping the two
+      // filters in lockstep prevents the "+N" badge ≠ modal-length mismatch.
+      const additionalSourceCount = viewerFilteredLists.filter(
+        (l) => !l.isSystemList && l.id !== feedEntry.sourceListId,
       ).length;
       return {
         ...event,
+        lists: viewerFilteredLists,
         sourceListId: sourceListVisible ? feedEntry.sourceListId : undefined,
         sourceListName: sourceListVisible ? sourceListDetails.name : undefined,
         sourceListSlug: sourceListVisible ? sourceListDetails.slug : undefined,
@@ -260,6 +274,14 @@ async function queryGroupedFeed(
         viewerId,
       );
 
+      // Strip private-unviewable lists from `event.lists` before sending to
+      // the client. See matching note in queryFeed — both the "Saved by"
+      // modal and the +N badge operate on this single pre-filtered set, so
+      // they can never disagree.
+      const viewerFilteredLists = (event.lists ?? []).filter((l) =>
+        viewableListIds.has(l.id),
+      );
+
       // Gate the primary attribution: if the viewer cannot see the source
       // list, drop its name/slug so we don't leak metadata.
       const sourceListDetails = sourceListId
@@ -270,18 +292,15 @@ async function queryGroupedFeed(
         !!sourceListId &&
         viewableListIds.has(sourceListId);
 
-      // Count other non-system lists this event belongs to, excluding the
-      // source list and any list the viewer cannot see. Personal/system lists
-      // are hidden so viewers don't see a stray +1 for the creator's
-      // auto-generated personal list, and private lists they don't have
-      // access to are hidden to avoid leaking membership metadata.
-      const additionalSourceCount = (event.lists ?? []).filter(
-        (l) =>
-          !l.isSystemList && l.id !== sourceListId && viewableListIds.has(l.id),
+      // Count other non-system lists, excluding the source list. Operates on
+      // the viewer-filtered list so the badge count equals what the modal
+      // will render (modal further drops system/personal lists client-side).
+      const additionalSourceCount = viewerFilteredLists.filter(
+        (l) => !l.isSystemList && l.id !== sourceListId,
       ).length;
 
       return {
-        event,
+        event: { ...event, lists: viewerFilteredLists },
         similarEventsCount: groupEntry.similarEventsCount,
         similarityGroupId: groupEntry.similarityGroupId,
         sourceListId: sourceListVisible ? sourceListId : undefined,

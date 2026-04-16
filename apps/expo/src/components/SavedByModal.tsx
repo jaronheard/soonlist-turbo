@@ -44,12 +44,16 @@ export function SavedByModal({
   }
 
   // Hide system/personal lists from the viewer — those are implementation
-  // details, not meaningful lists users browse to. Also hide private lists
-  // so a viewer who can see the event but not the list cannot learn the
-  // private list's name or slug from this modal.
-  const visibleLists = lists.filter(
-    (list) => !list.isSystemList && list.visibility !== "private",
-  );
+  // details, not meaningful lists users browse to.
+  //
+  // Private-list access is enforced on the SERVER (see feeds.ts
+  // `queryFeed`/`queryGroupedFeed`, which filter `event.lists` through
+  // `getViewableListIds`). Do NOT re-add a blanket `visibility !== "private"`
+  // filter here: that would hide private lists the viewer is the owner of or
+  // a member of, and — critically — it would desync this modal from the +N
+  // attribution badge (which is computed server-side on the same viewer-
+  // filtered set), showing "+1" with no matching entry in the modal.
+  const visibleLists = lists.filter((list) => !list.isSystemList);
 
   const handleUserPress = (user: UserForDisplay) => {
     onClose();
