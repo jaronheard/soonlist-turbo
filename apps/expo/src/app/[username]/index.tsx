@@ -1,10 +1,6 @@
-import React, { useCallback, useEffect, useMemo, useState } from "react";
+import React, { useCallback, useMemo } from "react";
 import {
   ActivityIndicator,
-  Modal,
-  Platform,
-  Pressable,
-  ScrollView,
   Text,
   TouchableOpacity,
   View,
@@ -16,18 +12,14 @@ import { useConvexAuth, useMutation, useQuery } from "convex/react";
 import type { Doc } from "@soonlist/backend/convex/_generated/dataModel";
 import { api } from "@soonlist/backend/convex/_generated/api";
 
-import { Check, User } from "~/components/icons";
+import { User } from "~/components/icons";
 import SaveShareButton from "~/components/SaveShareButton";
 import UserEventsList from "~/components/UserEventsList";
 import { UserProfileFlair } from "~/components/UserProfileFlair";
 import { useStablePaginatedQuery } from "~/hooks/useStableQuery";
 import { useStableTimestamp } from "~/store";
 import { logError } from "~/utils/errorLogging";
-import { hapticSuccess, toast } from "~/utils/feedback";
-
-function isPersonalSystemList(list: Doc<"lists">): boolean {
-  return list.isSystemList === true && list.systemListType === "personal";
-}
+import { hapticLight, toast } from "~/utils/feedback";
 
 function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === "object" && value !== null && !Array.isArray(value);
@@ -47,260 +39,11 @@ function profileLocationFromUser(user: {
   return null;
 }
 
-const sceneCardShadow =
-  Platform.OS === "ios"
-    ? {
-        shadowColor: "#5A32FB",
-        shadowOffset: { width: 0, height: 6 },
-        shadowOpacity: 0.07,
-        shadowRadius: 14,
-      }
-    : { elevation: 2 };
-
-/** Three tilted tiles; soft edges, no harsh strokes. */
-function ScenePreviewThreeUp({
-  imageUris,
-  align = "start",
-}: {
-  imageUris: (string | null)[];
-  align?: "start" | "center";
-}) {
-  const slots: (string | null)[] = [0, 1, 2].map((i) => imageUris[i] ?? null);
-  return (
-    <View
-      className={`flex-row items-center py-1 ${align === "center" ? "justify-center" : "justify-start"}`}
-    >
-      {slots.map((uri, i) => (
-        <View
-          key={i}
-          className="overflow-hidden rounded-lg bg-neutral-4"
-          style={{
-            width: 56,
-            height: 72,
-            marginLeft: i > 0 ? -14 : 0,
-            transform: [{ rotate: `${-8 + i * 8}deg` }],
-            zIndex: 3 - i,
-            ...sceneCardShadow,
-          }}
-        >
-          {uri ? (
-            <Image
-              source={{ uri }}
-              style={{ width: "100%", height: "100%" }}
-              contentFit="cover"
-              cachePolicy="disk"
-            />
-          ) : (
-            <View className="h-full w-full bg-neutral-4" />
-          )}
-        </View>
-      ))}
-    </View>
-  );
-}
-
-type ListWithCount = Doc<"lists"> & { followerCount: number };
-
-function OptOutCheckboxVisual({ checked }: { checked: boolean }) {
-  return (
-    <View
-      accessibilityElementsHidden
-      className={`h-6 w-6 items-center justify-center rounded-md ${
-        checked ? "bg-interactive-1" : "border-2 border-neutral-4 bg-white"
-      }`}
-    >
-      {checked ? <Check size={14} color="#FFFFFF" strokeWidth={3} /> : null}
-    </View>
-  );
-}
-
-/** Compact centered sheet: Follow all + checkboxes to opt out (X-style). */
-function FollowSceneModal({
-  visible,
-  onClose,
-  packLists,
-  followingIds,
-  followListMutation,
-}: {
-  visible: boolean;
-  onClose: () => void;
-  packLists: ListWithCount[];
-  followingIds: Set<string>;
-  followListMutation: (args: { listId: string }) => Promise<unknown>;
-}) {
-  const [includedIds, setIncludedIds] = useState<Set<string>>(new Set());
-  const [isSubmitting, setIsSubmitting] = useState(false);
-
-  useEffect(() => {
-    if (!visible) return;
-    setIncludedIds(new Set(packLists.map((l) => l.id)));
-  }, [visible, packLists]);
-
-  const toggleIncluded = useCallback((listId: string) => {
-    setIncludedIds((prev) => {
-      const next = new Set(prev);
-      if (next.has(listId)) next.delete(listId);
-      else next.add(listId);
-      return next;
-    });
-  }, []);
-
-  const handleFollowAll = useCallback(async () => {
-    const toFollow = packLists.filter(
-      (l) => includedIds.has(l.id) && !followingIds.has(l.id),
-    );
-    if (toFollow.length === 0) {
-      const anySelected = packLists.some((l) => includedIds.has(l.id));
-      if (!anySelected) {
-        toast.warning("Select at least one list");
-      } else {
-        void hapticSuccess();
-      }
-      onClose();
-      return;
-    }
-    setIsSubmitting(true);
-    try {
-      for (const l of toFollow) {
-        await followListMutation({ listId: l.id });
-      }
-      void hapticSuccess();
-      onClose();
-    } catch (error) {
-      logError("Follow scene batch", error);
-      toast.error("Couldn’t complete follows");
-    } finally {
-      setIsSubmitting(false);
-    }
-  }, [packLists, includedIds, followingIds, followListMutation, onClose]);
-
-  if (packLists.length === 0) {
-    return (
-      <Modal
-        visible={visible}
-        transparent
-        animationType="fade"
-        onRequestClose={onClose}
-      >
-        <Pressable
-          className="flex-1 items-center justify-center bg-black/35 px-6"
-          onPress={onClose}
-        >
-          <Pressable
-            className="w-full max-w-sm rounded-3xl bg-white px-5 py-5"
-            onPress={(e) => e.stopPropagation()}
-            style={sceneCardShadow}
-          >
-            <Text className="text-center text-base font-semibold text-neutral-1">
-              No lists in this scene yet
-            </Text>
-            <TouchableOpacity
-              onPress={onClose}
-              className="mt-4 items-center rounded-full bg-neutral-4 py-3"
-              activeOpacity={0.8}
-            >
-              <Text className="text-sm font-semibold text-neutral-2">
-                Close
-              </Text>
-            </TouchableOpacity>
-          </Pressable>
-        </Pressable>
-      </Modal>
-    );
-  }
-
-  return (
-    <Modal
-      visible={visible}
-      transparent
-      animationType="fade"
-      onRequestClose={onClose}
-    >
-      <Pressable
-        className="flex-1 items-center justify-center bg-black/35 px-5"
-        onPress={onClose}
-      >
-        <Pressable
-          className="w-full max-w-sm rounded-3xl bg-white px-5 py-5"
-          onPress={(e) => e.stopPropagation()}
-          style={sceneCardShadow}
-        >
-          <Text className="text-lg font-bold text-neutral-1">Follow scene</Text>
-          <Text className="mt-1 text-sm leading-5 text-neutral-2">
-            You’ll follow every list below. Uncheck any you want to skip.
-          </Text>
-
-          <ScrollView
-            className="mt-4 max-h-64"
-            keyboardShouldPersistTaps="handled"
-            showsVerticalScrollIndicator={false}
-          >
-            {packLists.map((list) => {
-              const included = includedIds.has(list.id);
-              return (
-                <TouchableOpacity
-                  key={list.id}
-                  className="mb-3 flex-row items-center gap-3 py-1"
-                  onPress={() => toggleIncluded(list.id)}
-                  activeOpacity={0.7}
-                  accessibilityRole="checkbox"
-                  accessibilityState={{ checked: included }}
-                >
-                  <OptOutCheckboxVisual checked={included} />
-                  <View className="min-w-0 flex-1">
-                    <Text
-                      className="text-base font-semibold text-neutral-1"
-                      numberOfLines={2}
-                    >
-                      {list.name}
-                    </Text>
-                    {followingIds.has(list.id) ? (
-                      <Text className="text-xs text-neutral-2">
-                        Already following
-                      </Text>
-                    ) : null}
-                  </View>
-                </TouchableOpacity>
-              );
-            })}
-          </ScrollView>
-
-          <TouchableOpacity
-            onPress={() => void handleFollowAll()}
-            disabled={isSubmitting}
-            className="mt-2 items-center rounded-full bg-interactive-1 py-3.5"
-            activeOpacity={0.85}
-          >
-            {isSubmitting ? (
-              <ActivityIndicator color="#FFFFFF" />
-            ) : (
-              <Text className="text-base font-semibold text-white">
-                Follow all
-              </Text>
-            )}
-          </TouchableOpacity>
-
-          <TouchableOpacity
-            onPress={onClose}
-            className="mt-2 items-center py-2"
-            activeOpacity={0.7}
-          >
-            <Text className="text-base font-semibold text-interactive-1">
-              Cancel
-            </Text>
-          </TouchableOpacity>
-        </Pressable>
-      </Pressable>
-    </Modal>
-  );
-}
-
 export default function UserProfilePage() {
   const { username } = useLocalSearchParams<{ username: string }>();
   const stableTimestamp = useStableTimestamp();
   const router = useRouter();
   const { isAuthenticated } = useConvexAuth();
-  const [scenePackOpen, setScenePackOpen] = useState(false);
 
   const targetUser = useQuery(
     api.users.getByUsername,
@@ -309,17 +52,34 @@ export default function UserProfilePage() {
 
   const currentUser = useQuery(api.users.getCurrentUser);
 
-  const userLists = useQuery(
-    api.lists.getListsForUser,
-    targetUser?.id ? { userId: targetUser.id } : "skip",
-  );
-
   const personalList = useQuery(
     api.lists.getPersonalListForUser,
     targetUser?.id ? { userId: targetUser.id } : "skip",
   );
 
-  const followListMutation = useMutation(api.lists.followList);
+  const followListMutation = useMutation(
+    api.lists.followList,
+  ).withOptimisticUpdate((localStore, args) => {
+    const current = localStore.getQuery(api.lists.getFollowedLists, {});
+    if (current === undefined || !personalList) return;
+    if (current.some((l) => l.id === args.listId)) return;
+    localStore.setQuery(api.lists.getFollowedLists, {}, [
+      ...current,
+      personalList,
+    ]);
+  });
+
+  const unfollowListMutation = useMutation(
+    api.lists.unfollowList,
+  ).withOptimisticUpdate((localStore, args) => {
+    const current = localStore.getQuery(api.lists.getFollowedLists, {});
+    if (current === undefined) return;
+    localStore.setQuery(
+      api.lists.getFollowedLists,
+      {},
+      current.filter((l) => l.id !== args.listId),
+    );
+  });
 
   const savedEventIdsQuery = useQuery(
     api.events.getSavedIdsForUser,
@@ -355,41 +115,6 @@ export default function UserProfilePage() {
     });
   }, [events, stableTimestamp]);
 
-  const scenePreviewImageUris = useMemo((): (string | null)[] => {
-    const urls: string[] = [];
-    for (const e of filteredEvents) {
-      const url = e.image;
-      if (typeof url === "string" && url.length > 0) {
-        urls.push(url);
-        if (urls.length >= 3) break;
-      }
-    }
-    return [urls[0] ?? null, urls[1] ?? null, urls[2] ?? null];
-  }, [filteredEvents]);
-
-  const sceneLists = useMemo((): ListWithCount[] => {
-    if (!userLists) return [];
-    return userLists.filter((list) => !isPersonalSystemList(list));
-  }, [userLists]);
-
-  const personalListFollowerCount = useMemo(() => {
-    if (!personalList || !userLists) return 0;
-    const row = userLists.find((l) => l.id === personalList.id);
-    return row?.followerCount ?? 0;
-  }, [personalList, userLists]);
-
-  const packLists = useMemo((): ListWithCount[] => {
-    const out: ListWithCount[] = [];
-    if (personalList) {
-      out.push({
-        ...personalList,
-        followerCount: personalListFollowerCount,
-      });
-    }
-    out.push(...sceneLists);
-    return out;
-  }, [personalList, personalListFollowerCount, sceneLists]);
-
   const handleLoadMore = () => {
     if (status === "CanLoadMore") {
       loadMore(25);
@@ -405,14 +130,6 @@ export default function UserProfilePage() {
     [followedLists],
   );
 
-  const openScenePack = useCallback(() => {
-    if (!isAuthenticated) {
-      router.push("/(auth)/sign-in");
-      return;
-    }
-    setScenePackOpen(true);
-  }, [isAuthenticated, router]);
-
   const isUserLoading = targetUser === undefined;
   const userNotFound = targetUser === null;
   const isOwnProfile = currentUser?.id === targetUser?.id;
@@ -420,22 +137,32 @@ export default function UserProfilePage() {
   const screenTitle =
     targetUser?.displayName || targetUser?.username || "Profile";
 
-  const sceneSourceCount = sceneLists.length;
-  const moreEventsBeyondPreview = Math.max(0, filteredEvents.length - 3);
-  const sceneStatsLine = useMemo(() => {
-    const n = filteredEvents.length;
-    if (n === 0) {
-      return "No upcoming events in this feed yet.";
+  const isFollowingPersonalList = personalList
+    ? followingIds.has(personalList.id)
+    : false;
+
+  const handleFollowListPress = useCallback(() => {
+    if (!personalList) return;
+    if (!isAuthenticated) {
+      router.push("/(auth)/sign-in");
+      return;
     }
-    const sources =
-      sceneSourceCount > 0
-        ? `${sceneSourceCount} source${sceneSourceCount === 1 ? "" : "s"}`
-        : "their picks";
-    if (moreEventsBeyondPreview <= 0) {
-      return `${n} event${n === 1 ? "" : "s"} from ${sources}`;
-    }
-    return `${moreEventsBeyondPreview} more event${moreEventsBeyondPreview === 1 ? "" : "s"} from ${sources}`;
-  }, [filteredEvents.length, moreEventsBeyondPreview, sceneSourceCount]);
+    void hapticLight();
+    const run = isFollowingPersonalList
+      ? unfollowListMutation
+      : followListMutation;
+    run({ listId: personalList.id }).catch((error: unknown) => {
+      logError("Toggle follow personal list", error);
+      toast.error("Couldn't update follow");
+    });
+  }, [
+    personalList,
+    isAuthenticated,
+    isFollowingPersonalList,
+    followListMutation,
+    unfollowListMutation,
+    router,
+  ]);
 
   const listHeader = useMemo(() => {
     if (!targetUser) {
@@ -444,66 +171,14 @@ export default function UserProfilePage() {
     const upcomingCount = filteredEvents.length;
 
     return (
-      <>
-        <ProfileIdentityHeader
-          user={targetUser}
-          upcomingEventCount={upcomingCount}
-        />
-
-        <View className="px-4 pb-2">
-          <Text className="mb-1 text-base font-medium text-neutral-1">
-            {isOwnProfile ? "Your scene" : "Their scene"}
-          </Text>
-          <TouchableOpacity
-            onPress={
-              isOwnProfile
-                ? undefined
-                : packLists.length > 0
-                  ? openScenePack
-                  : undefined
-            }
-            disabled={isOwnProfile || packLists.length === 0}
-            activeOpacity={0.85}
-            accessibilityRole="button"
-            accessibilityLabel={`${isOwnProfile ? "Your" : "Their"} scene: follow lists`}
-          >
-            <View className="flex-row items-center gap-3">
-              <ScenePreviewThreeUp
-                imageUris={scenePreviewImageUris}
-                align="start"
-              />
-              <View className="min-w-0 flex-1">
-                <Text className="text-sm leading-5 text-neutral-2">
-                  {sceneStatsLine}
-                </Text>
-                {!isOwnProfile && packLists.length > 0 ? (
-                  <View className="mt-1.5 self-start rounded-full bg-interactive-1 px-4 py-1.5">
-                    <Text className="text-sm font-semibold text-white">
-                      Follow scene
-                    </Text>
-                  </View>
-                ) : null}
-              </View>
-            </View>
-          </TouchableOpacity>
-        </View>
-
-        <View className="px-4 pb-2">
-          <Text className="text-base font-medium text-neutral-1">
-            {isOwnProfile ? "From your Soonlist" : "From their Soonlist"}
-          </Text>
-        </View>
-      </>
+      <ProfileIdentityHeader
+        user={targetUser}
+        upcomingEventCount={upcomingCount}
+      />
     );
-  }, [
-    targetUser,
-    isOwnProfile,
-    scenePreviewImageUris,
-    sceneStatsLine,
-    openScenePack,
-    packLists.length,
-    filteredEvents.length,
-  ]);
+  }, [targetUser, filteredEvents.length]);
+
+  const renderListHeader = useCallback(() => listHeader, [listHeader]);
 
   if (isUserLoading) {
     return (
@@ -573,7 +248,21 @@ export default function UserProfilePage() {
           headerTitleStyle: {
             color: "#5A32FB",
           },
-          headerRight: () => null,
+          unstable_headerRightItems:
+            isOwnProfile || !personalList
+              ? undefined
+              : () => [
+                  {
+                    type: "custom",
+                    element: (
+                      <ProfileFollowHeaderButton
+                        isFollowing={isFollowingPersonalList}
+                        onPress={handleFollowListPress}
+                      />
+                    ),
+                    hidesSharedBackground: true,
+                  },
+                ],
         }}
       />
       <View className="flex-1 bg-interactive-3">
@@ -587,17 +276,8 @@ export default function UserProfilePage() {
           primaryAction={isOwnProfile ? "addToCalendar" : "save"}
           ActionButton={ProfileSaveShareButtonWrapper}
           savedEventIds={savedEventIds}
-          HeaderComponent={() => listHeader}
+          HeaderComponent={renderListHeader}
         />
-        {!isOwnProfile ? (
-          <FollowSceneModal
-            visible={scenePackOpen}
-            onClose={() => setScenePackOpen(false)}
-            packLists={packLists}
-            followingIds={followingIds}
-            followListMutation={followListMutation}
-          />
-        ) : null}
       </View>
     </>
   );
@@ -614,54 +294,72 @@ interface ProfileIdentityHeaderProps {
   upcomingEventCount: number;
 }
 
-/** Left-aligned identity row: avatar + metadata (matches My Soonlist list header rhythm). */
+function ProfileFollowHeaderButton({
+  isFollowing,
+  onPress,
+}: {
+  isFollowing: boolean;
+  onPress: () => void;
+}) {
+  return (
+    <TouchableOpacity
+      onPress={onPress}
+      activeOpacity={0.85}
+      accessibilityRole="button"
+      accessibilityLabel={isFollowing ? "Following list" : "Follow list"}
+      className={`rounded-full px-4 py-1.5 ${
+        isFollowing
+          ? "border border-interactive-1 bg-white"
+          : "bg-interactive-1"
+      }`}
+    >
+      <Text
+        className={`text-sm font-semibold ${
+          isFollowing ? "text-interactive-1" : "text-white"
+        }`}
+      >
+        {isFollowing ? "Following" : "Follow"}
+      </Text>
+    </TouchableOpacity>
+  );
+}
+
+/** Profile header: avatar stacked above identity text block. */
 function ProfileIdentityHeader({
   user,
   upcomingEventCount,
 }: ProfileIdentityHeaderProps) {
   const locationLine = profileLocationFromUser(user);
-  const displayName = user.displayName || user.username;
-  const showAndroidTitle = Platform.OS === "android";
 
   return (
-    <View className="px-4 pb-2">
-      <View className="flex-row items-center gap-3">
-        <UserProfileFlair username={user.username} size="lg">
-          {user.userImage ? (
-            <Image
-              source={{ uri: user.userImage }}
-              style={{ width: 56, height: 56, borderRadius: 28 }}
-              contentFit="cover"
-              cachePolicy="disk"
-            />
-          ) : (
-            <View className="h-14 w-14 items-center justify-center rounded-full bg-neutral-4">
-              <User size={28} color="#627496" />
-            </View>
-          )}
-        </UserProfileFlair>
-        <View className="min-w-0 flex-1">
-          {showAndroidTitle ? (
-            <Text
-              className="text-xl font-bold text-neutral-1"
-              numberOfLines={2}
-            >
-              {displayName}
-            </Text>
-          ) : null}
-          <Text
-            className={`text-sm text-neutral-2 ${showAndroidTitle ? "mt-0.5" : ""}`}
-          >
-            {upcomingEventCount}{" "}
-            {upcomingEventCount === 1 ? "upcoming event" : "upcoming events"}
+    <View className="items-start gap-3 px-4 pb-4 pt-2">
+      <UserProfileFlair username={user.username} size="lg">
+        {user.userImage ? (
+          <Image
+            source={{ uri: user.userImage }}
+            style={{ width: 80, height: 80, borderRadius: 40 }}
+            contentFit="cover"
+            cachePolicy="disk"
+          />
+        ) : (
+          <View className="h-20 w-20 items-center justify-center rounded-full bg-neutral-4">
+            <User size={40} color="#627496" />
+          </View>
+        )}
+      </UserProfileFlair>
+      <View className="w-full">
+        <Text className="text-xl font-bold text-neutral-1">
+          @{user.username}
+        </Text>
+        <Text className="text-sm text-neutral-2">
+          {upcomingEventCount}{" "}
+          {upcomingEventCount === 1 ? "upcoming event" : "upcoming events"}
+        </Text>
+        {locationLine ? (
+          <Text className="text-sm text-neutral-2" numberOfLines={1}>
+            {locationLine}
           </Text>
-          {locationLine ? (
-            <Text className="text-sm text-neutral-2" numberOfLines={1}>
-              {locationLine}
-            </Text>
-          ) : null}
-          <Text className="text-sm text-neutral-2">@{user.username}</Text>
-        </View>
+        ) : null}
       </View>
     </View>
   );
