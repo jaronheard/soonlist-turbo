@@ -146,6 +146,15 @@ function MyFeedContent() {
         comments: [],
         eventToLists: [],
         lists: group.event.lists ?? [],
+        // queryGroupedFeed returns source-list attribution at the group
+        // level, but UserEventsList reads these fields off `item.event`.
+        // Merge them in so the "via [List]" link and the "+N" badge render
+        // on the My Feed tab (same surface as the Following tab, which
+        // uses queryFeed where these fields already live at event level).
+        sourceListId: group.sourceListId,
+        sourceListName: group.sourceListName,
+        sourceListSlug: group.sourceListSlug,
+        additionalSourceCount: group.additionalSourceCount,
       },
       // Server-computed count (already shows just similar events, not including primary)
       similarEvents: Array(group.similarEventsCount).fill({
