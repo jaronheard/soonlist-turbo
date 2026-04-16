@@ -181,12 +181,13 @@ async function queryFeed(
         !!feedEntry.sourceListId &&
         viewableListIds.has(feedEntry.sourceListId);
 
-      // Count other non-system lists this event belongs to, excluding the
-      // source list (which is already shown inline on the card as "via
-      // [List]"). The client-side `SavedByModal` mirrors this exact filter
-      // set — drops system lists AND the source list — so `+N` on the card
-      // always matches the number of items rendered in the modal's Lists
-      // section. Do not change one side without changing the other.
+      // Count non-system lists this event belongs to BEYOND the source list
+      // (the source is already shown inline on the card as "via [List]", so
+      // the badge is intentionally labeled "+N additional"). The modal
+      // itself is a complete "Saved by" view and renders ALL non-system
+      // lists — including the source list — so modal length = N + 1 by
+      // design. Don't change this invariant without updating SavedByModal's
+      // `visibleLists` and the "+" prefix on the card badge together.
       const additionalSourceCount = viewerFilteredLists.filter(
         (l) => !l.isSystemList && l.id !== feedEntry.sourceListId,
       ).length;
@@ -293,10 +294,10 @@ async function queryGroupedFeed(
         !!sourceListId &&
         viewableListIds.has(sourceListId);
 
-      // Count other non-system lists, excluding the source list. See the
-      // matching note in `queryFeed` — `SavedByModal` applies the identical
-      // filter (drops system lists and the source list), so `+N` on the
-      // card always equals the rendered list count in the modal.
+      // Count non-system lists beyond the source list. See the matching note
+      // in `queryFeed` — the badge reads "+N additional" (source is shown
+      // inline on the card) and the modal renders the full set including
+      // the source, so modal length = N + 1 by design.
       const additionalSourceCount = viewerFilteredLists.filter(
         (l) => !l.isSystemList && l.id !== sourceListId,
       ).length;

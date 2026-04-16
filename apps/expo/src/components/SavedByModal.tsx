@@ -23,12 +23,6 @@ interface SavedByModalProps {
   savers: UserForDisplay[];
   lists: Doc<"lists">[];
   currentUserId?: string;
-  /**
-   * The source list already shown inline on the event card ("via [List]").
-   * Excluded from the modal's Lists section so the rendered count matches
-   * the "+N additional" badge semantic. When undefined, no exclusion runs.
-   */
-  sourceListId?: string;
 }
 
 export function SavedByModal({
@@ -38,7 +32,6 @@ export function SavedByModal({
   savers,
   lists,
   currentUserId,
-  sourceListId,
 }: SavedByModalProps) {
   const insets = useSafeAreaInsets();
 
@@ -50,22 +43,18 @@ export function SavedByModal({
     }
   }
 
-  // Filters applied to the Lists section:
-  // 1. Drop system/personal lists — implementation details, not browsable.
-  // 2. Drop the source list — it's already shown inline on the card as
-  //    "via [List]", and the "+N" badge on the card represents *additional*
-  //    lists beyond that one. Including it here would render N+1 items when
-  //    the badge says "+N", producing an off-by-one user-visible mismatch.
+  // Show every non-system list this event belongs to — including the source
+  // list that's shown inline on the card. This is a complete "Saved by" view,
+  // and the "+N" card badge intentionally counts *additional* lists beyond
+  // the source, so the modal length is N+1 by design.
   //
   // Private-list access is enforced on the SERVER (see feeds.ts
   // `queryFeed`/`queryGroupedFeed`, which filter `event.lists` through
   // `getViewableListIds`). Do NOT re-add a blanket `visibility !== "private"`
-  // filter here: that would hide private lists the viewer is the owner of or
-  // a member of. The server-side filter already guarantees we only receive
-  // lists the viewer can see.
-  const visibleLists = lists.filter(
-    (list) => !list.isSystemList && list.id !== sourceListId,
-  );
+  // filter here: the server already guarantees we only receive lists the
+  // viewer can see, and adding that filter would incorrectly hide private
+  // lists the viewer is the owner/member of.
+  const visibleLists = lists.filter((list) => !list.isSystemList);
 
   const handleUserPress = (user: UserForDisplay) => {
     onClose();
