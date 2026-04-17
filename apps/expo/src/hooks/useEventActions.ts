@@ -429,8 +429,13 @@ export function useEventSaveActions(
       });
       toast.show({
         message: "Couldn't save event",
-        // eslint-disable-next-line @typescript-eslint/no-use-before-define
-        action: { label: "Retry", onPress: () => void toggle() },
+        action: {
+          label: "Retry",
+          onPress: () => {
+            setIsSaved(true);
+            void runSave();
+          },
+        },
         variant: "error",
       });
       logError("Error saving event", error);
@@ -461,6 +466,7 @@ export function useEventSaveActions(
   }, [eventId, unfollowEventMutation, source, posthog, toast]);
 
   const toggle = useCallback(() => {
+    if (pendingRef.current) return;
     if (demoMode) {
       toast.show({
         message: "Demo mode: action disabled",
