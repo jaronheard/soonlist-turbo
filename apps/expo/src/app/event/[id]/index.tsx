@@ -41,10 +41,10 @@ import {
   Heart,
   Instagram,
   MapPinned,
+  ShareIcon,
   User,
 } from "~/components/icons";
 import LoadingSpinner from "~/components/LoadingSpinner";
-import ShareButton from "~/components/ShareButton";
 import { UserProfileFlair } from "~/components/UserProfileFlair";
 import { useEventActions, useEventSaveActions } from "~/hooks/useEventActions";
 import { useRevenueCat } from "~/providers/RevenueCatProvider";
@@ -167,9 +167,10 @@ function EventDetail({ id }: { id: string }) {
       ? event.eventFollows.some((follow) => follow.userId === currentUser.id)
       : false;
 
-  const { handleDelete, handleAddToCal } = useEventActions({
+  const { handleDelete, handleAddToCal, handleShare } = useEventActions({
     event,
     isSaved,
+    source: "event_detail",
   });
 
   // Handlers
@@ -216,7 +217,14 @@ function EventDetail({ id }: { id: string }) {
 
     return (
       <View className="flex-row items-center gap-2">
-        <ShareButton webPath={`/event/${event.id}`} />
+        <TouchableOpacity
+          onPress={handleShare}
+          accessibilityLabel="Share event"
+          accessibilityRole="button"
+          hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+        >
+          <ShareIcon size={24} color="#5A32FB" />
+        </TouchableOpacity>
         <EventMenu
           event={event}
           isOwner={isOwner}
@@ -227,7 +235,7 @@ function EventDetail({ id }: { id: string }) {
         />
       </View>
     );
-  }, [event, isSaved, currentUser?.id, handleDeleteAndRedirect]);
+  }, [event, isSaved, currentUser?.id, handleDeleteAndRedirect, handleShare]);
 
   // Early return if the 'id' is missing or invalid
   if (!id || typeof id !== "string") {
