@@ -329,7 +329,7 @@ catalogs:
       version: 3.38.6
     lefthook:
       specifier: ^2.1.5
-      version: 2.1.5
+      version: 2.1.6
     lucide-react:
       specifier: ^0.373.0
       version: 0.373.0
@@ -554,7 +554,7 @@ importers:
         version: 7.4.4
       lefthook:
         specifier: 'catalog:'
-        version: 2.1.5
+        version: 2.1.6
       prettier:
         specifier: 'catalog:'
         version: 3.7.4
@@ -1082,6 +1082,9 @@ importers:
       '@convex-dev/workpool':
         specifier: 'catalog:'
         version: 0.2.19(convex-helpers@0.1.109(convex@1.31.2(@clerk/clerk-react@5.59.3(react-dom@19.2.0(react@19.2.0))(react@19.2.0))(react@19.2.0))(react@19.2.0)(typescript@5.9.3)(zod@3.25.76))(convex@1.31.2(@clerk/clerk-react@5.59.3(react-dom@19.2.0(react@19.2.0))(react@19.2.0))(react@19.2.0))
+      '@js-temporal/polyfill':
+        specifier: 'catalog:'
+        version: 0.4.4
       '@soonlist/cal':
         specifier: workspace:*
         version: link:../cal
@@ -5196,12 +5199,11 @@ packages:
   '@xmldom/xmldom@0.7.13':
     resolution: {integrity: sha512-lm2GW5PkosIzccsaZIz7tp8cPADSIlIHWDFTR1N0SzfinhhYgeIQjFMz4rYzanCScr3DqQLeomUDArp6MWKm+g==}
     engines: {node: '>=10.0.0'}
-    deprecated: this version has critical issues, please update to the latest version
+    deprecated: this version is no longer supported, please update to at least 0.8.*
 
   '@xmldom/xmldom@0.8.11':
     resolution: {integrity: sha512-cQzWCtO6C8TQiYl1ruKNn2U6Ao4o4WBBcbL61yJl84x+j5sOWWFU9X7DpND8XZG3daDppSsigMdfAIl2upQBRw==}
     engines: {node: '>=10.0.0'}
-    deprecated: this version has critical issues, please update to the latest version
 
   '@xtuc/ieee754@1.2.0':
     resolution: {integrity: sha512-DX8nKgqcGwsc0eJSqYt5lwP4DH5FlHnmuWWBRy7X0NcaGR0ZtuyeESgMwTYVEtxmsNGY+qit4QYT/MIYTOTPeA==}
@@ -5582,7 +5584,7 @@ packages:
   basic-ftp@5.1.0:
     resolution: {integrity: sha512-RkaJzeJKDbaDWTIPiJwubyljaEPwpVWkm9Rt5h9Nd6h7tEXTJ3VB4qxdZBioV7JO5yLUaOKwz7vDOzlncUsegw==}
     engines: {node: '>=10.0.0'}
-    deprecated: Security vulnerability fixed in 5.2.1, please upgrade
+    deprecated: Security vulnerability fixed in 5.2.0, please upgrade
 
   better-opn@3.0.2:
     resolution: {integrity: sha512-aVNobHnJqLiUelTaHat9DZ1qM2w0C0Eym4LPI/3JxOnSokGVdsl1T1kN7TFvsEAD8G47A6VKQ0TVHqbBnYMJlQ==}
@@ -7877,58 +7879,58 @@ packages:
     resolution: {integrity: sha512-MbjN408fEndfiQXbFQ1vnd+1NoLDsnQW41410oQBXiyXDMYH5z505juWa4KUE1LqxRC7DgOgZDbKLxHIwm27hA==}
     engines: {node: '>=0.10'}
 
-  lefthook-darwin-arm64@2.1.5:
-    resolution: {integrity: sha512-VITTaw8PxxyE26gkZ8UcwIa5ZrWnKNRGLeeSrqri40cQdXvLTEoMq2tjjw7eiL9UcB0waRReDdzydevy9GOPUQ==}
+  lefthook-darwin-arm64@2.1.6:
+    resolution: {integrity: sha512-hyB7eeiX78BS66f70byTJacDLC/xV1vgMv9n+idFUsrM7J3Udd/ag9Ag5NP3t0eN0EqQqAtrNnt35EH01lxnRQ==}
     cpu: [arm64]
     os: [darwin]
 
-  lefthook-darwin-x64@2.1.5:
-    resolution: {integrity: sha512-AvtjYiW0BSGHBGrdvL313seUymrW9FxI+6JJwJ+ZSaa2sH81etrTB0wAwlH1L9VfFwK9+gWvatZBvLfF3L4fPw==}
+  lefthook-darwin-x64@2.1.6:
+    resolution: {integrity: sha512-5Ka6cFxiH83krt+OMRQtmS6zqoZR5SLXSudLjTbZA1c3ZqF0+dqkeb4XcB6plx6WR0GFizabuc6Bi3iXPIe1eQ==}
     cpu: [x64]
     os: [darwin]
 
-  lefthook-freebsd-arm64@2.1.5:
-    resolution: {integrity: sha512-mXjJwe8jKGWGiBYUxfQY1ab3Nn5NhafqT9q3KJz8m5joGGQj4JD0cbWxF1nVBLBWsDGbWZRZunTCMGcIScT2bQ==}
+  lefthook-freebsd-arm64@2.1.6:
+    resolution: {integrity: sha512-VswyOg5CVN3rMaOJ2HtnkltiMKgFHW/wouWxXsV8RxSa4tgWOKxM0EmSXi8qc2jX+LRga6B0uOY6toXS01zWxA==}
     cpu: [arm64]
     os: [freebsd]
 
-  lefthook-freebsd-x64@2.1.5:
-    resolution: {integrity: sha512-exD69dCjc1K45BxatDPGoH4NmEvgLKPm4kJLOWn1fTeHRKZwWiFPwnjknEoG2OemlCDHmCU++5X40kMEG0WBlA==}
+  lefthook-freebsd-x64@2.1.6:
+    resolution: {integrity: sha512-vXsCUFYuVwrVWwcypB7Zt2Hf+5pl1V1la7ZfvGYZaTRURu0zF/XUnMF/nOz/PebGv0f4x/iOWXWwP7E42xRWsg==}
     cpu: [x64]
     os: [freebsd]
 
-  lefthook-linux-arm64@2.1.5:
-    resolution: {integrity: sha512-57TDKC5ewWpsCLZQKIJMHumFEObYKVundmPpiWhX491hINRZYYOL/26yrnVnNcidThRzTiTC+HLcuplLcaXtbA==}
+  lefthook-linux-arm64@2.1.6:
+    resolution: {integrity: sha512-WDJiQhJdZOvKORZd+kF/ms2l6NSsXzdA9ahflyr65V90AC4jES223W8VtEMbGPUtHuGWMEZ/v/XvwlWv0Ioz9g==}
     cpu: [arm64]
     os: [linux]
 
-  lefthook-linux-x64@2.1.5:
-    resolution: {integrity: sha512-bqK3LrAB5l5YaCaoHk6qRWlITrGWzP4FbwRxA31elbxjd0wgNWZ2Sn3zEfSEcxz442g7/PPkEwqqsTx0kSFzpg==}
+  lefthook-linux-x64@2.1.6:
+    resolution: {integrity: sha512-C18nCd7nTX1AVL4TcvwMmLAO1VI1OuGluIOTjiPkBQ746Ls1HhL5rl//jMPACmT28YmxIQJ2ZcLPNmhvEVBZvw==}
     cpu: [x64]
     os: [linux]
 
-  lefthook-openbsd-arm64@2.1.5:
-    resolution: {integrity: sha512-5aSwK7vV3A6t0w9PnxCMiVjQlcvopBP50BtmnnLnNJyAYHnFbZ0Baq5M0WkE9IsUkWSux0fe6fd0jDkuG711MA==}
+  lefthook-openbsd-arm64@2.1.6:
+    resolution: {integrity: sha512-mZOMxM8HiPxVFXDO3PtCUbH4GB8rkveXhsgXF27oAZTYVzQ3gO9vT6r/pxit6msqRXz3fvcwimLVJgb8eRsa8A==}
     cpu: [arm64]
     os: [openbsd]
 
-  lefthook-openbsd-x64@2.1.5:
-    resolution: {integrity: sha512-Y+pPdDuENJ8qWnUgL02xxhpjblc0WnwXvWGfqnl3WZrAgHzQpwx3G6469RID/wlNVdHYAlw3a8UkFSMYsTzXvA==}
+  lefthook-openbsd-x64@2.1.6:
+    resolution: {integrity: sha512-sG9ALLZSnnMOfXu+B7SmxFhJhuoAh4bqi5En5aaHJET48TqrLOcWWZuH+7ArFM6gr/U5KfSUvdmHFmY8WqCcIg==}
     cpu: [x64]
     os: [openbsd]
 
-  lefthook-windows-arm64@2.1.5:
-    resolution: {integrity: sha512-2PlcFBjTzJaMufw0c28kfhB/0zmaRCU0TRPPsil/HU2YNOExod4upPGLk9qjgsOmb2YVWFz6zq6u7+D1yqmzTQ==}
+  lefthook-windows-arm64@2.1.6:
+    resolution: {integrity: sha512-lD8yFWY4Csuljd0Rqs7EQaySC0VvDf7V3rN1FhRMUISTRDHutebIom1Loc8ckQPvKYGC6mftT9k0GvipsS+Brw==}
     cpu: [arm64]
     os: [win32]
 
-  lefthook-windows-x64@2.1.5:
-    resolution: {integrity: sha512-yiAh8qxml6uqy10jDxOdN9fOQpyLxBFY1fgCEAhn7sVJYmJKRhjqSBwZX6LG5MQjzr29KStrIdw7TR3lf3rT7Q==}
+  lefthook-windows-x64@2.1.6:
+    resolution: {integrity: sha512-q4z2n3xucLscoWiyMwFViEj3N8MDSkPulMwcJYuCYFHoPhP1h+icqNu7QRLGYj6AnVrCQweiUJY3Tb2X+GbD/A==}
     cpu: [x64]
     os: [win32]
 
-  lefthook@2.1.5:
-    resolution: {integrity: sha512-yB9IFWurFllusbPZqvG0EavTmpNXPya2MuO7Li7YT78xAj3uCQ3AgmW9TVUbTTsSMhsegbiAMRpwfEk2TP1P0A==}
+  lefthook@2.1.6:
+    resolution: {integrity: sha512-w9sBoR0mdN+kJc3SB85VzpiAAl451/rxdCRcZlwW71QLjkeH3EBQFgc4VMj5apePychYDHAlqEWTB8J8JK/j1Q==}
     hasBin: true
 
   leven@3.1.0:
@@ -14342,7 +14344,7 @@ snapshots:
       debug: 4.4.3
       invariant: 2.2.4
       metro: 0.83.3(bufferutil@4.1.0)(utf-8-validate@5.0.10)
-      metro-config: 0.83.3
+      metro-config: 0.83.3(bufferutil@4.1.0)(utf-8-validate@5.0.10)
       metro-core: 0.83.3
       semver: 7.7.3
     transitivePeerDependencies:
@@ -18722,48 +18724,48 @@ snapshots:
     dependencies:
       language-subtag-registry: 0.3.23
 
-  lefthook-darwin-arm64@2.1.5:
+  lefthook-darwin-arm64@2.1.6:
     optional: true
 
-  lefthook-darwin-x64@2.1.5:
+  lefthook-darwin-x64@2.1.6:
     optional: true
 
-  lefthook-freebsd-arm64@2.1.5:
+  lefthook-freebsd-arm64@2.1.6:
     optional: true
 
-  lefthook-freebsd-x64@2.1.5:
+  lefthook-freebsd-x64@2.1.6:
     optional: true
 
-  lefthook-linux-arm64@2.1.5:
+  lefthook-linux-arm64@2.1.6:
     optional: true
 
-  lefthook-linux-x64@2.1.5:
+  lefthook-linux-x64@2.1.6:
     optional: true
 
-  lefthook-openbsd-arm64@2.1.5:
+  lefthook-openbsd-arm64@2.1.6:
     optional: true
 
-  lefthook-openbsd-x64@2.1.5:
+  lefthook-openbsd-x64@2.1.6:
     optional: true
 
-  lefthook-windows-arm64@2.1.5:
+  lefthook-windows-arm64@2.1.6:
     optional: true
 
-  lefthook-windows-x64@2.1.5:
+  lefthook-windows-x64@2.1.6:
     optional: true
 
-  lefthook@2.1.5:
+  lefthook@2.1.6:
     optionalDependencies:
-      lefthook-darwin-arm64: 2.1.5
-      lefthook-darwin-x64: 2.1.5
-      lefthook-freebsd-arm64: 2.1.5
-      lefthook-freebsd-x64: 2.1.5
-      lefthook-linux-arm64: 2.1.5
-      lefthook-linux-x64: 2.1.5
-      lefthook-openbsd-arm64: 2.1.5
-      lefthook-openbsd-x64: 2.1.5
-      lefthook-windows-arm64: 2.1.5
-      lefthook-windows-x64: 2.1.5
+      lefthook-darwin-arm64: 2.1.6
+      lefthook-darwin-x64: 2.1.6
+      lefthook-freebsd-arm64: 2.1.6
+      lefthook-freebsd-x64: 2.1.6
+      lefthook-linux-arm64: 2.1.6
+      lefthook-linux-x64: 2.1.6
+      lefthook-openbsd-arm64: 2.1.6
+      lefthook-openbsd-x64: 2.1.6
+      lefthook-windows-arm64: 2.1.6
+      lefthook-windows-x64: 2.1.6
 
   leven@3.1.0: {}
 
@@ -19110,19 +19112,6 @@ snapshots:
       flow-enums-runtime: 0.0.6
       https-proxy-agent: 7.0.6
       metro-core: 0.83.3
-    transitivePeerDependencies:
-      - supports-color
-
-  metro-config@0.83.3:
-    dependencies:
-      connect: 3.7.0
-      flow-enums-runtime: 0.0.6
-      jest-validate: 29.7.0
-      metro: 0.83.3(bufferutil@4.1.0)(utf-8-validate@5.0.10)
-      metro-cache: 0.83.3
-      metro-core: 0.83.3
-      metro-runtime: 0.83.3
-      yaml: 2.8.2
     transitivePeerDependencies:
       - supports-color
 
