@@ -173,6 +173,9 @@ function EventDetail({ id }: { id: string }) {
     source: "event_detail",
   });
 
+  const { isSaved: optimisticIsSaved, toggle: toggleSave } =
+    useEventSaveActions(event?.id ?? "", isSaved, { source: "event_detail" });
+
   // Handlers
   const handleDeleteAndRedirect = useCallback(async () => {
     await handleDelete();
@@ -228,14 +231,20 @@ function EventDetail({ id }: { id: string }) {
         <EventMenu
           event={event}
           isOwner={isOwner}
-          isSaved={isSaved}
+          isSaved={optimisticIsSaved}
           menuType="popup"
           onDelete={handleDeleteAndRedirect}
           iconColor="#5A32FB"
         />
       </View>
     );
-  }, [event, isSaved, currentUser?.id, handleDeleteAndRedirect, handleShare]);
+  }, [
+    event,
+    optimisticIsSaved,
+    currentUser?.id,
+    handleDeleteAndRedirect,
+    handleShare,
+  ]);
 
   // Early return if the 'id' is missing or invalid
   if (!id || typeof id !== "string") {
@@ -648,63 +657,47 @@ function EventDetail({ id }: { id: string }) {
           </View>
         </TouchableOpacity>
 
-        {showSaveButton && (
-          <EventDetailSaveButton eventId={event.id} isSaved={isSaved} />
-        )}
+        {showSaveButton &&
+          (optimisticIsSaved ? (
+            <TouchableOpacity
+              onPress={toggleSave}
+              accessibilityLabel="Saved, double-tap to remove"
+              accessibilityRole="button"
+              activeOpacity={0.8}
+            >
+              <View
+                className="flex-row items-center justify-center gap-4 rounded-full px-8 py-5"
+                style={{
+                  backgroundColor: "rgba(120, 120, 128, 0.16)",
+                  minWidth: 168,
+                }}
+              >
+                <Check size={28} color="#1C1C1E" />
+                <Text
+                  className="text-xl font-bold"
+                  style={{ color: "#1C1C1E" }}
+                >
+                  Saved
+                </Text>
+              </View>
+            </TouchableOpacity>
+          ) : (
+            <TouchableOpacity
+              onPress={toggleSave}
+              accessibilityLabel="Save Event"
+              accessibilityRole="button"
+              activeOpacity={0.8}
+            >
+              <View
+                className="flex-row items-center justify-center gap-4 rounded-full bg-interactive-1 px-8 py-5"
+                style={{ minWidth: 168 }}
+              >
+                <Heart size={28} color="#FFFFFF" />
+                <Text className="text-xl font-bold text-white">Save</Text>
+              </View>
+            </TouchableOpacity>
+          ))}
       </View>
     </>
-  );
-}
-
-function EventDetailSaveButton({
-  eventId,
-  isSaved: initialIsSaved,
-}: {
-  eventId: string;
-  isSaved: boolean;
-}) {
-  const { isSaved, toggle } = useEventSaveActions(eventId, initialIsSaved, {
-    source: "event_detail",
-  });
-
-  if (isSaved) {
-    return (
-      <TouchableOpacity
-        onPress={toggle}
-        accessibilityLabel="Saved, double-tap to remove"
-        accessibilityRole="button"
-        activeOpacity={0.8}
-      >
-        <View
-          className="flex-row items-center justify-center gap-4 rounded-full px-8 py-5"
-          style={{
-            backgroundColor: "rgba(120, 120, 128, 0.16)",
-            minWidth: 168,
-          }}
-        >
-          <Check size={28} color="#1C1C1E" />
-          <Text className="text-xl font-bold" style={{ color: "#1C1C1E" }}>
-            Saved
-          </Text>
-        </View>
-      </TouchableOpacity>
-    );
-  }
-
-  return (
-    <TouchableOpacity
-      onPress={toggle}
-      accessibilityLabel="Save Event"
-      accessibilityRole="button"
-      activeOpacity={0.8}
-    >
-      <View
-        className="flex-row items-center justify-center gap-4 rounded-full bg-interactive-1 px-8 py-5"
-        style={{ minWidth: 168 }}
-      >
-        <Heart size={28} color="#FFFFFF" />
-        <Text className="text-xl font-bold text-white">Save</Text>
-      </View>
-    </TouchableOpacity>
   );
 }
