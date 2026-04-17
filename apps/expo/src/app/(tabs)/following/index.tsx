@@ -124,7 +124,7 @@ function FollowingEmptyState() {
           className="mb-1 text-base font-medium text-neutral-2"
           style={{ paddingLeft: 6 }}
         >
-          Events from lists I follow
+          Events from lists I subscribe to
         </Text>
       </View>
       <View
@@ -157,7 +157,7 @@ function FollowingEmptyState() {
             lineHeight: 22,
           }}
         >
-          Follow other lists to see their events here
+          Subscribe to other lists to see their events here
         </Text>
         <TouchableOpacity
           onPress={() => void handleInvite()}
@@ -301,7 +301,7 @@ function FollowingFeedContent() {
           className="mb-1 text-base font-medium text-neutral-2"
           style={{ paddingLeft: 6 }}
         >
-          Events from lists I follow
+          Events from lists I subscribe to
         </Text>
         {followedListCount > 0 && (
           <TouchableOpacity

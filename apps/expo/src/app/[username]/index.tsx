@@ -1,10 +1,5 @@
 import React, { useCallback, useMemo } from "react";
-import {
-  ActivityIndicator,
-  Text,
-  TouchableOpacity,
-  View,
-} from "react-native";
+import { ActivityIndicator, Text, View } from "react-native";
 import { Image } from "expo-image";
 import { Stack, useLocalSearchParams, useRouter } from "expo-router";
 import { useConvexAuth, useMutation, useQuery } from "convex/react";
@@ -14,12 +9,13 @@ import { api } from "@soonlist/backend/convex/_generated/api";
 
 import { User } from "~/components/icons";
 import SaveShareButton from "~/components/SaveShareButton";
+import { SubscribeButton } from "~/components/SubscribeButton";
 import UserEventsList from "~/components/UserEventsList";
 import { UserProfileFlair } from "~/components/UserProfileFlair";
 import { useStablePaginatedQuery } from "~/hooks/useStableQuery";
 import { useStableTimestamp } from "~/store";
 import { logError } from "~/utils/errorLogging";
-import { hapticLight, toast } from "~/utils/feedback";
+import { toast } from "~/utils/feedback";
 
 function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === "object" && value !== null && !Array.isArray(value);
@@ -147,13 +143,12 @@ export default function UserProfilePage() {
       router.push("/(auth)/sign-in");
       return;
     }
-    void hapticLight();
     const run = isFollowingPersonalList
       ? unfollowListMutation
       : followListMutation;
     run({ listId: personalList.id }).catch((error: unknown) => {
       logError("Toggle follow personal list", error);
-      toast.error("Couldn't update follow");
+      toast.error("Couldn't update subscription");
     });
   }, [
     personalList,
@@ -255,8 +250,8 @@ export default function UserProfilePage() {
                   {
                     type: "custom",
                     element: (
-                      <ProfileFollowHeaderButton
-                        isFollowing={isFollowingPersonalList}
+                      <SubscribeButton
+                        isSubscribed={isFollowingPersonalList}
                         onPress={handleFollowListPress}
                       />
                     ),
@@ -292,36 +287,6 @@ interface ProfileIdentityHeaderProps {
     publicMetadata?: unknown;
   };
   upcomingEventCount: number;
-}
-
-function ProfileFollowHeaderButton({
-  isFollowing,
-  onPress,
-}: {
-  isFollowing: boolean;
-  onPress: () => void;
-}) {
-  return (
-    <TouchableOpacity
-      onPress={onPress}
-      activeOpacity={0.85}
-      accessibilityRole="button"
-      accessibilityLabel={isFollowing ? "Following list" : "Follow list"}
-      className={`rounded-full px-4 py-1.5 ${
-        isFollowing
-          ? "border border-interactive-1 bg-white"
-          : "bg-interactive-1"
-      }`}
-    >
-      <Text
-        className={`text-sm font-semibold ${
-          isFollowing ? "text-interactive-1" : "text-white"
-        }`}
-      >
-        {isFollowing ? "Following" : "Follow"}
-      </Text>
-    </TouchableOpacity>
-  );
 }
 
 /** Profile header: avatar stacked above identity text block. */
