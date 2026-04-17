@@ -51,7 +51,7 @@ const FollowingFeedbackBanner: React.FC = () => {
             <View className="flex-1 flex-row items-center">
               <Text className="mr-1 text-lg">✨</Text>
               <Text className="flex-1 text-lg font-semibold text-neutral-1">
-                New! Follow lists
+                New! Subscribe to lists
               </Text>
             </View>
             <View className="flex-row items-center gap-2 rounded-full bg-interactive-1 px-4 py-2">

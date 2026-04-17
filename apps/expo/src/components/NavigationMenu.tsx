@@ -45,7 +45,7 @@ const routeIcons = {
 
 const baseRoutes = [
   { label: "Upcoming", path: "/feed" },
-  { label: "Following", path: "/following" },
+  { label: "My Scene", path: "/following" },
   { label: "Past", path: "/past" },
   { label: "Discover", path: "/discover" },
 ] as const;
