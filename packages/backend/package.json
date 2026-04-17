@@ -39,7 +39,8 @@
     "ai": "catalog:",
     "convex": "catalog:",
     "langfuse": "catalog:",
-    "nanoid": "catalog:"
+    "nanoid": "catalog:",
+    "zod": "catalog:"
   },
   "devDependencies": {
     "@soonlist/eslint-config": "workspace:*",

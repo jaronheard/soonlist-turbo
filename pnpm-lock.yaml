@@ -1103,6 +1103,9 @@ importers:
       nanoid:
         specifier: 'catalog:'
         version: 5.1.6
+      zod:
+        specifier: 'catalog:'
+        version: 3.25.76
     devDependencies:
       '@soonlist/eslint-config':
         specifier: workspace:*
