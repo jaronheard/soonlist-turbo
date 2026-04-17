@@ -26,7 +26,6 @@ import type { EventWithSimilarity } from "~/utils/similarEvents";
 import {
   CalendarPlus,
   Copy,
-  Heart,
   List,
   MoreVertical,
   PenSquare,
@@ -49,6 +48,7 @@ import { getEventEmoji } from "~/utils/eventEmoji";
 import { collapseSimilarEvents } from "~/utils/similarEvents";
 import { EventMenu } from "./EventMenu";
 import { EventStats } from "./EventStats";
+import SaveButton from "./SaveButton";
 import { UserProfileFlair } from "./UserProfileFlair";
 
 type ShowCreatorOption = "always" | "otherUsers" | "never" | "savedFromOthers";
@@ -304,7 +304,7 @@ export function UserEventListItem(props: UserEventListItemProps) {
     additionalSourceCount,
   } = props;
   const { fontScale } = useWindowDimensions();
-  const { handleAddToCal, handleShare, handleFollow } = useEventActions({
+  const { handleAddToCal, handleShare } = useEventActions({
     event,
     isSaved,
     demoMode,
@@ -586,9 +586,7 @@ export function UserEventListItem(props: UserEventListItemProps) {
                     hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
                   >
                     <CalendarPlus size={iconSize * 1.1} color="#5A32FB" />
-                    <Text className="text-base font-bold text-interactive-1">
-                      Add
-                    </Text>
+                    <Text className="text-base font-bold text-interactive-1">Add</Text>
                   </TouchableOpacity>
                 ) : isOwner ? (
                   <TouchableOpacity
@@ -597,32 +595,10 @@ export function UserEventListItem(props: UserEventListItemProps) {
                     hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
                   >
                     <ShareIcon size={iconSize * 1.1} color="#5A32FB" />
-                    <Text className="text-base font-bold text-interactive-1">
-                      Share
-                    </Text>
+                    <Text className="text-base font-bold text-interactive-1">Share</Text>
                   </TouchableOpacity>
-                ) : isSaved ? (
-                  <View className="-mb-0.5 -ml-2.5 flex-row items-center gap-1 py-2.5 pl-4 pr-1 opacity-60">
-                    <Heart
-                      size={iconSize * 1.1}
-                      color="#5A32FB"
-                      fill="#5A32FB"
-                    />
-                    <Text className="text-base font-bold text-interactive-1">
-                      Saved
-                    </Text>
-                  </View>
                 ) : (
-                  <TouchableOpacity
-                    className="-mb-0.5 -ml-2.5 flex-row items-center gap-1 py-2.5 pl-4 pr-1"
-                    onPress={() => void handleFollow()}
-                    hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
-                  >
-                    <Heart size={iconSize * 1.1} color="#5A32FB" />
-                    <Text className="text-base font-bold text-interactive-1">
-                      Save
-                    </Text>
-                  </TouchableOpacity>
+                  <SaveButton eventId={id} isSaved={isSaved} source="user_events_list" />
                 ))}
 
               {!isDiscoverFeed &&
