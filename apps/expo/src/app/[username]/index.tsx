@@ -1,3 +1,4 @@
+import type { FunctionReturnType } from "convex/server";
 import React, { useCallback, useEffect, useMemo, useState } from "react";
 import {
   ActivityIndicator,
@@ -7,6 +8,7 @@ import {
   ScrollView,
   Text,
   TouchableOpacity,
+  useWindowDimensions,
   View,
 } from "react-native";
 import { Image } from "expo-image";
@@ -16,15 +18,17 @@ import { useConvexAuth, useMutation, useQuery } from "convex/react";
 import type { Doc } from "@soonlist/backend/convex/_generated/dataModel";
 import { api } from "@soonlist/backend/convex/_generated/api";
 
-import { Check, User } from "~/components/icons";
+import { Check, ShareIcon, User } from "~/components/icons";
 import SaveButton from "~/components/SaveButton";
-import ShareButton from "~/components/ShareButton";
 import UserEventsList from "~/components/UserEventsList";
 import { UserProfileFlair } from "~/components/UserProfileFlair";
+import { useEventActions } from "~/hooks/useEventActions";
 import { useStablePaginatedQuery } from "~/hooks/useStableQuery";
 import { useStableTimestamp } from "~/store";
 import { logError } from "~/utils/errorLogging";
 import { hapticSuccess, toast } from "~/utils/feedback";
+
+type ProfileEvent = NonNullable<FunctionReturnType<typeof api.events.get>>;
 
 function isPersonalSystemList(list: Doc<"lists">): boolean {
   return list.isSystemList === true && list.systemListType === "personal";
@@ -540,24 +544,32 @@ export default function UserProfilePage() {
     );
   }
 
-  function ProfileSaveOrShareWrapper({
-    event,
-  }: {
-    event: { id: string; userId: string };
-  }) {
+  function ProfileSaveOrShareWrapper({ event }: { event: ProfileEvent }) {
+    const { fontScale } = useWindowDimensions();
+    const iconSize = 16 * fontScale;
+    const isOwnEvent = currentUser ? event.userId === currentUser.id : false;
+    const isSaved = savedEventIds.has(event.id);
+    const { handleShare } = useEventActions({
+      event,
+      isSaved,
+      source: "user_profile",
+    });
+
     if (!isAuthenticated || !currentUser) {
       return null;
     }
-    const isOwnEvent = event.userId === currentUser.id;
-    const isSaved = savedEventIds.has(event.id);
     return isOwnEvent ? (
-      <View
+      <TouchableOpacity
         className="-mb-0.5 -ml-2.5 flex-row items-center gap-2 bg-interactive-2 px-4 py-2.5"
         style={{ borderRadius: 16 }}
+        onPress={handleShare}
+        accessibilityLabel="Share"
+        accessibilityRole="button"
+        hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
       >
-        <ShareButton webPath={`/event/${event.id}`} />
+        <ShareIcon size={iconSize * 1.1} color="#5A32FB" />
         <Text className="text-base font-bold text-interactive-1">Share</Text>
-      </View>
+      </TouchableOpacity>
     ) : (
       <SaveButton
         eventId={event.id}
