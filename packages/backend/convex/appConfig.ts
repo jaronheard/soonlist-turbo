@@ -63,6 +63,9 @@ export const getFeaturedLists = query({
           });
         }
       }
+      // Any malformed row treats the whole config as unset so the client
+      // falls back to defaults instead of silently rendering a truncated list.
+      if (validated.length !== parsed.length) return null;
       return validated;
     } catch {
       return null;
