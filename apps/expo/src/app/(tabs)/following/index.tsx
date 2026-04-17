@@ -150,15 +150,16 @@ function FeaturedListRow({
     );
   });
 
-  const { results: events } = useStablePaginatedQuery(
+  const { results: events, status: feedStatus } = useStablePaginatedQuery(
     api.feeds.getPublicUserFeed,
     targetUserFound ? { username, filter: "upcoming" as const } : "skip",
     { initialNumItems: 50 },
   );
 
-  const { imageUris, upcomingCount } = useMemo((): {
+  const { imageUris, upcomingCount, hasMoreUpcoming } = useMemo((): {
     imageUris: (string | null)[];
     upcomingCount: number;
+    hasMoreUpcoming: boolean;
   } => {
     const currentTime = new Date(stableTimestamp).getTime();
     const upcoming = events.filter(
@@ -174,8 +175,9 @@ function FeaturedListRow({
     return {
       imageUris: [urls[0] ?? null, urls[1] ?? null, urls[2] ?? null],
       upcomingCount: upcoming.length,
+      hasMoreUpcoming: feedStatus === "CanLoadMore",
     };
-  }, [events, stableTimestamp]);
+  }, [events, stableTimestamp, feedStatus]);
 
   const isSelf =
     currentUserId !== undefined &&
@@ -209,7 +211,7 @@ function FeaturedListRow({
   const upcomingLabel =
     upcomingCount === 1
       ? "1 upcoming event"
-      : `${upcomingCount} upcoming events`;
+      : `${upcomingCount}${hasMoreUpcoming ? "+" : ""} upcoming events`;
 
   return (
     <View className="mb-4 flex-row items-center gap-3">
