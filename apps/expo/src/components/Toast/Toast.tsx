@@ -153,30 +153,33 @@ export function Toast({ toast, onDismiss }: ToastProps) {
             { bottom: insets.bottom + 72 },
             containerStyle,
           ]}
-          accessibilityLiveRegion="polite"
         >
           <GestureDetector gesture={swipeGesture}>
             <View style={styles.shadowHost}>
-              <BlurView intensity={60} tint="light" style={styles.blur}>
-                <View style={[styles.check, { backgroundColor: checkColor }]}>
-                  <Text style={styles.checkGlyph}>
-                    {variant === "success" ? "✓" : "✕"}
+              <View style={styles.clipHost}>
+                <BlurView intensity={60} tint="light" style={styles.blur}>
+                  <View style={[styles.check, { backgroundColor: checkColor }]}>
+                    <Text style={styles.checkGlyph}>
+                      {variant === "success" ? "✓" : "✕"}
+                    </Text>
+                  </View>
+                  <Text style={styles.message} numberOfLines={2}>
+                    {toast.message}
                   </Text>
-                </View>
-                <Text style={styles.message} numberOfLines={2}>
-                  {toast.message}
-                </Text>
-                {toast.action && (
-                  <Pressable
-                    onPress={handleActionPress}
-                    accessibilityRole="button"
-                    accessibilityLabel={toast.action.label}
-                    hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
-                  >
-                    <Text style={styles.actionLabel}>{toast.action.label}</Text>
-                  </Pressable>
-                )}
-              </BlurView>
+                  {toast.action && (
+                    <Pressable
+                      onPress={handleActionPress}
+                      accessibilityRole="button"
+                      accessibilityLabel={toast.action.label}
+                      hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+                    >
+                      <Text style={styles.actionLabel}>
+                        {toast.action.label}
+                      </Text>
+                    </Pressable>
+                  )}
+                </BlurView>
+              </View>
             </View>
           </GestureDetector>
         </Animated.View>
@@ -199,8 +202,12 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.12,
     shadowRadius: 30,
     elevation: 6,
-    overflow: "hidden",
+    // No overflow: "hidden" here so iOS shadow renders.
     backgroundColor: "rgba(242, 242, 247, 0.92)",
+  },
+  clipHost: {
+    borderRadius: 14,
+    overflow: "hidden",
     borderWidth: StyleSheet.hairlineWidth,
     borderColor: "rgba(0,0,0,0.1)",
   },
