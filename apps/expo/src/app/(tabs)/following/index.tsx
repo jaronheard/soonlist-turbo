@@ -384,6 +384,10 @@ function FollowingFeedContent() {
     }
     if (emptyStateMode === "dismissed" && !hasFollowings) {
       setEmptyStateMode("show");
+      // Reset to the default segment so the onboarding confirmation count and
+      // the subsequent feed view both reflect upcoming events, not whatever
+      // segment the user had picked under their prior subscriptions.
+      setSelectedSegment("upcoming");
     }
   }, [followedLists, hasFollowings, emptyStateMode]);
   const handleExitEmptyState = useCallback(() => {
