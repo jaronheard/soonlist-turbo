@@ -1,4 +1,10 @@
-import React, { useCallback, useEffect, useMemo, useState } from "react";
+import React, {
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
 import {
   Platform,
   ScrollView,
@@ -40,7 +46,13 @@ interface FeaturedList {
   displayName: string;
 }
 
-const FEATURED_LISTS_BY_ENV: Record<
+// Hardcoded fallback used while the appConfig query loads, and when no
+// featuredLists row is present on the deployment. Remote config
+// (api.appConfig.getFeaturedLists) is authoritative when set, so the featured
+// list can be curated without shipping a client release. Env-keyed here only
+// so the fallback matches the deployment — each Convex deployment is itself
+// environment-specific, so a non-null remote response needs no env split.
+const DEFAULT_FEATURED_LISTS_BY_ENV: Record<
   "production" | "development",
   FeaturedList[]
 > = {
@@ -56,7 +68,7 @@ const FEATURED_LISTS_BY_ENV: Record<
   ],
 };
 
-const FEATURED_LISTS = FEATURED_LISTS_BY_ENV[Config.env];
+const DEFAULT_FEATURED_LISTS = DEFAULT_FEATURED_LISTS_BY_ENV[Config.env];
 
 type Segment = "upcoming" | "past";
 
@@ -189,11 +201,13 @@ function FeaturedListRow({
     return followedLists.some((l) => l.id === personalList.id);
   }, [personalList, followedLists]);
 
-  const [isMutating, setIsMutating] = useState(false);
+  // Ref (not state) — this is purely a re-entry lock; nothing visible depends
+  // on it, so using state would just trigger two extra re-renders per tap.
+  const isMutatingRef = useRef(false);
 
   const handleToggleSubscribe = useCallback(() => {
-    if (!personalList || isSelf || isMutating) return;
-    setIsMutating(true);
+    if (!personalList || isSelf || isMutatingRef.current) return;
+    isMutatingRef.current = true;
     const promise = isSubscribed
       ? unfollowListMutation({ listId: personalList.id })
       : followListMutation({ listId: personalList.id });
@@ -207,12 +221,11 @@ function FeaturedListRow({
         );
       })
       .finally(() => {
-        setIsMutating(false);
+        isMutatingRef.current = false;
       });
   }, [
     personalList,
     isSelf,
-    isMutating,
     isSubscribed,
     unfollowListMutation,
     followListMutation,
@@ -301,6 +314,17 @@ function FollowingEmptyState({
   );
   const currentUserId = userData?.id;
 
+  // Remote-configurable featured lists (api.appConfig.getFeaturedLists).
+  // null = no appConfig row set (fall back to defaults for the env)
+  // []   = admin has intentionally cleared the featured lists
+  // T[]  = curated list from the deployment
+  // undefined = query loading — use defaults so the empty state isn't blank
+  const remoteFeaturedLists = useQuery(api.appConfig.getFeaturedLists, {});
+  const featuredLists =
+    remoteFeaturedLists !== undefined && remoteFeaturedLists !== null
+      ? remoteFeaturedLists
+      : DEFAULT_FEATURED_LISTS;
+
   return (
     <ScrollView
       contentInsetAdjustmentBehavior="automatic"
@@ -335,7 +359,7 @@ function FollowingEmptyState({
         </Text>
 
         <View className="mb-2">
-          {FEATURED_LISTS.map((list) => (
+          {featuredLists.map((list) => (
             <FeaturedListRow
               key={list.username}
               username={list.username}
