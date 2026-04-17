@@ -34,6 +34,7 @@ import { getTimezoneAbbreviation } from "@soonlist/cal";
 import { EventMenu } from "~/components/EventMenu";
 import { HeaderLogo } from "~/components/HeaderLogo";
 import {
+  CalendarPlus,
   EyeOff,
   Globe2,
   Heart,
@@ -183,7 +184,7 @@ function EventDetail({ id }: { id: string }) {
       ? event.eventFollows.some((follow) => follow.userId === currentUser.id)
       : false;
 
-  const { handleDelete } = useEventActions({
+  const { handleDelete, handleAddToCal } = useEventActions({
     event,
     isSaved,
     source: "event_detail",
@@ -379,6 +380,9 @@ function EventDetail({ id }: { id: string }) {
 
   // Determine primary and secondary actions
   const showSaveButton = true;
+  // Owners of the event always see "Saved" state (they already have it in
+  // their list by virtue of creating it); non-owners see live local state.
+  const displayIsSaved = isCurrentUserEvent || optimisticIsSaved;
 
   return (
     <>
@@ -680,8 +684,9 @@ function EventDetail({ id }: { id: string }) {
         {showSaveButton && (
           <TouchableOpacity
             onPress={toggleSave}
+            disabled={isCurrentUserEvent}
             accessibilityLabel={
-              optimisticIsSaved ? "Saved, double-tap to remove" : "Save Event"
+              displayIsSaved ? "Saved, double-tap to remove" : "Save Event"
             }
             accessibilityRole="button"
             activeOpacity={0.8}
@@ -693,14 +698,26 @@ function EventDetail({ id }: { id: string }) {
               <Heart
                 size={28}
                 color="#FFFFFF"
-                fill={optimisticIsSaved ? "#FFFFFF" : "transparent"}
+                fill={displayIsSaved ? "#FFFFFF" : "transparent"}
               />
               <Text className="text-xl font-bold text-white">
-                {optimisticIsSaved ? "Saved" : "Save"}
+                {displayIsSaved ? "Saved" : "Save"}
               </Text>
             </View>
           </TouchableOpacity>
         )}
+
+        <TouchableOpacity
+          onPress={handleAddToCal}
+          accessibilityLabel="Add to Calendar"
+          accessibilityRole="button"
+          activeOpacity={0.8}
+        >
+          <View className="flex-row items-center justify-center gap-4 rounded-full bg-interactive-2 px-8 py-5">
+            <CalendarPlus size={28} color="#5A32FB" />
+            <Text className="text-xl font-bold text-interactive-1">Add</Text>
+          </View>
+        </TouchableOpacity>
       </View>
     </>
   );
