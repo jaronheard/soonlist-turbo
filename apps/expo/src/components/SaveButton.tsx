@@ -2,7 +2,7 @@ import React from "react";
 import { Text, TouchableOpacity, useWindowDimensions } from "react-native";
 import { useUser } from "@clerk/clerk-expo";
 
-import { Heart } from "~/components/icons";
+import { Check, Heart } from "~/components/icons";
 import { useEventSaveActions } from "~/hooks/useEventActions";
 
 interface SaveButtonProps {
@@ -39,7 +39,7 @@ export default function SaveButton({
         }}
         activeOpacity={0.7}
       >
-        <Text style={{ fontSize: iconSize * 1.1, color: "#1C1C1E" }}>✓</Text>
+        <Check size={iconSize * 1.1} color="#1C1C1E" />
         <Text
           className="text-base font-bold"
           style={{ color: "#1C1C1E" }}
