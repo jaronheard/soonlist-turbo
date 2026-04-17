@@ -72,13 +72,14 @@ function findDate(
 /**
  * Normalize event start/end dates.
  *
- * - Explicit year: trust the model's year on `startDate` (throws on an
- *   invalid date like Feb 29 of a non-leap year). The end year is always
- *   advanced if needed so NYE-style events with `end < start` stay
- *   consistent.
+ * - Explicit year: trust the model's year on both `startDate` and `endDate`.
+ *   `startDate` is taken exactly (throws on an invalid date like Feb 29 of a
+ *   non-leap year). `endDate`'s year is preserved when the range is legit
+ *   multi-year (e.g. 2026-01-01 → 2027-01-01) and advanced only when
+ *   `end < start` (NYE-style spans).
  * - Inferred year: replace `startDate`'s year with the soonest future year
- *   for its MM-DD relative to `today`; then pick `endDate`'s year so it
- *   remains on/after `startDate`.
+ *   for its MM-DD relative to `today`; then pick `endDate`'s year starting
+ *   at `startDate.year` so it remains on/after `startDate`.
  */
 export function normalizeEventYear(
   input: NormalizeInput,
@@ -94,7 +95,8 @@ export function normalizeEventYear(
       )
     : findDate(today.year, start.month, start.day, today);
 
-  const endDate = findDate(startDate.year, end.month, end.day, startDate);
+  const endStartYear = input.hasExplicitYear ? end.year : startDate.year;
+  const endDate = findDate(endStartYear, end.month, end.day, startDate);
 
   return {
     startDate: startDate.toString(),
