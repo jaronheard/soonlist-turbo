@@ -8,7 +8,8 @@ import {
   View,
 } from "react-native";
 import * as Haptics from "expo-haptics";
-import { Redirect } from "expo-router";
+import { Image } from "expo-image";
+import { Redirect, useRouter } from "expo-router";
 import { SymbolView } from "expo-symbols";
 import { useUser } from "@clerk/clerk-expo";
 import { Host, Picker, Text as SwiftUIText } from "@expo/ui/swift-ui";
@@ -17,19 +18,41 @@ import {
   Authenticated,
   AuthLoading,
   Unauthenticated,
+  useMutation,
   useQuery,
 } from "convex/react";
-import { usePostHog } from "posthog-react-native";
 
 import { api } from "@soonlist/backend/convex/_generated/api";
 
 import { FollowedListsModal } from "~/components/FollowedListsModal";
-import { ShareIcon } from "~/components/icons";
+import { User } from "~/components/icons";
 import LoadingSpinner from "~/components/LoadingSpinner";
+import ScenePreviewThreeUp from "~/components/ScenePreviewThreeUp";
 import UserEventsList from "~/components/UserEventsList";
 import { useStablePaginatedQuery } from "~/hooks/useStableQuery";
 import { useAppStore, useStableTimestamp } from "~/store";
+import Config from "~/utils/config";
 import { logError } from "~/utils/errorLogging";
+
+interface FeaturedList {
+  username: string;
+  displayName: string;
+}
+
+const FEATURED_LISTS_BY_ENV: Record<"production" | "development", FeaturedList[]> = {
+  production: [
+    { username: "thepianofarm", displayName: "Anis Mojgani" },
+    { username: "kaylakennett", displayName: "Kayla Kennett" },
+    { username: "joshcarr", displayName: "Josh Carr" },
+  ],
+  development: [
+    { username: "jaron", displayName: "Jaron Heard" },
+    { username: "jaron-heard", displayName: "Jaron (Dev)" },
+    { username: "soonlist", displayName: "Soonlist" },
+  ],
+};
+
+const FEATURED_LISTS = FEATURED_LISTS_BY_ENV[Config.env];
 
 type Segment = "upcoming" | "past";
 
@@ -78,38 +101,178 @@ function SegmentedControlFallback({
   );
 }
 
-function FollowingEmptyState() {
-  const { user } = useUser();
-  const posthog = usePostHog();
-  const username = user?.username ?? "";
-  const handleInvite = async () => {
-    void Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+function FeaturedListRow({
+  username,
+  displayName,
+  currentUserId,
+}: {
+  username: string;
+  displayName: string;
+  currentUserId: string | undefined;
+}) {
+  const router = useRouter();
+  const stableTimestamp = useStableTimestamp();
 
-    // AppsFlyer OneLink with follow intent — recipient will be prompted to follow this user
-    const followUrl = `https://soonlist.onelink.me/QM97?pid=soonlist_app&c=following_empty_state&deep_link_value=follow&deep_link_sub1=${encodeURIComponent(username)}`;
-    const shareMessage =
-      "Hey, check out Soonlist! It turns your screenshots into saved plans and makes finding and sharing events way easier.";
+  const targetUser = useQuery(api.users.getByUsername, { userName: username });
+  const personalList = useQuery(
+    api.lists.getPersonalListForUser,
+    targetUser?.id ? { userId: targetUser.id } : "skip",
+  );
+  const followedLists = useQuery(api.lists.getFollowedLists, {});
+  const followListMutation = useMutation(api.lists.followList);
+  const unfollowListMutation = useMutation(api.lists.unfollowList);
 
+  const { results: events } = useStablePaginatedQuery(
+    api.feeds.getPublicUserFeed,
+    { username, filter: "upcoming" as const },
+    { initialNumItems: 10 },
+  );
+
+  const { imageUris, upcomingCount } = useMemo((): {
+    imageUris: (string | null)[];
+    upcomingCount: number;
+  } => {
+    const currentTime = new Date(stableTimestamp).getTime();
+    const upcoming = events.filter(
+      (e) => new Date(e.endDateTime).getTime() >= currentTime,
+    );
+    const urls: string[] = [];
+    for (const e of upcoming) {
+      if (typeof e.image === "string" && e.image.length > 0) {
+        urls.push(e.image);
+        if (urls.length >= 3) break;
+      }
+    }
+    return {
+      imageUris: [urls[0] ?? null, urls[1] ?? null, urls[2] ?? null],
+      upcomingCount: upcoming.length,
+    };
+  }, [events, stableTimestamp]);
+
+  const isSelf =
+    currentUserId !== undefined &&
+    targetUser?.id !== undefined &&
+    targetUser.id === currentUserId;
+
+  const isFollowing = useMemo(() => {
+    if (!personalList || !followedLists) return false;
+    return followedLists.some((l) => l.id === personalList.id);
+  }, [personalList, followedLists]);
+
+  const [isUpdatingFollow, setIsUpdatingFollow] = useState(false);
+
+  const handleToggleFollow = useCallback(async () => {
+    if (!personalList || isSelf || isUpdatingFollow) return;
+    setIsUpdatingFollow(true);
+    void Haptics.selectionAsync();
     try {
-      posthog.capture("invite_friend_initiated", {
-        source: "following_empty_state",
-      });
-
-      const result = await Share.share({
-        message: shareMessage,
-        url: followUrl,
-        title: "Soonlist — Save events instantly",
-      });
-
-      if (result.action === Share.sharedAction) {
-        posthog.capture("invite_friend_completed", {
-          source: "following_empty_state",
-        });
+      if (isFollowing) {
+        await unfollowListMutation({ listId: personalList.id });
+      } else {
+        await followListMutation({ listId: personalList.id });
       }
     } catch (error) {
-      logError("Error sharing from following empty state", error);
+      logError("Error toggling list follow from empty state", error);
+    } finally {
+      setIsUpdatingFollow(false);
     }
-  };
+  }, [
+    personalList,
+    isSelf,
+    isUpdatingFollow,
+    isFollowing,
+    unfollowListMutation,
+    followListMutation,
+  ]);
+
+  const upcomingLabel =
+    upcomingCount === 1
+      ? "1 upcoming event"
+      : `${upcomingCount} upcoming events`;
+
+  return (
+    <View className="mb-4 flex-row items-center gap-3">
+      <TouchableOpacity
+        onPress={() => router.push(`/${username}`)}
+        activeOpacity={0.7}
+        accessibilityRole="button"
+        accessibilityLabel={`Open ${displayName}'s profile`}
+        className="min-w-0 flex-1 flex-row items-center gap-3"
+      >
+        <ScenePreviewThreeUp imageUris={imageUris} align="start" />
+        <View className="min-w-0 flex-1">
+          <View className="flex-row items-center gap-1.5">
+            {targetUser?.userImage ? (
+              <Image
+                source={{ uri: targetUser.userImage }}
+                style={{ width: 20, height: 20, borderRadius: 10 }}
+                contentFit="cover"
+                cachePolicy="disk"
+              />
+            ) : (
+              <View className="h-5 w-5 items-center justify-center rounded-full bg-neutral-4">
+                <User size={12} color="#627496" />
+              </View>
+            )}
+            <Text
+              className="flex-1 text-base font-semibold text-neutral-1"
+              numberOfLines={1}
+              ellipsizeMode="tail"
+            >
+              {displayName}
+            </Text>
+          </View>
+          <Text
+            className="text-sm text-neutral-2"
+            numberOfLines={1}
+            ellipsizeMode="tail"
+          >
+            {upcomingLabel}
+          </Text>
+        </View>
+      </TouchableOpacity>
+      {!isSelf ? (
+        <TouchableOpacity
+          onPress={() => void handleToggleFollow()}
+          disabled={!personalList || isUpdatingFollow}
+          activeOpacity={0.8}
+          accessibilityRole="button"
+          accessibilityLabel={
+            isFollowing ? `Unfollow ${displayName}` : `Follow ${displayName}`
+          }
+          className={`rounded-full px-4 py-2 ${
+            isFollowing ? "bg-neutral-4" : "bg-interactive-1"
+          } ${!personalList || isUpdatingFollow ? "opacity-60" : ""}`}
+        >
+          <Text
+            className={`text-sm font-semibold ${
+              isFollowing ? "text-neutral-1" : "text-white"
+            }`}
+          >
+            {isFollowing ? "Following" : "Follow"}
+          </Text>
+        </TouchableOpacity>
+      ) : null}
+    </View>
+  );
+}
+
+function FollowingEmptyState({
+  hasFollowings,
+  followedEventCount,
+  onExitToFeed,
+}: {
+  hasFollowings: boolean;
+  followedEventCount: number;
+  onExitToFeed: () => void;
+}) {
+  const { user } = useUser();
+
+  const userData = useQuery(
+    api.users.getByUsername,
+    user?.username ? { userName: user.username } : "skip",
+  );
+  const currentUserId = userData?.id;
 
   return (
     <ScrollView
@@ -117,6 +280,7 @@ function FollowingEmptyState() {
       style={{ flex: 1, backgroundColor: "#F4F1FF" }}
       contentContainerStyle={{
         flexGrow: 1,
+        paddingBottom: 80,
       }}
     >
       <View className="px-3 pb-2" style={{ marginTop: -4 }}>
@@ -127,67 +291,53 @@ function FollowingEmptyState() {
           Events from lists I follow
         </Text>
       </View>
-      <View
-        style={{
-          flex: 1,
-          justifyContent: "center",
-          alignItems: "center",
-          paddingHorizontal: 32,
-          paddingBottom: 200,
-        }}
-      >
+
+      <View className="px-6 pt-6">
         <Text
-          style={{
-            fontSize: 18,
-            fontWeight: "600",
-            color: "#627496",
-            textAlign: "center",
-            marginBottom: 8,
-            lineHeight: 26,
-          }}
+          className="mb-3 text-2xl font-bold text-neutral-1"
+          style={{ lineHeight: 30 }}
         >
-          Your scene starts with a list
+          Follow a list to get started
         </Text>
         <Text
-          style={{
-            fontSize: 15,
-            color: "#8E99A4",
-            textAlign: "center",
-            marginBottom: 24,
-            lineHeight: 22,
-          }}
+          className="mb-6 text-base text-neutral-2"
+          style={{ lineHeight: 22 }}
         >
-          Follow other lists to see their events here
+          My Scene shows upcoming events from people you follow. Start with
+          one of these featured lists.
         </Text>
-        <TouchableOpacity
-          onPress={() => void handleInvite()}
-          activeOpacity={0.7}
-          accessibilityRole="button"
-          accessibilityLabel="Invite friends to Soonlist"
-        >
-          <View
-            style={{
-              flexDirection: "row",
-              alignItems: "center",
-              gap: 8,
-              backgroundColor: "#5A32FB",
-              paddingHorizontal: 24,
-              paddingVertical: 14,
-              borderRadius: 999,
-            }}
-          >
-            <ShareIcon size={18} color="#FFFFFF" />
-            <Text
-              style={{
-                fontSize: 17,
-                fontWeight: "700",
-                color: "#FFFFFF",
-              }}
-            >
-              Invite friends
+
+        <View className="mb-2">
+          {FEATURED_LISTS.map((list) => (
+            <FeaturedListRow
+              key={list.username}
+              username={list.username}
+              displayName={list.displayName}
+              currentUserId={currentUserId}
+            />
+          ))}
+        </View>
+
+        {hasFollowings ? (
+          <View className="mt-4 items-center">
+            <Text className="mb-1 text-sm text-neutral-2">
+              {followedEventCount === 1
+                ? "1 event added to My Scene"
+                : `${followedEventCount} events added to My Scene`}
             </Text>
+            <TouchableOpacity
+              onPress={onExitToFeed}
+              activeOpacity={0.7}
+              accessibilityRole="button"
+              accessibilityLabel="View My Scene"
+              className="px-2 py-2"
+            >
+              <Text className="text-base font-semibold text-interactive-1">
+                View My Scene →
+              </Text>
+            </TouchableOpacity>
           </View>
-        </TouchableOpacity>
+        ) : null}
       </View>
     </ScrollView>
   );
@@ -202,6 +352,23 @@ function FollowingFeedContent() {
   // Check if user is following any lists
   const followedLists = useQuery(api.lists.getFollowedLists);
   const hasFollowings = (followedLists?.length ?? 0) > 0;
+
+  // Session-sticky empty state: once the user lands with no followings, keep the empty
+  // state visible so they can follow multiple featured lists without it disappearing
+  // after the first follow. They exit explicitly via "See your scene" or on next tab
+  // remount (when hasFollowings is already true on load).
+  const [emptyStateMode, setEmptyStateMode] = useState<
+    "unset" | "show" | "dismissed"
+  >("unset");
+  useEffect(() => {
+    if (followedLists === undefined) return;
+    if (!hasFollowings && emptyStateMode !== "show") {
+      setEmptyStateMode("show");
+    }
+  }, [followedLists, hasFollowings, emptyStateMode]);
+  const handleExitEmptyState = useCallback(() => {
+    setEmptyStateMode("dismissed");
+  }, []);
 
   const handleSegmentChange = useCallback((segment: Segment) => {
     setSelectedSegment(segment);
@@ -364,9 +531,15 @@ function FollowingFeedContent() {
     handleShareList,
   ]);
 
-  // Show empty state if not following any lists
-  if (followedLists !== undefined && !hasFollowings) {
-    return <FollowingEmptyState />;
+  // Show empty state if this session started empty and the user hasn't exited yet.
+  if (emptyStateMode === "show") {
+    return (
+      <FollowingEmptyState
+        hasFollowings={hasFollowings}
+        followedEventCount={enrichedEvents.length}
+        onExitToFeed={handleExitEmptyState}
+      />
+    );
   }
 
   return (
