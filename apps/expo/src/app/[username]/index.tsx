@@ -17,7 +17,8 @@ import type { Doc } from "@soonlist/backend/convex/_generated/dataModel";
 import { api } from "@soonlist/backend/convex/_generated/api";
 
 import { Check, User } from "~/components/icons";
-import SaveShareButton from "~/components/SaveShareButton";
+import SaveButton from "~/components/SaveButton";
+import ShareButton from "~/components/ShareButton";
 import UserEventsList from "~/components/UserEventsList";
 import { UserProfileFlair } from "~/components/UserProfileFlair";
 import { useStablePaginatedQuery } from "~/hooks/useStableQuery";
@@ -549,11 +550,18 @@ export default function UserProfilePage() {
     }
     const isOwnEvent = event.userId === currentUser.id;
     const isSaved = savedEventIds.has(event.id);
-    return (
-      <SaveShareButton
+    return isOwnEvent ? (
+      <View
+        className="-mb-0.5 -ml-2.5 flex-row items-center gap-2 bg-interactive-2 px-4 py-2.5"
+        style={{ borderRadius: 16 }}
+      >
+        <ShareButton webPath={`/event/${event.id}`} />
+        <Text className="text-base font-bold text-interactive-1">Share</Text>
+      </View>
+    ) : (
+      <SaveButton
         eventId={event.id}
         isSaved={isSaved}
-        isOwnEvent={isOwnEvent}
         source="user_profile"
       />
     );
