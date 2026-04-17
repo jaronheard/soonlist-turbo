@@ -1,5 +1,6 @@
+import type { FunctionReturnType } from "convex/server";
 import React, { useCallback, useMemo } from "react";
-import { Text, View } from "react-native";
+import { Text, TouchableOpacity, useWindowDimensions, View } from "react-native";
 import { Redirect } from "expo-router";
 import { useUser } from "@clerk/clerk-expo";
 import {
@@ -12,13 +13,16 @@ import {
 import { api } from "@soonlist/backend/convex/_generated/api";
 
 import DiscoverShareBanner from "~/components/DiscoverShareBanner";
+import { ShareIcon } from "~/components/icons";
 import LoadingSpinner from "~/components/LoadingSpinner";
 import SaveButton from "~/components/SaveButton";
-import ShareButton from "~/components/ShareButton";
 import UserEventsList from "~/components/UserEventsList";
+import { useEventActions } from "~/hooks/useEventActions";
 import { useStablePaginatedQuery } from "~/hooks/useStableQuery";
 import { useAppStore, useStableTimestamp } from "~/store";
 import { getPlanStatusFromUser } from "~/utils/plan";
+
+type DiscoverEvent = NonNullable<FunctionReturnType<typeof api.events.get>>;
 
 function DiscoverContent() {
   const { user } = useUser();
@@ -95,27 +99,34 @@ function DiscoverContent() {
     return <Redirect href="/feed" />;
   }
 
-  function SaveOrShareWrapper({
-    event,
-  }: {
-    event: { id: string; userId: string };
-  }) {
+  function SaveOrShareWrapper({ event }: { event: DiscoverEvent }) {
+    const { fontScale } = useWindowDimensions();
+    const iconSize = 16 * fontScale;
+    const isOwnEvent = user ? event.userId === user.id : false;
+    const isSaved = savedEventIds.has(event.id);
+    const { handleShare } = useEventActions({
+      event,
+      isSaved,
+      source: "discover_list",
+    });
+
     // Only show save/share button for authenticated users
     if (!user) {
       return null;
     }
 
-    const isOwnEvent = event.userId === user.id;
-    const isSaved = savedEventIds.has(event.id);
-
     return isOwnEvent ? (
-      <View
+      <TouchableOpacity
         className="-mb-0.5 -ml-2.5 flex-row items-center gap-2 bg-interactive-2 px-4 py-2.5"
         style={{ borderRadius: 16 }}
+        onPress={handleShare}
+        accessibilityLabel="Share"
+        accessibilityRole="button"
+        hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
       >
-        <ShareButton webPath={`/event/${event.id}`} />
+        <ShareIcon size={iconSize * 1.1} color="#5A32FB" />
         <Text className="text-base font-bold text-interactive-1">Share</Text>
-      </View>
+      </TouchableOpacity>
     ) : (
       <SaveButton
         eventId={event.id}
