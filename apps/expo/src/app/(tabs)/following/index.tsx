@@ -283,11 +283,13 @@ function FeaturedListRow({
 function FollowingEmptyState({
   hasFollowings,
   followedEventCount,
+  hasMoreFollowedEvents,
   followedLists,
   onExitToFeed,
 }: {
   hasFollowings: boolean;
   followedEventCount: number;
+  hasMoreFollowedEvents: boolean;
   followedLists: Doc<"lists">[] | undefined;
   onExitToFeed: () => void;
 }) {
@@ -349,7 +351,9 @@ function FollowingEmptyState({
             <Text className="mb-1 text-sm text-neutral-2">
               {followedEventCount === 1
                 ? "1 event added to My Scene"
-                : `${followedEventCount} events added to My Scene`}
+                : `${followedEventCount}${
+                    hasMoreFollowedEvents ? "+" : ""
+                  } events added to My Scene`}
             </Text>
             <TouchableOpacity
               onPress={onExitToFeed}
@@ -576,6 +580,7 @@ function FollowingFeedContent() {
       <FollowingEmptyState
         hasFollowings={hasFollowings}
         followedEventCount={enrichedEvents.length}
+        hasMoreFollowedEvents={status === "CanLoadMore"}
         followedLists={followedLists}
         onExitToFeed={handleExitEmptyState}
       />
