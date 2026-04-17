@@ -329,7 +329,7 @@ export function useEventSaveActions(
     if (!pendingRef.current) {
       setIsSaved(initialIsSaved);
     }
-  }, [initialIsSaved]);
+  }, [initialIsSaved, eventId]);
 
   const followEventMutation = useMutation(
     api.events.follow,
