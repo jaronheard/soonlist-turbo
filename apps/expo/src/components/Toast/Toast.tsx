@@ -1,5 +1,5 @@
 // apps/expo/src/components/Toast/Toast.tsx
-import React, { useEffect, useRef } from "react";
+import React, { useCallback, useEffect, useRef } from "react";
 import {
   AccessibilityInfo,
   AppState,
@@ -35,14 +35,39 @@ export function Toast({ toast, onDismiss }: ToastProps) {
   const translateY = useSharedValue(120);
   const opacity = useSharedValue(0);
   const pathnameAtMountRef = useRef(pathname);
+  const pathnameLatestRef = useRef(pathname);
+  pathnameLatestRef.current = pathname;
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const runDismissRef = useRef<() => void>(() => {
+    // placeholder; replaced in effect below
+  });
 
   const duration = toast.duration ?? DEFAULT_DURATION;
   const variant = toast.variant ?? "success";
 
+  const runDismiss = useCallback(() => {
+    if (timerRef.current) {
+      clearTimeout(timerRef.current);
+      timerRef.current = null;
+    }
+    translateY.value = withTiming(120, { duration: 180 });
+    opacity.value = withTiming(0, { duration: 180 }, (finished) => {
+      if (finished) runOnJS(onDismiss)();
+    });
+  }, [onDismiss, translateY, opacity]);
+
+  // Keep ref updated so long-lived effects always call the latest runDismiss.
+  useEffect(() => {
+    runDismissRef.current = runDismiss;
+  }, [runDismiss]);
+
   // Animate in on mount / toast change; reset on toast.id change.
   useEffect(() => {
-    pathnameAtMountRef.current = pathname;
+    // Capture pathname-at-toast-mount via the latest ref so this effect
+    // doesn't need pathname as a dep (and therefore doesn't re-run on
+    // navigation, which would race with the route-change-dismiss effect).
+    pathnameAtMountRef.current = pathnameLatestRef.current;
+    // eslint-disable-next-line react-compiler/react-compiler -- reanimated SharedValue mutation; runs on UI thread.
     translateY.value = withSpring(0, { damping: 18, stiffness: 180 });
     opacity.value = withTiming(1, { duration: 200 });
 
@@ -52,19 +77,18 @@ export function Toast({ toast, onDismiss }: ToastProps) {
     // Auto-dismiss timer
     if (timerRef.current) clearTimeout(timerRef.current);
     timerRef.current = setTimeout(() => {
-      runDismiss();
+      runDismissRef.current();
     }, duration);
 
     return () => {
       if (timerRef.current) clearTimeout(timerRef.current);
     };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [toast.id]);
+  }, [toast.id, toast.message, duration, translateY, opacity]);
 
   // Dismiss on route change
   useEffect(() => {
     if (pathname !== pathnameAtMountRef.current) {
-      runDismiss();
+      runDismissRef.current();
     }
   }, [pathname]);
 
@@ -72,22 +96,11 @@ export function Toast({ toast, onDismiss }: ToastProps) {
   useEffect(() => {
     const sub = AppState.addEventListener("change", (state) => {
       if (state !== "active") {
-        runDismiss();
+        runDismissRef.current();
       }
     });
     return () => sub.remove();
   }, []);
-
-  const runDismiss = () => {
-    if (timerRef.current) {
-      clearTimeout(timerRef.current);
-      timerRef.current = null;
-    }
-    translateY.value = withTiming(120, { duration: 180 });
-    opacity.value = withTiming(0, { duration: 180 }, (finished) => {
-      if (finished) runOnJS(onDismiss)();
-    });
-  };
 
   const swipeGesture = Gesture.Pan()
     .activeOffsetY(8)
