@@ -46,12 +46,7 @@ interface FeaturedList {
   displayName: string;
 }
 
-// Hardcoded fallback used while the appConfig query loads, and when no
-// featuredLists row is present on the deployment. Remote config
-// (api.appConfig.getFeaturedLists) is authoritative when set, so the featured
-// list can be curated without shipping a client release. Env-keyed here only
-// so the fallback matches the deployment — each Convex deployment is itself
-// environment-specific, so a non-null remote response needs no env split.
+// Fallback for when api.appConfig.getFeaturedLists is loading or unset.
 const DEFAULT_FEATURED_LISTS_BY_ENV: Record<
   "production" | "development",
   FeaturedList[]
@@ -201,8 +196,6 @@ function FeaturedListRow({
     return followedLists.some((l) => l.id === personalList.id);
   }, [personalList, followedLists]);
 
-  // Ref (not state) — this is purely a re-entry lock; nothing visible depends
-  // on it, so using state would just trigger two extra re-renders per tap.
   const isMutatingRef = useRef(false);
 
   const handleToggleSubscribe = useCallback(() => {
@@ -314,11 +307,7 @@ function FollowingEmptyState({
   );
   const currentUserId = userData?.id;
 
-  // Remote-configurable featured lists (api.appConfig.getFeaturedLists).
-  // null = no appConfig row set (fall back to defaults for the env)
-  // []   = admin has intentionally cleared the featured lists
-  // T[]  = curated list from the deployment
-  // undefined = query loading — use defaults so the empty state isn't blank
+  // null = row not set (fall back); [] = admin intentionally cleared.
   const remoteFeaturedLists = useQuery(api.appConfig.getFeaturedLists, {});
   const featuredLists =
     remoteFeaturedLists !== undefined && remoteFeaturedLists !== null
@@ -407,12 +396,9 @@ function FollowingFeedContent() {
   const followedLists = useQuery(api.lists.getFollowedLists);
   const hasFollowings = (followedLists?.length ?? 0) > 0;
 
-  // Session-sticky empty state: once the user lands with no followings, keep the empty
-  // state visible so they can follow multiple featured lists without it disappearing
-  // after the first follow. Re-latch to "show" if the user empties their lists mid-
-  // session (e.g., unfollows everything from the feed view) — otherwise the feed view
-  // would be stuck rendering stale results from the skipped getFollowedListsFeed query,
-  // and the next subscribe tap would snap them right back out of onboarding.
+  // Sticky so users can subscribe to multiple featured lists without the
+  // screen flipping to the feed mid-flow. Re-latches to "show" after an
+  // unfollow-all so the feed isn't stuck on stale paginated results.
   const [emptyStateMode, setEmptyStateMode] = useState<
     "unset" | "show" | "dismissed"
   >("unset");
@@ -591,11 +577,7 @@ function FollowingFeedContent() {
     handleShareList,
   ]);
 
-  // Show the empty state when:
-  // 1) the latch is "show" (initial onboarding, or re-latched after unfollow-all), or
-  // 2) data is loaded and the user has no followings — covers the first render before
-  //    the latch effect commits, and guards the feed view from rendering stale results
-  //    from the skipped getFollowedListsFeed query after an unfollow-all.
+  // Second branch avoids a one-frame flash before the latch effect commits.
   const showEmptyState =
     emptyStateMode === "show" ||
     (followedLists !== undefined && !hasFollowings);

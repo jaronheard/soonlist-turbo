@@ -33,15 +33,7 @@ const featuredListValidator = v.object({
   displayName: v.string(),
 });
 
-/**
- * Featured lists rendered in the Following tab onboarding empty state.
- *
- * Returns `null` when no config row exists (client falls back to hardcoded
- * defaults). Returns `[]` as an intentional "hide all featured lists" signal
- * an admin can set without a client release. Returns an array of entries
- * otherwise. Each Convex deployment is environment-specific, so no env key
- * is needed — prod and dev deployments hold their own featured list rows.
- */
+/** Returns `null` when the row is unset so clients can fall back to defaults. */
 export const getFeaturedLists = query({
   args: {},
   returns: v.union(v.null(), v.array(featuredListValidator)),
