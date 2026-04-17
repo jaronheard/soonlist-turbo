@@ -185,14 +185,19 @@ function EventDetail({ id }: { id: string }) {
       ? event.eventFollows.some((follow) => follow.userId === currentUser.id)
       : false;
 
-  const { handleDelete, handleAddToCal, handleShare } = useEventActions({
+  const { handleDelete, handleAddToCal } = useEventActions({
     event,
     isSaved,
     source: "event_detail",
   });
 
-  const { isSaved: optimisticIsSaved, toggle: toggleSave } =
-    useEventSaveActions(event?.id ?? "", isSaved, { source: "event_detail" });
+  const {
+    isSaved: optimisticIsSaved,
+    toggle: toggleSave,
+    openShareSheet,
+  } = useEventSaveActions(event?.id ?? "", isSaved, {
+    source: "event_detail",
+  });
 
   // Handlers
   const handleDeleteAndRedirect = useCallback(async () => {
@@ -239,7 +244,7 @@ function EventDetail({ id }: { id: string }) {
     return (
       <View className="flex-row items-center gap-4">
         <TouchableOpacity
-          onPress={handleShare}
+          onPress={() => void openShareSheet("event_detail")}
           accessibilityLabel="Share event"
           accessibilityRole="button"
           hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
@@ -272,7 +277,7 @@ function EventDetail({ id }: { id: string }) {
     optimisticIsSaved,
     currentUser?.id,
     handleDeleteAndRedirect,
-    handleShare,
+    openShareSheet,
   ]);
 
   // Early return if the 'id' is missing or invalid
