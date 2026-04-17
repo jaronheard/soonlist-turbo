@@ -3,6 +3,7 @@ import React, { useCallback, useEffect, useRef } from "react";
 import {
   AccessibilityInfo,
   AppState,
+  Modal,
   Pressable,
   StyleSheet,
   Text,
@@ -10,10 +11,10 @@ import {
 } from "react-native";
 import { Gesture, GestureDetector } from "react-native-gesture-handler";
 import Animated, {
+  Easing,
   runOnJS,
   useAnimatedStyle,
   useSharedValue,
-  withSpring,
   withTiming,
 } from "react-native-reanimated";
 import { BlurView } from "expo-blur";
@@ -68,8 +69,11 @@ export function Toast({ toast, onDismiss }: ToastProps) {
     // navigation, which would race with the route-change-dismiss effect).
     pathnameAtMountRef.current = pathnameLatestRef.current;
     // eslint-disable-next-line react-compiler/react-compiler -- reanimated SharedValue mutation; runs on UI thread.
-    translateY.value = withSpring(0, { damping: 18, stiffness: 180 });
-    opacity.value = withTiming(1, { duration: 200 });
+    translateY.value = withTiming(0, {
+      duration: 220,
+      easing: Easing.out(Easing.cubic),
+    });
+    opacity.value = withTiming(1, { duration: 180 });
 
     // Announce to VoiceOver
     AccessibilityInfo.announceForAccessibility(toast.message);
@@ -113,7 +117,10 @@ export function Toast({ toast, onDismiss }: ToastProps) {
       if (e.translationY > 40) {
         runOnJS(runDismiss)();
       } else {
-        translateY.value = withSpring(0, { damping: 18, stiffness: 180 });
+        translateY.value = withTiming(0, {
+          duration: 180,
+          easing: Easing.out(Easing.cubic),
+        });
       }
     });
 
@@ -130,40 +137,51 @@ export function Toast({ toast, onDismiss }: ToastProps) {
   };
 
   return (
-    <Animated.View
-      pointerEvents="box-none"
-      style={[
-        styles.wrapper,
-        { bottom: insets.bottom + 72 },
-        containerStyle,
-      ]}
-      accessibilityLiveRegion="polite"
+    <Modal
+      transparent
+      visible
+      animationType="none"
+      statusBarTranslucent
+      hardwareAccelerated
+      presentationStyle="overFullScreen"
     >
-      <GestureDetector gesture={swipeGesture}>
-        <View style={styles.shadowHost}>
-          <BlurView intensity={60} tint="light" style={styles.blur}>
-            <View style={[styles.check, { backgroundColor: checkColor }]}>
-              <Text style={styles.checkGlyph}>
-                {variant === "success" ? "✓" : "✕"}
-              </Text>
+      <View pointerEvents="box-none" style={StyleSheet.absoluteFill}>
+        <Animated.View
+          pointerEvents="box-none"
+          style={[
+            styles.wrapper,
+            { bottom: insets.bottom + 72 },
+            containerStyle,
+          ]}
+          accessibilityLiveRegion="polite"
+        >
+          <GestureDetector gesture={swipeGesture}>
+            <View style={styles.shadowHost}>
+              <BlurView intensity={60} tint="light" style={styles.blur}>
+                <View style={[styles.check, { backgroundColor: checkColor }]}>
+                  <Text style={styles.checkGlyph}>
+                    {variant === "success" ? "✓" : "✕"}
+                  </Text>
+                </View>
+                <Text style={styles.message} numberOfLines={2}>
+                  {toast.message}
+                </Text>
+                {toast.action && (
+                  <Pressable
+                    onPress={handleActionPress}
+                    accessibilityRole="button"
+                    accessibilityLabel={toast.action.label}
+                    hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+                  >
+                    <Text style={styles.actionLabel}>{toast.action.label}</Text>
+                  </Pressable>
+                )}
+              </BlurView>
             </View>
-            <Text style={styles.message} numberOfLines={2}>
-              {toast.message}
-            </Text>
-            {toast.action && (
-              <Pressable
-                onPress={handleActionPress}
-                accessibilityRole="button"
-                accessibilityLabel={toast.action.label}
-                hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
-              >
-                <Text style={styles.actionLabel}>{toast.action.label}</Text>
-              </Pressable>
-            )}
-          </BlurView>
-        </View>
-      </GestureDetector>
-    </Animated.View>
+          </GestureDetector>
+        </Animated.View>
+      </View>
+    </Modal>
   );
 }
 
