@@ -18,8 +18,7 @@ export function SubscribeButton({
   size = "md",
   accessibilityLabel,
 }: SubscribeButtonProps) {
-  const containerSize =
-    size === "sm" ? "px-3 py-1" : "px-4 py-1.5";
+  const containerSize = size === "sm" ? "px-3 py-1" : "px-4 py-1.5";
   const textSize = size === "sm" ? "text-xs" : "text-sm";
 
   return (

@@ -46,7 +46,15 @@ export default function ListDetailScreen() {
     const current = localStore.getQuery(api.lists.getFollowedLists, {});
     if (current === undefined || !listData) return;
     if (current.some((l) => l.id === args.listId)) return;
-    localStore.setQuery(api.lists.getFollowedLists, {}, [...current, listData]);
+    // getBySlug returns an enriched shape; strip fields not on Doc<"lists">
+    // before writing to the getFollowedLists cache.
+    const {
+      owner: _owner,
+      contributorCount: _contributorCount,
+      followerCount: _followerCount,
+      ...rawList
+    } = listData;
+    localStore.setQuery(api.lists.getFollowedLists, {}, [...current, rawList]);
   });
 
   const unfollowListMutation = useMutation(
