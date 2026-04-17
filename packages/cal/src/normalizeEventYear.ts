@@ -66,7 +66,11 @@ function findDate(
       // Invalid for this year (e.g. Feb 29 in a non-leap year); try next.
     }
   }
-  throw new Error(`Invalid month/day combination: ${month}-${day}`);
+  throw new Error(
+    `Could not find a valid date for month ${month}, day ${day} ` +
+      `within ${MAX_YEAR_OFFSET} years of ${startYear}` +
+      (notBefore ? ` on or after ${notBefore.toString()}` : ""),
+  );
 }
 
 /**
