@@ -188,6 +188,12 @@ export const EventSchema = z.object({
     .describe(
       "End time in 24-hour format HH:MM:SS (e.g., 14:30:00 for 2:30 PM). Always include seconds, even if they're 00.",
     ),
+  hasExplicitYear: z
+    .boolean()
+    .optional()
+    .describe(
+      "Set to true ONLY if the source text or image explicitly states a 4-digit year for the event (e.g., 'March 15, 2028' or 'Summer 2027'). Omit or set to false in every other case, including when the year is merely implied by recency, context, or your own guess. When false, any placeholder year you pick for startDate/endDate will be discarded and replaced downstream with the soonest future year that matches the month and day.",
+    ),
   timeZone: z.string().describe("Timezone in IANA format."),
   location: z.string().describe("Location of the event."),
   // eventMetadata: EventMetadataSchema,
@@ -294,15 +300,8 @@ export const systemMessage = (schema?: string) =>
  * Generates the main event extraction prompt text.
  * @param date - Current date in YYYY-MM-DD format (e.g., "2026-01-20")
  * @param timezone - IANA timezone identifier (e.g., "America/Los_Angeles")
- * @param minDate - Earliest valid date in YYYY-MM-DD format (e.g., "2025-11-20")
- * @param maxDate - Latest valid date in YYYY-MM-DD format (e.g., "2026-11-20")
  */
-export const getText = (
-  date: string,
-  timezone: string,
-  minDate: string,
-  maxDate: string,
-) => `# CONTEXT
+export const getText = (date: string, timezone: string) => `# CONTEXT
 The current date is ${date}, and the default timezone is ${timezone} unless specified otherwise.
 
 ## YOUR JOB
@@ -335,9 +334,10 @@ The system using the output requires specific date and time formatting.
 - Always include seconds in the time, even if they're 00.
 - Always provide both startTime and endTime.
 
-**Year Inference:**
-- If no year is explicitly stated: You MUST infer a year that places the date between ${minDate} and ${maxDate}.
-- If a year IS explicitly stated: Use that exact year. This is the ONLY time a date can fall outside the ${minDate} to ${maxDate} window.
+**Year Inference (read carefully):**
+- Set \`hasExplicitYear\` to true ONLY when the source text or image literally contains a 4-digit year tied to the event (e.g., "March 15, 2028", "Summer 2027", "NYE 2026/2027"). Recency, context, or your own best guess DO NOT count as explicit.
+- When \`hasExplicitYear\` is false, the year you write into \`startDate\`/\`endDate\` does not matter — pick the current year as a placeholder. The system will replace it downstream with the soonest future year that matches the month and day, so DO NOT try to reason about whether the event has "already passed this year".
+- When \`hasExplicitYear\` is true, use the exact year stated. Never invent a year just to satisfy recency.
 
 ** Time Inference (when a start or end time is not explicitly stated):**
 - If start time is not explicitly stated, infer a reasonable start time based on the event type and context (e.g., 19:00:00 for an evening concert, 10:00:00 for a morning workshop).
@@ -388,7 +388,7 @@ Common pitfalls (avoid):
 - Guessing platform; when unsure, use "unknown".
 `;
 
-const formatOffsetAsIANASoft = (offset: string) => {
+export const formatOffsetAsIANASoft = (offset: string) => {
   const timezone = soft(offset)[0];
   return timezone?.iana || Intl.DateTimeFormat().resolvedOptions().timeZone;
 };
@@ -398,28 +398,25 @@ export const getPrompt = (
 ) => {
   const timezoneIANA = formatOffsetAsIANASoft(timezone);
   const now = Temporal.Now.instant().toZonedDateTimeISO(timezoneIANA);
-  const currentDate = now.toPlainDate();
-  const date = currentDate.toString();
-  const minDate = currentDate.subtract({ months: 2 }).toString();
-  const maxDate = currentDate.add({ months: 10 }).toString();
+  const date = now.toPlainDate().toString();
 
   return {
-    text: getText(date, timezoneIANA, minDate, maxDate),
+    text: getText(date, timezoneIANA),
     textMetadata: getTextMetadata(),
-    version: "v2026.03.30.2", // simplify year inference to strict date window with rare explicit-year override
+    version: "v2026.04.10.1", // delegate year inference to deterministic post-processing (normalizeEventYear)
   };
 };
 
 export const getSystemMessage = () => {
   return {
     text: systemMessage(),
-    version: "v2026.03.30.2", // simplify year inference to strict date window with rare explicit-year override
+    version: "v2026.04.10.1", // delegate year inference to deterministic post-processing (normalizeEventYear)
   };
 };
 
 export const getSystemMessageMetadata = () => {
   return {
     text: systemMessage(eventMetadataSchemaAsText),
-    version: "v2026.03.30.2", // simplify year inference to strict date window with rare explicit-year override
+    version: "v2026.04.10.1", // delegate year inference to deterministic post-processing (normalizeEventYear)
   };
 };

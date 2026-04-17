@@ -33,12 +33,14 @@
     "@convex-dev/migrations": "catalog:",
     "@convex-dev/workflow": "catalog:",
     "@convex-dev/workpool": "catalog:",
+    "@js-temporal/polyfill": "catalog:",
     "@soonlist/cal": "workspace:*",
     "@vercel/functions": "catalog:",
     "ai": "catalog:",
     "convex": "catalog:",
     "langfuse": "catalog:",
-    "nanoid": "catalog:"
+    "nanoid": "catalog:",
+    "zod": "catalog:"
   },
   "devDependencies": {
     "@soonlist/eslint-config": "workspace:*",

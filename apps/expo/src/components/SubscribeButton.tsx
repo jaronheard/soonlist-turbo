@@ -1,0 +1,51 @@
+import React from "react";
+import { Text, TouchableOpacity } from "react-native";
+
+import { hapticLight } from "~/utils/feedback";
+
+interface SubscribeButtonProps {
+  isSubscribed: boolean;
+  onPress: () => void;
+  /** "md" = header pill; "sm" = row pill (tighter, smaller text). Defaults to "md". */
+  size?: "sm" | "md";
+  /** Override the default a11y label. */
+  accessibilityLabel?: string;
+}
+
+export function SubscribeButton({
+  isSubscribed,
+  onPress,
+  size = "md",
+  accessibilityLabel,
+}: SubscribeButtonProps) {
+  const containerSize = size === "sm" ? "px-3 py-1" : "px-4 py-1.5";
+  const textSize = size === "sm" ? "text-xs" : "text-sm";
+
+  return (
+    <TouchableOpacity
+      onPress={() => {
+        void hapticLight();
+        onPress();
+      }}
+      activeOpacity={0.85}
+      accessibilityRole="button"
+      accessibilityLabel={
+        accessibilityLabel ??
+        (isSubscribed ? "Subscribed to list" : "Subscribe to list")
+      }
+      className={`rounded-full ${containerSize} ${
+        isSubscribed
+          ? "border border-interactive-1 bg-white"
+          : "bg-interactive-1"
+      }`}
+    >
+      <Text
+        className={`${textSize} font-semibold ${
+          isSubscribed ? "text-interactive-1" : "text-white"
+        }`}
+      >
+        {isSubscribed ? "Subscribed" : "Subscribe"}
+      </Text>
+    </TouchableOpacity>
+  );
+}

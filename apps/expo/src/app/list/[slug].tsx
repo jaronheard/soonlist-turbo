@@ -6,20 +6,22 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
-import { Stack, useLocalSearchParams } from "expo-router";
+import { Stack, useLocalSearchParams, useRouter } from "expo-router";
 import { useConvexAuth, useMutation, useQuery } from "convex/react";
 
 import { api } from "@soonlist/backend/convex/_generated/api";
 
 import { List as ListIcon, ShareIcon } from "~/components/icons";
+import { SubscribeButton } from "~/components/SubscribeButton";
 import UserEventsList from "~/components/UserEventsList";
 import { useStablePaginatedQuery } from "~/hooks/useStableQuery";
 import { logError } from "~/utils/errorLogging";
-import { hapticSuccess, toast } from "~/utils/feedback";
+import { toast } from "~/utils/feedback";
 
 export default function ListDetailScreen() {
   const { slug } = useLocalSearchParams<{ slug: string }>();
   const normalizedSlug = typeof slug === "string" ? slug : "";
+  const router = useRouter();
   const { isAuthenticated } = useConvexAuth();
   const currentUser = useQuery(api.users.getCurrentUser);
 
@@ -38,8 +40,34 @@ export default function ListDetailScreen() {
     { initialNumItems: 50 },
   );
 
-  const followListMutation = useMutation(api.lists.followList);
-  const unfollowListMutation = useMutation(api.lists.unfollowList);
+  const followListMutation = useMutation(
+    api.lists.followList,
+  ).withOptimisticUpdate((localStore, args) => {
+    const current = localStore.getQuery(api.lists.getFollowedLists, {});
+    if (current === undefined || !listData) return;
+    if (current.some((l) => l.id === args.listId)) return;
+    // getBySlug returns an enriched shape; strip fields not on Doc<"lists">
+    // before writing to the getFollowedLists cache.
+    const {
+      owner: _owner,
+      contributorCount: _contributorCount,
+      followerCount: _followerCount,
+      ...rawList
+    } = listData;
+    localStore.setQuery(api.lists.getFollowedLists, {}, [...current, rawList]);
+  });
+
+  const unfollowListMutation = useMutation(
+    api.lists.unfollowList,
+  ).withOptimisticUpdate((localStore, args) => {
+    const current = localStore.getQuery(api.lists.getFollowedLists, {});
+    if (current === undefined) return;
+    localStore.setQuery(
+      api.lists.getFollowedLists,
+      {},
+      current.filter((l) => l.id !== args.listId),
+    );
+  });
 
   const followedLists = useQuery(
     api.lists.getFollowedLists,
@@ -53,22 +81,27 @@ export default function ListDetailScreen() {
 
   const isOwnList = listData?.userId === currentUser?.id;
 
-  const handleToggleFollow = useCallback(async () => {
+  const handleToggleFollow = useCallback(() => {
     if (!listData) return;
-    try {
-      if (isFollowing) {
-        await unfollowListMutation({ listId: listData.id });
-      } else {
-        await followListMutation({ listId: listData.id });
-      }
-      void hapticSuccess();
-    } catch (error) {
+    if (!isAuthenticated) {
+      router.push("/(auth)/sign-in");
+      return;
+    }
+    const run = isFollowing ? unfollowListMutation : followListMutation;
+    run({ listId: listData.id }).catch((error: unknown) => {
       logError("Error toggling list follow", error);
       toast.error(
-        isFollowing ? "Failed to unfollow list" : "Failed to follow list",
+        isFollowing ? "Failed to unsubscribe" : "Failed to subscribe",
       );
-    }
-  }, [listData, isFollowing, followListMutation, unfollowListMutation]);
+    });
+  }, [
+    listData,
+    isAuthenticated,
+    isFollowing,
+    followListMutation,
+    unfollowListMutation,
+    router,
+  ]);
 
   const handleShare = useCallback(async () => {
     if (!listData || !normalizedSlug) return;
@@ -172,17 +205,21 @@ export default function ListDetailScreen() {
       <Stack.Screen
         options={{
           title: "List Details",
-          headerRight: () =>
-            isAuthenticated && !isOwnList ? (
-              <TouchableOpacity
-                onPress={() => void handleToggleFollow()}
-                activeOpacity={0.7}
-              >
-                <Text className="text-base font-semibold text-interactive-1">
-                  {isFollowing ? "Unfollow" : "Follow"}
-                </Text>
-              </TouchableOpacity>
-            ) : null,
+          unstable_headerRightItems:
+            isOwnList || !listData
+              ? undefined
+              : () => [
+                  {
+                    type: "custom",
+                    element: (
+                      <SubscribeButton
+                        isSubscribed={isFollowing}
+                        onPress={handleToggleFollow}
+                      />
+                    ),
+                    hidesSharedBackground: true,
+                  },
+                ],
         }}
       />
       <UserEventsList
