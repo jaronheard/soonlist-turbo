@@ -7,7 +7,6 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
-import * as Haptics from "expo-haptics";
 import { Image } from "expo-image";
 import { Redirect, useRouter } from "expo-router";
 import { SymbolView } from "expo-symbols";
@@ -28,6 +27,7 @@ import { FollowedListsModal } from "~/components/FollowedListsModal";
 import { User } from "~/components/icons";
 import LoadingSpinner from "~/components/LoadingSpinner";
 import ScenePreviewThreeUp from "~/components/ScenePreviewThreeUp";
+import { SubscribeButton } from "~/components/SubscribeButton";
 import UserEventsList from "~/components/UserEventsList";
 import { useStablePaginatedQuery } from "~/hooks/useStableQuery";
 import { useAppStore, useStableTimestamp } from "~/store";
@@ -119,8 +119,30 @@ function FeaturedListRow({
     targetUser?.id ? { userId: targetUser.id } : "skip",
   );
   const followedLists = useQuery(api.lists.getFollowedLists, {});
-  const followListMutation = useMutation(api.lists.followList);
-  const unfollowListMutation = useMutation(api.lists.unfollowList);
+
+  const followListMutation = useMutation(
+    api.lists.followList,
+  ).withOptimisticUpdate((localStore, args) => {
+    const current = localStore.getQuery(api.lists.getFollowedLists, {});
+    if (current === undefined || !personalList) return;
+    if (current.some((l) => l.id === args.listId)) return;
+    localStore.setQuery(api.lists.getFollowedLists, {}, [
+      ...current,
+      personalList,
+    ]);
+  });
+
+  const unfollowListMutation = useMutation(
+    api.lists.unfollowList,
+  ).withOptimisticUpdate((localStore, args) => {
+    const current = localStore.getQuery(api.lists.getFollowedLists, {});
+    if (current === undefined) return;
+    localStore.setQuery(
+      api.lists.getFollowedLists,
+      {},
+      current.filter((l) => l.id !== args.listId),
+    );
+  });
 
   const { results: events } = useStablePaginatedQuery(
     api.feeds.getPublicUserFeed,
@@ -154,33 +176,26 @@ function FeaturedListRow({
     targetUser?.id !== undefined &&
     targetUser.id === currentUserId;
 
-  const isFollowing = useMemo(() => {
+  const isSubscribed = useMemo(() => {
     if (!personalList || !followedLists) return false;
     return followedLists.some((l) => l.id === personalList.id);
   }, [personalList, followedLists]);
 
-  const [isUpdatingFollow, setIsUpdatingFollow] = useState(false);
-
-  const handleToggleFollow = useCallback(async () => {
-    if (!personalList || isSelf || isUpdatingFollow) return;
-    setIsUpdatingFollow(true);
-    void Haptics.selectionAsync();
-    try {
-      if (isFollowing) {
-        await unfollowListMutation({ listId: personalList.id });
-      } else {
-        await followListMutation({ listId: personalList.id });
-      }
-    } catch (error) {
-      logError("Error toggling list follow from empty state", error);
-    } finally {
-      setIsUpdatingFollow(false);
+  const handleToggleSubscribe = useCallback(() => {
+    if (!personalList || isSelf) return;
+    if (isSubscribed) {
+      unfollowListMutation({ listId: personalList.id }).catch((error) => {
+        logError("Error unsubscribing from featured list", error);
+      });
+    } else {
+      followListMutation({ listId: personalList.id }).catch((error) => {
+        logError("Error subscribing to featured list", error);
+      });
     }
   }, [
     personalList,
     isSelf,
-    isUpdatingFollow,
-    isFollowing,
+    isSubscribed,
     unfollowListMutation,
     followListMutation,
   ]);
@@ -231,27 +246,17 @@ function FeaturedListRow({
           </Text>
         </View>
       </TouchableOpacity>
-      {!isSelf ? (
-        <TouchableOpacity
-          onPress={() => void handleToggleFollow()}
-          disabled={!personalList || isUpdatingFollow}
-          activeOpacity={0.8}
-          accessibilityRole="button"
+      {!isSelf && personalList ? (
+        <SubscribeButton
+          isSubscribed={isSubscribed}
+          onPress={handleToggleSubscribe}
+          size="sm"
           accessibilityLabel={
-            isFollowing ? `Unfollow ${displayName}` : `Follow ${displayName}`
+            isSubscribed
+              ? `Unsubscribe from ${displayName}`
+              : `Subscribe to ${displayName}`
           }
-          className={`rounded-full px-4 py-2 ${
-            isFollowing ? "bg-neutral-4" : "bg-interactive-1"
-          } ${!personalList || isUpdatingFollow ? "opacity-60" : ""}`}
-        >
-          <Text
-            className={`text-sm font-semibold ${
-              isFollowing ? "text-neutral-1" : "text-white"
-            }`}
-          >
-            {isFollowing ? "Following" : "Follow"}
-          </Text>
-        </TouchableOpacity>
+        />
       ) : null}
     </View>
   );
@@ -288,7 +293,7 @@ function FollowingEmptyState({
           className="mb-1 text-base font-medium text-neutral-2"
           style={{ paddingLeft: 6 }}
         >
-          Events from lists I follow
+          Events from lists I subscribe to
         </Text>
       </View>
 
@@ -297,14 +302,14 @@ function FollowingEmptyState({
           className="mb-3 text-2xl font-bold text-neutral-1"
           style={{ lineHeight: 30 }}
         >
-          Follow a list to get started
+          Subscribe to a list to get started
         </Text>
         <Text
           className="mb-6 text-base text-neutral-2"
           style={{ lineHeight: 22 }}
         >
-          My Scene shows upcoming events from people you follow. Start with
-          one of these featured lists.
+          My Scene shows upcoming events from people you subscribe to. Start
+          with one of these featured lists.
         </Text>
 
         <View className="mb-2">
@@ -468,7 +473,7 @@ function FollowingFeedContent() {
           className="mb-1 text-base font-medium text-neutral-2"
           style={{ paddingLeft: 6 }}
         >
-          Events from lists I follow
+          Events from lists I subscribe to
         </Text>
         {followedListCount > 0 && (
           <TouchableOpacity

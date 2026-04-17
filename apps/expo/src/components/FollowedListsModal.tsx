@@ -1,4 +1,4 @@
-import React, { useCallback, useState } from "react";
+import React, { useCallback } from "react";
 import {
   ActivityIndicator,
   FlatList,
@@ -16,8 +16,9 @@ import type { Doc } from "@soonlist/backend/convex/_generated/dataModel";
 import { api } from "@soonlist/backend/convex/_generated/api";
 
 import { ChevronRight, List, ShareIcon } from "~/components/icons";
+import { SubscribeButton } from "~/components/SubscribeButton";
 import { logError } from "~/utils/errorLogging";
-import { hapticSuccess, toast } from "~/utils/feedback";
+import { toast } from "~/utils/feedback";
 
 interface FollowedListsModalProps {
   visible: boolean;
@@ -30,25 +31,24 @@ export function FollowedListsModal({
 }: FollowedListsModalProps) {
   const insets = useSafeAreaInsets();
   const followedLists = useQuery(api.lists.getFollowedLists);
-  const unfollowListMutation = useMutation(api.lists.unfollowList);
-  const [unfollowingIds, setUnfollowingIds] = useState<Set<string>>(new Set());
+  const unfollowListMutation = useMutation(
+    api.lists.unfollowList,
+  ).withOptimisticUpdate((localStore, args) => {
+    const current = localStore.getQuery(api.lists.getFollowedLists, {});
+    if (current === undefined) return;
+    localStore.setQuery(
+      api.lists.getFollowedLists,
+      {},
+      current.filter((l) => l.id !== args.listId),
+    );
+  });
 
   const handleUnfollow = useCallback(
-    async (listId: string) => {
-      setUnfollowingIds((prev) => new Set(prev).add(listId));
-      try {
-        await unfollowListMutation({ listId });
-        void hapticSuccess();
-      } catch (error) {
+    (listId: string) => {
+      unfollowListMutation({ listId }).catch((error: unknown) => {
         logError("Error unfollowing list", error);
-        toast.error("Failed to unfollow list");
-      } finally {
-        setUnfollowingIds((prev) => {
-          const next = new Set(prev);
-          next.delete(listId);
-          return next;
-        });
-      }
+        toast.error("Failed to unsubscribe");
+      });
     },
     [unfollowListMutation],
   );
@@ -90,7 +90,9 @@ export function FollowedListsModal({
       <View className="flex-1 bg-white" style={{ paddingTop: insets.top }}>
         {/* Header */}
         <View className="flex-row items-center justify-between border-b border-neutral-3 px-4 py-3">
-          <Text className="text-lg font-bold text-neutral-1">Following</Text>
+          <Text className="text-lg font-bold text-neutral-1">
+            Subscribed lists
+          </Text>
           <TouchableOpacity onPress={onClose} activeOpacity={0.7}>
             <Text className="text-base font-semibold text-interactive-1">
               Done
@@ -105,7 +107,7 @@ export function FollowedListsModal({
         ) : followedLists.length === 0 ? (
           <View className="flex-1 items-center justify-center px-4">
             <Text className="text-base text-neutral-2">
-              Not following any lists yet
+              Not subscribed to any lists yet
             </Text>
           </View>
         ) : (
@@ -123,7 +125,6 @@ export function FollowedListsModal({
               </Text>
             }
             renderItem={({ item: list }) => {
-              const isUnfollowing = unfollowingIds.has(list.id);
               return (
                 <View className="flex-row items-center py-3">
                   <TouchableOpacity
@@ -157,21 +158,14 @@ export function FollowedListsModal({
                     <ShareIcon size={18} color="#5A32FB" />
                   </TouchableOpacity>
 
-                  <TouchableOpacity
-                    onPress={() => void handleUnfollow(list.id)}
-                    disabled={isUnfollowing}
-                    className="ml-1 rounded-full bg-neutral-4 px-3 py-1.5"
-                    activeOpacity={0.7}
-                    accessibilityLabel={`Unfollow ${list.name}`}
-                  >
-                    {isUnfollowing ? (
-                      <ActivityIndicator size="small" color="#627496" />
-                    ) : (
-                      <Text className="text-xs font-semibold text-neutral-2">
-                        Unfollow
-                      </Text>
-                    )}
-                  </TouchableOpacity>
+                  <View className="ml-1">
+                    <SubscribeButton
+                      isSubscribed={true}
+                      onPress={() => handleUnfollow(list.id)}
+                      size="sm"
+                      accessibilityLabel={`Unsubscribe from ${list.name}`}
+                    />
+                  </View>
                 </View>
               );
             }}
