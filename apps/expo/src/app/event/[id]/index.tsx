@@ -97,10 +97,14 @@ function getPlatformUrl(
   }
 }
 
+// Sized to match Apple's observed iOS 26 Liquid Glass nav-bar buttons
+// (Mail, Safari, Music): ~36pt visible capsule, ~18pt SF Symbol, ≥44pt hit
+// area via hitSlop. Apple has not published exact point values; these match
+// stock-app appearance per design research.
 const headerButtonStyle = {
-  width: 32,
-  height: 32,
-  borderRadius: 16,
+  width: 36,
+  height: 36,
+  borderRadius: 18,
   alignItems: "center" as const,
   justifyContent: "center" as const,
   backgroundColor: "#FFFFFF",
@@ -233,7 +237,7 @@ function EventDetail({ id }: { id: string }) {
     const isOwner = event.userId === currentUser?.id;
 
     return (
-      <View className="flex-row items-center gap-3">
+      <View className="flex-row items-center gap-4">
         <TouchableOpacity
           onPress={handleShare}
           accessibilityLabel="Share event"
@@ -241,7 +245,7 @@ function EventDetail({ id }: { id: string }) {
           hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
           style={headerButtonStyle}
         >
-          <ShareIcon size={20} color="#5A32FB" />
+          <ShareIcon size={18} color="#5A32FB" />
         </TouchableOpacity>
         <EventMenu
           event={event}
@@ -258,7 +262,7 @@ function EventDetail({ id }: { id: string }) {
             hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
             style={headerButtonStyle}
           >
-            <MoreVertical size={20} color="#5A32FB" />
+            <MoreVertical size={18} color="#5A32FB" />
           </TouchableOpacity>
         </EventMenu>
       </View>
