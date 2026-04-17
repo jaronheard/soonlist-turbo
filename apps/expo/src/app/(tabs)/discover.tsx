@@ -95,7 +95,7 @@ function DiscoverContent() {
     return <Redirect href="/feed" />;
   }
 
-  function SaveShareButtonWrapper({
+  function SaveOrShareWrapper({
     event,
   }: {
     event: { id: string; userId: string };
@@ -131,7 +131,7 @@ function DiscoverContent() {
       onEndReached={handleLoadMore}
       isFetchingNextPage={status === "LoadingMore"}
       isLoadingFirstPage={status === "LoadingFirstPage"}
-      ActionButton={SaveShareButtonWrapper}
+      ActionButton={SaveOrShareWrapper}
       showCreator="always"
       isDiscoverFeed={true}
       primaryAction="save"

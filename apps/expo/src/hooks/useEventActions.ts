@@ -456,6 +456,13 @@ export function useEventSaveActions(
       setIsSaved(true);
       toast.show({
         message: "Couldn't unsave event",
+        action: {
+          label: "Retry",
+          onPress: () => {
+            setIsSaved(false);
+            void runUnsave();
+          },
+        },
         variant: "error",
       });
       logError("Error unsaving event", error);

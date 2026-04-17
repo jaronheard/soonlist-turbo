@@ -540,7 +540,7 @@ export default function UserProfilePage() {
     );
   }
 
-  function ProfileSaveShareButtonWrapper({
+  function ProfileSaveOrShareWrapper({
     event,
   }: {
     event: { id: string; userId: string };
@@ -593,7 +593,7 @@ export default function UserProfilePage() {
           showCreator="never"
           isDiscoverFeed={false}
           primaryAction={isOwnProfile ? "addToCalendar" : "save"}
-          ActionButton={ProfileSaveShareButtonWrapper}
+          ActionButton={ProfileSaveOrShareWrapper}
           savedEventIds={savedEventIds}
           HeaderComponent={() => listHeader}
         />
