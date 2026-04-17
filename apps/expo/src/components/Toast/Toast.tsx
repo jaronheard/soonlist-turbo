@@ -3,7 +3,6 @@ import React, { useCallback, useEffect, useRef } from "react";
 import {
   AccessibilityInfo,
   AppState,
-  Modal,
   Pressable,
   StyleSheet,
   Text,
@@ -17,6 +16,7 @@ import Animated, {
   useSharedValue,
   withTiming,
 } from "react-native-reanimated";
+import { FullWindowOverlay } from "react-native-screens";
 import { BlurView } from "expo-blur";
 import { usePathname } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
@@ -137,14 +137,7 @@ export function Toast({ toast, onDismiss }: ToastProps) {
   };
 
   return (
-    <Modal
-      transparent
-      visible
-      animationType="none"
-      statusBarTranslucent
-      hardwareAccelerated
-      presentationStyle="overFullScreen"
-    >
+    <FullWindowOverlay>
       <View pointerEvents="box-none" style={StyleSheet.absoluteFill}>
         <Animated.View
           pointerEvents="box-none"
@@ -184,7 +177,7 @@ export function Toast({ toast, onDismiss }: ToastProps) {
           </GestureDetector>
         </Animated.View>
       </View>
-    </Modal>
+    </FullWindowOverlay>
   );
 }
 
