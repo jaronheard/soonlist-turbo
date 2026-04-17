@@ -41,6 +41,7 @@ import {
   Heart,
   Instagram,
   MapPinned,
+  MoreVertical,
   ShareIcon,
   User,
 } from "~/components/icons";
@@ -95,6 +96,19 @@ function getPlatformUrl(
       return ""; // Return empty string for unsupported platforms
   }
 }
+
+const headerButtonStyle = {
+  width: 32,
+  height: 32,
+  borderRadius: 16,
+  alignItems: "center" as const,
+  justifyContent: "center" as const,
+  backgroundColor: "#FFFFFF",
+  shadowColor: "#000",
+  shadowOffset: { width: 0, height: 1 },
+  shadowOpacity: 0.06,
+  shadowRadius: 2,
+};
 
 export default function Page() {
   const { id } = useLocalSearchParams<{ id: string }>();
@@ -219,14 +233,15 @@ function EventDetail({ id }: { id: string }) {
     const isOwner = event.userId === currentUser?.id;
 
     return (
-      <View className="flex-row items-center gap-2">
+      <View className="flex-row items-center gap-3">
         <TouchableOpacity
           onPress={handleShare}
           accessibilityLabel="Share event"
           accessibilityRole="button"
-          hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+          hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+          style={headerButtonStyle}
         >
-          <ShareIcon size={24} color="#5A32FB" />
+          <ShareIcon size={20} color="#5A32FB" />
         </TouchableOpacity>
         <EventMenu
           event={event}
@@ -235,7 +250,17 @@ function EventDetail({ id }: { id: string }) {
           menuType="popup"
           onDelete={handleDeleteAndRedirect}
           iconColor="#5A32FB"
-        />
+        >
+          <TouchableOpacity
+            activeOpacity={0.6}
+            accessibilityLabel="Event menu"
+            accessibilityRole="button"
+            hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+            style={headerButtonStyle}
+          >
+            <MoreVertical size={20} color="#5A32FB" />
+          </TouchableOpacity>
+        </EventMenu>
       </View>
     );
   }, [
