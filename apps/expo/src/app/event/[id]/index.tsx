@@ -35,15 +35,16 @@ import { EventMenu } from "~/components/EventMenu";
 import { HeaderLogo } from "~/components/HeaderLogo";
 import {
   CalendarPlus,
+  Check,
   EyeOff,
   Globe2,
   Heart,
   Instagram,
   MapPinned,
-  ShareIcon,
   User,
 } from "~/components/icons";
 import LoadingSpinner from "~/components/LoadingSpinner";
+import ShareButton from "~/components/ShareButton";
 import { UserProfileFlair } from "~/components/UserProfileFlair";
 import { useEventActions, useEventSaveActions } from "~/hooks/useEventActions";
 import { useRevenueCat } from "~/providers/RevenueCatProvider";
@@ -166,7 +167,7 @@ function EventDetail({ id }: { id: string }) {
       ? event.eventFollows.some((follow) => follow.userId === currentUser.id)
       : false;
 
-  const { handleDelete, handleShare, handleAddToCal } = useEventActions({
+  const { handleDelete, handleAddToCal } = useEventActions({
     event,
     isSaved,
   });
@@ -215,6 +216,7 @@ function EventDetail({ id }: { id: string }) {
 
     return (
       <View className="flex-row items-center gap-2">
+        <ShareButton webPath={`/event/${event.id}`} />
         <EventMenu
           event={event}
           isOwner={isOwner}
@@ -328,7 +330,6 @@ function EventDetail({ id }: { id: string }) {
 
   // Determine primary and secondary actions
   const showSaveButton = !isCurrentUserEvent;
-  const showShareButton = isCurrentUserEvent;
 
   return (
     <>
@@ -642,20 +643,6 @@ function EventDetail({ id }: { id: string }) {
         {showSaveButton && (
           <EventDetailSaveButton eventId={event.id} isSaved={isSaved} />
         )}
-
-        {showShareButton && (
-          <TouchableOpacity
-            onPress={handleShare}
-            accessibilityLabel="Share"
-            accessibilityRole="button"
-            activeOpacity={0.8}
-          >
-            <View className="flex-row items-center gap-4 rounded-full bg-interactive-1 px-8 py-5">
-              <ShareIcon size={28} color="#FFFFFF" />
-              <Text className="text-xl font-bold text-white">Share</Text>
-            </View>
-          </TouchableOpacity>
-        )}
       </View>
     </>
   );
@@ -681,12 +668,13 @@ function EventDetailSaveButton({
         activeOpacity={0.8}
       >
         <View
-          className="flex-row items-center gap-4 rounded-full px-8 py-5"
-          style={{ backgroundColor: "rgba(120, 120, 128, 0.16)" }}
+          className="flex-row items-center justify-center gap-4 rounded-full px-8 py-5"
+          style={{
+            backgroundColor: "rgba(120, 120, 128, 0.16)",
+            minWidth: 168,
+          }}
         >
-          <Text style={{ fontSize: 28, color: "#1C1C1E", fontWeight: "700" }}>
-            ✓
-          </Text>
+          <Check size={28} color="#1C1C1E" />
           <Text className="text-xl font-bold" style={{ color: "#1C1C1E" }}>
             Saved
           </Text>
@@ -702,7 +690,10 @@ function EventDetailSaveButton({
       accessibilityRole="button"
       activeOpacity={0.8}
     >
-      <View className="flex-row items-center gap-4 rounded-full bg-interactive-1 px-8 py-5">
+      <View
+        className="flex-row items-center justify-center gap-4 rounded-full bg-interactive-1 px-8 py-5"
+        style={{ minWidth: 168 }}
+      >
         <Heart size={28} color="#FFFFFF" />
         <Text className="text-xl font-bold text-white">Save</Text>
       </View>
