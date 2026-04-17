@@ -547,8 +547,17 @@ function FollowingFeedContent() {
     handleShareList,
   ]);
 
-  // Show empty state if this session started empty and the user hasn't exited yet.
-  if (emptyStateMode === "show") {
+  // Show the empty state if this session started empty and the user hasn't
+  // exited yet. The "unset && loaded && no followings" branch makes the very
+  // first render correct so we don't flash UserEventsList's generic empty
+  // component for one frame before the useEffect above transitions the latch
+  // to "show".
+  const showEmptyState =
+    emptyStateMode === "show" ||
+    (emptyStateMode === "unset" &&
+      followedLists !== undefined &&
+      !hasFollowings);
+  if (showEmptyState) {
     return (
       <FollowingEmptyState
         hasFollowings={hasFollowings}
