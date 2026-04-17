@@ -189,20 +189,30 @@ function FeaturedListRow({
     return followedLists.some((l) => l.id === personalList.id);
   }, [personalList, followedLists]);
 
+  const [isMutating, setIsMutating] = useState(false);
+
   const handleToggleSubscribe = useCallback(() => {
-    if (!personalList || isSelf) return;
-    if (isSubscribed) {
-      unfollowListMutation({ listId: personalList.id }).catch((error) => {
-        logError("Error unsubscribing from featured list", error);
+    if (!personalList || isSelf || isMutating) return;
+    setIsMutating(true);
+    const promise = isSubscribed
+      ? unfollowListMutation({ listId: personalList.id })
+      : followListMutation({ listId: personalList.id });
+    promise
+      .catch((error) => {
+        logError(
+          isSubscribed
+            ? "Error unsubscribing from featured list"
+            : "Error subscribing to featured list",
+          error,
+        );
+      })
+      .finally(() => {
+        setIsMutating(false);
       });
-    } else {
-      followListMutation({ listId: personalList.id }).catch((error) => {
-        logError("Error subscribing to featured list", error);
-      });
-    }
   }, [
     personalList,
     isSelf,
+    isMutating,
     isSubscribed,
     unfollowListMutation,
     followListMutation,
@@ -371,16 +381,22 @@ function FollowingFeedContent() {
 
   // Session-sticky empty state: once the user lands with no followings, keep the empty
   // state visible so they can follow multiple featured lists without it disappearing
-  // after the first follow. Decision is made once (on initial query resolution); after
-  // that the latch is terminal for the session — unfollowing every list in-session
-  // won't drag the user back into onboarding after they've tapped "View My Scene".
+  // after the first follow. Re-latch to "show" if the user empties their lists mid-
+  // session (e.g., unfollows everything from the feed view) — otherwise the feed view
+  // would be stuck rendering stale results from the skipped getFollowedListsFeed query,
+  // and the next subscribe tap would snap them right back out of onboarding.
   const [emptyStateMode, setEmptyStateMode] = useState<
     "unset" | "show" | "dismissed"
   >("unset");
   useEffect(() => {
     if (followedLists === undefined) return;
-    if (emptyStateMode !== "unset") return;
-    setEmptyStateMode(hasFollowings ? "dismissed" : "show");
+    if (emptyStateMode === "unset") {
+      setEmptyStateMode(hasFollowings ? "dismissed" : "show");
+      return;
+    }
+    if (emptyStateMode === "dismissed" && !hasFollowings) {
+      setEmptyStateMode("show");
+    }
   }, [followedLists, hasFollowings, emptyStateMode]);
   const handleExitEmptyState = useCallback(() => {
     setEmptyStateMode("dismissed");
@@ -547,16 +563,14 @@ function FollowingFeedContent() {
     handleShareList,
   ]);
 
-  // Show the empty state if this session started empty and the user hasn't
-  // exited yet. The "unset && loaded && no followings" branch makes the very
-  // first render correct so we don't flash UserEventsList's generic empty
-  // component for one frame before the useEffect above transitions the latch
-  // to "show".
+  // Show the empty state when:
+  // 1) the latch is "show" (initial onboarding, or re-latched after unfollow-all), or
+  // 2) data is loaded and the user has no followings — covers the first render before
+  //    the latch effect commits, and guards the feed view from rendering stale results
+  //    from the skipped getFollowedListsFeed query after an unfollow-all.
   const showEmptyState =
     emptyStateMode === "show" ||
-    (emptyStateMode === "unset" &&
-      followedLists !== undefined &&
-      !hasFollowings);
+    (followedLists !== undefined && !hasFollowings);
   if (showEmptyState) {
     return (
       <FollowingEmptyState
