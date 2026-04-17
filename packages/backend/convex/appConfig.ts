@@ -1,4 +1,5 @@
 import { v } from "convex/values";
+import { z } from "zod";
 
 import { query } from "./_generated/server";
 
@@ -28,14 +29,16 @@ export const getMinimumIOSVersion = query({
   },
 });
 
-const featuredListValidator = v.object({
-  username: v.string(),
-  displayName: v.string(),
-});
+const featuredListSchema = z.array(
+  z.object({
+    username: z.string(),
+    displayName: z.string(),
+  }),
+);
 
 export const getFeaturedLists = query({
   args: {},
-  returns: v.array(featuredListValidator),
+  returns: v.array(v.object({ username: v.string(), displayName: v.string() })),
   handler: async (ctx) => {
     const config = await ctx.db
       .query("appConfig")
@@ -44,36 +47,22 @@ export const getFeaturedLists = query({
 
     if (!config?.value) return [];
 
+    let raw: unknown;
     try {
-      const parsed: unknown = JSON.parse(config.value);
-      if (!Array.isArray(parsed)) {
-        console.warn("featuredLists appConfig is not an array");
-        return [];
-      }
-      const validated: { username: string; displayName: string }[] = [];
-      for (const item of parsed) {
-        if (
-          item !== null &&
-          typeof item === "object" &&
-          typeof (item as { username?: unknown }).username === "string" &&
-          typeof (item as { displayName?: unknown }).displayName === "string"
-        ) {
-          const row = item as { username: string; displayName: string };
-          validated.push({
-            username: row.username,
-            displayName: row.displayName,
-          });
-        }
-      }
-      if (validated.length !== parsed.length) {
-        console.warn(
-          `featuredLists appConfig dropped ${parsed.length - validated.length} malformed row(s)`,
-        );
-      }
-      return validated;
+      raw = JSON.parse(config.value);
     } catch (error) {
       console.warn("featuredLists appConfig JSON parse failed", error);
       return [];
     }
+
+    const result = featuredListSchema.safeParse(raw);
+    if (!result.success) {
+      console.warn(
+        "featuredLists appConfig failed validation",
+        result.error.flatten(),
+      );
+      return [];
+    }
+    return result.data;
   },
 });
