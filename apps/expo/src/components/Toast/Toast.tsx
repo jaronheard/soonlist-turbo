@@ -16,10 +16,10 @@ import Animated, {
   useSharedValue,
   withTiming,
 } from "react-native-reanimated";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { FullWindowOverlay } from "react-native-screens";
 import { BlurView } from "expo-blur";
 import { usePathname } from "expo-router";
-import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import type { ActiveToast } from "./ToastProvider";
 

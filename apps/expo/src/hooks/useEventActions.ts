@@ -336,10 +336,9 @@ export function useEventSaveActions(
   ).withOptimisticUpdate((localStore, args) => {
     const { id } = args;
     if (!user?.username) return;
-    const currentSavedIds = localStore.getQuery(
-      api.events.getSavedIdsForUser,
-      { userName: user.username },
-    );
+    const currentSavedIds = localStore.getQuery(api.events.getSavedIdsForUser, {
+      userName: user.username,
+    });
     if (currentSavedIds !== undefined) {
       const updatedSavedIds = [...currentSavedIds, { id }];
       localStore.setQuery(
@@ -355,10 +354,9 @@ export function useEventSaveActions(
   ).withOptimisticUpdate((localStore, args) => {
     const { id } = args;
     if (!user?.username) return;
-    const currentSavedIds = localStore.getQuery(
-      api.events.getSavedIdsForUser,
-      { userName: user.username },
-    );
+    const currentSavedIds = localStore.getQuery(api.events.getSavedIdsForUser, {
+      userName: user.username,
+    });
     if (currentSavedIds !== undefined) {
       const updatedSavedIds = currentSavedIds.filter(
         (savedEvent) => savedEvent.id !== id,
