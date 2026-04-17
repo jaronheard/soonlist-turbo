@@ -598,7 +598,11 @@ export function UserEventListItem(props: UserEventListItemProps) {
                     <Text className="text-base font-bold text-interactive-1">Share</Text>
                   </TouchableOpacity>
                 ) : (
-                  <SaveButton eventId={id} isSaved={isSaved} source="user_events_list" />
+                  <SaveButton
+                    eventId={id}
+                    isSaved={isSaved}
+                    source={source ?? "user_events_list"}
+                  />
                 ))}
 
               {!isDiscoverFeed &&

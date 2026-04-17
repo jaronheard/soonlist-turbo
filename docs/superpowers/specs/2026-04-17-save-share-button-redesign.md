@@ -96,7 +96,7 @@ States:
 
 Behavior:
 - Local `isSaved` state seeded from prop, toggled synchronously on tap.
-- Light impact haptic on tap.
+- Light impact haptic only on save (not on unsave; unsave is silent per spec).
 - Calls `useEventSaveActions().toggle(eventId)`.
 
 Accessibility:
@@ -187,7 +187,7 @@ New / modified PostHog events:
 | `event_saved` (new) | Save tap succeeds | `event_id`, `source` |
 | `event_unsaved` (new) | Unsave tap succeeds | `event_id`, `source` |
 | `event_save_failed` (new) | Save mutation errors | `event_id`, `source`, `error_message` |
-| `share_event_initiated` (existing, modified) | Share opens | adds `via: "save_toast" \| "detail_page" \| "event_card"` |
+| `share_event_initiated` (existing, modified) | Share opens | adds `via: "save_toast" \| "event_detail" \| "event_card"` |
 | `save_toast_share_clicked` (new) | User taps Share in toast | `event_id`, `source` |
 | `save_toast_dismissed` (new) | Toast auto-dismisses without interaction | `event_id`, `source`, `duration_ms` |
 
