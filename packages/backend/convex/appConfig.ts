@@ -33,21 +33,23 @@ const featuredListValidator = v.object({
   displayName: v.string(),
 });
 
-/** Returns `null` when the row is unset so clients can fall back to defaults. */
 export const getFeaturedLists = query({
   args: {},
-  returns: v.union(v.null(), v.array(featuredListValidator)),
+  returns: v.array(featuredListValidator),
   handler: async (ctx) => {
     const config = await ctx.db
       .query("appConfig")
       .withIndex("by_key", (q) => q.eq("key", "featuredLists"))
       .first();
 
-    if (!config?.value) return null;
+    if (!config?.value) return [];
 
     try {
       const parsed: unknown = JSON.parse(config.value);
-      if (!Array.isArray(parsed)) return null;
+      if (!Array.isArray(parsed)) {
+        console.warn("featuredLists appConfig is not an array");
+        return [];
+      }
       const validated: { username: string; displayName: string }[] = [];
       for (const item of parsed) {
         if (
@@ -63,12 +65,15 @@ export const getFeaturedLists = query({
           });
         }
       }
-      // Any malformed row treats the whole config as unset so the client
-      // falls back to defaults instead of silently rendering a truncated list.
-      if (validated.length !== parsed.length) return null;
+      if (validated.length !== parsed.length) {
+        console.warn(
+          `featuredLists appConfig dropped ${parsed.length - validated.length} malformed row(s)`,
+        );
+      }
       return validated;
-    } catch {
-      return null;
+    } catch (error) {
+      console.warn("featuredLists appConfig JSON parse failed", error);
+      return [];
     }
   },
 });

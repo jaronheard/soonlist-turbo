@@ -38,32 +38,7 @@ import { SubscribeButton } from "~/components/SubscribeButton";
 import UserEventsList from "~/components/UserEventsList";
 import { useStablePaginatedQuery } from "~/hooks/useStableQuery";
 import { useAppStore, useStableTimestamp } from "~/store";
-import Config from "~/utils/config";
 import { logError } from "~/utils/errorLogging";
-
-interface FeaturedList {
-  username: string;
-  displayName: string;
-}
-
-// Fallback for when api.appConfig.getFeaturedLists is loading or unset.
-const DEFAULT_FEATURED_LISTS_BY_ENV: Record<
-  "production" | "development",
-  FeaturedList[]
-> = {
-  production: [
-    { username: "thepianofarm", displayName: "Anis Mojgani" },
-    { username: "kaylakennett", displayName: "Kayla Kennett" },
-    { username: "joshcarr", displayName: "Josh Carr" },
-  ],
-  development: [
-    { username: "jaron", displayName: "Jaron Heard" },
-    { username: "jaron-heard", displayName: "Jaron (Dev)" },
-    { username: "soonlist", displayName: "Soonlist" },
-  ],
-};
-
-const DEFAULT_FEATURED_LISTS = DEFAULT_FEATURED_LISTS_BY_ENV[Config.env];
 
 type Segment = "upcoming" | "past";
 
@@ -307,12 +282,7 @@ function FollowingEmptyState({
   );
   const currentUserId = userData?.id;
 
-  // null = row not set (fall back); [] = admin intentionally cleared.
-  const remoteFeaturedLists = useQuery(api.appConfig.getFeaturedLists, {});
-  const featuredLists =
-    remoteFeaturedLists !== undefined && remoteFeaturedLists !== null
-      ? remoteFeaturedLists
-      : DEFAULT_FEATURED_LISTS;
+  const featuredLists = useQuery(api.appConfig.getFeaturedLists, {}) ?? [];
 
   return (
     <ScrollView
@@ -343,21 +313,25 @@ function FollowingEmptyState({
           className="mb-6 text-base text-neutral-2"
           style={{ lineHeight: 22 }}
         >
-          My Scene shows upcoming events from people you subscribe to. Start
-          with one of these featured lists.
+          My Scene shows upcoming events from people you subscribe to.
+          {featuredLists.length > 0
+            ? " Start with one of these featured lists."
+            : ""}
         </Text>
 
-        <View className="mb-2">
-          {featuredLists.map((list) => (
-            <FeaturedListRow
-              key={list.username}
-              username={list.username}
-              displayName={list.displayName}
-              currentUserId={currentUserId}
-              followedLists={followedLists}
-            />
-          ))}
-        </View>
+        {featuredLists.length > 0 ? (
+          <View className="mb-2">
+            {featuredLists.map((list) => (
+              <FeaturedListRow
+                key={list.username}
+                username={list.username}
+                displayName={list.displayName}
+                currentUserId={currentUserId}
+                followedLists={followedLists}
+              />
+            ))}
+          </View>
+        ) : null}
 
         {hasFollowings ? (
           <View className="mt-4 items-center">
