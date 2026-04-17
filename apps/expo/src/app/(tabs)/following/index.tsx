@@ -21,6 +21,7 @@ import {
   useQuery,
 } from "convex/react";
 
+import type { Doc } from "@soonlist/backend/convex/_generated/dataModel";
 import { api } from "@soonlist/backend/convex/_generated/api";
 
 import { FollowedListsModal } from "~/components/FollowedListsModal";
@@ -39,7 +40,10 @@ interface FeaturedList {
   displayName: string;
 }
 
-const FEATURED_LISTS_BY_ENV: Record<"production" | "development", FeaturedList[]> = {
+const FEATURED_LISTS_BY_ENV: Record<
+  "production" | "development",
+  FeaturedList[]
+> = {
   production: [
     { username: "thepianofarm", displayName: "Anis Mojgani" },
     { username: "kaylakennett", displayName: "Kayla Kennett" },
@@ -105,20 +109,22 @@ function FeaturedListRow({
   username,
   displayName,
   currentUserId,
+  followedLists,
 }: {
   username: string;
   displayName: string;
   currentUserId: string | undefined;
+  followedLists: Doc<"lists">[] | undefined;
 }) {
   const router = useRouter();
   const stableTimestamp = useStableTimestamp();
 
   const targetUser = useQuery(api.users.getByUsername, { userName: username });
+  const targetUserFound = targetUser !== null && targetUser !== undefined;
   const personalList = useQuery(
     api.lists.getPersonalListForUser,
-    targetUser?.id ? { userId: targetUser.id } : "skip",
+    targetUserFound ? { userId: targetUser.id } : "skip",
   );
-  const followedLists = useQuery(api.lists.getFollowedLists, {});
 
   const followListMutation = useMutation(
     api.lists.followList,
@@ -146,8 +152,8 @@ function FeaturedListRow({
 
   const { results: events } = useStablePaginatedQuery(
     api.feeds.getPublicUserFeed,
-    { username, filter: "upcoming" as const },
-    { initialNumItems: 10 },
+    targetUserFound ? { username, filter: "upcoming" as const } : "skip",
+    { initialNumItems: 50 },
   );
 
   const { imageUris, upcomingCount } = useMemo((): {
@@ -265,10 +271,12 @@ function FeaturedListRow({
 function FollowingEmptyState({
   hasFollowings,
   followedEventCount,
+  followedLists,
   onExitToFeed,
 }: {
   hasFollowings: boolean;
   followedEventCount: number;
+  followedLists: Doc<"lists">[] | undefined;
   onExitToFeed: () => void;
 }) {
   const { user } = useUser();
@@ -319,6 +327,7 @@ function FollowingEmptyState({
               username={list.username}
               displayName={list.displayName}
               currentUserId={currentUserId}
+              followedLists={followedLists}
             />
           ))}
         </View>
@@ -360,16 +369,16 @@ function FollowingFeedContent() {
 
   // Session-sticky empty state: once the user lands with no followings, keep the empty
   // state visible so they can follow multiple featured lists without it disappearing
-  // after the first follow. They exit explicitly via "See your scene" or on next tab
-  // remount (when hasFollowings is already true on load).
+  // after the first follow. Decision is made once (on initial query resolution); after
+  // that the latch is terminal for the session — unfollowing every list in-session
+  // won't drag the user back into onboarding after they've tapped "View My Scene".
   const [emptyStateMode, setEmptyStateMode] = useState<
     "unset" | "show" | "dismissed"
   >("unset");
   useEffect(() => {
     if (followedLists === undefined) return;
-    if (!hasFollowings && emptyStateMode !== "show") {
-      setEmptyStateMode("show");
-    }
+    if (emptyStateMode !== "unset") return;
+    setEmptyStateMode(hasFollowings ? "dismissed" : "show");
   }, [followedLists, hasFollowings, emptyStateMode]);
   const handleExitEmptyState = useCallback(() => {
     setEmptyStateMode("dismissed");
@@ -542,6 +551,7 @@ function FollowingFeedContent() {
       <FollowingEmptyState
         hasFollowings={hasFollowings}
         followedEventCount={enrichedEvents.length}
+        followedLists={followedLists}
         onExitToFeed={handleExitEmptyState}
       />
     );
