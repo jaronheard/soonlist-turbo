@@ -45,7 +45,7 @@ import {
 } from "~/components/icons";
 import LoadingSpinner from "~/components/LoadingSpinner";
 import { UserProfileFlair } from "~/components/UserProfileFlair";
-import { useEventActions } from "~/hooks/useEventActions";
+import { useEventActions, useEventSaveActions } from "~/hooks/useEventActions";
 import { useRevenueCat } from "~/providers/RevenueCatProvider";
 import {
   useIncrementEventView,
@@ -166,11 +166,10 @@ function EventDetail({ id }: { id: string }) {
       ? event.eventFollows.some((follow) => follow.userId === currentUser.id)
       : false;
 
-  const { handleDelete, handleShare, handleAddToCal, handleFollow } =
-    useEventActions({
-      event,
-      isSaved,
-    });
+  const { handleDelete, handleShare, handleAddToCal } = useEventActions({
+    event,
+    isSaved,
+  });
 
   // Handlers
   const handleDeleteAndRedirect = useCallback(async () => {
@@ -328,8 +327,8 @@ function EventDetail({ id }: { id: string }) {
   );
 
   // Determine primary and secondary actions
-  const showSaveButton = !isCurrentUserEvent && !isSaved;
-  const showShareButton = isCurrentUserEvent || isSaved;
+  const showSaveButton = !isCurrentUserEvent;
+  const showShareButton = isCurrentUserEvent;
 
   return (
     <>
@@ -641,17 +640,7 @@ function EventDetail({ id }: { id: string }) {
         </TouchableOpacity>
 
         {showSaveButton && (
-          <TouchableOpacity
-            onPress={handleFollow}
-            accessibilityLabel="Save Event"
-            accessibilityRole="button"
-            activeOpacity={0.8}
-          >
-            <View className="flex-row items-center gap-4 rounded-full bg-interactive-1 px-8 py-5">
-              <Heart size={28} color="#FFFFFF" />
-              <Text className="text-xl font-bold text-white">Save</Text>
-            </View>
-          </TouchableOpacity>
+          <EventDetailSaveButton eventId={event.id} isSaved={isSaved} />
         )}
 
         {showShareButton && (
@@ -669,5 +658,54 @@ function EventDetail({ id }: { id: string }) {
         )}
       </View>
     </>
+  );
+}
+
+function EventDetailSaveButton({
+  eventId,
+  isSaved: initialIsSaved,
+}: {
+  eventId: string;
+  isSaved: boolean;
+}) {
+  const { isSaved, toggle } = useEventSaveActions(eventId, initialIsSaved, {
+    source: "event_detail",
+  });
+
+  if (isSaved) {
+    return (
+      <TouchableOpacity
+        onPress={toggle}
+        accessibilityLabel="Saved, double-tap to remove"
+        accessibilityRole="button"
+        activeOpacity={0.8}
+      >
+        <View
+          className="flex-row items-center gap-4 rounded-full px-8 py-5"
+          style={{ backgroundColor: "rgba(120, 120, 128, 0.16)" }}
+        >
+          <Text style={{ fontSize: 28, color: "#1C1C1E", fontWeight: "700" }}>
+            ✓
+          </Text>
+          <Text className="text-xl font-bold" style={{ color: "#1C1C1E" }}>
+            Saved
+          </Text>
+        </View>
+      </TouchableOpacity>
+    );
+  }
+
+  return (
+    <TouchableOpacity
+      onPress={toggle}
+      accessibilityLabel="Save Event"
+      accessibilityRole="button"
+      activeOpacity={0.8}
+    >
+      <View className="flex-row items-center gap-4 rounded-full bg-interactive-1 px-8 py-5">
+        <Heart size={28} color="#FFFFFF" />
+        <Text className="text-xl font-bold text-white">Save</Text>
+      </View>
+    </TouchableOpacity>
   );
 }
