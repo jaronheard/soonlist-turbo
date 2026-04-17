@@ -8,6 +8,8 @@ import React, {
   useState,
 } from "react";
 
+import { Toast } from "./Toast";
+
 export type ToastVariant = "success" | "error";
 
 export interface ToastAction {
@@ -53,7 +55,10 @@ export function ToastProvider({ children }: { children: React.ReactNode }) {
   );
 
   return (
-    <ToastContext.Provider value={value}>{children}</ToastContext.Provider>
+    <ToastContext.Provider value={value}>
+      {children}
+      {current && <Toast toast={current} onDismiss={dismiss} />}
+    </ToastContext.Provider>
   );
 }
 
