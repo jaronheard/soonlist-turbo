@@ -71,7 +71,11 @@ export function normalizeEventYear(
       )
     : findDate(today.year, start.month, start.day, today);
 
-  const endStartYear = input.hasExplicitYear ? end.year : startDate.year;
+  // Floor the explicit end year at startDate.year so an inconsistent model
+  // output (e.g. start 2030, end 2020) can't push the scan past its window.
+  const endStartYear = input.hasExplicitYear
+    ? Math.max(end.year, startDate.year)
+    : startDate.year;
   const endDate = findDate(endStartYear, end.month, end.day, startDate);
 
   return {
