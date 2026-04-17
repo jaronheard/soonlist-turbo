@@ -34,8 +34,6 @@ import { getTimezoneAbbreviation } from "@soonlist/cal";
 import { EventMenu } from "~/components/EventMenu";
 import { HeaderLogo } from "~/components/HeaderLogo";
 import {
-  CalendarPlus,
-  Check,
   EyeOff,
   Globe2,
   Heart,
@@ -185,7 +183,7 @@ function EventDetail({ id }: { id: string }) {
       ? event.eventFollows.some((follow) => follow.userId === currentUser.id)
       : false;
 
-  const { handleDelete, handleAddToCal } = useEventActions({
+  const { handleDelete } = useEventActions({
     event,
     isSaved,
     source: "event_detail",
@@ -380,7 +378,7 @@ function EventDetail({ id }: { id: string }) {
   );
 
   // Determine primary and secondary actions
-  const showSaveButton = !isCurrentUserEvent;
+  const showSaveButton = true;
 
   return (
     <>
@@ -679,58 +677,30 @@ function EventDetail({ id }: { id: string }) {
           elevation: 8,
         }}
       >
-        <TouchableOpacity
-          onPress={handleAddToCal}
-          accessibilityLabel="Add to Calendar"
-          accessibilityRole="button"
-          activeOpacity={0.8}
-        >
-          <View className="flex-row items-center gap-4 rounded-full bg-interactive-2 px-8 py-5">
-            <CalendarPlus size={28} color="#5A32FB" />
-            <Text className="text-xl font-bold text-interactive-1">Add</Text>
-          </View>
-        </TouchableOpacity>
-
-        {showSaveButton &&
-          (optimisticIsSaved ? (
-            <TouchableOpacity
-              onPress={toggleSave}
-              accessibilityLabel="Saved, double-tap to remove"
-              accessibilityRole="button"
-              activeOpacity={0.8}
+        {showSaveButton && (
+          <TouchableOpacity
+            onPress={toggleSave}
+            accessibilityLabel={
+              optimisticIsSaved ? "Saved, double-tap to remove" : "Save Event"
+            }
+            accessibilityRole="button"
+            activeOpacity={0.8}
+          >
+            <View
+              className="flex-row items-center justify-center gap-4 rounded-full bg-interactive-1 px-8 py-5"
+              style={{ minWidth: 168 }}
             >
-              <View
-                className="flex-row items-center justify-center gap-4 rounded-full px-8 py-5"
-                style={{
-                  backgroundColor: "rgba(120, 120, 128, 0.16)",
-                  minWidth: 168,
-                }}
-              >
-                <Check size={28} color="#1C1C1E" />
-                <Text
-                  className="text-xl font-bold"
-                  style={{ color: "#1C1C1E" }}
-                >
-                  Saved
-                </Text>
-              </View>
-            </TouchableOpacity>
-          ) : (
-            <TouchableOpacity
-              onPress={toggleSave}
-              accessibilityLabel="Save Event"
-              accessibilityRole="button"
-              activeOpacity={0.8}
-            >
-              <View
-                className="flex-row items-center justify-center gap-4 rounded-full bg-interactive-1 px-8 py-5"
-                style={{ minWidth: 168 }}
-              >
-                <Heart size={28} color="#FFFFFF" />
-                <Text className="text-xl font-bold text-white">Save</Text>
-              </View>
-            </TouchableOpacity>
-          ))}
+              <Heart
+                size={28}
+                color="#FFFFFF"
+                fill={optimisticIsSaved ? "#FFFFFF" : "transparent"}
+              />
+              <Text className="text-xl font-bold text-white">
+                {optimisticIsSaved ? "Saved" : "Save"}
+              </Text>
+            </View>
+          </TouchableOpacity>
+        )}
       </View>
     </>
   );

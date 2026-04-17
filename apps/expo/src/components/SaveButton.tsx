@@ -9,12 +9,14 @@ interface SaveButtonProps {
   eventId: string;
   isSaved: boolean;
   source: string;
+  variant?: "labeled" | "icon";
 }
 
 export default function SaveButton({
   eventId,
   isSaved: initialIsSaved,
   source,
+  variant = "labeled",
 }: SaveButtonProps) {
   const { isLoaded } = useUser();
   const { fontScale } = useWindowDimensions();
@@ -23,6 +25,26 @@ export default function SaveButton({
   const { isSaved, toggle } = useEventSaveActions(eventId, initialIsSaved, {
     source,
   });
+
+  if (variant === "icon") {
+    return (
+      <TouchableOpacity
+        onPress={toggle}
+        disabled={!isLoaded}
+        accessibilityLabel={isSaved ? "Saved, double-tap to remove" : "Save"}
+        accessibilityRole="button"
+        hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+        className="rounded-full p-2.5"
+        activeOpacity={0.7}
+      >
+        <Heart
+          color="#5A32FB"
+          size={iconSize * 1.1}
+          fill={isSaved ? "#5A32FB" : "white"}
+        />
+      </TouchableOpacity>
+    );
+  }
 
   if (isSaved) {
     return (
@@ -40,10 +62,7 @@ export default function SaveButton({
         activeOpacity={0.7}
       >
         <Check size={iconSize * 1.1} color="#1C1C1E" />
-        <Text
-          className="text-base font-bold"
-          style={{ color: "#1C1C1E" }}
-        >
+        <Text className="text-base font-bold" style={{ color: "#1C1C1E" }}>
           Saved
         </Text>
       </TouchableOpacity>

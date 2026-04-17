@@ -576,49 +576,74 @@ export function UserEventListItem(props: UserEventListItemProps) {
             ) : null}
 
             <View className="-mb-2 mt-1.5 flex-row items-center justify-start gap-3">
-              {ActionButton && <ActionButton event={event} />}
+              {ActionButton ? (
+                <>
+                  <ActionButton event={event} />
 
-              {!ActionButton &&
-                (primaryAction === "addToCalendar" ? (
-                  <TouchableOpacity
-                    className="-mb-0.5 -ml-2.5 flex-row items-center gap-1 py-2.5 pl-4 pr-1"
-                    onPress={handleAddToCal}
-                    hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
-                  >
-                    <CalendarPlus size={iconSize * 1.1} color="#5A32FB" />
-                    <Text className="text-base font-bold text-interactive-1">Add</Text>
-                  </TouchableOpacity>
-                ) : isOwner ? (
-                  <TouchableOpacity
-                    className="-mb-0.5 -ml-2.5 flex-row items-center gap-1 py-2.5 pl-4 pr-1"
-                    onPress={handleShare}
-                    hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
-                  >
-                    <ShareIcon size={iconSize * 1.1} color="#5A32FB" />
-                    <Text className="text-base font-bold text-interactive-1">Share</Text>
-                  </TouchableOpacity>
-                ) : (
-                  <SaveButton
-                    eventId={id}
+                  {!isDiscoverFeed &&
+                    (isOwner && primaryAction !== "addToCalendar" ? (
+                      <TouchableOpacity
+                        className="rounded-full p-2.5"
+                        onPress={() => {
+                          router.navigate(`/event/${id}/edit`);
+                        }}
+                        accessibilityLabel="Edit"
+                        accessibilityRole="button"
+                        hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+                      >
+                        <PenSquare size={iconSize * 1.1} color="#5A32FB" />
+                      </TouchableOpacity>
+                    ) : (
+                      <TouchableOpacity
+                        className="rounded-full p-2.5"
+                        onPress={handleShare}
+                        accessibilityLabel="Share"
+                        accessibilityRole="button"
+                        hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+                      >
+                        <ShareIcon size={iconSize * 1.1} color="#5A32FB" />
+                      </TouchableOpacity>
+                    ))}
+
+                  <EventMenu
+                    event={event}
+                    isOwner={isOwner}
                     isSaved={isSaved}
-                    source={source ?? "user_events_list"}
-                  />
-                ))}
-
-              {!isDiscoverFeed &&
-                (isOwner && primaryAction !== "addToCalendar" ? (
-                  <TouchableOpacity
-                    className="rounded-full p-2.5"
-                    onPress={() => {
-                      router.navigate(`/event/${id}/edit`);
-                    }}
-                    accessibilityLabel="Edit"
-                    accessibilityRole="button"
-                    hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+                    menuType="popup"
+                    demoMode={demoMode}
                   >
-                    <PenSquare size={iconSize * 1.1} color="#5A32FB" />
-                  </TouchableOpacity>
-                ) : (
+                    <TouchableOpacity
+                      className="rounded-full p-2.5"
+                      onPress={(e) => {
+                        e.stopPropagation();
+                      }}
+                      hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+                    >
+                      <MoreVertical size={iconSize * 1.1} color="#5A32FB" />
+                    </TouchableOpacity>
+                  </EventMenu>
+                </>
+              ) : (
+                <>
+                  {primaryAction === "addToCalendar" ? (
+                    <TouchableOpacity
+                      className="rounded-full p-2.5"
+                      onPress={handleAddToCal}
+                      accessibilityLabel="Add to Calendar"
+                      accessibilityRole="button"
+                      hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+                    >
+                      <CalendarPlus size={iconSize * 1.1} color="#5A32FB" />
+                    </TouchableOpacity>
+                  ) : (
+                    <SaveButton
+                      eventId={id}
+                      isSaved={isSaved}
+                      source={source ?? "user_events_list"}
+                      variant="icon"
+                    />
+                  )}
+
                   <TouchableOpacity
                     className="rounded-full p-2.5"
                     onPress={handleShare}
@@ -628,25 +653,26 @@ export function UserEventListItem(props: UserEventListItemProps) {
                   >
                     <ShareIcon size={iconSize * 1.1} color="#5A32FB" />
                   </TouchableOpacity>
-                ))}
 
-              <EventMenu
-                event={event}
-                isOwner={isOwner}
-                isSaved={isSaved}
-                menuType="popup"
-                demoMode={demoMode}
-              >
-                <TouchableOpacity
-                  className="rounded-full p-2.5"
-                  onPress={(e) => {
-                    e.stopPropagation();
-                  }}
-                  hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
-                >
-                  <MoreVertical size={iconSize * 1.1} color="#5A32FB" />
-                </TouchableOpacity>
-              </EventMenu>
+                  <EventMenu
+                    event={event}
+                    isOwner={isOwner}
+                    isSaved={isSaved}
+                    menuType="popup"
+                    demoMode={demoMode}
+                  >
+                    <TouchableOpacity
+                      className="rounded-full p-2.5"
+                      onPress={(e) => {
+                        e.stopPropagation();
+                      }}
+                      hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+                    >
+                      <MoreVertical size={iconSize * 1.1} color="#5A32FB" />
+                    </TouchableOpacity>
+                  </EventMenu>
+                </>
+              )}
             </View>
           </View>
           {shouldShowCreator ? (
