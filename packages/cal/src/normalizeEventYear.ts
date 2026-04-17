@@ -1,20 +1,8 @@
 import { Temporal } from "@js-temporal/polyfill";
 
-/**
- * Deterministically pick the year for event dates that the model extracted
- * without an explicit year in the source.
- *
- * The model is unreliable at enforcing a date-window constraint in the prompt
- * (this caused the recurring "2027 date" bug — see migrations/fix2027Dates.ts
- * and migrations/fix2027FeedDates.ts). Instead of trusting the model, we have
- * it extract MM-DD and self-report whether the source explicitly stated a
- * year. If not, we compute the year ourselves: the soonest future instance
- * of that MM-DD relative to "today" in the user's timezone.
- *
- * Feb 29 inputs advance to the next leap year instead of silently clamping to
- * Feb 28. Events that span a year boundary (e.g. an NYE show that ends Jan 1)
- * are handled by advancing the end year until end >= start.
- */
+// Pick the year for an event's MM-DD deterministically rather than trusting
+// the model, which doesn't reliably enforce a date-window constraint in the
+// prompt. See migrations/fix2027Dates.ts for the bug this replaces.
 
 const DATE_REGEX = /^(\d{4})-(\d{2})-(\d{2})$/;
 const MAX_YEAR_OFFSET = 4;
@@ -40,13 +28,9 @@ function parseYMD(value: string): { year: number; month: number; day: number } {
   };
 }
 
-/**
- * Earliest valid PlainDate for `month`/`day` starting at `startYear`, scanning
- * forward up to MAX_YEAR_OFFSET years. When `notBefore` is provided, the
- * returned date is also >= it. Uses overflow:"reject" so Feb 29 finds the
- * next leap year instead of silently clamping. Throws on truly invalid
- * month/day combinations (e.g. 13-40, 02-30).
- */
+// Earliest valid PlainDate for month/day at or after startYear (and notBefore,
+// if given). Scans forward so Feb 29 advances to the next leap year instead of
+// clamping to Feb 28.
 function findDate(
   startYear: number,
   month: number,
@@ -73,18 +57,6 @@ function findDate(
   );
 }
 
-/**
- * Normalize event start/end dates.
- *
- * - Explicit year: trust the model's year on both `startDate` and `endDate`.
- *   `startDate` is taken exactly (throws on an invalid date like Feb 29 of a
- *   non-leap year). `endDate`'s year is preserved when the range is legit
- *   multi-year (e.g. 2026-01-01 → 2027-01-01) and advanced only when
- *   `end < start` (NYE-style spans).
- * - Inferred year: replace `startDate`'s year with the soonest future year
- *   for its MM-DD relative to `today`; then pick `endDate`'s year starting
- *   at `startDate.year` so it remains on/after `startDate`.
- */
 export function normalizeEventYear(
   input: NormalizeInput,
   today: Temporal.PlainDate,
