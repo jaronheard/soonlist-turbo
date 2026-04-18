@@ -404,15 +404,31 @@ function FollowingFeedContent() {
   }, [followedLists, hasFollowings, emptyStateMode]);
 
   // When the user returns to the tab with active subscriptions, dismiss the
-  // empty state so they land directly on their feed. The in-tab stickiness
-  // during a subscribe session is preserved because focus events don't fire
-  // while the user stays on this tab.
+  // empty state so they land directly on their feed. The focus callback is
+  // intentionally stable (empty deps) because useFocusEffect's internal
+  // useEffect re-runs whenever its callback reference changes — a naive deps
+  // array would dismiss mid-session as soon as hasFollowings flips to true,
+  // defeating the stickiness that lets users subscribe to multiple featured
+  // lists before the view swaps to the feed. A ref tracks whether the screen
+  // has actually blurred, so we only dismiss on a true return-to-tab.
+  const hasFollowingsRef = useRef(hasFollowings);
+  hasFollowingsRef.current = hasFollowings;
+  const emptyStateModeRef = useRef(emptyStateMode);
+  emptyStateModeRef.current = emptyStateMode;
+  const hasBlurredRef = useRef(false);
   useFocusEffect(
     useCallback(() => {
-      if (hasFollowings && emptyStateMode === "show") {
+      if (
+        hasBlurredRef.current &&
+        hasFollowingsRef.current &&
+        emptyStateModeRef.current === "show"
+      ) {
         setEmptyStateMode("dismissed");
       }
-    }, [hasFollowings, emptyStateMode]),
+      return () => {
+        hasBlurredRef.current = true;
+      };
+    }, []),
   );
 
   const handleExitEmptyState = useCallback(() => {
