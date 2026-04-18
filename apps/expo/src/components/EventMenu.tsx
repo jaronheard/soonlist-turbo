@@ -106,11 +106,26 @@ export function EventMenu({
   };
 
   const getMenuItems = (): MenuItem[] => {
-    const baseItems: MenuItem[] = [
+    const items: MenuItem[] = [];
+
+    if (!isOwner && !isSaved) {
+      items.push({
+        title: "Save",
+        lucideIcon: Heart,
+        systemIcon: "heart",
+      });
+    }
+
+    items.push(
       {
         title: "Share",
         lucideIcon: ShareIcon,
         systemIcon: "square.and.arrow.up",
+      },
+      {
+        title: "Add to calendar",
+        lucideIcon: CalendarPlus,
+        systemIcon: "calendar.badge.plus",
       },
       {
         title: "Show QR",
@@ -122,64 +137,50 @@ export function EventMenu({
         lucideIcon: Map,
         systemIcon: "map",
       },
-      {
-        title: "Add to calendar",
-        lucideIcon: CalendarPlus,
-        systemIcon: "calendar.badge.plus",
-      },
-      {
-        title: "Feedback",
-        lucideIcon: MessageSquare,
-        systemIcon: "message",
-      },
-    ];
+    );
 
-    if (showDiscover && isOwner) {
-      baseItems.push({
-        title:
-          event.visibility === "public"
-            ? "Make not discoverable"
-            : "Make discoverable",
-        lucideIcon: event.visibility === "public" ? EyeOff : Globe2,
-        systemIcon: event.visibility === "public" ? "eye.slash" : "globe",
+    if (isOwner) {
+      items.push({
+        title: "Edit",
+        lucideIcon: PenSquare,
+        systemIcon: "square.and.pencil",
+      });
+
+      if (showDiscover) {
+        items.push({
+          title:
+            event.visibility === "public"
+              ? "Make not discoverable"
+              : "Make discoverable",
+          lucideIcon: event.visibility === "public" ? EyeOff : Globe2,
+          systemIcon: event.visibility === "public" ? "eye.slash" : "globe",
+        });
+      }
+    }
+
+    items.push({
+      title: "Feedback",
+      lucideIcon: MessageSquare,
+      systemIcon: "message",
+    });
+
+    if (isOwner) {
+      items.push({
+        title: "Delete",
+        lucideIcon: Trash2,
+        systemIcon: "trash",
+        destructive: true,
+      });
+    } else if (isSaved) {
+      items.push({
+        title: "Unsave",
+        lucideIcon: MinusCircle,
+        systemIcon: "minus.circle",
+        destructive: true,
       });
     }
 
-    if (isOwner) {
-      return [
-        ...baseItems,
-        {
-          title: "Edit",
-          lucideIcon: PenSquare,
-          systemIcon: "square.and.pencil",
-        },
-        {
-          title: "Delete",
-          lucideIcon: Trash2,
-          systemIcon: "trash",
-          destructive: true,
-        },
-      ];
-    } else if (!isSaved) {
-      return [
-        {
-          title: "Save",
-          lucideIcon: Heart,
-          systemIcon: "heart",
-        },
-        ...baseItems,
-      ];
-    } else {
-      return [
-        ...baseItems,
-        {
-          title: "Unsave",
-          lucideIcon: MinusCircle,
-          systemIcon: "minus.circle",
-          destructive: true,
-        },
-      ];
-    }
+    return items;
   };
 
   const handleMenuSelect = (title: string) => {
