@@ -64,6 +64,9 @@ dist/
 # turbo
 .turbo
 
+# superpowers (local-only plans/specs)
+docs/superpowers/
+
 # claude code
 .claude/worktrees/
 .claude/settings.local.json
