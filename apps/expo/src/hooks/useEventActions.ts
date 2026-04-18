@@ -1,5 +1,7 @@
 import type { FunctionReturnType } from "convex/server";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { Linking, Share } from "react-native";
+import * as Haptics from "expo-haptics";
 import { router } from "expo-router";
 import { useUser } from "@clerk/clerk-expo";
 import {
@@ -11,6 +13,7 @@ import { usePostHog } from "posthog-react-native";
 import type { AddToCalendarButtonPropsRestricted } from "@soonlist/cal/types";
 import { api } from "@soonlist/backend/convex/_generated/api";
 
+import { useToast } from "~/components/Toast";
 import { useStableTimestamp } from "~/store";
 import { AF_EVENTS, trackAFEvent } from "~/utils/appsflyerEvents";
 import Config from "~/utils/config";
@@ -307,95 +310,215 @@ export function useEventActions({
 // Simplified hook for save/follow actions that doesn't require the full event object
 export function useEventSaveActions(
   eventId: string,
-  isSaved: boolean,
-  demoMode = false,
+  initialIsSaved: boolean,
+  options: { source?: string; demoMode?: boolean } = {},
 ) {
+  const { source = "unknown", demoMode = false } = options;
   const { user } = useUser();
+  const posthog = usePostHog();
+  const toast = useToast();
 
-  const unfollowEventMutation = useMutation(
-    api.events.unfollow,
-  ).withOptimisticUpdate((localStore, args) => {
-    const { id } = args;
+  // Local state owns the UI. Seeded from prop. Updated synchronously on toggle.
+  const [isSaved, setIsSaved] = useState(initialIsSaved);
+  const [isPending, setIsPending] = useState(false);
+  const pendingRef = useRef(false);
 
-    // Update the saved event IDs query if loaded
-    if (user?.username) {
-      const currentSavedIds = localStore.getQuery(
-        api.events.getSavedIdsForUser,
-        {
-          userName: user.username,
-        },
-      );
-
-      if (currentSavedIds !== undefined) {
-        // Remove the event from saved IDs
-        const updatedSavedIds = currentSavedIds.filter(
-          (savedEvent) => savedEvent.id !== id,
-        );
-        localStore.setQuery(
-          api.events.getSavedIdsForUser,
-          { userName: user.username },
-          updatedSavedIds,
-        );
-      }
+  // If the parent prop changes (e.g., query refetch) and no mutation is in flight,
+  // sync the local state to match.
+  useEffect(() => {
+    if (!pendingRef.current) {
+      setIsSaved(initialIsSaved);
     }
-  });
+  }, [initialIsSaved, eventId]);
 
   const followEventMutation = useMutation(
     api.events.follow,
   ).withOptimisticUpdate((localStore, args) => {
     const { id } = args;
-
-    // Update the saved event IDs query if loaded
-    if (user?.username) {
-      const currentSavedIds = localStore.getQuery(
+    if (!user?.username) return;
+    const currentSavedIds = localStore.getQuery(api.events.getSavedIdsForUser, {
+      userName: user.username,
+    });
+    if (currentSavedIds !== undefined) {
+      const updatedSavedIds = [...currentSavedIds, { id }];
+      localStore.setQuery(
         api.events.getSavedIdsForUser,
-        {
-          userName: user.username,
-        },
+        { userName: user.username },
+        updatedSavedIds,
       );
-
-      if (currentSavedIds !== undefined) {
-        // Add the event to saved IDs
-        const updatedSavedIds = [...currentSavedIds, { id }];
-        localStore.setQuery(
-          api.events.getSavedIdsForUser,
-          { userName: user.username },
-          updatedSavedIds,
-        );
-      }
     }
   });
 
-  const checkDemoMode = () => {
-    if (demoMode) {
-      toast.warning("Demo mode: action disabled");
-      return true;
+  const unfollowEventMutation = useMutation(
+    api.events.unfollow,
+  ).withOptimisticUpdate((localStore, args) => {
+    const { id } = args;
+    if (!user?.username) return;
+    const currentSavedIds = localStore.getQuery(api.events.getSavedIdsForUser, {
+      userName: user.username,
+    });
+    if (currentSavedIds !== undefined) {
+      const updatedSavedIds = currentSavedIds.filter(
+        (savedEvent) => savedEvent.id !== id,
+      );
+      localStore.setQuery(
+        api.events.getSavedIdsForUser,
+        { userName: user.username },
+        updatedSavedIds,
+      );
     }
-    return false;
-  };
+  });
 
-  const handleFollow = async () => {
-    if (checkDemoMode() || isSaved) return;
-    void hapticSuccess();
+  const openShareSheet = useCallback(
+    async (via: "save_toast" | "event_detail" | "event_card") => {
+      try {
+        posthog.capture("share_event_initiated", {
+          event_id: eventId,
+          source,
+          is_saved: true,
+          via,
+        });
+
+        const result = await Share.share({
+          url: `${Config.apiBaseUrl}/event/${eventId}`,
+        });
+
+        if (result.action === Share.sharedAction) {
+          posthog.capture("share_event_completed", {
+            event_id: eventId,
+            source,
+            is_saved: true,
+            via,
+          });
+        } else if (result.action === Share.dismissedAction) {
+          posthog.capture("share_event_dismissed", {
+            event_id: eventId,
+            source,
+            is_saved: true,
+            via,
+          });
+        }
+      } catch (error) {
+        posthog.capture("share_event_error", {
+          event_id: eventId,
+          source,
+          via,
+          error_message: (error as Error).message,
+        });
+        logError("Error sharing event", error);
+      }
+    },
+    [eventId, source, posthog],
+  );
+
+  const runSave = useCallback(async () => {
+    pendingRef.current = true;
+    setIsPending(true);
     try {
       await followEventMutation({ id: eventId });
+      posthog.capture("event_saved", { event_id: eventId, source });
     } catch (error) {
-      toast.error("Failed to save event", (error as Error).message);
+      // Revert local state on error
+      setIsSaved(false);
+      posthog.capture("event_save_failed", {
+        event_id: eventId,
+        source,
+        error_message: (error as Error).message,
+      });
+      toast.show({
+        message: "Couldn't save event",
+        action: {
+          label: "Retry",
+          onPress: () => {
+            setIsSaved(true);
+            void runSave();
+          },
+        },
+        variant: "error",
+      });
+      logError("Error saving event", error);
+    } finally {
+      pendingRef.current = false;
+      setIsPending(false);
     }
-  };
+  }, [eventId, followEventMutation, source, posthog, toast]);
 
-  const handleUnfollow = async () => {
-    if (checkDemoMode() || !isSaved) return;
-    void hapticSuccess();
+  const runUnsave = useCallback(async () => {
+    pendingRef.current = true;
+    setIsPending(true);
     try {
       await unfollowEventMutation({ id: eventId });
+      posthog.capture("event_unsaved", { event_id: eventId, source });
     } catch (error) {
-      toast.error("Failed to unsave event", (error as Error).message);
+      // Revert local state on error
+      setIsSaved(true);
+      toast.show({
+        message: "Couldn't unsave event",
+        action: {
+          label: "Retry",
+          onPress: () => {
+            setIsSaved(false);
+            void runUnsave();
+          },
+        },
+        variant: "error",
+      });
+      logError("Error unsaving event", error);
+    } finally {
+      pendingRef.current = false;
+      setIsPending(false);
     }
-  };
+  }, [eventId, unfollowEventMutation, source, posthog, toast]);
+
+  const toggle = useCallback(() => {
+    if (pendingRef.current) return;
+    if (demoMode) {
+      toast.show({
+        message: "Demo mode: action disabled",
+        variant: "error",
+      });
+      return;
+    }
+
+    if (isSaved) {
+      // Unsave: silent (no toast, no haptic per spec).
+      setIsSaved(false);
+      void runUnsave();
+    } else {
+      // Save: instant UI flip, light haptic, success toast with Share action.
+      setIsSaved(true);
+      void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+      toast.show({
+        message: "Saved to your Soonlist",
+        action: {
+          label: "Share",
+          onPress: () => {
+            posthog.capture("save_toast_share_clicked", {
+              event_id: eventId,
+              source,
+            });
+            void openShareSheet("save_toast");
+          },
+        },
+      });
+      void runSave();
+    }
+  }, [
+    demoMode,
+    isSaved,
+    runSave,
+    runUnsave,
+    toast,
+    openShareSheet,
+    posthog,
+    eventId,
+    source,
+  ]);
 
   return {
-    handleFollow,
-    handleUnfollow,
+    isSaved,
+    isPending,
+    toggle,
+    openShareSheet,
   };
 }

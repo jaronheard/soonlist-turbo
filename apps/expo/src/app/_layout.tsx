@@ -31,6 +31,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import AuthAndTokenSync from "~/components/AuthAndTokenSync";
 import { ForceUpdateScreen } from "~/components/ForceUpdateScreen";
 import { PostHogIdentityTracker } from "~/components/PostHogIdentityTracker";
+import { ToastProvider } from "~/components/Toast";
 import { useAppsFlyerDeepLink } from "~/hooks/useAppsFlyerDeepLink";
 import { useCaptureCompletionFeedback } from "~/hooks/useCaptureCompletionFeedback";
 import { useForceUpdate } from "~/hooks/useForceUpdate";
@@ -185,7 +186,9 @@ function RootLayout() {
                   <OneSignalProvider>
                     <RevenueCatProvider>
                       <AuthAndTokenSync />
-                      <RootLayoutContent />
+                      <ToastProvider>
+                        <RootLayoutContent />
+                      </ToastProvider>
                     </RevenueCatProvider>
                   </OneSignalProvider>
                 </PostHogProvider>

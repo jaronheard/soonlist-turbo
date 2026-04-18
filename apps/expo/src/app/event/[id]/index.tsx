@@ -40,12 +40,13 @@ import {
   Heart,
   Instagram,
   MapPinned,
+  MoreVertical,
   ShareIcon,
   User,
 } from "~/components/icons";
 import LoadingSpinner from "~/components/LoadingSpinner";
 import { UserProfileFlair } from "~/components/UserProfileFlair";
-import { useEventActions } from "~/hooks/useEventActions";
+import { useEventActions, useEventSaveActions } from "~/hooks/useEventActions";
 import { useRevenueCat } from "~/providers/RevenueCatProvider";
 import {
   useIncrementEventView,
@@ -94,6 +95,23 @@ function getPlatformUrl(
       return ""; // Return empty string for unsupported platforms
   }
 }
+
+// Sized to match Apple's observed iOS 26 Liquid Glass nav-bar buttons
+// (Mail, Safari, Music): ~36pt visible capsule, ~18pt SF Symbol, ≥44pt hit
+// area via hitSlop. Apple has not published exact point values; these match
+// stock-app appearance per design research.
+const headerButtonStyle = {
+  width: 36,
+  height: 36,
+  borderRadius: 18,
+  alignItems: "center" as const,
+  justifyContent: "center" as const,
+  backgroundColor: "#FFFFFF",
+  shadowColor: "#000",
+  shadowOffset: { width: 0, height: 1 },
+  shadowOpacity: 0.06,
+  shadowRadius: 2,
+};
 
 export default function Page() {
   const { id } = useLocalSearchParams<{ id: string }>();
@@ -166,11 +184,19 @@ function EventDetail({ id }: { id: string }) {
       ? event.eventFollows.some((follow) => follow.userId === currentUser.id)
       : false;
 
-  const { handleDelete, handleShare, handleAddToCal, handleFollow } =
-    useEventActions({
-      event,
-      isSaved,
-    });
+  const { handleDelete, handleAddToCal } = useEventActions({
+    event,
+    isSaved,
+    source: "event_detail",
+  });
+
+  const {
+    isSaved: optimisticIsSaved,
+    toggle: toggleSave,
+    openShareSheet,
+  } = useEventSaveActions(event?.id ?? "", isSaved, {
+    source: "event_detail",
+  });
 
   // Handlers
   const handleDeleteAndRedirect = useCallback(async () => {
@@ -215,18 +241,43 @@ function EventDetail({ id }: { id: string }) {
     const isOwner = event.userId === currentUser?.id;
 
     return (
-      <View className="flex-row items-center gap-2">
+      <View className="flex-row items-center gap-4">
+        <TouchableOpacity
+          onPress={() => void openShareSheet("event_detail")}
+          accessibilityLabel="Share event"
+          accessibilityRole="button"
+          hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+          style={headerButtonStyle}
+        >
+          <ShareIcon size={18} color="#5A32FB" />
+        </TouchableOpacity>
         <EventMenu
           event={event}
           isOwner={isOwner}
-          isSaved={isSaved}
+          isSaved={optimisticIsSaved}
           menuType="popup"
           onDelete={handleDeleteAndRedirect}
           iconColor="#5A32FB"
-        />
+        >
+          <TouchableOpacity
+            activeOpacity={0.6}
+            accessibilityLabel="Event menu"
+            accessibilityRole="button"
+            hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+            style={headerButtonStyle}
+          >
+            <MoreVertical size={18} color="#5A32FB" />
+          </TouchableOpacity>
+        </EventMenu>
       </View>
     );
-  }, [event, isSaved, currentUser?.id, handleDeleteAndRedirect]);
+  }, [
+    event,
+    optimisticIsSaved,
+    currentUser?.id,
+    handleDeleteAndRedirect,
+    openShareSheet,
+  ]);
 
   // Early return if the 'id' is missing or invalid
   if (!id || typeof id !== "string") {
@@ -328,8 +379,10 @@ function EventDetail({ id }: { id: string }) {
   );
 
   // Determine primary and secondary actions
-  const showSaveButton = !isCurrentUserEvent && !isSaved;
-  const showShareButton = isCurrentUserEvent || isSaved;
+  const showSaveButton = true;
+  // Owners of the event always see "Saved" state (they already have it in
+  // their list by virtue of creating it); non-owners see live local state.
+  const displayIsSaved = isCurrentUserEvent || optimisticIsSaved;
 
   return (
     <>
@@ -628,45 +681,43 @@ function EventDetail({ id }: { id: string }) {
           elevation: 8,
         }}
       >
+        {showSaveButton && (
+          <TouchableOpacity
+            onPress={toggleSave}
+            disabled={isCurrentUserEvent}
+            accessibilityLabel={
+              displayIsSaved ? "Saved, double-tap to remove" : "Save Event"
+            }
+            accessibilityRole="button"
+            activeOpacity={0.8}
+          >
+            <View
+              className="flex-row items-center justify-center gap-4 rounded-full bg-interactive-1 px-8 py-5"
+              style={{ minWidth: 168 }}
+            >
+              <Heart
+                size={28}
+                color="#FFFFFF"
+                fill={displayIsSaved ? "#FFFFFF" : "transparent"}
+              />
+              <Text className="text-xl font-bold text-white">
+                {displayIsSaved ? "Saved" : "Save"}
+              </Text>
+            </View>
+          </TouchableOpacity>
+        )}
+
         <TouchableOpacity
           onPress={handleAddToCal}
           accessibilityLabel="Add to Calendar"
           accessibilityRole="button"
           activeOpacity={0.8}
         >
-          <View className="flex-row items-center gap-4 rounded-full bg-interactive-2 px-8 py-5">
+          <View className="flex-row items-center justify-center gap-4 rounded-full bg-interactive-2 px-8 py-5">
             <CalendarPlus size={28} color="#5A32FB" />
             <Text className="text-xl font-bold text-interactive-1">Add</Text>
           </View>
         </TouchableOpacity>
-
-        {showSaveButton && (
-          <TouchableOpacity
-            onPress={handleFollow}
-            accessibilityLabel="Save Event"
-            accessibilityRole="button"
-            activeOpacity={0.8}
-          >
-            <View className="flex-row items-center gap-4 rounded-full bg-interactive-1 px-8 py-5">
-              <Heart size={28} color="#FFFFFF" />
-              <Text className="text-xl font-bold text-white">Save</Text>
-            </View>
-          </TouchableOpacity>
-        )}
-
-        {showShareButton && (
-          <TouchableOpacity
-            onPress={handleShare}
-            accessibilityLabel="Share"
-            accessibilityRole="button"
-            activeOpacity={0.8}
-          >
-            <View className="flex-row items-center gap-4 rounded-full bg-interactive-1 px-8 py-5">
-              <ShareIcon size={28} color="#FFFFFF" />
-              <Text className="text-xl font-bold text-white">Share</Text>
-            </View>
-          </TouchableOpacity>
-        )}
       </View>
     </>
   );
