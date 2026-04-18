@@ -489,7 +489,7 @@ export function useEventSaveActions(
       setIsSaved(true);
       void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
       toast.show({
-        message: "Saved to your list",
+        message: "Saved to your Soonlist",
         action: {
           label: "Share",
           onPress: () => {
