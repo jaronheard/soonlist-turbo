@@ -14,7 +14,7 @@ import {
   View,
 } from "react-native";
 import { Image } from "expo-image";
-import { Redirect, useRouter } from "expo-router";
+import { Redirect, useFocusEffect, useRouter } from "expo-router";
 import { SymbolView } from "expo-symbols";
 import { useUser } from "@clerk/clerk-expo";
 import { Host, Picker, Text as SwiftUIText } from "@expo/ui/swift-ui";
@@ -36,6 +36,7 @@ import LoadingSpinner from "~/components/LoadingSpinner";
 import ScenePreviewThreeUp from "~/components/ScenePreviewThreeUp";
 import { SubscribeButton } from "~/components/SubscribeButton";
 import UserEventsList from "~/components/UserEventsList";
+import { useAddEventFlow } from "~/hooks/useAddEventFlow";
 import { useStablePaginatedQuery } from "~/hooks/useStableQuery";
 import { useAppStore, useStableTimestamp } from "~/store";
 import { logError } from "~/utils/errorLogging";
@@ -275,6 +276,7 @@ function FollowingEmptyState({
   onExitToFeed: () => void;
 }) {
   const { user } = useUser();
+  const { triggerAddEventFlow } = useAddEventFlow();
 
   const userData = useQuery(
     api.users.getByUsername,
@@ -293,15 +295,6 @@ function FollowingEmptyState({
         paddingBottom: 80,
       }}
     >
-      <View className="px-3 pb-2" style={{ marginTop: -4 }}>
-        <Text
-          className="mb-1 text-base font-medium text-neutral-2"
-          style={{ paddingLeft: 6 }}
-        >
-          Events from lists I subscribe to
-        </Text>
-      </View>
-
       <View className="px-6 pt-6">
         <Text
           className="mb-3 text-2xl font-bold text-neutral-1"
@@ -313,9 +306,9 @@ function FollowingEmptyState({
           className="mb-6 text-base text-neutral-2"
           style={{ lineHeight: 22 }}
         >
-          My Scene shows upcoming events from people you subscribe to.
+          My Scene shows upcoming events from lists you subscribe to.
           {featuredLists.length > 0
-            ? " Start with one of these featured lists."
+            ? " These featured lists are based in Portland, OR."
             : ""}
         </Text>
 
@@ -354,7 +347,26 @@ function FollowingEmptyState({
               </Text>
             </TouchableOpacity>
           </View>
-        ) : null}
+        ) : (
+          <View className="mt-4 items-center">
+            <Text className="mb-1 text-sm text-neutral-2">
+              Not in Portland? Start your own Soonlist.
+            </Text>
+            <TouchableOpacity
+              onPress={() => {
+                void triggerAddEventFlow();
+              }}
+              activeOpacity={0.7}
+              accessibilityRole="button"
+              accessibilityLabel="Add an event"
+              className="px-2 py-2"
+            >
+              <Text className="text-base font-semibold text-interactive-1">
+                Add an event →
+              </Text>
+            </TouchableOpacity>
+          </View>
+        )}
       </View>
     </ScrollView>
   );
@@ -390,6 +402,19 @@ function FollowingFeedContent() {
       setSelectedSegment("upcoming");
     }
   }, [followedLists, hasFollowings, emptyStateMode]);
+
+  // When the user returns to the tab with active subscriptions, dismiss the
+  // empty state so they land directly on their feed. The in-tab stickiness
+  // during a subscribe session is preserved because focus events don't fire
+  // while the user stays on this tab.
+  useFocusEffect(
+    useCallback(() => {
+      if (hasFollowings && emptyStateMode === "show") {
+        setEmptyStateMode("dismissed");
+      }
+    }, [hasFollowings, emptyStateMode]),
+  );
+
   const handleExitEmptyState = useCallback(() => {
     setEmptyStateMode("dismissed");
   }, []);
@@ -456,13 +481,25 @@ function FollowingFeedContent() {
       }));
   }, [events, stableTimestamp, selectedSegment]);
 
-  // Update tab badge count based on upcoming events
+  // Update tab badge count based on upcoming events. When the user
+  // unsubscribes from everything, the feed query is skipped and `events`
+  // retains its last value via useStablePaginatedQuery, so we must clear the
+  // badge explicitly based on `hasFollowings`.
   const setCommunityBadgeCount = useAppStore((s) => s.setCommunityBadgeCount);
   useEffect(() => {
+    if (!hasFollowings) {
+      setCommunityBadgeCount(0);
+      return;
+    }
     if (selectedSegment === "upcoming") {
       setCommunityBadgeCount(enrichedEvents.length);
     }
-  }, [enrichedEvents.length, selectedSegment, setCommunityBadgeCount]);
+  }, [
+    hasFollowings,
+    enrichedEvents.length,
+    selectedSegment,
+    setCommunityBadgeCount,
+  ]);
 
   const followedListCount = followedLists?.length ?? 0;
   const singleFollowedList =
