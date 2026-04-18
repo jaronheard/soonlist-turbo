@@ -1,324 +1,69 @@
-import React, { useCallback, useEffect, useState } from "react";
-import {
-  ActivityIndicator,
-  Pressable,
-  ScrollView,
-  Text,
-  View,
-} from "react-native";
-import RevenueCatUI, { PAYWALL_RESULT } from "react-native-purchases-ui";
-import { SafeAreaView } from "react-native-safe-area-context";
-import { router } from "expo-router";
+import React from "react";
+import { Pressable, Text, View } from "react-native";
 
-import { ProgressBar } from "~/components/ProgressBar";
-import { useRevenueCat } from "~/providers/RevenueCatProvider";
-import {
-  useAppStore,
-  usePendingFollowUsername,
-  useSetHasSeenOnboarding,
-} from "~/store";
-import { AF_EVENTS, trackAFEvent } from "~/utils/appsflyerEvents";
-import { shouldMockPaywall } from "~/utils/deviceInfo";
+import { Check } from "~/components/icons";
+import { QuestionContainer } from "~/components/QuestionContainer";
+import { useOnboarding } from "~/hooks/useOnboarding";
+import { usePendingFollowUsername, useSetHasSeenOnboarding } from "~/store";
+import { hapticLight } from "~/utils/feedback";
 
-// Route path for the sign-in screen within the onboarding flow.
-// Expo Router's typed routes are generated from the file structure and may be stale.
-// Using a relative path avoids the strict typed-route check.
-const SIGN_IN_PATH = "./05-sign-in" as const;
+const BULLETS = [
+  "Free to save events & share lists",
+  "Built for real life, not algorithms",
+  "Community supported — optional supporter perks",
+];
 
-export default function PaywallScreen() {
-  const { isInitialized, customerInfo } = useRevenueCat();
-  const { setOnboardingData } = useAppStore();
+export default function CommunitySupportedScreen() {
   const pendingFollowUsername = usePendingFollowUsername();
-  const [showMockPaywall] = useState(() => shouldMockPaywall());
-  const [paywallPresented, setPaywallPresented] = useState(false);
-  const hasUnlimited =
-    customerInfo?.entitlements.active.unlimited?.isActive ?? false;
+  const setHasSeenOnboarding = useSetHasSeenOnboarding();
+  const { saveStep } = useOnboarding();
 
-  // Paywall is the step after notifications. Sign-in sits at totalSteps - 1
-  // and final "done" is totalSteps, so paywall lands at totalSteps - 2.
+  // Keep the existing step math: this screen sits at totalSteps - 2,
+  // with sign-in at totalSteps - 1 and the final tick reserved for the
+  // "account created" state.
   const totalSteps = pendingFollowUsername ? 7 : 6;
   const currentStep = totalSteps - 2;
 
-  const setHasSeenOnboarding = useSetHasSeenOnboarding();
-
-  const completeOnboarding = useCallback(() => {
+  const handleContinue = () => {
+    void hapticLight();
     setHasSeenOnboarding(true);
-  }, [setHasSeenOnboarding]);
-
-  const presentPaywall = useCallback(async () => {
-    try {
-      setPaywallPresented(true);
-      // Use presentPaywallIfNeeded to double-check entitlements
-      const paywallResult = await RevenueCatUI.presentPaywallIfNeeded({
-        requiredEntitlementIdentifier: "unlimited",
-      });
-
-      switch (paywallResult) {
-        case PAYWALL_RESULT.PURCHASED:
-        case PAYWALL_RESULT.RESTORED:
-          // User subscribed successfully
-          setOnboardingData({
-            subscribed: true,
-            subscribedAt: new Date().toISOString(),
-          });
-          // Mark onboarding as seen
-          completeOnboarding();
-          // Navigate to sign-in screen with subscription status
-          router.navigate({
-            pathname: SIGN_IN_PATH,
-            params: { fromPaywall: "true", subscribed: "true" },
-          });
-          break;
-
-        case PAYWALL_RESULT.NOT_PRESENTED:
-          // User already has the required entitlement
-          setOnboardingData({
-            subscribed: true,
-            subscribedAt: new Date().toISOString(),
-          });
-          // Mark onboarding as seen
-          completeOnboarding();
-          // Navigate to sign-in screen with subscription status
-          router.navigate({
-            pathname: SIGN_IN_PATH,
-            params: {
-              fromPaywall: "true",
-              subscribed: "true",
-              skipped: "already_subscribed",
-            },
-          });
-          break;
-
-        case PAYWALL_RESULT.CANCELLED:
-        case PAYWALL_RESULT.ERROR:
-          // User cancelled or error occurred - enter trial mode
-          trackAFEvent(AF_EVENTS.START_TRIAL, {});
-          setOnboardingData({
-            subscribed: false,
-            trialMode: true,
-            trialStartedAt: new Date().toISOString(),
-          });
-          // Mark onboarding as seen
-          completeOnboarding();
-          // Navigate to sign-in screen in trial mode
-          router.navigate({
-            pathname: SIGN_IN_PATH,
-            params: { fromPaywall: "true", trial: "true" },
-          });
-          break;
-      }
-    } catch (error) {
-      console.error("Error presenting paywall:", error);
-      // On error, continue to sign-up in trial mode
-      setOnboardingData({
-        subscribed: false,
-        trialMode: true,
-        trialStartedAt: new Date().toISOString(),
-      });
-      // Mark onboarding as seen
-      completeOnboarding();
-      router.navigate({
-        pathname: SIGN_IN_PATH,
-        params: { fromPaywall: "true", trial: "true" },
-      });
-    }
-  }, [setOnboardingData, setPaywallPresented, completeOnboarding]);
-
-  useEffect(() => {
-    // Check if user is already subscribed
-    if (isInitialized && hasUnlimited) {
-      // User already has subscription, skip paywall
-      setOnboardingData({
-        subscribed: true,
-        subscribedAt: new Date().toISOString(),
-      });
-      // Mark onboarding as seen
-      completeOnboarding();
-      // Navigate to sign-in screen with subscription status
-      router.navigate({
-        pathname: SIGN_IN_PATH,
-        params: {
-          fromPaywall: "true",
-          subscribed: "true",
-          skipped: "already_subscribed",
-        },
-      });
-      return;
-    }
-
-    // Present paywall for non-subscribers on real devices
-    if (
-      !showMockPaywall &&
-      isInitialized &&
-      !hasUnlimited &&
-      !paywallPresented
-    ) {
-      void presentPaywall();
-    }
-  }, [
-    isInitialized,
-    showMockPaywall,
-    presentPaywall,
-    hasUnlimited,
-    setOnboardingData,
-    paywallPresented,
-  ]);
-
-  const handleSkip = () => {
-    // Dismiss the paywall and enter trial mode
-    if (!showMockPaywall) {
-      // Paywall will dismiss automatically
-    }
-
-    trackAFEvent(AF_EVENTS.START_TRIAL, {});
-
-    // Save that they're in trial mode
-    setOnboardingData({
-      subscribed: false,
-      trialMode: true,
-      trialStartedAt: new Date().toISOString(),
-    });
-
-    // Mark onboarding as seen
-    completeOnboarding();
-
-    // Navigate to sign-in screen
-    router.navigate({
-      pathname: SIGN_IN_PATH,
-      params: { fromPaywall: "true", trial: "true" },
-    });
+    saveStep("paywall", {}, "/(onboarding)/onboarding/05-sign-in");
   };
 
-  const handleMockSubscribe = (plan: string) => {
-    // Mock subscription for simulator
-    setOnboardingData({
-      subscribed: true,
-      subscribedAt: new Date().toISOString(),
-      subscriptionPlan: plan,
-    });
-    // Mark onboarding as seen
-    completeOnboarding();
-    // Navigate to sign-in screen
-    router.navigate({
-      pathname: SIGN_IN_PATH,
-      params: { fromPaywall: "true", subscribed: "true", plan },
-    });
-  };
-
-  // Show mock paywall UI in simulator/development
-  if (showMockPaywall) {
-    return (
-      <SafeAreaView className="flex-1 bg-interactive-1">
-        <View className="pt-2">
-          <ProgressBar
-            currentStep={currentStep}
-            totalSteps={totalSteps}
-            backgroundColor="bg-neutral-3"
-            foregroundColor="bg-neutral-1"
-          />
-        </View>
-        <ScrollView className="flex-1 px-6">
-          <View className="py-8">
-            <Text className="mb-2 text-center text-3xl font-bold text-white">
-              Unlock Soonlist
-            </Text>
-            <Text className="mb-2 text-center text-lg text-white/80">
-              Save unlimited events and never miss out
-            </Text>
-            <Text className="mb-8 text-center text-sm text-accent-yellow">
-              (Mock Paywall - Simulator Mode)
-            </Text>
-
-            {/* Mock Plans */}
-            <View className="mb-8 space-y-4">
-              <Pressable
-                onPress={() => handleMockSubscribe("monthly")}
-                className="rounded-2xl border-2 border-white/30 bg-white/5 p-4"
-              >
-                <View className="flex-row items-center justify-between">
-                  <View>
-                    <Text className="text-lg font-semibold text-white">
-                      Monthly
-                    </Text>
-                    <Text className="text-white/80">Cancel anytime</Text>
-                  </View>
-                  <View className="items-end">
-                    <Text className="text-2xl font-bold text-white">$9.99</Text>
-                    <Text className="text-sm text-white/60">/month</Text>
-                  </View>
-                </View>
-              </Pressable>
-
-              <Pressable
-                onPress={() => handleMockSubscribe("yearly")}
-                className="rounded-2xl border-2 border-white bg-white/10 p-4"
-              >
-                <View className="flex-row items-center justify-between">
-                  <View>
-                    <Text className="text-lg font-semibold text-white">
-                      Yearly
-                    </Text>
-                    <Text className="text-white/80">Save 50% - Best value</Text>
-                  </View>
-                  <View className="items-end">
-                    <Text className="text-2xl font-bold text-white">
-                      $59.99
-                    </Text>
-                    <Text className="text-sm text-white/60">/year</Text>
-                  </View>
-                </View>
-                <View className="mt-2 self-start rounded-full bg-accent-yellow px-3 py-1">
-                  <Text className="text-sm font-semibold text-black">
-                    BEST VALUE
-                  </Text>
-                </View>
-              </Pressable>
-            </View>
-
-            <Text className="mb-4 text-center text-white/60">
-              Tap a plan to simulate purchase
-            </Text>
-
-            {/* Try Free Button */}
-            <Pressable onPress={handleSkip} className="py-2">
-              <Text className="text-center text-white/80 underline">
-                Continue for free
-              </Text>
-            </Pressable>
-          </View>
-        </ScrollView>
-      </SafeAreaView>
-    );
-  }
-
-  // Real device - show loading spinner
-  // The RevenueCat paywall will appear as a modal over this screen
   return (
-    <SafeAreaView className="flex-1 bg-interactive-1">
-      <View className="pt-2">
-        <ProgressBar
-          currentStep={currentStep}
-          totalSteps={totalSteps}
-          backgroundColor="bg-neutral-3"
-          foregroundColor="bg-neutral-1"
-        />
-      </View>
-      <View className="flex-1 items-center justify-center px-6">
-        <ActivityIndicator size="large" color="white" />
-        <Text className="mt-4 text-lg text-white">
-          {!isInitialized
-            ? "Initializing..."
-            : "Loading subscription options..."}
-        </Text>
-        {/* Show skip button only before paywall is presented */}
-        {isInitialized && !paywallPresented && (
-          <Pressable onPress={handleSkip} className="mt-8 py-2">
-            <Text className="text-center text-white/60 underline">
-              Skip for now
+    <QuestionContainer
+      question="Free to use. Community supported."
+      subtitle="Soonlist is an invitation to real life — not a feed."
+      currentStep={currentStep}
+      totalSteps={totalSteps}
+    >
+      <View className="flex-1 justify-between">
+        <View className="mt-4">
+          {BULLETS.map((text) => (
+            <View key={text} className="mb-5 flex-row items-start">
+              <View className="mr-3 mt-1 h-6 w-6 items-center justify-center rounded-full bg-white">
+                <Check size={16} color="#5A32FB" strokeWidth={3} />
+              </View>
+              <Text className="flex-1 text-lg text-white">{text}</Text>
+            </View>
+          ))}
+        </View>
+
+        <View>
+          <Text className="mb-4 text-center text-sm text-white/70">
+            No ads. No algorithms. All features are free — supporter perks come
+            later.
+          </Text>
+          <Pressable
+            onPress={handleContinue}
+            className="rounded-full bg-white py-4 active:scale-[0.98] active:bg-neutral-100"
+          >
+            <Text className="text-center text-lg font-semibold text-interactive-1">
+              Continue
             </Text>
           </Pressable>
-        )}
+        </View>
       </View>
-    </SafeAreaView>
+    </QuestionContainer>
   );
 }
