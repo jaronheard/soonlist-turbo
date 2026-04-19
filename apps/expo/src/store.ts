@@ -168,6 +168,10 @@ interface AppState {
   hasShownRatingPrompt: boolean;
   markRatingPromptShown: () => void;
 
+  // Share list prompt state (3-event gate, one-shot bottom sheet)
+  hasSeenShareListPrompt: boolean;
+  setShareListPromptSeen: () => void;
+
   // Pending follow from deep link (used when user is not authenticated yet)
   pendingFollowUsername: string | null;
   setPendingFollowUsername: (username: string | null) => void;
@@ -403,6 +407,7 @@ export const useAppStore = create<AppState>()(
           totalEventViews: 0,
           lastPaywallShownAtView: 0,
           hasShownRatingPrompt: false,
+          hasSeenShareListPrompt: false,
           pendingFollowUsername: null,
           myListBadgeCount: 0,
           communityBadgeCount: 0,
@@ -453,6 +458,7 @@ export const useAppStore = create<AppState>()(
           totalEventViews: 0,
           lastPaywallShownAtView: 0,
           hasShownRatingPrompt: false,
+          hasSeenShareListPrompt: false,
           // Keep pendingFollowUsername in case user is re-authenticating
           pendingFollowUsername: state.pendingFollowUsername,
           myListBadgeCount: 0,
@@ -512,6 +518,10 @@ export const useAppStore = create<AppState>()(
       // Rating prompt state
       hasShownRatingPrompt: false,
       markRatingPromptShown: () => set({ hasShownRatingPrompt: true }),
+
+      // Share list prompt state
+      hasSeenShareListPrompt: false,
+      setShareListPromptSeen: () => set({ hasSeenShareListPrompt: true }),
 
       // Pending follow from deep link
       pendingFollowUsername: null,
@@ -612,6 +622,12 @@ export const useHasShownRatingPrompt = () =>
   useAppStore((state) => state.hasShownRatingPrompt);
 export const useMarkRatingPromptShown = () =>
   useAppStore((state) => state.markRatingPromptShown);
+
+// Share list prompt selectors
+export const useHasSeenShareListPrompt = () =>
+  useAppStore((state) => state.hasSeenShareListPrompt);
+export const useSetShareListPromptSeen = () =>
+  useAppStore((state) => state.setShareListPromptSeen);
 
 // Calendar preference selectors
 export const usePreferredCalendarApp = () =>

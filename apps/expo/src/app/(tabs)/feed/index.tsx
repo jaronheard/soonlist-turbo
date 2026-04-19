@@ -18,14 +18,18 @@ import {
   Unauthenticated,
   useQuery,
 } from "convex/react";
+import { usePostHog } from "posthog-react-native";
 
 import { api } from "@soonlist/backend/convex/_generated/api";
 
 import LoadingSpinner from "~/components/LoadingSpinner";
+import { ShareListPromptSheet } from "~/components/ShareListPromptSheet";
 import UserEventsList from "~/components/UserEventsList";
 import { useRatingPrompt } from "~/hooks/useRatingPrompt";
+import { useShareListPrompt } from "~/hooks/useShareListPrompt";
 import { useStablePaginatedQuery } from "~/hooks/useStableQuery";
 import { useAppStore, useStableTimestamp } from "~/store";
+import { shareOwnList } from "~/utils/shareOwnList";
 
 type Segment = "upcoming" | "past";
 
@@ -175,8 +179,53 @@ function MyFeedContent() {
     return events;
   }, [groupedEvents, stableTimestamp, selectedSegment]);
 
+  const upcomingCount =
+    selectedSegment === "upcoming" ? enrichedEvents.length : 0;
+
   // Trigger rating prompt when user has 3+ upcoming events
-  useRatingPrompt(selectedSegment === "upcoming" ? enrichedEvents.length : 0);
+  useRatingPrompt(upcomingCount);
+
+  // Share prompt gate (3-event threshold) — see docs/brainstorms/2026-04-18-share-prompt-timing-3-event-gate-requirements.md
+  const posthog = usePostHog();
+  const { shouldShowOneShot, markOneShotSeen } =
+    useShareListPrompt(upcomingCount);
+  const [isShareSheetVisible, setIsShareSheetVisible] = useState(false);
+
+  useEffect(() => {
+    if (shouldShowOneShot && !isShareSheetVisible) {
+      const t = setTimeout(() => setIsShareSheetVisible(true), 400);
+      return () => clearTimeout(t);
+    }
+  }, [shouldShowOneShot, isShareSheetVisible]);
+
+  const handleSheetShare = useCallback(() => {
+    posthog.capture("share_prompt_one_shot_share_tapped");
+    markOneShotSeen();
+    setIsShareSheetVisible(false);
+    void shareOwnList({
+      username: user?.username,
+      posthog,
+      source: "one_shot_sheet",
+    });
+  }, [markOneShotSeen, posthog, user?.username]);
+
+  const handleSheetDismiss = useCallback(
+    (method: "not_now_button" | "swipe") => {
+      posthog.capture("share_prompt_one_shot_dismissed", { method });
+      markOneShotSeen();
+      setIsShareSheetVisible(false);
+    },
+    [markOneShotSeen, posthog],
+  );
+
+  const handlePillShare = useCallback(() => {
+    posthog.capture("share_prompt_pill_tapped");
+    void shareOwnList({
+      username: user?.username,
+      posthog,
+      source: "pill",
+    });
+  }, [posthog, user?.username]);
 
   // Update tab badge count based on upcoming events
   const setMyListBadgeCount = useAppStore((s) => s.setMyListBadgeCount);
@@ -249,17 +298,26 @@ function MyFeedContent() {
   ]);
 
   return (
-    <UserEventsList
-      groupedEvents={enrichedEvents}
-      onEndReached={handleLoadMore}
-      isFetchingNextPage={status === "LoadingMore"}
-      isLoadingFirstPage={false}
-      showCreator="savedFromOthers"
-      showSourceStickers
-      savedEventIds={savedEventIds}
-      source={selectedSegment === "upcoming" ? "feed" : "past"}
-      HeaderComponent={HeaderComponent}
-    />
+    <>
+      <UserEventsList
+        groupedEvents={enrichedEvents}
+        onEndReached={handleLoadMore}
+        isFetchingNextPage={status === "LoadingMore"}
+        isLoadingFirstPage={false}
+        showCreator="savedFromOthers"
+        showSourceStickers
+        savedEventIds={savedEventIds}
+        source={selectedSegment === "upcoming" ? "feed" : "past"}
+        HeaderComponent={HeaderComponent}
+        upcomingEventCount={upcomingCount}
+        onSharePress={handlePillShare}
+      />
+      <ShareListPromptSheet
+        isVisible={isShareSheetVisible}
+        onShare={handleSheetShare}
+        onDismiss={handleSheetDismiss}
+      />
+    </>
   );
 }
 

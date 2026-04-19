@@ -6,7 +6,6 @@ import {
   Linking,
   Platform,
   ScrollView,
-  Share,
   Switch,
   Text,
   TextInput,
@@ -19,6 +18,7 @@ import { Redirect, router } from "expo-router";
 import { useUser } from "@clerk/clerk-expo";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useConvexAuth, useMutation, useQuery } from "convex/react";
+import { usePostHog } from "posthog-react-native";
 import { Controller, useForm } from "react-hook-form";
 import { z } from "zod";
 
@@ -33,6 +33,7 @@ import { useRevenueCat } from "~/providers/RevenueCatProvider";
 import { useAppStore } from "~/store";
 import Config from "~/utils/config";
 import { hapticSuccess, toast } from "~/utils/feedback";
+import { shareOwnList } from "~/utils/shareOwnList";
 import { logError } from "../../utils/errorLogging";
 import { getPlanStatusFromUser } from "../../utils/plan";
 
@@ -352,16 +353,15 @@ export default function EditProfileScreen() {
     return `${Config.apiBaseUrl}/${user.username}`;
   }, [user?.username]);
 
-  const handleSharePublicList = useCallback(async () => {
-    const url = getPublicListUrl();
-    if (!url) return;
+  const posthog = usePostHog();
 
-    try {
-      await Share.share(Platform.OS === "ios" ? { url } : { message: url });
-    } catch {
-      // Share can be cancelled, so don't show error toast
-    }
-  }, [getPublicListUrl]);
+  const handleSharePublicList = useCallback(async () => {
+    await shareOwnList({
+      username: user?.username,
+      posthog,
+      source: "settings",
+    });
+  }, [posthog, user?.username]);
 
   const handleCopyLink = useCallback(async () => {
     const url = getPublicListUrl();

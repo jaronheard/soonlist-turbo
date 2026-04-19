@@ -1,24 +1,24 @@
 import React, { useCallback } from "react";
-import { Share, View } from "react-native";
+import { View } from "react-native";
 import { Stack } from "expo-router";
 import { useUser } from "@clerk/clerk-expo";
+import { usePostHog } from "posthog-react-native";
 
 import { CaptureOverlayButton } from "~/components/CaptureOverlayButton";
 import { ProfileMenu } from "~/components/ProfileMenu";
-import Config from "~/utils/config";
-import { logError } from "~/utils/errorLogging";
+import { shareOwnList } from "~/utils/shareOwnList";
 
 export default function FeedLayout() {
   const { user } = useUser();
+  const posthog = usePostHog();
 
   const handleShareEvents = useCallback(async () => {
-    const shareUrl = `${Config.apiBaseUrl}/${user?.username ?? ""}`;
-    try {
-      await Share.share({ url: shareUrl });
-    } catch (error) {
-      logError("Error sharing events", error);
-    }
-  }, [user?.username]);
+    await shareOwnList({
+      username: user?.username,
+      posthog,
+      source: "header",
+    });
+  }, [posthog, user?.username]);
 
   return (
     <View style={{ flex: 1 }}>

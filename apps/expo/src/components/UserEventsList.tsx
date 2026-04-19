@@ -835,35 +835,60 @@ const SourceStickersRow = () => {
   );
 };
 
-const ScreenshotCta = () => {
+interface ScreenshotCtaProps {
+  upcomingEventCount: number;
+  onSharePress: () => void;
+}
+
+const ScreenshotCta = ({
+  upcomingEventCount,
+  onSharePress,
+}: ScreenshotCtaProps) => {
   const { fontScale } = useWindowDimensions();
   const iconSize = 16 * fontScale;
   const { triggerAddEventFlow } = useAddEventFlow();
+
+  const isShareEligible = upcomingEventCount >= 3;
+  const label = isShareEligible
+    ? "Share your Soon List →"
+    : "Screenshot events →";
+  const handlePress = isShareEligible
+    ? onSharePress
+    : () => void triggerAddEventFlow();
+  const accessibilityLabel = isShareEligible
+    ? "Share your Soon List"
+    : "Screenshot events";
 
   return (
     <View className="mb-6 items-center py-4">
       <TouchableOpacity
         className="flex-row items-center justify-center gap-1.5 rounded-full bg-interactive-2 px-4 py-3"
-        onPress={() => void triggerAddEventFlow()}
+        onPress={handlePress}
         activeOpacity={0.7}
+        accessibilityRole="button"
+        accessibilityLabel={accessibilityLabel}
       >
         <Text
           className="text-center font-semibold text-neutral-1"
           style={{ fontSize: 14 * fontScale }}
         >
-          Screenshot events →
+          {label}
         </Text>
-        <Image
-          // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-require-imports
-          source={require("../assets/capture-cta.png")}
-          style={{ width: iconSize, height: iconSize }}
-        />
-        <Text
-          className="text-center font-semibold text-neutral-1"
-          style={{ fontSize: 14 * fontScale }}
-        >
-          Add
-        </Text>
+        {!isShareEligible && (
+          <>
+            <Image
+              // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-require-imports
+              source={require("../assets/capture-cta.png")}
+              style={{ width: iconSize, height: iconSize }}
+            />
+            <Text
+              className="text-center font-semibold text-neutral-1"
+              style={{ fontSize: 14 * fontScale }}
+            >
+              Add
+            </Text>
+          </>
+        )}
       </TouchableOpacity>
     </View>
   );
@@ -1106,6 +1131,14 @@ interface UserEventsListProps {
   HeaderComponent?: React.ComponentType<Record<string, never>>;
   EmptyStateComponent?: React.ComponentType<Record<string, never>>;
   source?: string;
+  /**
+   * Count of upcoming events on the current user's own list. When >= 3 the
+   * bottom ScreenshotCta pill flips to "Share your Soon List →". Only
+   * meaningful for the user's own feed.
+   */
+  upcomingEventCount?: number;
+  /** Called when the eligible share-pill is tapped. */
+  onSharePress?: () => void;
 }
 
 export default function UserEventsList(props: UserEventsListProps) {
@@ -1126,6 +1159,8 @@ export default function UserEventsList(props: UserEventsListProps) {
     HeaderComponent,
     EmptyStateComponent,
     source,
+    upcomingEventCount = 0,
+    onSharePress,
   } = props;
   const { user } = useUser();
   // Use pre-grouped events if provided, otherwise collapse client-side
@@ -1196,7 +1231,12 @@ export default function UserEventsList(props: UserEventsListProps) {
             <ActivityIndicator size="large" color="#5A32FB" />
           </View>
         ) : null}
-        {showSourceStickers ? <ScreenshotCta /> : null}
+        {showSourceStickers ? (
+          <ScreenshotCta
+            upcomingEventCount={upcomingEventCount}
+            onSharePress={onSharePress ?? (() => undefined)}
+          />
+        ) : null}
       </>
     );
   };
