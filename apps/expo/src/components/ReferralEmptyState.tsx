@@ -105,12 +105,21 @@ export function ReferralEmptyState({
 
   // Fallback handling: if the referral target doesn't exist or resolves to
   // the current user, clear the pending state and fall back to the default
-  // empty state.
+  // empty state. The Clerk-username check is sync/cached, so it catches the
+  // self-share case even before the convex `currentUserRecord` query resolves.
+  const clerkUsernameLower = clerkUser?.username?.toLowerCase() ?? null;
+  const pendingUsernameLower = pendingFollowUsername?.toLowerCase() ?? null;
+  const isSelfReferral =
+    clerkUsernameLower != null &&
+    pendingUsernameLower != null &&
+    clerkUsernameLower === pendingUsernameLower;
+
   const shouldFallback =
     pendingFollowUsername != null &&
-    // Target lookup resolved with null (user doesn't exist)
-    (targetUser === null ||
-      // OR target is the current signed-in user
+    (isSelfReferral ||
+      // Target lookup resolved with null (user doesn't exist)
+      targetUser === null ||
+      // OR target is the current signed-in user (confirmed via convex lookup)
       (targetUserFound &&
         currentUserId !== undefined &&
         targetUser.id === currentUserId));
@@ -123,6 +132,11 @@ export function ReferralEmptyState({
 
   const handleSubscribe = useCallback(() => {
     if (!pendingFollowUsername || isMutatingRef.current) return;
+    // Defense in depth: if the Clerk username matches the pending username, a
+    // tap between `targetUser` resolving and `currentUserRecord` resolving would
+    // otherwise follow the user's own list. The fallback effect will also clear
+    // pending; bail out so we never call the mutation for the self-share case.
+    if (isSelfReferral) return;
     isMutatingRef.current = true;
     setIsSubscribing(true);
     void (async () => {
@@ -156,9 +170,18 @@ export function ReferralEmptyState({
         setIsSubscribing(false);
       }
     })();
-  }, [pendingFollowUsername, convex, setPendingFollowUsername, router]);
+  }, [
+    pendingFollowUsername,
+    isSelfReferral,
+    convex,
+    setPendingFollowUsername,
+    router,
+  ]);
 
-  // If pending was cleared (e.g., by fallback effect), render default.
+  // If pending was cleared (e.g., by fallback effect), render default. The
+  // `targetUser === null` clause is logically redundant with `shouldFallback`
+  // but is required here so TypeScript can narrow `targetUser` below — TS
+  // cannot see through the `shouldFallback` composition.
   if (!pendingFollowUsername || shouldFallback || targetUser === null) {
     return (
       <DefaultEmptyState

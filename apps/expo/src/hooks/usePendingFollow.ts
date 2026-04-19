@@ -109,4 +109,14 @@ export function usePendingFollow() {
       hasProcessed.current = false;
     }
   }, [pendingFollowUsername]);
+
+  // Reset when auth drops so a re-authenticated user in the same app session
+  // can still have their persisted pending referral processed. Without this,
+  // a new user who routes to /(tabs)/following, then signs out and signs back
+  // in, would be stranded because `hasProcessed` latched true on the first run.
+  useEffect(() => {
+    if (!isAuthenticated) {
+      hasProcessed.current = false;
+    }
+  }, [isAuthenticated]);
 }

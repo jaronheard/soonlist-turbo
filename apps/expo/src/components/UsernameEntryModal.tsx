@@ -29,6 +29,10 @@ export function UsernameEntryModal({
   const [error, setError] = useState("");
   const [success, setSuccess] = useState(false);
   const timeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  // Synchronous guard against rapid double-taps — React state updates are async,
+  // so `isSubmitting` alone does not prevent two calls from queuing before the
+  // button disables. Mirrors the pattern used in FeaturedListRow.
+  const isMutatingRef = useRef(false);
 
   const router = useRouter();
   const convex = useConvex();
@@ -41,6 +45,8 @@ export function UsernameEntryModal({
   );
 
   const handleSubmit = async () => {
+    if (isMutatingRef.current) return;
+
     const normalized = normalizeUsername(username);
     if (!normalized) {
       setError("Please enter a username");
@@ -54,6 +60,7 @@ export function UsernameEntryModal({
       return;
     }
 
+    isMutatingRef.current = true;
     setIsSubmitting(true);
     setError("");
 
@@ -93,6 +100,7 @@ export function UsernameEntryModal({
       });
       setError("Something went wrong. Please try again.");
     } finally {
+      isMutatingRef.current = false;
       setIsSubmitting(false);
     }
   };
