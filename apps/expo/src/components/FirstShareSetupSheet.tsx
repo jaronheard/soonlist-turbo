@@ -223,8 +223,8 @@ export function FirstShareSetupSheet({
         </ScrollView>
 
         <View
-          className="border-t border-neutral-3 bg-white px-5 pt-3"
-          style={{ paddingBottom: Math.max(insets.bottom, 12) }}
+          className="bg-white px-5 pt-4"
+          style={{ paddingBottom: Math.max(insets.bottom, 16) }}
         >
           <Pressable
             disabled={submitting}
