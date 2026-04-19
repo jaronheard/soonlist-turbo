@@ -1133,6 +1133,22 @@ export const deleteUserAndCascade = internalMutation({
         await ctx.db.delete(etl._id);
       }
 
+      // Remove the event from every userFeeds entry it lives in — including
+      // list_${listId} entries in OTHER users' lists, followedLists_* and
+      // followedUsers_* entries in their followers' feeds, and the discover
+      // feed. Without this, those rows hydrate as null in future queries
+      // (sparse pagination and dead data growth). Scheduled so the
+      // user-deletion mutation stays within transaction limits.
+      await ctx.scheduler.runAfter(
+        0,
+        internal.feedHelpers.removeEventFromFeeds,
+        {
+          eventId: event.id,
+          keepCreatorFeed: false,
+          keepListFeeds: false,
+        },
+      );
+
       // Delete the event itself
       await ctx.db.delete(event._id);
     }

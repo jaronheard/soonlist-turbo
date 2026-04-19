@@ -1357,35 +1357,42 @@ export const getEventsForList = query({
       .order(order)
       .paginate(paginationOpts);
 
-    // Backfill-window safety: if the feed is fully empty AND the list has
-    // eventToLists membership, the migration hasn't reached this list yet.
-    // Fall back to the legacy junction scan so users don't see an empty
-    // list during deploy. Only checked on the first page (cursor=null) and
-    // when the entire feed is empty (isDone) — once any feed entry exists
-    // for this list this branch is skipped.
+    // Backfill-window safety: fall back to the legacy junction scan when
+    // the list's feed is missing entries relative to `eventToLists`. Covers
+    // both the pre-migration case (feed entirely empty) and the partial-
+    // migration case (some entries present but not all, e.g. the user
+    // filters for "upcoming" and only past events have been migrated so
+    // far). Once the counts match, the feed is authoritative and this
+    // branch is skipped on subsequent queries.
+    //
+    // Guarded on the first page only (`cursor === null`) and on a fully
+    // exhausted `feedResults` to avoid double-scanning on every paginated
+    // call post-migration.
     if (
       paginationOpts.cursor === null &&
       feedResults.page.length === 0 &&
       feedResults.isDone
     ) {
-      const anyFeedEntry = await ctx.db
-        .query("userFeeds")
-        .withIndex("by_feed_hasEnded_startTime", (q) => q.eq("feedId", feedId))
-        .first();
-      if (!anyFeedEntry) {
-        const anyMembership = await ctx.db
+      const [junctionEntries, feedEntries] = await Promise.all([
+        ctx.db
           .query("eventToLists")
           .withIndex("by_list", (q) => q.eq("listId", list.id))
-          .first();
-        if (anyMembership) {
-          return getEventsForListBackfillFallback(
-            ctx,
-            list.id,
-            paginationOpts,
-            filter,
-            viewerId,
-          );
-        }
+          .collect(),
+        ctx.db
+          .query("userFeeds")
+          .withIndex("by_feed_hasEnded_startTime", (q) =>
+            q.eq("feedId", feedId),
+          )
+          .collect(),
+      ]);
+      if (feedEntries.length < junctionEntries.length) {
+        return getEventsForListBackfillFallback(
+          ctx,
+          list.id,
+          paginationOpts,
+          filter,
+          viewerId,
+        );
       }
     }
 
