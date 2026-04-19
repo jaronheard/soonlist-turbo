@@ -11,7 +11,7 @@ import {
   SOONLIST_MARK_GLYPH_PATH,
   SOONLIST_MARK_VIEWBOX,
 } from "~/lib/brand-logo";
-import { getAuthenticatedConvex } from "~/lib/convex-server";
+import { getUnauthenticatedConvex } from "~/lib/convex-server";
 import { extractFilePath } from "~/lib/utils";
 
 export const runtime = "nodejs";
@@ -333,6 +333,9 @@ export default async function OgImage({ params }: Props) {
 }
 
 async function fetchOgData(slug: string) {
-  const convex = await getAuthenticatedConvex();
+  // Unauthenticated on purpose: keeps the route cacheable under ISR and
+  // matches the query's crawler-facing semantics (private lists always
+  // resolve to `status: "private"` without a viewer).
+  const convex = getUnauthenticatedConvex();
   return convex.query(api.lists.getOgData, { slug });
 }
