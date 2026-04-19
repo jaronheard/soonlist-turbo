@@ -6,7 +6,7 @@
 
 **Tech Stack:** React Native (Expo), Zustand, Convex, PostHog, NativeWind.
 
-**Spec:** [docs/brainstorms/2026-04-18-share-prompt-timing-3-event-gate-requirements.md](../brainstorms/2026-04-18-share-prompt-timing-3-event-gate-requirements.md)
+**Issue:** [#1011](https://github.com/jaronheard/soonlist-turbo/issues/1011)
 
 ---
 

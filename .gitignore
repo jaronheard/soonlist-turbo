@@ -66,6 +66,7 @@ dist/
 
 # superpowers (local-only plans/specs)
 docs/superpowers/
+docs/brainstorms/
 .superpowers/
 
 # claude code
