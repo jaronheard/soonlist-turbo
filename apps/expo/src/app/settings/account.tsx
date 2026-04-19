@@ -24,7 +24,6 @@ import { z } from "zod";
 import { api } from "@soonlist/backend/convex/_generated/api";
 
 import { Button } from "~/components/Button";
-import { FirstShareSetupSheet } from "~/components/FirstShareSetupSheet";
 import { Copy, ShareIcon } from "~/components/icons";
 import { TimezoneSelectNative } from "~/components/TimezoneSelectNative";
 import { UserProfileFlair } from "~/components/UserProfileFlair";
@@ -101,12 +100,7 @@ export default function EditProfileScreen() {
   const { user } = useUser();
   const { customerInfo, showProPaywallIfNeeded } = useRevenueCat();
   const signOut = useSignOut();
-  const {
-    requestShare,
-    isSetupSheetVisible,
-    closeSetupSheet,
-    closeSetupSheetAndShare,
-  } = useShareMyList();
+  const { requestShare } = useShareMyList();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [profileImage, setProfileImage] = useState<string | null>(
     user?.imageUrl ?? null,
@@ -673,11 +667,6 @@ export default function EditProfileScreen() {
           </SettingsSection>
         </View>
       </ScrollView>
-      <FirstShareSetupSheet
-        visible={isSetupSheetVisible}
-        onClose={closeSetupSheet}
-        onComplete={closeSetupSheetAndShare}
-      />
     </KeyboardAvoidingView>
   );
 }

@@ -22,7 +22,6 @@ import { usePostHog } from "posthog-react-native";
 
 import { api } from "@soonlist/backend/convex/_generated/api";
 
-import { FirstShareSetupSheet } from "~/components/FirstShareSetupSheet";
 import LoadingSpinner from "~/components/LoadingSpinner";
 import UserEventsList from "~/components/UserEventsList";
 import { useRatingPrompt } from "~/hooks/useRatingPrompt";
@@ -189,19 +188,12 @@ function MyFeedContent() {
   const { shouldShowOneShot, markOneShotSeen } =
     useShareListPrompt(upcomingCount);
 
-  const {
-    requestShare,
-    isSetupSheetVisible,
-    closeSetupSheet,
-    closeSetupSheetAndShare,
-  } = useShareMyList();
+  const { requestShare } = useShareMyList();
 
-  // Threshold-crossing auto-trigger: open FirstShareSetupSheet directly.
-  // That sheet IS the "your Soonlist is ready to share" moment — no second
-  // prompt on top. For users who've already shared (hasSharedListBefore in
-  // useShareMyList), requestShare would auto-open native share, which we
-  // DON'T want here — so we only auto-trigger on the first-share path and
-  // mark the one-shot seen either way.
+  // On threshold crossing, route to the share-setup modal (which is the
+  // "your Soonlist is ready to share" moment). Skip for users who've already
+  // shared — requestShare would auto-launch native share, which we don't
+  // want here. Either way mark the one-shot seen.
   const currentUser = useQuery(api.users.getCurrentUser);
   const hasSharedListBefore = currentUser?.hasSharedListBefore ?? false;
   useEffect(() => {
@@ -298,26 +290,19 @@ function MyFeedContent() {
   ]);
 
   return (
-    <>
-      <UserEventsList
-        groupedEvents={enrichedEvents}
-        onEndReached={handleLoadMore}
-        isFetchingNextPage={status === "LoadingMore"}
-        isLoadingFirstPage={false}
-        showCreator="savedFromOthers"
-        showSourceStickers
-        savedEventIds={savedEventIds}
-        source={selectedSegment === "upcoming" ? "feed" : "past"}
-        HeaderComponent={HeaderComponent}
-        upcomingEventCount={upcomingCount}
-        onSharePress={handlePillShare}
-      />
-      <FirstShareSetupSheet
-        visible={isSetupSheetVisible}
-        onClose={closeSetupSheet}
-        onComplete={closeSetupSheetAndShare}
-      />
-    </>
+    <UserEventsList
+      groupedEvents={enrichedEvents}
+      onEndReached={handleLoadMore}
+      isFetchingNextPage={status === "LoadingMore"}
+      isLoadingFirstPage={false}
+      showCreator="savedFromOthers"
+      showSourceStickers
+      savedEventIds={savedEventIds}
+      source={selectedSegment === "upcoming" ? "feed" : "past"}
+      HeaderComponent={HeaderComponent}
+      upcomingEventCount={upcomingCount}
+      onSharePress={handlePillShare}
+    />
   );
 }
 

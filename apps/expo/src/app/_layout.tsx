@@ -273,6 +273,14 @@ const InitialLayout = () => {
         }}
       />
       <Stack.Screen
+        name="share-setup"
+        options={{
+          presentation: "modal",
+          title: "",
+          headerShown: false,
+        }}
+      />
+      <Stack.Screen
         name="event/[id]/edit"
         options={{
           presentation: "modal",
