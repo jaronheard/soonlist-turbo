@@ -1,11 +1,5 @@
 import React, { useCallback, useEffect, useMemo, useState } from "react";
-import {
-  Platform,
-  Share,
-  Text,
-  TouchableOpacity,
-  View,
-} from "react-native";
+import { Platform, Share, Text, TouchableOpacity, View } from "react-native";
 import { Redirect } from "expo-router";
 import { SymbolView } from "expo-symbols";
 import { useUser } from "@clerk/clerk-expo";

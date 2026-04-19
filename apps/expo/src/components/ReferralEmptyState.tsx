@@ -1,10 +1,11 @@
-import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import {
-  ScrollView,
-  Text,
-  TouchableOpacity,
-  View,
-} from "react-native";
+import React, {
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
+import { ScrollView, Text, TouchableOpacity, View } from "react-native";
 import { Image } from "expo-image";
 import { useRouter } from "expo-router";
 import { useUser } from "@clerk/clerk-expo";
@@ -13,6 +14,7 @@ import { useConvex, useQuery } from "convex/react";
 import type { Doc } from "@soonlist/backend/convex/_generated/dataModel";
 import { api } from "@soonlist/backend/convex/_generated/api";
 
+import { DefaultEmptyState } from "~/components/DefaultEmptyState";
 import { User } from "~/components/icons";
 import LoadingSpinner from "~/components/LoadingSpinner";
 import ScenePreviewThreeUp from "~/components/ScenePreviewThreeUp";
@@ -21,7 +23,6 @@ import { useStablePaginatedQuery } from "~/hooks/useStableQuery";
 import { useAppStore, useStableTimestamp } from "~/store";
 import { logError } from "~/utils/errorLogging";
 import { toast } from "~/utils/feedback";
-import { DefaultEmptyState } from "~/components/DefaultEmptyState";
 
 interface ReferralEmptyStateProps {
   hasFollowings: boolean;
