@@ -186,15 +186,11 @@ function MyFeedContent() {
   // Trigger rating prompt when user has 3+ upcoming events
   useRatingPrompt(upcomingCount);
 
-  // Share prompt gate (3-event threshold) — see docs/brainstorms/2026-04-18-share-prompt-timing-3-event-gate-requirements.md
   const posthog = usePostHog();
   const { shouldShowOneShot, markOneShotSeen } =
     useShareListPrompt(upcomingCount);
   const [isShareSheetVisible, setIsShareSheetVisible] = useState(false);
 
-  // Routes share taps through the first-share setup flow (#1007). When the
-  // user has already shared, requestShare opens the native share sheet
-  // directly; otherwise it opens FirstShareSetupSheet.
   const {
     requestShare,
     isSetupSheetVisible,
@@ -203,11 +199,10 @@ function MyFeedContent() {
   } = useShareMyList();
 
   useEffect(() => {
-    if (shouldShowOneShot && !isShareSheetVisible) {
-      const t = setTimeout(() => setIsShareSheetVisible(true), 400);
-      return () => clearTimeout(t);
-    }
-  }, [shouldShowOneShot, isShareSheetVisible]);
+    if (!shouldShowOneShot) return;
+    const t = setTimeout(() => setIsShareSheetVisible(true), 400);
+    return () => clearTimeout(t);
+  }, [shouldShowOneShot]);
 
   const handleSheetShare = useCallback(() => {
     posthog.capture("share_prompt_one_shot_share_tapped");

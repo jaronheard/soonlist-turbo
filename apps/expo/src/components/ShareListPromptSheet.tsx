@@ -8,11 +8,6 @@ interface ShareListPromptSheetProps {
   onDismiss: (method: "not_now_button" | "swipe") => void;
 }
 
-/**
- * One-shot bottom sheet shown once when the current user first crosses the
- * 3-upcoming-event threshold. Shell content only — #1007 later replaces the
- * body with its privacy + profile setup without changing the trigger.
- */
 export function ShareListPromptSheet({
   isVisible,
   onShare,

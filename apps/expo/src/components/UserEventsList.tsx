@@ -36,6 +36,7 @@ import {
 import { SavedByModal } from "~/components/SavedByModal";
 import { useAddEventFlow } from "~/hooks/useAddEventFlow";
 import { useEventActions } from "~/hooks/useEventActions";
+import { SHARE_PROMPT_THRESHOLD } from "~/hooks/useShareListPrompt";
 import { useUserTimezone } from "~/store";
 import { cn } from "~/utils/cn";
 import {
@@ -655,7 +656,7 @@ const ScreenshotCta = ({
   const iconSize = 16 * fontScale;
   const { triggerAddEventFlow } = useAddEventFlow();
 
-  const isShareEligible = upcomingEventCount >= 3;
+  const isShareEligible = upcomingEventCount >= SHARE_PROMPT_THRESHOLD;
   const label = isShareEligible
     ? "Share your Soon List →"
     : "Screenshot events →";
@@ -939,13 +940,7 @@ interface UserEventsListProps {
   EmptyStateComponent?: React.ComponentType<Record<string, never>>;
   source?: string;
   attributionVariant?: EventAttributionVariant;
-  /**
-   * Count of upcoming events on the current user's own list. When >= 3 the
-   * bottom ScreenshotCta pill flips to "Share your Soon List →". Only
-   * meaningful for the user's own feed.
-   */
   upcomingEventCount?: number;
-  /** Called when the eligible share-pill is tapped. */
   onSharePress?: () => void;
 }
 

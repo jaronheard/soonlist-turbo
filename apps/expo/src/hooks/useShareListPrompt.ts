@@ -5,18 +5,12 @@ import { shallow } from "zustand/shallow";
 import { useHasSeenShareListPrompt, useSetShareListPromptSeen } from "~/store";
 import { useInFlightEventStore } from "~/store/useInFlightEventStore";
 
-const THRESHOLD = 3;
+export const SHARE_PROMPT_THRESHOLD = 3;
 
 /**
- * Hook that gates proactive Soon List share prompts on having at least
- * THRESHOLD upcoming events. Mirrors useRatingPrompt in spirit but exposes
- * state (rather than firing directly) so the feed screen can mount a custom
- * bottom sheet.
- *
- * - `isShareEligible` reflects the current count (reactive; can flip back).
- * - `shouldShowOneShot` is true when we should show the one-shot sheet now
- *   (eligible, not yet seen, no batch mid-flight).
- * - `markOneShotSeen` persists the dismissal.
+ * Gates proactive Soon List share prompts on upcoming-event count.
+ * Returns state rather than firing directly, so the feed screen can mount
+ * its own UI on top of the one-shot signal.
  */
 export function useShareListPrompt(upcomingEventCount: number) {
   const hasSeen = useHasSeenShareListPrompt();
@@ -27,7 +21,7 @@ export function useShareListPrompt(upcomingEventCount: number) {
     shallow,
   );
 
-  const isShareEligible = upcomingEventCount >= THRESHOLD;
+  const isShareEligible = upcomingEventCount >= SHARE_PROMPT_THRESHOLD;
   const isBatchInFlight = pendingBatchIds.length > 0;
 
   const wasEligibleRef = useRef(isShareEligible);
