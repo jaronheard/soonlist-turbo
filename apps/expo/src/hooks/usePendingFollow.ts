@@ -98,6 +98,14 @@ export function usePendingFollow() {
         console.error("Auto-follow failed:", error);
       }
 
+      // Only finalize if we're still the active processing run. A newer
+      // referral that arrived mid-mutation would have advanced
+      // `lastProcessedRef`; clobbering its pending/navigation here would
+      // cancel that newer intent before its own flow completes.
+      if (lastProcessedRef.current !== usernameToFollow) {
+        return;
+      }
+
       // Clear pending BEFORE navigating so the state update doesn't
       // re-trigger the effect between the push and the clear.
       setPendingFollowUsername(null);
