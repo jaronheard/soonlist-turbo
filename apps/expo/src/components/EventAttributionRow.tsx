@@ -50,13 +50,7 @@ function navigateToUser(user: UserForDisplay, currentUserId?: string) {
   }
 }
 
-function Avatar({
-  user,
-  size,
-}: {
-  user: UserForDisplay;
-  size: number;
-}) {
+function Avatar({ user, size }: { user: UserForDisplay; size: number }) {
   return (
     <UserProfileFlair username={user.username} size="xs">
       {user.userImage ? (
@@ -213,13 +207,19 @@ function ListPrimaryRow({
   const openModal = () => setShowModal(true);
 
   const maxStack = 3;
-  const stackUsers = allUsers.slice(0, maxStack);
-  const extraCount = Math.max(allUsers.length - maxStack, 0);
+  // Own-event: "You" is already shown, so the stack surfaces other savers
+  // only. Otherwise the stack combines creator + savers.
+  const stackCandidates = isOwnEvent
+    ? savers.filter((s) => s.id !== creator.id)
+    : allUsers;
+  const stackUsers = stackCandidates.slice(0, maxStack);
+  const extraCount = Math.max(stackCandidates.length - maxStack, 0);
 
   const ownBadge = (
     <Pressable
       onPress={() => navigateToUser(creator, currentUserId)}
       hitSlop={HIT_SLOP}
+      accessibilityLabel="Go to your profile"
       className="flex-row items-center gap-1"
     >
       <Avatar user={creator} size={avatarSize} />
@@ -255,7 +255,7 @@ function ListPrimaryRow({
         ) : null}
         <ListChip name={sourceListName} slug={sourceListSlug} />
         <OverflowPill count={remainingListsCount} onPress={openModal} />
-        {!isOwnEvent && stack ? (
+        {stack ? (
           <>
             <Text className="text-xs text-neutral-2">·</Text>
             {stack}
