@@ -22,38 +22,39 @@ interface LinkIconRowProps {
 
 type IoniconName = React.ComponentProps<typeof Ionicons>["name"];
 
-const makeIcon =
-  (name: IoniconName): React.ComponentType<{ size: number; color: string }> =>
-  ({ size, color }) => <Ionicons name={name} size={size} color={color} />;
-
 const ICONS: {
   key: LinkField;
-  Icon: React.ComponentType<{ size: number; color: string }>;
+  name: IoniconName;
   placeholder: string;
+  label: string;
   keyboard?: "email-address" | "phone-pad" | "url" | "default";
 }[] = [
   {
     key: "publicInsta",
-    Icon: makeIcon("logo-instagram"),
+    name: "logo-instagram",
     placeholder: "@handle",
+    label: "Instagram",
     keyboard: "default",
   },
   {
     key: "publicWebsite",
-    Icon: makeIcon("globe-outline"),
-    placeholder: "https://...",
+    name: "globe-outline",
+    placeholder: "https://…",
+    label: "Website",
     keyboard: "url",
   },
   {
     key: "publicEmail",
-    Icon: makeIcon("at-outline"),
+    name: "mail-outline",
     placeholder: "you@example.com",
+    label: "Email",
     keyboard: "email-address",
   },
   {
     key: "publicPhone",
-    Icon: makeIcon("call-outline"),
+    name: "call-outline",
     placeholder: "+1 555 123 4567",
+    label: "Phone",
     keyboard: "phone-pad",
   },
 ];
@@ -65,39 +66,49 @@ export function LinkIconRow({ values, onChange }: LinkIconRowProps) {
     onChange({ ...values, [key]: value.length === 0 ? null : value });
   };
 
+  const activeEntry = ICONS.find((i) => i.key === active);
+
   return (
     <View>
       <View className="flex-row gap-3">
-        {ICONS.map(({ key, Icon }) => {
+        {ICONS.map(({ key, name, label }) => {
           const filled = Boolean(values[key]);
+          const isActive = active === key;
           return (
             <Pressable
               key={key}
-              onPress={() => setActive(active === key ? null : key)}
-              accessibilityLabel={`Edit ${key}`}
-              className={`h-10 w-10 items-center justify-center rounded-full ${
-                filled
-                  ? "bg-interactive-2"
-                  : "border border-dashed border-neutral-300"
+              onPress={() => setActive(isActive ? null : key)}
+              accessibilityLabel={`Edit ${label}`}
+              className={`items-center justify-center rounded-full ${
+                filled || isActive ? "bg-interactive-2" : "bg-interactive-3"
               }`}
+              style={{ height: 48, width: 48 }}
             >
-              <Icon size={18} color={filled ? "#5A32FB" : "#999"} />
+              <Ionicons
+                name={name}
+                size={22}
+                color={filled || isActive ? "#5A32FB" : "#627496"}
+              />
             </Pressable>
           );
         })}
       </View>
 
-      {active ? (
+      {activeEntry ? (
         <TextInput
-          key={active}
+          key={activeEntry.key}
           autoFocus
-          className="mt-3 rounded-md border border-neutral-300 px-3 py-2 text-base"
-          placeholder={ICONS.find((i) => i.key === active)?.placeholder}
-          keyboardType={ICONS.find((i) => i.key === active)?.keyboard}
+          className="mt-3 rounded-xl border border-neutral-3 bg-white px-4 text-base text-neutral-1"
+          style={{ height: 48 }}
+          placeholder={activeEntry.placeholder}
+          placeholderTextColor="rgb(98, 116, 150)"
+          keyboardType={activeEntry.keyboard}
           autoCapitalize="none"
-          value={values[active] ?? ""}
-          onChangeText={(text) => setField(active, text)}
+          value={values[activeEntry.key] ?? ""}
+          onChangeText={(text) => setField(activeEntry.key, text)}
           onBlur={() => setActive(null)}
+          returnKeyType="done"
+          onSubmitEditing={() => setActive(null)}
         />
       ) : null}
     </View>

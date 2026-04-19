@@ -6,7 +6,6 @@ import {
   Modal,
   Platform,
   Pressable,
-  ScrollView,
   Text,
   TextInput,
   View,
@@ -163,29 +162,33 @@ export function FirstShareSetupSheet({
   return (
     <Modal
       visible={visible}
-      presentationStyle="pageSheet"
+      transparent
       animationType="slide"
       onRequestClose={onClose}
+      statusBarTranslucent
     >
+      <Pressable
+        onPress={onClose}
+        className="flex-1 bg-black/40"
+        accessibilityLabel="Dismiss"
+      />
       <KeyboardAvoidingView
         behavior={Platform.OS === "ios" ? "padding" : undefined}
-        className="flex-1 bg-white"
+        className="absolute inset-x-0 bottom-0"
       >
-        <View className="border-b border-neutral-3 px-5 py-4">
-          <Text className="text-center text-lg font-bold text-neutral-1">
+        <View
+          className="rounded-t-3xl bg-white px-6 pt-3"
+          style={{ paddingBottom: Math.max(insets.bottom, 16) + 8 }}
+        >
+          <View className="mb-5 items-center">
+            <View className="h-1 w-10 rounded-full bg-neutral-3" />
+          </View>
+
+          <Text className="mb-6 text-center text-xl font-bold text-neutral-1">
             Share your Soon List
           </Text>
-        </View>
 
-        <ScrollView
-          keyboardShouldPersistTaps="handled"
-          contentContainerStyle={{
-            paddingHorizontal: 20,
-            paddingTop: 20,
-            paddingBottom: 24,
-          }}
-        >
-          <View className="mb-6">
+          <View className="mb-5">
             <Text className="mb-2 text-xs font-semibold uppercase tracking-wider text-neutral-2">
               List name
             </Text>
@@ -201,24 +204,26 @@ export function FirstShareSetupSheet({
             />
           </View>
 
-          <View className="mb-6">
+          <View className="mb-5">
             <Text className="mb-2 text-xs font-semibold uppercase tracking-wider text-neutral-2">
               Your profile
             </Text>
             <View className="flex-row items-center gap-3">
               <Pressable
                 onPress={pickAvatar}
-                className="items-center justify-center overflow-hidden rounded-full bg-neutral-3"
-                style={{ height: 56, width: 56 }}
+                className="items-center justify-center overflow-hidden rounded-full bg-interactive-3"
+                style={{ height: 48, width: 48 }}
                 accessibilityLabel="Change photo"
               >
                 {avatar ? (
                   <Image
                     source={{ uri: avatar }}
-                    style={{ height: 56, width: 56 }}
+                    style={{ height: 48, width: 48 }}
                   />
                 ) : (
-                  <Text className="text-xs text-neutral-2">Photo</Text>
+                  <Text className="text-xs font-medium text-interactive-1">
+                    Photo
+                  </Text>
                 )}
               </Pressable>
               <TextInput
@@ -230,6 +235,7 @@ export function FirstShareSetupSheet({
                   markDirty();
                 }}
                 placeholder="Your name"
+                placeholderTextColor="rgb(98, 116, 150)"
                 maxLength={50}
               />
             </View>
@@ -249,14 +255,11 @@ export function FirstShareSetupSheet({
           </View>
 
           {error ? (
-            <Text className="mb-2 text-sm text-red-600">{error}</Text>
+            <Text className="mb-3 text-center text-sm text-red-600">
+              {error}
+            </Text>
           ) : null}
-        </ScrollView>
 
-        <View
-          className="border-t border-neutral-3 bg-white px-5 pt-3"
-          style={{ paddingBottom: Math.max(insets.bottom, 12) }}
-        >
           <Pressable
             disabled={submitting}
             onPress={() => void handleShare()}
@@ -277,7 +280,7 @@ export function FirstShareSetupSheet({
           <Pressable
             disabled={submitting}
             onPress={() => void handleShareNow()}
-            className="items-center py-3"
+            className="items-center pt-3"
           >
             <Text className="text-sm font-medium text-neutral-2">
               Share now without editing
