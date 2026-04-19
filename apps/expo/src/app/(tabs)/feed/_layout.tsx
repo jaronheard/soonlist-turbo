@@ -1,24 +1,19 @@
-import React, { useCallback } from "react";
+import React from "react";
 import { View } from "react-native";
 import { Stack } from "expo-router";
-import { useUser } from "@clerk/clerk-expo";
-import { usePostHog } from "posthog-react-native";
 
 import { CaptureOverlayButton } from "~/components/CaptureOverlayButton";
+import { FirstShareSetupSheet } from "~/components/FirstShareSetupSheet";
 import { ProfileMenu } from "~/components/ProfileMenu";
-import { shareOwnList } from "~/utils/shareOwnList";
+import { useShareMyList } from "~/hooks/useShareMyList";
 
 export default function FeedLayout() {
-  const { user } = useUser();
-  const posthog = usePostHog();
-
-  const handleShareEvents = useCallback(async () => {
-    await shareOwnList({
-      username: user?.username,
-      posthog,
-      source: "header",
-    });
-  }, [posthog, user?.username]);
+  const {
+    requestShare,
+    isSetupSheetVisible,
+    closeSetupSheet,
+    closeSetupSheetAndShare,
+  } = useShareMyList();
 
   return (
     <View style={{ flex: 1 }}>
@@ -41,7 +36,7 @@ export default function FeedLayout() {
                 type: "button",
                 label: "",
                 icon: { type: "sfSymbol", name: "square.and.arrow.up" },
-                onPress: () => void handleShareEvents(),
+                onPress: requestShare,
                 accessibilityLabel: "Share",
                 tintColor: "#5A32FB",
               },
@@ -55,6 +50,11 @@ export default function FeedLayout() {
         />
       </Stack>
       <CaptureOverlayButton />
+      <FirstShareSetupSheet
+        visible={isSetupSheetVisible}
+        onClose={closeSetupSheet}
+        onComplete={closeSetupSheetAndShare}
+      />
     </View>
   );
 }

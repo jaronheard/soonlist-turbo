@@ -22,14 +22,15 @@ import { usePostHog } from "posthog-react-native";
 
 import { api } from "@soonlist/backend/convex/_generated/api";
 
+import { FirstShareSetupSheet } from "~/components/FirstShareSetupSheet";
 import LoadingSpinner from "~/components/LoadingSpinner";
 import { ShareListPromptSheet } from "~/components/ShareListPromptSheet";
 import UserEventsList from "~/components/UserEventsList";
 import { useRatingPrompt } from "~/hooks/useRatingPrompt";
 import { useShareListPrompt } from "~/hooks/useShareListPrompt";
+import { useShareMyList } from "~/hooks/useShareMyList";
 import { useStablePaginatedQuery } from "~/hooks/useStableQuery";
 import { useAppStore, useStableTimestamp } from "~/store";
-import { shareOwnList } from "~/utils/shareOwnList";
 
 type Segment = "upcoming" | "past";
 
@@ -191,6 +192,16 @@ function MyFeedContent() {
     useShareListPrompt(upcomingCount);
   const [isShareSheetVisible, setIsShareSheetVisible] = useState(false);
 
+  // Routes share taps through the first-share setup flow (#1007). When the
+  // user has already shared, requestShare opens the native share sheet
+  // directly; otherwise it opens FirstShareSetupSheet.
+  const {
+    requestShare,
+    isSetupSheetVisible,
+    closeSetupSheet,
+    closeSetupSheetAndShare,
+  } = useShareMyList();
+
   useEffect(() => {
     if (shouldShowOneShot && !isShareSheetVisible) {
       const t = setTimeout(() => setIsShareSheetVisible(true), 400);
@@ -202,12 +213,8 @@ function MyFeedContent() {
     posthog.capture("share_prompt_one_shot_share_tapped");
     markOneShotSeen();
     setIsShareSheetVisible(false);
-    void shareOwnList({
-      username: user?.username,
-      posthog,
-      source: "one_shot_sheet",
-    });
-  }, [markOneShotSeen, posthog, user?.username]);
+    requestShare();
+  }, [markOneShotSeen, posthog, requestShare]);
 
   const handleSheetDismiss = useCallback(
     (method: "not_now_button" | "swipe") => {
@@ -220,12 +227,8 @@ function MyFeedContent() {
 
   const handlePillShare = useCallback(() => {
     posthog.capture("share_prompt_pill_tapped");
-    void shareOwnList({
-      username: user?.username,
-      posthog,
-      source: "pill",
-    });
-  }, [posthog, user?.username]);
+    requestShare();
+  }, [posthog, requestShare]);
 
   // Update tab badge count based on upcoming events
   const setMyListBadgeCount = useAppStore((s) => s.setMyListBadgeCount);
@@ -316,6 +319,11 @@ function MyFeedContent() {
         isVisible={isShareSheetVisible}
         onShare={handleSheetShare}
         onDismiss={handleSheetDismiss}
+      />
+      <FirstShareSetupSheet
+        visible={isSetupSheetVisible}
+        onClose={closeSetupSheet}
+        onComplete={closeSetupSheetAndShare}
       />
     </>
   );
