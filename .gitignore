@@ -74,3 +74,5 @@ docs/superpowers/
 .claude/launch.json
 .claude/.worktree-ports
 .claude/.worktree-ports.lock
+
+.superpowers/
