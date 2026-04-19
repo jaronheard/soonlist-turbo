@@ -1353,11 +1353,12 @@ export const getOgData = query({
       return { status: "private" as const };
     }
 
-    // `.collect()` is bounded by Convex's implicit per-query read limit
-    // (~16k docs). Pathologically large lists will throw, and the caller's
-    // try/catch falls back to the branded-default OG image. Taking a smaller
-    // fixed slice here would let the pill count drift below the true upcoming
-    // count for large lists, so we scan the full set.
+    // Bounded per Convex's `.take()`-over-`.collect()` rule (see
+    // packages/backend/.cursor/rules/convex_rules.mdc). The pill count below
+    // is derived from this slice, so lists with >500 upcoming-public events
+    // will show an approximate count; a denormalized counter updated by list
+    // mutations would be the rigorous fix if/when that becomes visible.
+    const OG_EVENT_SCAN_LIMIT = 500;
     const [owner, eventToLists] = await Promise.all([
       ctx.db
         .query("users")
@@ -1366,7 +1367,7 @@ export const getOgData = query({
       ctx.db
         .query("eventToLists")
         .withIndex("by_list", (q) => q.eq("listId", list.id))
-        .collect(),
+        .take(OG_EVENT_SCAN_LIMIT),
     ]);
 
     if (!owner) {

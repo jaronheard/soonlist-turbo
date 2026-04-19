@@ -64,12 +64,11 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
         ? list.description
         : autoDescription;
     const title = `${list.name} · Soonlist`;
-    const imageAlt = `${list.name} — a list on Soonlist by @${ownerHandle}`;
 
     // Next's file-based `opengraph-image.tsx` convention auto-wires the image
-    // URL into og:image + twitter:image, so we don't set them manually here.
-    // We do upgrade `twitter:card` to `summary_large_image` since the dynamic
-    // route produces a 1200×630 rich card.
+    // URL (with its static `alt`) into og:image + twitter:image, so we don't
+    // set them manually here. We do upgrade `twitter:card` to
+    // `summary_large_image` since the dynamic route produces a 1200×630 card.
     return {
       title,
       description,
@@ -87,7 +86,6 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
       },
       other: {
         "apple-itunes-app": APPLE_ITUNES_APP(slug),
-        "og:image:alt": imageAlt,
       },
     };
   } catch (error) {
