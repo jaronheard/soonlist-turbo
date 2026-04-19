@@ -623,7 +623,7 @@ const SourceStickersRow = () => {
             className="font-semibold text-neutral-1"
             style={{ fontSize: 20 * fontScale }}
           >
-            Got screenshots? →
+            Screenshot events →
           </Text>
           <Image
             // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-require-imports

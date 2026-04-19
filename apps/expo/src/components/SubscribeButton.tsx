@@ -1,6 +1,7 @@
 import React from "react";
 import { Text, TouchableOpacity } from "react-native";
 
+import { Check, PlusIcon } from "~/components/icons";
 import { hapticLight } from "~/utils/feedback";
 
 interface SubscribeButtonProps {
@@ -20,6 +21,9 @@ export function SubscribeButton({
 }: SubscribeButtonProps) {
   const containerSize = size === "sm" ? "px-3 py-1" : "px-4 py-1.5";
   const textSize = size === "sm" ? "text-xs" : "text-sm";
+  const iconSize = size === "sm" ? 12 : 14;
+  const iconColor = isSubscribed ? "#5A32FB" : "#FFFFFF";
+  const Icon = isSubscribed ? Check : PlusIcon;
 
   return (
     <TouchableOpacity
@@ -33,12 +37,13 @@ export function SubscribeButton({
         accessibilityLabel ??
         (isSubscribed ? "Subscribed to list" : "Subscribe to list")
       }
-      className={`rounded-full ${containerSize} ${
+      className={`flex-row items-center gap-1 rounded-full ${containerSize} ${
         isSubscribed
           ? "border border-interactive-1 bg-white"
           : "bg-interactive-1"
       }`}
     >
+      <Icon size={iconSize} color={iconColor} strokeWidth={2.5} />
       <Text
         className={`${textSize} font-semibold ${
           isSubscribed ? "text-interactive-1" : "text-white"
