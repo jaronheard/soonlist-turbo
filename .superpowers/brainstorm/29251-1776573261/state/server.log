@@ -1,3 +1,0 @@
-{"type":"server-started","port":60672,"host":"127.0.0.1","url_host":"localhost","url":"http://localhost:60672","screen_dir":"/Users/jaronheard/soonlist-turbo/.claude/worktrees/amazing-mendel-b31323/.superpowers/brainstorm/29251-1776573261/content","state_dir":"/Users/jaronheard/soonlist-turbo/.claude/worktrees/amazing-mendel-b31323/.superpowers/brainstorm/29251-1776573261/state"}
-{"type":"screen-added","file":"/Users/jaronheard/soonlist-turbo/.claude/worktrees/amazing-mendel-b31323/.superpowers/brainstorm/29251-1776573261/content/waiting.html"}
-{"type":"server-stopped","reason":"idle timeout"}
