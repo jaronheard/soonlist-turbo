@@ -40,14 +40,14 @@ export function ShareListPromptSheet({
         >
           <View className="mb-4 h-1 w-10 self-center rounded-full bg-neutral-300" />
           <Text className="mb-2 text-center font-heading text-2xl font-bold text-neutral-1">
-            Your Soon List is ready to share
+            Your Soonlist is ready to share
           </Text>
           <Text className="mb-6 text-center text-base text-neutral-2">
             Send your upcoming events to friends.
           </Text>
           <Pressable
             accessibilityRole="button"
-            accessibilityLabel="Share your Soon List"
+            accessibilityLabel="Share your Soonlist"
             onPress={onShare}
             className="mb-3 rounded-full bg-interactive-1 py-4"
           >

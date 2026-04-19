@@ -1,6 +1,6 @@
 # Share Prompt Timing: 3-Event Gate — Implementation Plan
 
-**Goal:** Gate proactive Soon List share prompts on `upcomingEventCount >= 3` by adding a persistent pill transformation + a one-shot bottom sheet, via a reusable `shareOwnList` action.
+**Goal:** Gate proactive Soonlist share prompts on `upcomingEventCount >= 3` by adding a persistent pill transformation + a one-shot bottom sheet, via a reusable `shareOwnList` action.
 
 **Architecture:** Mirrors the existing `useRatingPrompt` pattern. A Zustand flag tracks one-shot dismissal. A single hook exposes eligibility + trigger state. The feed screen drives both surfaces. Share action is a shared utility so #1007 can later swap in first-share setup.
 
@@ -194,7 +194,7 @@ const ScreenshotCta = ({ upcomingEventCount, onSharePress }: ScreenshotCtaProps)
   const { triggerAddEventFlow } = useAddEventFlow();
 
   const isShareEligible = upcomingEventCount >= 3;
-  const label = isShareEligible ? "Share your Soon List →" : "Screenshot events →";
+  const label = isShareEligible ? "Share your Soonlist →" : "Screenshot events →";
   const handlePress = isShareEligible ? onSharePress : () => void triggerAddEventFlow();
 
   return (
@@ -204,7 +204,7 @@ const ScreenshotCta = ({ upcomingEventCount, onSharePress }: ScreenshotCtaProps)
         onPress={handlePress}
         activeOpacity={0.7}
         accessibilityRole="button"
-        accessibilityLabel={isShareEligible ? "Share your Soon List" : "Screenshot events"}
+        accessibilityLabel={isShareEligible ? "Share your Soonlist" : "Screenshot events"}
       >
         <Text
           className="text-center font-semibold text-neutral-1"
@@ -286,14 +286,14 @@ export function ShareListPromptSheet({
         >
           <View className="mb-4 h-1 w-10 self-center rounded-full bg-neutral-300" />
           <Text className="mb-2 text-center font-heading text-2xl font-bold text-neutral-1">
-            Your Soon List is ready to share
+            Your Soonlist is ready to share
           </Text>
           <Text className="mb-6 text-center text-base text-neutral-2">
             Send your upcoming events to friends.
           </Text>
           <Pressable
             accessibilityRole="button"
-            accessibilityLabel="Share your Soon List"
+            accessibilityLabel="Share your Soonlist"
             onPress={() => {
               posthog.capture("share_prompt_one_shot_share_tapped");
               onShare();

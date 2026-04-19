@@ -8,7 +8,7 @@ import { useInFlightEventStore } from "~/store/useInFlightEventStore";
 export const SHARE_PROMPT_THRESHOLD = 3;
 
 /**
- * Gates proactive Soon List share prompts on upcoming-event count.
+ * Gates proactive Soonlist share prompts on upcoming-event count.
  * Returns state rather than firing directly, so the feed screen can mount
  * its own UI on top of the one-shot signal.
  */

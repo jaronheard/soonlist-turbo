@@ -658,13 +658,13 @@ const ScreenshotCta = ({
 
   const isShareEligible = upcomingEventCount >= SHARE_PROMPT_THRESHOLD;
   const label = isShareEligible
-    ? "Share your Soon List →"
+    ? "Share your Soonlist →"
     : "Screenshot events →";
   const handlePress = isShareEligible
     ? onSharePress
     : () => void triggerAddEventFlow();
   const accessibilityLabel = isShareEligible
-    ? "Share your Soon List"
+    ? "Share your Soonlist"
     : "Screenshot events";
 
   return (
