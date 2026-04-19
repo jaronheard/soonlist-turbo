@@ -39,6 +39,7 @@ import UserEventsList from "~/components/UserEventsList";
 import { useStablePaginatedQuery } from "~/hooks/useStableQuery";
 import { useAppStore, useStableTimestamp } from "~/store";
 import { logError } from "~/utils/errorLogging";
+import { toast } from "~/utils/feedback";
 
 type Segment = "upcoming" | "past";
 
@@ -203,6 +204,7 @@ function FeaturedListRow({
           logError("followUserByUsername returned failure", {
             reason: result.reason,
           });
+          toast.error("Couldn't update subscription");
         }
       })
       .catch((error) => {

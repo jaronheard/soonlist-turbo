@@ -65,6 +65,8 @@ export const personalListBatch = internalMutation({
   },
 });
 
+const FOLLOWERS_PER_BATCH = 100;
+
 /**
  * Paginated backfill of a single user's events → personal list.
  * Self-schedules the next page to stay under transaction limits.
@@ -130,23 +132,58 @@ export const backfillUserEventsBatch = internalMutation({
         `backfillUserEventsBatch: cursor stalled for user ${userId} list ${listId} at cursor ${cursor} — aborting`,
       );
     } else if (hydrateFollowersOnComplete) {
-      // Fan out to every CURRENT follower so anyone who subscribed during
-      // the backfill window also gets hydrated, and anyone who unfollowed
-      // mid-backfill is skipped.
-      const follows = await ctx.db
-        .query("listFollows")
-        .withIndex("by_list", (q) => q.eq("listId", listId))
-        .collect();
-      for (const follow of follows) {
-        await ctx.scheduler.runAfter(
-          0,
-          internal.feedHelpers.addListEventsToUserFeed,
-          { userId: follow.userId, listId },
-        );
-      }
+      // Kick off a paginated follower fan-out. We schedule rather than
+      // inline-collect so we don't blow transaction limits for lists that
+      // accumulated many followers while the backfill was running.
+      await ctx.scheduler.runAfter(
+        0,
+        internal.migrations.personalListMigration.hydrateListFollowersBatch,
+        { listId, cursor: null },
+      );
     }
 
     return { linked, isDone: result.isDone };
+  },
+});
+
+/**
+ * Paginated fan-out: schedule `addListEventsToUserFeed` for each current
+ * follower of `listId`. Self-schedules the next page so a list with many
+ * followers doesn't exceed transaction limits.
+ */
+export const hydrateListFollowersBatch = internalMutation({
+  args: {
+    listId: v.string(),
+    cursor: v.union(v.string(), v.null()),
+  },
+  returns: v.null(),
+  handler: async (ctx, { listId, cursor }) => {
+    const result = await ctx.db
+      .query("listFollows")
+      .withIndex("by_list", (q) => q.eq("listId", listId))
+      .paginate({ numItems: FOLLOWERS_PER_BATCH, cursor });
+
+    for (const follow of result.page) {
+      await ctx.scheduler.runAfter(
+        0,
+        internal.feedHelpers.addListEventsToUserFeed,
+        { userId: follow.userId, listId },
+      );
+    }
+
+    if (!result.isDone && result.continueCursor !== cursor) {
+      await ctx.scheduler.runAfter(
+        0,
+        internal.migrations.personalListMigration.hydrateListFollowersBatch,
+        { listId, cursor: result.continueCursor },
+      );
+    } else if (!result.isDone) {
+      console.error(
+        `hydrateListFollowersBatch: cursor stalled for list ${listId} at cursor ${cursor} — aborting`,
+      );
+    }
+
+    return null;
   },
 });
 
