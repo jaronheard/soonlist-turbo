@@ -4,10 +4,10 @@ import { router } from "expo-router";
 
 import type { Doc } from "@soonlist/backend/convex/_generated/dataModel";
 
+import type { UserForDisplay } from "~/types/user";
 import { List } from "~/components/icons";
 import { SavedByModal } from "~/components/SavedByModal";
 import { UserAvatar } from "~/components/UserAvatar";
-import type { UserForDisplay } from "~/types/user";
 import { navigateToUser } from "~/utils/navigateToUser";
 
 export type EventAttributionVariant = "list-primary" | "people-primary";

@@ -2,9 +2,9 @@ import React from "react";
 import { View } from "react-native";
 import { Image as ExpoImage } from "expo-image";
 
+import type { UserForDisplay } from "~/types/user";
 import { User } from "~/components/icons";
 import { UserProfileFlair } from "~/components/UserProfileFlair";
-import type { UserForDisplay } from "~/types/user";
 
 interface UserAvatarProps {
   user: Pick<UserForDisplay, "id" | "username" | "userImage">;

@@ -5,9 +5,9 @@ import { router } from "expo-router";
 
 import type { Doc } from "@soonlist/backend/convex/_generated/dataModel";
 
+import type { UserForDisplay } from "~/types/user";
 import { ChevronRight, List } from "~/components/icons";
 import { UserAvatar } from "~/components/UserAvatar";
-import type { UserForDisplay } from "~/types/user";
 import { navigateToUser } from "~/utils/navigateToUser";
 
 interface SavedByModalProps {
