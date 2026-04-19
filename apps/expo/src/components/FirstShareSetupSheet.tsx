@@ -11,6 +11,7 @@ import {
   TextInput,
   View,
 } from "react-native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 import * as ImagePicker from "expo-image-picker";
 import { useUser } from "@clerk/clerk-expo";
 import { useMutation, useQuery } from "convex/react";
@@ -32,6 +33,7 @@ export function FirstShareSetupSheet({
   onClose,
   onComplete,
 }: FirstShareSetupSheetProps) {
+  const insets = useSafeAreaInsets();
   const { user } = useUser();
   const currentUser = useQuery(api.users.getCurrentUser);
   const completeSetup = useMutation(api.users.completeFirstShareSetup);
@@ -58,9 +60,6 @@ export function FirstShareSetupSheet({
   const [error, setError] = useState<string | null>(null);
   const [isDirty, setIsDirty] = useState(false);
 
-  // Re-seed defaults when the sheet opens with fresh currentUser data.
-  // We keep latest values in a ref so we re-seed only on the open transition
-  // (when `visible` flips to true), not on every Convex query refresh.
   const seedRef = useRef({ defaultListName, currentUser });
   seedRef.current = { defaultListName, currentUser };
   useEffect(() => {
@@ -91,7 +90,8 @@ export function FirstShareSetupSheet({
       base64: true,
     });
     if (result.canceled || !result.assets[0]?.base64) return;
-    const base64 = `data:image/jpeg;base64,${result.assets[0].base64}`;
+    const mimeType = result.assets[0].mimeType ?? "image/jpeg";
+    const base64 = `data:${mimeType};base64,${result.assets[0].base64}`;
     try {
       await user?.setProfileImage({ file: base64 });
       setAvatar(result.assets[0].uri);
@@ -131,7 +131,6 @@ export function FirstShareSetupSheet({
     setError(null);
     try {
       if (isDirty) {
-        // "Share now" with edits keeps the edits — same as Share.
         await completeSetup({
           userId,
           publicListName: listName,
@@ -164,112 +163,126 @@ export function FirstShareSetupSheet({
   return (
     <Modal
       visible={visible}
-      transparent
+      presentationStyle="pageSheet"
       animationType="slide"
       onRequestClose={onClose}
     >
       <KeyboardAvoidingView
         behavior={Platform.OS === "ios" ? "padding" : undefined}
-        className="flex-1 justify-end bg-black/50"
+        className="flex-1 bg-white"
       >
-        <View className="rounded-t-2xl bg-white p-5">
-          <ScrollView keyboardShouldPersistTaps="handled">
-            <Text className="mb-4 text-xl font-semibold">
-              Share your Soon List
+        <View className="border-b border-neutral-3 px-5 py-4">
+          <Text className="text-center text-lg font-bold text-neutral-1">
+            Share your Soon List
+          </Text>
+        </View>
+
+        <ScrollView
+          keyboardShouldPersistTaps="handled"
+          contentContainerStyle={{
+            paddingHorizontal: 20,
+            paddingTop: 20,
+            paddingBottom: 24,
+          }}
+        >
+          <View className="mb-6">
+            <Text className="mb-2 text-xs font-semibold uppercase tracking-wider text-neutral-2">
+              List name
             </Text>
+            <TextInput
+              className="rounded-xl border border-neutral-3 bg-white px-4 text-base text-neutral-1"
+              style={{ height: 48 }}
+              value={listName}
+              onChangeText={(t) => {
+                setListName(t);
+                markDirty();
+              }}
+              maxLength={80}
+            />
+          </View>
 
-            <View className="mb-4">
-              <Text className="mb-1 text-xs uppercase text-neutral-500">
-                List name
-              </Text>
+          <View className="mb-6">
+            <Text className="mb-2 text-xs font-semibold uppercase tracking-wider text-neutral-2">
+              Your profile
+            </Text>
+            <View className="flex-row items-center gap-3">
+              <Pressable
+                onPress={pickAvatar}
+                className="items-center justify-center overflow-hidden rounded-full bg-neutral-3"
+                style={{ height: 56, width: 56 }}
+                accessibilityLabel="Change photo"
+              >
+                {avatar ? (
+                  <Image
+                    source={{ uri: avatar }}
+                    style={{ height: 56, width: 56 }}
+                  />
+                ) : (
+                  <Text className="text-xs text-neutral-2">Photo</Text>
+                )}
+              </Pressable>
               <TextInput
-                className="rounded-md border border-neutral-300 px-3 py-2 text-base"
-                value={listName}
+                className="flex-1 rounded-xl border border-neutral-3 bg-white px-4 text-base text-neutral-1"
+                style={{ height: 48 }}
+                value={displayName}
                 onChangeText={(t) => {
-                  setListName(t);
+                  setDisplayName(t);
                   markDirty();
                 }}
-                maxLength={80}
+                placeholder="Your name"
+                maxLength={50}
               />
             </View>
+          </View>
 
-            <View className="mb-4 border-t border-neutral-200 pt-4">
-              <Text className="mb-2 text-xs uppercase text-neutral-500">
-                Your profile
-              </Text>
-              <View className="flex-row items-center gap-3">
-                <Pressable
-                  onPress={pickAvatar}
-                  className="h-14 w-14 items-center justify-center overflow-hidden rounded-full bg-neutral-200"
-                  accessibilityLabel="Change photo"
-                >
-                  {avatar ? (
-                    <Image source={{ uri: avatar }} className="h-14 w-14" />
-                  ) : (
-                    <Text className="text-xs text-neutral-500">Photo</Text>
-                  )}
-                </Pressable>
-                <TextInput
-                  className="flex-1 rounded-md border border-neutral-300 px-3 py-2 text-base"
-                  value={displayName}
-                  onChangeText={(t) => {
-                    setDisplayName(t);
-                    markDirty();
-                  }}
-                  placeholder="Your name"
-                  maxLength={50}
-                />
-              </View>
-            </View>
+          <View className="mb-6">
+            <Text className="mb-2 text-xs font-semibold uppercase tracking-wider text-neutral-2">
+              Add links (optional)
+            </Text>
+            <LinkIconRow
+              values={links}
+              onChange={(next) => {
+                setLinks(next);
+                markDirty();
+              }}
+            />
+          </View>
 
-            <View className="mb-4 border-t border-neutral-200 pt-4">
-              <Text className="mb-2 text-xs uppercase text-neutral-500">
-                Add links (optional)
-              </Text>
-              <LinkIconRow
-                values={links}
-                onChange={(next) => {
-                  setLinks(next);
-                  markDirty();
-                }}
-              />
-            </View>
+          {error ? (
+            <Text className="mb-2 text-sm text-red-600">{error}</Text>
+          ) : null}
+        </ScrollView>
 
-            {error ? (
-              <Text className="mb-2 text-sm text-red-600">{error}</Text>
-            ) : null}
+        <View
+          className="border-t border-neutral-3 bg-white px-5 pt-3"
+          style={{ paddingBottom: Math.max(insets.bottom, 12) }}
+        >
+          <Pressable
+            disabled={submitting}
+            onPress={() => void handleShare()}
+            className="items-center rounded-2xl bg-interactive-1"
+            style={{
+              height: 52,
+              justifyContent: "center",
+              opacity: submitting ? 0.5 : 1,
+            }}
+          >
+            {submitting ? (
+              <ActivityIndicator color="#fff" />
+            ) : (
+              <Text className="text-base font-semibold text-white">Share</Text>
+            )}
+          </Pressable>
 
-            <Pressable
-              disabled={submitting}
-              onPress={() => void handleShare()}
-              className="mb-2 items-center rounded-md bg-interactive-1 py-3"
-              style={{ opacity: submitting ? 0.5 : 1 }}
-            >
-              {submitting ? (
-                <ActivityIndicator color="#fff" />
-              ) : (
-                <Text className="font-semibold text-white">Share</Text>
-              )}
-            </Pressable>
-
-            <Pressable
-              disabled={submitting}
-              onPress={() => void handleShareNow()}
-              className="items-center py-2"
-            >
-              <Text className="text-sm text-neutral-500">
-                Share now without editing
-              </Text>
-            </Pressable>
-
-            <Pressable
-              disabled={submitting}
-              onPress={onClose}
-              className="items-center py-2"
-            >
-              <Text className="text-sm text-neutral-400">Cancel</Text>
-            </Pressable>
-          </ScrollView>
+          <Pressable
+            disabled={submitting}
+            onPress={() => void handleShareNow()}
+            className="items-center py-3"
+          >
+            <Text className="text-sm font-medium text-neutral-2">
+              Share now without editing
+            </Text>
+          </Pressable>
         </View>
       </KeyboardAvoidingView>
     </Modal>
