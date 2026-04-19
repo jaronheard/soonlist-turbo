@@ -1062,33 +1062,32 @@ export async function removeEventFromListFeedInline(
 }
 
 /**
- * Batch-delete every `list_${listId}` feed entry. Used by the user-deletion
- * cascade and by the migration's cleanup path. Idempotent and paginated to
- * stay within Convex transaction limits.
+ * Batch-delete up to `batchSize` `list_${listId}` feed entries. Used by the
+ * user-deletion cascade. Uses `.take()` rather than `.paginate()` because
+ * we delete every row we pull on the index prefix — a paginate cursor
+ * would point at a deleted document in the next transaction, which is
+ * unsafe. The caller loops until `processed === 0`.
  */
 export const removeListFeedBatch = internalMutation({
   args: {
     listId: v.string(),
-    cursor: v.union(v.string(), v.null()),
     batchSize: v.number(),
   },
   returns: v.object({
     processed: v.number(),
     removed: v.number(),
-    nextCursor: v.union(v.string(), v.null()),
-    isDone: v.boolean(),
   }),
-  handler: async (ctx, { listId, cursor, batchSize }) => {
+  handler: async (ctx, { listId, batchSize }) => {
     const feedId = listFeedId(listId);
-    const result = await ctx.db
+    const entries = await ctx.db
       .query("userFeeds")
       .withIndex("by_feed_hasEnded_startTime", (q) => q.eq("feedId", feedId))
-      .paginate({ numItems: batchSize, cursor });
+      .take(batchSize);
 
     const affectedGroups = new Set<string>();
     let removed = 0;
 
-    for (const entry of result.page) {
+    for (const entry of entries) {
       if (entry.similarityGroupId) {
         affectedGroups.add(entry.similarityGroupId);
       }
@@ -1105,10 +1104,8 @@ export const removeListFeedBatch = internalMutation({
     }
 
     return {
-      processed: result.page.length,
+      processed: entries.length,
       removed,
-      nextCursor: result.continueCursor,
-      isDone: result.isDone,
     };
   },
 });
@@ -1121,26 +1118,18 @@ export const removeListFeedAction = internalAction({
   args: { listId: v.string() },
   returns: v.null(),
   handler: async (ctx, { listId }) => {
-    let cursor: string | null = null;
+    // take()/delete-everything pattern: loop until the batch returns zero
+    // rows. No cursor to track because each batch re-queries from the
+    // start of the index prefix.
     while (true) {
       const result: {
         processed: number;
         removed: number;
-        nextCursor: string | null;
-        isDone: boolean;
       } = await ctx.runMutation(internal.feedHelpers.removeListFeedBatch, {
         listId,
-        cursor,
         batchSize: 100,
       });
-      if (result.isDone) break;
-      if (result.nextCursor === cursor) {
-        console.error(
-          `Cursor stalled in removeListFeed for listId=${listId} — aborting`,
-        );
-        break;
-      }
-      cursor = result.nextCursor;
+      if (result.processed === 0) break;
     }
     return null;
   },
