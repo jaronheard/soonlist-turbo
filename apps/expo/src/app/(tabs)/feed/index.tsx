@@ -5,9 +5,9 @@ import React, {
   useRef,
   useState,
 } from "react";
-import { Alert, Platform, Text, TouchableOpacity, View } from "react-native";
+import { Platform, Text, TouchableOpacity, View } from "react-native";
 import * as Location from "expo-location";
-import { Redirect } from "expo-router";
+import { Redirect, router } from "expo-router";
 import { SymbolView } from "expo-symbols";
 import { useUser } from "@clerk/clerk-expo";
 import { Host, Picker, Text as SwiftUIText } from "@expo/ui/swift-ui";
@@ -186,8 +186,7 @@ function MyFeedContent() {
   useRatingPrompt(upcomingCount);
 
   const posthog = usePostHog();
-  const { shouldShowOneShot, markOneShotSeen } =
-    useShareListPrompt(upcomingCount);
+  const { shouldShowOneShot } = useShareListPrompt(upcomingCount);
 
   const {
     requestShare,
@@ -196,44 +195,9 @@ function MyFeedContent() {
     closeSetupSheetAndShare,
   } = useShareMyList();
 
-  // Stable refs so the threshold-crossing effect doesn't re-fire when its deps
-  // change identity — the alert should show exactly once per crossing.
-  const markOneShotSeenRef = useRef(markOneShotSeen);
-  markOneShotSeenRef.current = markOneShotSeen;
-  const requestShareRef = useRef(requestShare);
-  requestShareRef.current = requestShare;
-  const posthogRef = useRef(posthog);
-  posthogRef.current = posthog;
-
   useEffect(() => {
     if (!shouldShowOneShot) return;
-    const t = setTimeout(() => {
-      posthogRef.current.capture("share_prompt_one_shot_shown");
-      Alert.alert(
-        "Your Soonlist is ready to share",
-        "Send your upcoming events to friends.",
-        [
-          {
-            text: "Not now",
-            style: "cancel",
-            onPress: () => {
-              posthogRef.current.capture("share_prompt_one_shot_dismissed", {
-                method: "not_now_button",
-              });
-              markOneShotSeenRef.current();
-            },
-          },
-          {
-            text: "Share",
-            onPress: () => {
-              posthogRef.current.capture("share_prompt_one_shot_share_tapped");
-              markOneShotSeenRef.current();
-              requestShareRef.current();
-            },
-          },
-        ],
-      );
-    }, 400);
+    const t = setTimeout(() => router.push("/feed/share-prompt"), 400);
     return () => clearTimeout(t);
   }, [shouldShowOneShot]);
 
