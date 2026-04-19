@@ -8,7 +8,8 @@ export function navigateToUser(
 ) {
   if (currentUserId && user.id === currentUserId) {
     router.push("/settings/account");
-  } else {
-    router.push(`/${user.username}`);
+    return;
   }
+  if (!user.username) return;
+  router.push(`/${user.username}`);
 }

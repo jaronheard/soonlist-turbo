@@ -462,20 +462,21 @@ function EventDetail({ id }: { id: string }) {
                     </View>
                   ) : (
                     <Pressable
-                      onPress={() => router.push(`/${event.user?.username}`)}
+                      onPress={() =>
+                        event.user?.username &&
+                        router.push(`/${event.user.username}`)
+                      }
                       className="-my-2 flex-row items-center gap-2 py-2"
                       hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
                     >
-                      {event.user ? (
-                        <UserAvatar
-                          user={{
-                            id: event.user.id,
-                            username: event.user.username,
-                            userImage: event.user.userImage,
-                          }}
-                          size={20}
-                        />
-                      ) : null}
+                      <UserAvatar
+                        user={{
+                          id: event.user?.id ?? "",
+                          username: event.user?.username ?? "",
+                          userImage: event.user?.userImage,
+                        }}
+                        size={20}
+                      />
                       <Text className="text-sm text-neutral-2">
                         {event.user?.displayName ||
                           event.user?.username ||

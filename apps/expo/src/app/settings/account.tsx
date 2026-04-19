@@ -6,7 +6,6 @@ import {
   Linking,
   Platform,
   ScrollView,
-  Share,
   Switch,
   Text,
   TextInput,
@@ -25,9 +24,11 @@ import { z } from "zod";
 import { api } from "@soonlist/backend/convex/_generated/api";
 
 import { Button } from "~/components/Button";
+import { FirstShareSetupSheet } from "~/components/FirstShareSetupSheet";
 import { Copy, ShareIcon } from "~/components/icons";
 import { TimezoneSelectNative } from "~/components/TimezoneSelectNative";
 import { UserProfileFlair } from "~/components/UserProfileFlair";
+import { useShareMyList } from "~/hooks/useShareMyList";
 import { useSignOut } from "~/hooks/useSignOut";
 import { useRevenueCat } from "~/providers/RevenueCatProvider";
 import { useAppStore } from "~/store";
@@ -100,6 +101,12 @@ export default function EditProfileScreen() {
   const { user } = useUser();
   const { customerInfo, showProPaywallIfNeeded } = useRevenueCat();
   const signOut = useSignOut();
+  const {
+    requestShare,
+    isSetupSheetVisible,
+    closeSetupSheet,
+    closeSetupSheetAndShare,
+  } = useShareMyList();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [profileImage, setProfileImage] = useState<string | null>(
     user?.imageUrl ?? null,
@@ -352,17 +359,6 @@ export default function EditProfileScreen() {
     return `${Config.apiBaseUrl}/${user.username}`;
   }, [user?.username]);
 
-  const handleSharePublicList = useCallback(async () => {
-    const url = getPublicListUrl();
-    if (!url) return;
-
-    try {
-      await Share.share(Platform.OS === "ios" ? { url } : { message: url });
-    } catch {
-      // Share can be cancelled, so don't show error toast
-    }
-  }, [getPublicListUrl]);
-
   const handleCopyLink = useCallback(async () => {
     const url = getPublicListUrl();
     if (!url) return;
@@ -537,7 +533,7 @@ export default function EditProfileScreen() {
                         <Copy size={20} color="#5A32FB" />
                       </TouchableOpacity>
                       <TouchableOpacity
-                        onPress={handleSharePublicList}
+                        onPress={requestShare}
                         className="items-center justify-center rounded-lg border border-interactive-1 bg-interactive-1/5 p-3"
                         activeOpacity={0.7}
                         accessible={true}
@@ -677,6 +673,11 @@ export default function EditProfileScreen() {
           </SettingsSection>
         </View>
       </ScrollView>
+      <FirstShareSetupSheet
+        visible={isSetupSheetVisible}
+        onClose={closeSetupSheet}
+        onComplete={closeSetupSheetAndShare}
+      />
     </KeyboardAvoidingView>
   );
 }

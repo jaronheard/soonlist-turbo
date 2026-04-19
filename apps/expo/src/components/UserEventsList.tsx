@@ -22,8 +22,9 @@ import type { Doc } from "@soonlist/backend/convex/_generated/dataModel";
 import type { AddToCalendarButtonPropsRestricted } from "@soonlist/cal/types";
 import { getTimezoneAbbreviation } from "@soonlist/cal";
 
-import type { UserForDisplay } from "~/types/user";
+import type { EventAttributionVariant } from "~/components/EventAttributionRow";
 import type { EventWithSimilarity } from "~/utils/similarEvents";
+import { EventAttributionRow } from "~/components/EventAttributionRow";
 import {
   CalendarPlus,
   Copy,
@@ -33,7 +34,6 @@ import {
   ShareIcon,
 } from "~/components/icons";
 import { SavedByModal } from "~/components/SavedByModal";
-import { UserAvatar } from "~/components/UserAvatar";
 import { useAddEventFlow } from "~/hooks/useAddEventFlow";
 import { useEventActions } from "~/hooks/useEventActions";
 import { useUserTimezone } from "~/store";
@@ -46,7 +46,6 @@ import {
 } from "~/utils/dates";
 import { setEventCache } from "~/utils/eventCache";
 import { getEventEmoji } from "~/utils/eventEmoji";
-import { navigateToUser } from "~/utils/navigateToUser";
 import { collapseSimilarEvents } from "~/utils/similarEvents";
 import { EventMenu } from "./EventMenu";
 import { EventStats } from "./EventStats";
@@ -64,162 +63,6 @@ interface EnrichedEventFollow {
     displayName?: string | null;
     userImage?: string | null;
   } | null;
-}
-
-// Inline avatars component for showing multiple users who saved an event
-function EventSaversRow({
-  creator,
-  savers,
-  iconSize,
-  eventId,
-  currentUserId,
-  sourceListName,
-  sourceListSlug,
-  additionalSourceCount,
-  lists,
-}: {
-  creator: UserForDisplay;
-  savers: UserForDisplay[];
-  iconSize: number;
-  eventId: string;
-  currentUserId?: string;
-  sourceListName?: string;
-  sourceListSlug?: string;
-  additionalSourceCount?: number;
-  lists?: Doc<"lists">[];
-}) {
-  const [showModal, setShowModal] = useState(false);
-  const isOwnEvent = currentUserId === creator.id;
-
-  // Combine creator with savers, deduplicate by id
-  const allUsers: UserForDisplay[] = [creator];
-  for (const saver of savers) {
-    if (!allUsers.some((u) => u.id === saver.id)) {
-      allUsers.push(saver);
-    }
-  }
-
-  const displayUsers = allUsers.slice(0, 2);
-  const remainingUsersCount = allUsers.length - displayUsers.length;
-  const remainingListsCount = additionalSourceCount ?? 0;
-
-  const handleListPress = () => {
-    if (sourceListSlug) {
-      router.push(`/list/${sourceListSlug}`);
-    }
-  };
-
-  const avatarSize = iconSize * 0.9;
-
-  const listConnector = isOwnEvent ? "· Shared to" : "via";
-  const hasAnyListInfo =
-    !!sourceListSlug || !!sourceListName || remainingListsCount > 0;
-
-  return (
-    <>
-      <View className="mx-auto mt-1 flex-row flex-wrap items-center justify-center gap-1">
-        {isOwnEvent ? (
-          <Pressable
-            onPress={() => navigateToUser(creator, currentUserId)}
-            hitSlop={{ top: 8, bottom: 8, left: 4, right: 4 }}
-            className="flex-row items-center gap-1"
-          >
-            <UserAvatar
-              user={creator}
-              size={avatarSize}
-              recyclingKey={`${eventId}-creator-inline`}
-            />
-            <Text className="text-xs text-neutral-2">You</Text>
-          </Pressable>
-        ) : (
-          displayUsers.map((user, index) => (
-            <Pressable
-              key={user.id}
-              onPress={() => navigateToUser(user, currentUserId)}
-              hitSlop={{ top: 8, bottom: 8, left: 4, right: 4 }}
-              className="flex-row items-center gap-1"
-            >
-              <UserAvatar
-                user={user}
-                size={avatarSize}
-                recyclingKey={`${eventId}-saver-inline-${user.id}`}
-              />
-              <Text className="text-xs text-neutral-2">
-                {user.displayName || user.username}
-                {index < displayUsers.length - 1 || remainingUsersCount > 0
-                  ? ","
-                  : ""}
-              </Text>
-            </Pressable>
-          ))
-        )}
-        {!isOwnEvent && remainingUsersCount > 0 && (
-          <Pressable
-            onPress={() => setShowModal(true)}
-            hitSlop={{ top: 8, bottom: 8, left: 4, right: 4 }}
-          >
-            <View className="rounded-full bg-interactive-3 px-1.5 py-0.5">
-              <Text className="text-xs font-medium text-interactive-1">
-                +{remainingUsersCount}
-              </Text>
-            </View>
-          </Pressable>
-        )}
-        {hasAnyListInfo && (
-          <>
-            <Text className="text-xs text-neutral-2">{listConnector}</Text>
-            {sourceListSlug ? (
-              <Pressable
-                onPress={handleListPress}
-                hitSlop={{ top: 8, bottom: 8, left: 4, right: 4 }}
-                accessibilityLabel={
-                  sourceListName ? `Open list ${sourceListName}` : "Open list"
-                }
-                className="flex-row items-center gap-1"
-              >
-                <List size={13} color="#5A32FB" />
-                {sourceListName ? (
-                  <Text className="text-xs font-semibold text-interactive-1">
-                    {sourceListName}
-                  </Text>
-                ) : null}
-              </Pressable>
-            ) : (
-              <View className="flex-row items-center gap-1">
-                <List size={13} color="#5A32FB" />
-                {sourceListName ? (
-                  <Text className="text-xs text-neutral-2">
-                    {sourceListName}
-                  </Text>
-                ) : null}
-              </View>
-            )}
-            {remainingListsCount > 0 && (
-              <Pressable
-                onPress={() => setShowModal(true)}
-                hitSlop={{ top: 8, bottom: 8, left: 4, right: 4 }}
-              >
-                <View className="rounded-full bg-interactive-3 px-1.5 py-0.5">
-                  <Text className="text-xs font-medium text-interactive-1">
-                    +{remainingListsCount}
-                  </Text>
-                </View>
-              </Pressable>
-            )}
-          </>
-        )}
-      </View>
-
-      <SavedByModal
-        visible={showModal}
-        onClose={() => setShowModal(false)}
-        creator={creator}
-        savers={savers}
-        lists={lists ?? []}
-        currentUserId={currentUserId}
-      />
-    </>
-  );
 }
 
 // Define the type for the stats data based on the expected query output
@@ -246,6 +89,7 @@ interface UserEventListItemProps {
   sourceListName?: string;
   sourceListSlug?: string;
   additionalSourceCount?: number;
+  attributionVariant?: EventAttributionVariant;
 }
 
 export function UserEventListItem(props: UserEventListItemProps) {
@@ -264,6 +108,7 @@ export function UserEventListItem(props: UserEventListItemProps) {
     sourceListName,
     sourceListSlug,
     additionalSourceCount,
+    attributionVariant,
   } = props;
   const { fontScale } = useWindowDimensions();
   const { handleAddToCal, handleShare } = useEventActions({
@@ -638,7 +483,7 @@ export function UserEventListItem(props: UserEventListItemProps) {
             </View>
           </View>
           {shouldShowCreator ? (
-            <EventSaversRow
+            <EventAttributionRow
               creator={{
                 id: eventUser.id,
                 username: eventUser.username,
@@ -662,12 +507,12 @@ export function UserEventListItem(props: UserEventListItemProps) {
                   })) ?? []
               }
               iconSize={iconSize}
-              eventId={event.id}
               currentUserId={currentUser?.id}
               sourceListName={sourceListName}
               sourceListSlug={sourceListSlug}
               additionalSourceCount={additionalSourceCount}
               lists={(event as { lists?: Doc<"lists">[] }).lists}
+              variant={attributionVariant}
             />
           ) : sourceListSlug ||
             sourceListName ||
@@ -778,7 +623,7 @@ const SourceStickersRow = () => {
             className="font-semibold text-neutral-1"
             style={{ fontSize: 20 * fontScale }}
           >
-            Got screenshots? →
+            Screenshot events →
           </Text>
           <Image
             // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-require-imports
@@ -1068,6 +913,7 @@ interface UserEventsListProps {
   HeaderComponent?: React.ComponentType<Record<string, never>>;
   EmptyStateComponent?: React.ComponentType<Record<string, never>>;
   source?: string;
+  attributionVariant?: EventAttributionVariant;
 }
 
 export default function UserEventsList(props: UserEventsListProps) {
@@ -1088,6 +934,7 @@ export default function UserEventsList(props: UserEventsListProps) {
     HeaderComponent,
     EmptyStateComponent,
     source,
+    attributionVariant,
   } = props;
   const { user } = useUser();
   // Use pre-grouped events if provided, otherwise collapse client-side
@@ -1228,6 +1075,7 @@ export default function UserEventsList(props: UserEventsListProps) {
             sourceListName={sourceListName}
             sourceListSlug={sourceListSlug}
             additionalSourceCount={additionalSourceCount}
+            attributionVariant={attributionVariant}
           />
         );
       }}
