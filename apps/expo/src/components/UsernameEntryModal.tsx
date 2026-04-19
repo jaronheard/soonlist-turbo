@@ -1,6 +1,5 @@
 import React, { useEffect, useRef, useState } from "react";
 import { Modal, Pressable, Text, TextInput, View } from "react-native";
-import { useRouter } from "expo-router";
 import { useUser } from "@clerk/clerk-expo";
 import { useConvex } from "convex/react";
 
@@ -8,14 +7,15 @@ import { api } from "@soonlist/backend/convex/_generated/api";
 
 import { useAppStore } from "~/store";
 import { logError } from "~/utils/errorLogging";
+import { hapticLight } from "~/utils/feedback";
 
 interface UsernameEntryModalProps {
   isVisible: boolean;
   onClose: () => void;
   /**
-   * Called right before navigating to the feed on a successful subscribe.
-   * Used by parent empty states to dismiss their sticky `emptyStateMode` so
-   * the user doesn't return to a stale empty-state screen.
+   * Called on a successful subscribe. Parents use this to dismiss their
+   * sticky `emptyStateMode` so the newly populated feed takes over without
+   * re-showing the empty state.
    */
   onSubscribeSuccess?: () => void;
 }
@@ -41,7 +41,6 @@ export function UsernameEntryModal({
   // button disables. Mirrors the pattern used in FeaturedListRow.
   const isMutatingRef = useRef(false);
 
-  const router = useRouter();
   const convex = useConvex();
   const { user } = useUser();
   const pendingFollowUsername = useAppStore(
@@ -70,6 +69,7 @@ export function UsernameEntryModal({
     isMutatingRef.current = true;
     setIsSubmitting(true);
     setError("");
+    void hapticLight();
 
     try {
       const result = await convex.mutation(api.lists.followUserByUsername, {
@@ -77,20 +77,12 @@ export function UsernameEntryModal({
       });
 
       if (result.success) {
-        // Let parents dismiss their sticky empty-state mode so the user
-        // doesn't return to a stale empty-state screen after subscribing.
+        // Dismiss the parent's sticky empty-state mode and stay on My Scene.
+        // The populated feed takes over in place; no navigation.
         onSubscribeSuccess?.();
 
         if (pendingFollowUsername) {
-          // Clearing pending causes the parent to switch from
-          // ReferralEmptyState to DefaultEmptyState, which unmounts this
-          // modal and cancels any pending setTimeout. Navigate synchronously
-          // so `router.push` actually fires before unmount.
           setPendingFollowUsername(null);
-          setUsername("");
-          onClose();
-          router.push("/(tabs)/feed");
-          return;
         }
 
         setSuccess(true);
@@ -98,7 +90,6 @@ export function UsernameEntryModal({
           onClose();
           setSuccess(false);
           setUsername("");
-          router.push("/(tabs)/feed");
         }, 600);
         return;
       }
@@ -160,7 +151,7 @@ export function UsernameEntryModal({
                 Subscribed!
               </Text>
               <Text className="text-center text-gray-500">
-                Taking you to My Scene…
+                Their events will appear in your feed.
               </Text>
             </View>
           ) : (

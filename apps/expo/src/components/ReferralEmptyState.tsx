@@ -7,9 +7,8 @@ import React, {
 } from "react";
 import { ScrollView, Text, TouchableOpacity, View } from "react-native";
 import { Image } from "expo-image";
-import { useRouter } from "expo-router";
 import { useUser } from "@clerk/clerk-expo";
-import { useConvex, useQuery } from "convex/react";
+import { useMutation, useQuery } from "convex/react";
 
 import type { Doc } from "@soonlist/backend/convex/_generated/dataModel";
 import { api } from "@soonlist/backend/convex/_generated/api";
@@ -22,7 +21,7 @@ import { UsernameEntryModal } from "~/components/UsernameEntryModal";
 import { useStablePaginatedQuery } from "~/hooks/useStableQuery";
 import { useAppStore, useStableTimestamp } from "~/store";
 import { logError } from "~/utils/errorLogging";
-import { toast } from "~/utils/feedback";
+import { hapticLight, toast } from "~/utils/feedback";
 
 interface ReferralEmptyStateProps {
   hasFollowings: boolean;
@@ -39,8 +38,6 @@ export function ReferralEmptyState({
   followedLists,
   onExitToFeed,
 }: ReferralEmptyStateProps) {
-  const router = useRouter();
-  const convex = useConvex();
   const { user: clerkUser } = useUser();
   const stableTimestamp = useStableTimestamp();
 
@@ -52,7 +49,6 @@ export function ReferralEmptyState({
   );
 
   const [isModalVisible, setIsModalVisible] = useState(false);
-  const [isSubscribing, setIsSubscribing] = useState(false);
   const isMutatingRef = useRef(false);
 
   // Look up the pending referral target.
@@ -60,6 +56,26 @@ export function ReferralEmptyState({
     api.users.getByUsername,
     pendingFollowUsername ? { userName: pendingFollowUsername } : "skip",
   );
+
+  // Look up the target's personal list so we can call the same
+  // `followList` mutation + optimistic update pattern FeaturedListRow uses.
+  const targetUserFound = targetUser !== null && targetUser !== undefined;
+  const personalList = useQuery(
+    api.lists.getPersonalListForUser,
+    targetUserFound ? { userId: targetUser.id } : "skip",
+  );
+
+  const followListMutation = useMutation(
+    api.lists.followList,
+  ).withOptimisticUpdate((localStore, args) => {
+    const current = localStore.getQuery(api.lists.getFollowedLists, {});
+    if (current === undefined || !personalList) return;
+    if (current.some((l) => l.id === args.listId)) return;
+    localStore.setQuery(api.lists.getFollowedLists, {}, [
+      ...current,
+      personalList,
+    ]);
+  });
 
   // Look up the current authenticated user by their Clerk username so we can
   // detect the self-share case.
@@ -70,7 +86,6 @@ export function ReferralEmptyState({
   const currentUserId = currentUserRecord?.id;
 
   // Pull a preview feed for the target user (mirrors FeaturedListRow).
-  const targetUserFound = targetUser !== null && targetUser !== undefined;
   const previewUsername = targetUserFound ? pendingFollowUsername : null;
   const { results: events, status: feedStatus } = useStablePaginatedQuery(
     api.feeds.getPublicUserFeed,
@@ -131,58 +146,39 @@ export function ReferralEmptyState({
   }, [shouldFallback, setPendingFollowUsername]);
 
   const handleSubscribe = useCallback(() => {
-    if (!pendingFollowUsername || isMutatingRef.current) return;
+    if (!personalList || isMutatingRef.current) return;
     // Defense in depth: if the Clerk username matches the pending username, a
     // tap between `targetUser` resolving and `currentUserRecord` resolving would
     // otherwise follow the user's own list. The fallback effect will also clear
     // pending; bail out so we never call the mutation for the self-share case.
     if (isSelfReferral) return;
     isMutatingRef.current = true;
-    setIsSubscribing(true);
-    void (async () => {
-      try {
-        const result = await convex.mutation(api.lists.followUserByUsername, {
-          username: pendingFollowUsername,
-        });
-        if (result.success) {
-          // Dismiss the sticky empty-state mode so the user doesn't come
-          // back to this screen after subscribing.
-          onExitToFeed();
-          setPendingFollowUsername(null);
-          router.push("/(tabs)/feed");
-        } else {
-          const reason = result.reason ?? "";
-          if (reason.startsWith("Cannot follow this list")) {
-            toast.error("This list is private.");
-          } else if (
-            reason === "User not found" ||
-            reason === "User has no personal list"
-          ) {
-            toast.error(`We couldn't find @${pendingFollowUsername}.`);
-            // Unrecoverable: no amount of retries will make this referral
-            // succeed. Clear pending so the user drops back to
-            // DefaultEmptyState instead of being stuck on a failing CTA.
-            setPendingFollowUsername(null);
-          } else {
-            toast.error("Something went wrong. Please try again.");
-          }
-        }
-      } catch (error) {
+    void hapticLight();
+    followListMutation({ listId: personalList.id })
+      .then(() => {
+        // Clear pending on confirmed success. If the mutation had failed, the
+        // optimistic revert would drop hasFollowings back to false and the
+        // parent's latch effect would re-show this referral empty state so
+        // the user can retry.
+        setPendingFollowUsername(null);
+      })
+      .catch((error: unknown) => {
         logError("Error subscribing from referral empty state", error, {
-          username: pendingFollowUsername,
+          listId: personalList.id,
         });
         toast.error("Something went wrong. Please try again.");
-      } finally {
+      })
+      .finally(() => {
         isMutatingRef.current = false;
-        setIsSubscribing(false);
-      }
-    })();
+      });
+    // Optimistic dismiss: the optimistic update flips hasFollowings to true,
+    // so dismissing the empty state here shows the populated feed immediately.
+    onExitToFeed();
   }, [
-    pendingFollowUsername,
+    personalList,
     isSelfReferral,
-    convex,
+    followListMutation,
     setPendingFollowUsername,
-    router,
     onExitToFeed,
   ]);
 
@@ -268,16 +264,9 @@ export function ReferralEmptyState({
               className="flex-1 text-2xl font-bold text-neutral-1"
               style={{ lineHeight: 30 }}
             >
-              {displayName} shared their list with you
+              {displayName} shared with you
             </Text>
           </View>
-
-          <Text
-            className="mb-6 text-base text-neutral-2"
-            style={{ lineHeight: 22 }}
-          >
-            My Scene shows upcoming events from lists you subscribe to.
-          </Text>
 
           {/* Preview card */}
           <View className="mb-6 flex-row items-center gap-3">
@@ -301,19 +290,20 @@ export function ReferralEmptyState({
             </View>
           </View>
 
-          {/* Primary CTA */}
+          {/* Primary CTA — fire-and-forget with optimistic update, matching
+              the FeaturedListRow subscribe pattern. */}
           <TouchableOpacity
             onPress={handleSubscribe}
-            disabled={isSubscribing}
+            disabled={!personalList}
             activeOpacity={0.85}
             accessibilityRole="button"
             accessibilityLabel={`Subscribe to ${displayName}`}
             className={`mb-4 w-full rounded-full py-4 ${
-              isSubscribing ? "bg-gray-400" : "bg-interactive-1"
+              !personalList ? "bg-gray-400" : "bg-interactive-1"
             }`}
           >
             <Text className="text-center text-base font-semibold text-white">
-              {isSubscribing ? "Subscribing…" : `Subscribe to ${displayName}`}
+              Subscribe to {displayName}
             </Text>
           </TouchableOpacity>
 
