@@ -423,6 +423,20 @@ export const addListEventsToUserFeed = internalMutation({
     listId: v.string(),
   },
   handler: async (ctx, { userId, listId }) => {
+    // Verify the user is still following the list. This guards delayed
+    // hydration jobs (e.g. the on-demand backfill fan-out): a user who
+    // unfollowed between the schedule and the run shouldn't get the
+    // list's events re-added to their feed.
+    const follow = await ctx.db
+      .query("listFollows")
+      .withIndex("by_user_and_list", (q) =>
+        q.eq("userId", userId).eq("listId", listId),
+      )
+      .first();
+    if (!follow) {
+      return;
+    }
+
     const canView = await canUserViewListForFeed(ctx, listId, userId);
     if (!canView) {
       return;
