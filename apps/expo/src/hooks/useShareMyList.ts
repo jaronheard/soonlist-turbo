@@ -28,9 +28,7 @@ export function useShareMyList() {
     if (!username) return;
     const url = `${Config.apiBaseUrl}/${username}`;
     try {
-      await Share.share(
-        Platform.OS === "ios" ? { url } : { message: url },
-      );
+      await Share.share(Platform.OS === "ios" ? { url } : { message: url });
     } catch (error) {
       logError("Error sharing list", error);
     }
