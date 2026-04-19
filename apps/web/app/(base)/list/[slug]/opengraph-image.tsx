@@ -69,17 +69,19 @@ async function loadFont(
 
 // Satori can't decode WebP, which is what Bytescale (upcdn.io) returns by
 // default. Route through Bytescale's `/image/` processor with `f=jpg` so OG
-// crawlers receive a JPEG. Only applies when the source really is a Bytescale
-// URL — non-Bytescale images (arbitrary external URLs) pass through unchanged
-// so we don't generate bogus upcdn.io paths from WordPress / S3 / etc.
+// crawlers receive a JPEG. Only applies when the source is a Bytescale URL
+// *on our account* — we don't want to rewrite arbitrary external URLs, nor
+// cross-account upcdn.io URLs, into bogus `/{BYTESCALE_ACCOUNT_ID}/image/…`
+// paths that would 404.
 function transformImage(url: string): string {
-  let hostname: string;
+  let parsed: URL;
   try {
-    hostname = new URL(url).hostname;
+    parsed = new URL(url);
   } catch {
     return url;
   }
-  if (hostname !== "upcdn.io") return url;
+  if (parsed.hostname !== "upcdn.io") return url;
+  if (!parsed.pathname.startsWith(`/${BYTESCALE_ACCOUNT_ID}/`)) return url;
   const filePath = extractFilePath(url);
   if (!filePath) return url;
   return Bytescale.UrlBuilder.url({
