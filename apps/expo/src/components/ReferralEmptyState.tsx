@@ -145,6 +145,9 @@ export function ReferralEmptyState({
           username: pendingFollowUsername,
         });
         if (result.success) {
+          // Dismiss the sticky empty-state mode so the user doesn't come
+          // back to this screen after subscribing.
+          onExitToFeed();
           setPendingFollowUsername(null);
           router.push("/(tabs)/feed");
         } else {
@@ -176,6 +179,7 @@ export function ReferralEmptyState({
     convex,
     setPendingFollowUsername,
     router,
+    onExitToFeed,
   ]);
 
   // If pending was cleared (e.g., by fallback effect), render default. The
@@ -222,6 +226,7 @@ export function ReferralEmptyState({
       <UsernameEntryModal
         isVisible={isModalVisible}
         onClose={() => setIsModalVisible(false)}
+        onSubscribeSuccess={onExitToFeed}
       />
       <ScrollView
         contentInsetAdjustmentBehavior="automatic"

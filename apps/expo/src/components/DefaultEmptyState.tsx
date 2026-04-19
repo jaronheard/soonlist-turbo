@@ -40,6 +40,7 @@ export function DefaultEmptyState({
       <UsernameEntryModal
         isVisible={isModalVisible}
         onClose={() => setIsModalVisible(false)}
+        onSubscribeSuccess={onExitToFeed}
       />
       <ScrollView
         contentInsetAdjustmentBehavior="automatic"

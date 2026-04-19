@@ -12,6 +12,12 @@ import { logError } from "~/utils/errorLogging";
 interface UsernameEntryModalProps {
   isVisible: boolean;
   onClose: () => void;
+  /**
+   * Called right before navigating to the feed on a successful subscribe.
+   * Used by parent empty states to dismiss their sticky `emptyStateMode` so
+   * the user doesn't return to a stale empty-state screen.
+   */
+  onSubscribeSuccess?: () => void;
 }
 
 function normalizeUsername(raw: string): string {
@@ -23,6 +29,7 @@ function normalizeUsername(raw: string): string {
 export function UsernameEntryModal({
   isVisible,
   onClose,
+  onSubscribeSuccess,
 }: UsernameEntryModalProps): React.ReactElement {
   const [username, setUsername] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -70,9 +77,22 @@ export function UsernameEntryModal({
       });
 
       if (result.success) {
+        // Let parents dismiss their sticky empty-state mode so the user
+        // doesn't return to a stale empty-state screen after subscribing.
+        onSubscribeSuccess?.();
+
         if (pendingFollowUsername) {
+          // Clearing pending causes the parent to switch from
+          // ReferralEmptyState to DefaultEmptyState, which unmounts this
+          // modal and cancels any pending setTimeout. Navigate synchronously
+          // so `router.push` actually fires before unmount.
           setPendingFollowUsername(null);
+          setUsername("");
+          onClose();
+          router.push("/(tabs)/feed");
+          return;
         }
+
         setSuccess(true);
         timeoutRef.current = setTimeout(() => {
           onClose();
