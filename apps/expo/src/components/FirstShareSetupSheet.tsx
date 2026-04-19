@@ -25,7 +25,7 @@ import { LinkIconRow } from "./LinkIconRow";
 interface FirstShareSetupSheetProps {
   visible: boolean;
   onClose: () => void;
-  /** Called after a successful Share or Share now — opens the native share sheet. */
+  /** Called after a successful save — opens the native share sheet. */
   onComplete: () => Promise<void> | void;
 }
 
@@ -47,7 +47,6 @@ export function FirstShareSetupSheet({
   const { user } = useUser();
   const currentUser = useQuery(api.users.getCurrentUser);
   const completeSetup = useMutation(api.users.completeFirstShareSetup);
-  const markSharedWithoutEdits = useMutation(api.users.markSharedWithoutEdits);
 
   const defaultListName = currentUser?.publicListName
     ? currentUser.publicListName
@@ -68,7 +67,6 @@ export function FirstShareSetupSheet({
   );
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [isDirty, setIsDirty] = useState(false);
 
   const seedRef = useRef({ defaultListName, currentUser });
   seedRef.current = { defaultListName, currentUser };
@@ -86,10 +84,7 @@ export function FirstShareSetupSheet({
     });
     setAvatar(seedUser?.userImage ?? null);
     setError(null);
-    setIsDirty(false);
   }, [visible]);
-
-  const markDirty = useCallback(() => setIsDirty(true), []);
 
   const pickAvatar = useCallback(async () => {
     const result = await ImagePicker.launchImageLibraryAsync({
@@ -105,11 +100,10 @@ export function FirstShareSetupSheet({
     try {
       await user?.setProfileImage({ file: base64 });
       setAvatar(result.assets[0].uri);
-      markDirty();
     } catch {
       setError("Couldn't update photo. Try again.");
     }
-  }, [user, markDirty]);
+  }, [user]);
 
   const userId = currentUser?.id;
 
@@ -134,41 +128,6 @@ export function FirstShareSetupSheet({
       setSubmitting(false);
     }
   }, [userId, listName, displayName, links, completeSetup, onComplete]);
-
-  const handleShareNow = useCallback(async () => {
-    if (!userId) return;
-    setSubmitting(true);
-    setError(null);
-    try {
-      if (isDirty) {
-        await completeSetup({
-          userId,
-          publicListName: listName,
-          displayName,
-          publicInsta: links.publicInsta ?? null,
-          publicWebsite: links.publicWebsite ?? null,
-          publicEmail: links.publicEmail ?? null,
-          publicPhone: links.publicPhone ?? null,
-        });
-      } else {
-        await markSharedWithoutEdits({ userId });
-      }
-      await onComplete();
-    } catch (e) {
-      setError(e instanceof Error ? e.message : "Something went wrong");
-    } finally {
-      setSubmitting(false);
-    }
-  }, [
-    userId,
-    isDirty,
-    listName,
-    displayName,
-    links,
-    completeSetup,
-    markSharedWithoutEdits,
-    onComplete,
-  ]);
 
   return (
     <Modal
@@ -204,10 +163,7 @@ export function FirstShareSetupSheet({
               className={INPUT_CLASSES}
               style={INPUT_STYLE}
               value={listName}
-              onChangeText={(t) => {
-                setListName(t);
-                markDirty();
-              }}
+              onChangeText={setListName}
               placeholderTextColor={PLACEHOLDER_COLOR}
               maxLength={80}
             />
@@ -244,10 +200,7 @@ export function FirstShareSetupSheet({
                 className={`flex-1 ${INPUT_CLASSES}`}
                 style={INPUT_STYLE}
                 value={displayName}
-                onChangeText={(t) => {
-                  setDisplayName(t);
-                  markDirty();
-                }}
+                onChangeText={setDisplayName}
                 placeholder="Your name"
                 placeholderTextColor={PLACEHOLDER_COLOR}
                 maxLength={50}
@@ -259,13 +212,7 @@ export function FirstShareSetupSheet({
             <Text className="mb-2 text-xs font-semibold uppercase tracking-wider text-neutral-2">
               Add links (optional)
             </Text>
-            <LinkIconRow
-              values={links}
-              onChange={(next) => {
-                setLinks(next);
-                markDirty();
-              }}
-            />
+            <LinkIconRow values={links} onChange={setLinks} />
           </View>
 
           {error ? (
@@ -297,18 +244,10 @@ export function FirstShareSetupSheet({
             {submitting ? (
               <ActivityIndicator color="#fff" />
             ) : (
-              <Text className="text-base font-semibold text-white">Share</Text>
+              <Text className="text-base font-semibold text-white">
+                Save & Share
+              </Text>
             )}
-          </Pressable>
-
-          <Pressable
-            disabled={submitting}
-            onPress={() => void handleShareNow()}
-            className="items-center pt-5"
-          >
-            <Text className="text-sm font-semibold text-interactive-1">
-              Share now without editing
-            </Text>
           </Pressable>
         </View>
       </KeyboardAvoidingView>

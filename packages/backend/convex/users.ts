@@ -993,53 +993,6 @@ export const completeFirstShareSetup = mutation({
 });
 
 /**
- * Used by the "Share now" button when the user skips editing in the
- * first-share sheet. Only flips the flags; doesn't touch profile fields.
- */
-export const markSharedWithoutEdits = mutation({
-  args: { userId: v.string() },
-  returns: v.null(),
-  handler: async (ctx, args) => {
-    const identity = await ctx.auth.getUserIdentity();
-    if (!identity) {
-      throw new ConvexError("User must be logged in");
-    }
-    if (identity.subject !== args.userId) {
-      throw new ConvexError("Unauthorized");
-    }
-
-    const user = await ctx.db
-      .query("users")
-      .withIndex("by_custom_id", (q) => q.eq("id", args.userId))
-      .unique();
-    if (!user) {
-      throw new ConvexError("User not found");
-    }
-
-    const wasPublicBefore = user.publicListEnabled === true;
-
-    await ctx.db.patch(user._id, {
-      updatedAt: new Date().toISOString(),
-      hasSharedListBefore: true,
-      publicListEnabled: true,
-    });
-
-    if (!wasPublicBefore) {
-      await ctx.scheduler.runAfter(
-        0,
-        internal.users.bulkUpdateEventVisibilityAction,
-        {
-          userId: args.userId,
-          visibility: "public",
-        },
-      );
-    }
-
-    return null;
-  },
-});
-
-/**
  * Get user's public list if enabled
  */
 export const getPublicList = query({
