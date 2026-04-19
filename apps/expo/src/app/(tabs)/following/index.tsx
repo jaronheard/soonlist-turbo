@@ -588,6 +588,7 @@ function FollowingFeedContent() {
         savedEventIds={savedEventIds}
         source="following"
         HeaderComponent={HeaderComponent}
+        attributionVariant="list-primary"
       />
     </>
   );

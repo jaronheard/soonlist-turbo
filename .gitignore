@@ -66,6 +66,7 @@ dist/
 
 # superpowers (local-only plans/specs)
 docs/superpowers/
+.superpowers/
 
 # claude code
 .claude/worktrees/
