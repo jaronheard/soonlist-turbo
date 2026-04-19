@@ -185,6 +185,10 @@ export async function getOrCreatePersonalList(
     slug: `user-${username}`,
     created_at: new Date().toISOString(),
     updatedAt: null,
+    // New lists never need the backfill fallback — the write path
+    // (addEventToList → addEventToListFeedInline) keeps the list feed in
+    // lockstep with eventToLists from day one.
+    feedBackfilledAt: new Date().toISOString(),
   });
 
   return (await ctx.db.get(docId))!;
@@ -1357,43 +1361,27 @@ export const getEventsForList = query({
       .order(order)
       .paginate(paginationOpts);
 
-    // Backfill-window safety: fall back to the legacy junction scan when
-    // the list's feed is missing entries relative to `eventToLists`. Covers
-    // both the pre-migration case (feed entirely empty) and the partial-
-    // migration case (some entries present but not all, e.g. the user
-    // filters for "upcoming" and only past events have been migrated so
-    // far). Once the counts match, the feed is authoritative and this
-    // branch is skipped on subsequent queries.
-    //
-    // Guarded on the first page only (`cursor === null`) and on a fully
-    // exhausted `feedResults` to avoid double-scanning on every paginated
-    // call post-migration.
+    // Backfill-window safety: a list is only known to have its `list_*`
+    // feed fully mirrored from `eventToLists` once `list.feedBackfilledAt`
+    // is populated. New lists set this at creation; pre-existing lists get
+    // it set by `migrations/backfillListFeeds.runBackfillListFeeds`. When
+    // the marker is absent we fall back to the junction scan to cover the
+    // deploy/backfill window — including partial-migration states where
+    // the feed already has some entries but not all for this list. Once
+    // the marker is populated this branch is an O(1) field check.
     if (
       paginationOpts.cursor === null &&
       feedResults.page.length === 0 &&
-      feedResults.isDone
+      feedResults.isDone &&
+      !list.feedBackfilledAt
     ) {
-      const [junctionEntries, feedEntries] = await Promise.all([
-        ctx.db
-          .query("eventToLists")
-          .withIndex("by_list", (q) => q.eq("listId", list.id))
-          .collect(),
-        ctx.db
-          .query("userFeeds")
-          .withIndex("by_feed_hasEnded_startTime", (q) =>
-            q.eq("feedId", feedId),
-          )
-          .collect(),
-      ]);
-      if (feedEntries.length < junctionEntries.length) {
-        return getEventsForListBackfillFallback(
-          ctx,
-          list.id,
-          paginationOpts,
-          filter,
-          viewerId,
-        );
-      }
+      return getEventsForListBackfillFallback(
+        ctx,
+        list.id,
+        paginationOpts,
+        filter,
+        viewerId,
+      );
     }
 
     const events = await Promise.all(

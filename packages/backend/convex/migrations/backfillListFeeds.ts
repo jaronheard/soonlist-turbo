@@ -66,10 +66,52 @@ export const backfillListFeedsBatch = internalMutation({
   },
 });
 
+/**
+ * Phase 2: once the feed entries are populated, mark every list so
+ * `getEventsForList` can trust the feed directly (O(1) field check)
+ * instead of falling back to a junction scan. Idempotent: only lists
+ * missing `feedBackfilledAt` get patched.
+ */
+export const markListsBackfilledBatch = internalMutation({
+  args: {
+    cursor: v.union(v.string(), v.null()),
+    batchSize: v.number(),
+  },
+  returns: v.object({
+    processed: v.number(),
+    marked: v.number(),
+    nextCursor: v.union(v.string(), v.null()),
+    isDone: v.boolean(),
+  }),
+  handler: async (ctx, { cursor, batchSize }) => {
+    const result = await ctx.db
+      .query("lists")
+      .paginate({ numItems: batchSize, cursor });
+
+    const now = new Date().toISOString();
+    let marked = 0;
+
+    for (const list of result.page) {
+      if (list.feedBackfilledAt) continue;
+      await ctx.db.patch(list._id, { feedBackfilledAt: now });
+      marked++;
+    }
+
+    return {
+      processed: result.page.length,
+      marked,
+      nextCursor: result.continueCursor,
+      isDone: result.isDone,
+    };
+  },
+});
+
 export const runBackfillListFeeds = internalAction({
   args: {},
   returns: v.null(),
   handler: async (ctx) => {
+    // Phase 1: mirror every eventToLists row into a `list_${listId}` feed
+    // entry. Safe to re-run; upserts are keyed on (feedId, eventId).
     let totalProcessed = 0;
     let totalUpserted = 0;
     let totalSkipped = 0;
@@ -101,7 +143,41 @@ export const runBackfillListFeeds = internalAction({
     }
 
     console.log(
-      `list feed backfill: ${totalProcessed} eventToLists processed, ${totalUpserted} feed entries upserted, ${totalSkipped} skipped (missing event)`,
+      `list feed backfill phase 1: ${totalProcessed} eventToLists processed, ${totalUpserted} feed entries upserted, ${totalSkipped} skipped (missing event)`,
+    );
+
+    // Phase 2: stamp every list with `feedBackfilledAt`. Once phase 1
+    // committed its last row, this marker is safe — it tells
+    // getEventsForList that the feed is authoritative for this list and
+    // the junction-scan fallback can be skipped.
+    let totalListsProcessed = 0;
+    let totalMarked = 0;
+    let listCursor: string | null = null;
+
+    while (true) {
+      const result: {
+        processed: number;
+        marked: number;
+        nextCursor: string | null;
+        isDone: boolean;
+      } = await ctx.runMutation(
+        internal.migrations.backfillListFeeds.markListsBackfilledBatch,
+        { cursor: listCursor, batchSize },
+      );
+
+      totalListsProcessed += result.processed;
+      totalMarked += result.marked;
+
+      if (result.isDone) break;
+      if (result.nextCursor === listCursor) {
+        console.error("Cursor stalled in markListsBackfilledBatch — aborting");
+        break;
+      }
+      listCursor = result.nextCursor;
+    }
+
+    console.log(
+      `list feed backfill phase 2: ${totalListsProcessed} lists processed, ${totalMarked} marked backfilled`,
     );
     return null;
   },

@@ -146,6 +146,13 @@ export default defineSchema({
     slug: v.optional(v.string()),
     created_at: v.string(), // ISO date string
     updatedAt: v.union(v.string(), v.null()), // ISO date string or null
+    // Set once the list's `list_${id}` userFeeds entries are known to mirror
+    // `eventToLists` — populated immediately on list creation (new lists
+    // never need the backfill fallback) and retroactively by
+    // `migrations/backfillListFeeds`. Absence signals getEventsForList to
+    // use the junction-scan fallback during the backfill window. Field is
+    // optional so pre-existing docs validate until the migration runs.
+    feedBackfilledAt: v.optional(v.string()),
   })
     .index("by_user", ["userId"])
     .index("by_custom_id", ["id"])
