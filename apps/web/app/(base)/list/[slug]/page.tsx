@@ -43,6 +43,12 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
         title: "Private list · Soonlist",
         description: `This list by ${ownerLabel} is private.`,
         robots: { index: false, follow: false },
+        // Explicitly point to the branded default so Next doesn't auto-wire
+        // the dynamic opengraph-image route (which would still render the
+        // branded default for private lists, but this skips the extra hop).
+        openGraph: {
+          images: [{ url: "/api/og", width: 1200, height: 630 }],
+        },
         other: {
           "apple-itunes-app": APPLE_ITUNES_APP(slug),
         },
@@ -51,12 +57,19 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 
     const { list } = result;
     const ownerHandle = list.owner?.username ?? "soonlist";
+    const ownerDisplay = list.owner?.displayName ?? ownerHandle;
+    const autoDescription = `Curated by ${ownerDisplay} · @${ownerHandle}`;
     const description =
       list.description && list.description.trim().length > 0
         ? list.description
-        : `A list by @${ownerHandle}`;
+        : autoDescription;
     const title = `${list.name} · Soonlist`;
+    const imageAlt = `${list.name} — a list on Soonlist by @${ownerHandle}`;
 
+    // Next's file-based `opengraph-image.tsx` convention auto-wires the image
+    // URL into og:image + twitter:image, so we don't set them manually here.
+    // We do upgrade `twitter:card` to `summary_large_image` since the dynamic
+    // route produces a 1200×630 rich card.
     return {
       title,
       description,
@@ -68,12 +81,13 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
         locale: "en_US",
       },
       twitter: {
-        card: "summary",
+        card: "summary_large_image",
         title,
         description,
       },
       other: {
         "apple-itunes-app": APPLE_ITUNES_APP(slug),
+        "og:image:alt": imageAlt,
       },
     };
   } catch (error) {

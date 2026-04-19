@@ -1295,3 +1295,116 @@ export const backfillContributorEvents = internalAction({
     return null;
   },
 });
+
+/**
+ * Get the minimal data needed to render an OpenGraph preview image for a list.
+ *
+ * Separate from `getBySlug` so the OG-specific shape can evolve independently.
+ * This query runs unauthenticated at crawl time, so private lists intentionally
+ * return `status: "private"` — never leak member-only content to crawlers.
+ *
+ * Returns one of:
+ *   { status: "ok", list, owner, upcomingEvents }  — 0–3 upcoming events, chronological
+ *   { status: "private" }
+ *   { status: "notFound" }
+ */
+export const getOgData = query({
+  args: { slug: v.string() },
+  returns: v.union(
+    v.object({
+      status: v.literal("ok"),
+      list: v.object({
+        name: v.string(),
+        eventCount: v.number(),
+      }),
+      owner: v.object({
+        username: v.string(),
+        displayName: v.string(),
+        userImage: v.string(),
+        emoji: v.union(v.string(), v.null()),
+      }),
+      upcomingEvents: v.array(
+        v.object({
+          image: v.string(),
+        }),
+      ),
+    }),
+    v.object({ status: v.literal("private") }),
+    v.object({ status: v.literal("notFound") }),
+  ),
+  handler: async (ctx, { slug }) => {
+    const list = await ctx.db
+      .query("lists")
+      .withIndex("by_slug", (q) => q.eq("slug", slug))
+      .first();
+
+    if (!list) {
+      return { status: "notFound" as const };
+    }
+
+    const viewerId = await getUserId(ctx);
+    const accessResult = await checkListAccess(ctx, list.id, viewerId);
+
+    if (accessResult.status === "notFound") {
+      return { status: "notFound" as const };
+    }
+
+    if (accessResult.status !== "ok") {
+      return { status: "private" as const };
+    }
+
+    // Bounded so unauthenticated crawlers can't trigger a huge fan-out against
+    // a pathologically large list; the OG image only needs a few upcoming
+    // events regardless.
+    const OG_EVENT_SCAN_LIMIT = 500;
+    const [owner, eventToLists] = await Promise.all([
+      ctx.db
+        .query("users")
+        .withIndex("by_custom_id", (q) => q.eq("id", list.userId))
+        .first(),
+      ctx.db
+        .query("eventToLists")
+        .withIndex("by_list", (q) => q.eq("listId", list.id))
+        .take(OG_EVENT_SCAN_LIMIT),
+    ]);
+
+    if (!owner) {
+      return { status: "notFound" as const };
+    }
+
+    const nowIso = new Date().toISOString();
+    const events = await Promise.all(
+      eventToLists.map((etl) =>
+        ctx.db
+          .query("events")
+          .withIndex("by_custom_id", (q) => q.eq("id", etl.eventId))
+          .unique(),
+      ),
+    );
+
+    // Pill count reports the *upcoming* count so it aligns with what the
+    // preview promises (the screenshots are upcoming events).
+    const upcomingPublic = events
+      .filter((e): e is NonNullable<typeof e> => e !== null)
+      .filter((e) => e.visibility !== "private")
+      .filter((e) => e.startDateTime >= nowIso)
+      .sort((a, b) => a.startDateTime.localeCompare(b.startDateTime));
+
+    const upcomingEvents = upcomingPublic
+      .filter((e) => typeof e.image === "string" && e.image.length > 0)
+      .slice(0, 3)
+      .map((e) => ({ image: e.image! }));
+
+    return {
+      status: "ok" as const,
+      list: { name: list.name, eventCount: upcomingPublic.length },
+      owner: {
+        username: owner.username,
+        displayName: owner.displayName,
+        userImage: owner.userImage,
+        emoji: owner.emoji,
+      },
+      upcomingEvents,
+    };
+  },
+});
