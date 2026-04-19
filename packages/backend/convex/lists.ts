@@ -439,8 +439,9 @@ export const followUserByUsername = mutation({
     } else {
       // List was just created on-demand for an older account. Schedule a
       // bounded backfill of the owner's historical events; the backfill
-      // chain hydrates this follower's feed when it completes so they
-      // don't see an empty feed.
+      // chain hydrates every current follower's feed when it completes,
+      // so this follower (and anyone else who subscribes during the
+      // backfill window) doesn't see an empty feed.
       await ctx.scheduler.runAfter(
         0,
         internal.migrations.personalListMigration.backfillUserEventsBatch,
@@ -448,7 +449,7 @@ export const followUserByUsername = mutation({
           userId: targetUser.id,
           listId,
           cursor: null,
-          hydrateFollowerUserId: userId,
+          hydrateFollowersOnComplete: true,
         },
       );
     }

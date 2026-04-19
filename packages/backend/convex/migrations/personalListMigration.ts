@@ -69,22 +69,27 @@ export const personalListBatch = internalMutation({
  * Paginated backfill of a single user's events → personal list.
  * Self-schedules the next page to stay under transaction limits.
  *
- * If `hydrateFollowerUserId` is set, the follower's feed is hydrated from
- * the list once the backfill chain completes — used when a list is created
- * on-demand at follow time so the new follower's feed isn't empty.
+ * When `hydrateFollowersOnComplete` is true, every current follower's
+ * feed is hydrated from the list once the backfill chain finishes — used
+ * for lists created on-demand at follow time so followers don't see an
+ * empty feed. Only currently-following users are hydrated, so anyone who
+ * unfollowed mid-backfill is naturally skipped.
  */
 export const backfillUserEventsBatch = internalMutation({
   args: {
     userId: v.string(),
     listId: v.string(),
     cursor: v.union(v.string(), v.null()),
-    hydrateFollowerUserId: v.optional(v.string()),
+    hydrateFollowersOnComplete: v.optional(v.boolean()),
   },
   returns: v.object({
     linked: v.number(),
     isDone: v.boolean(),
   }),
-  handler: async (ctx, { userId, listId, cursor, hydrateFollowerUserId }) => {
+  handler: async (
+    ctx,
+    { userId, listId, cursor, hydrateFollowersOnComplete },
+  ) => {
     const result = await ctx.db
       .query("events")
       .withIndex("by_user", (q) => q.eq("userId", userId))
@@ -117,19 +122,28 @@ export const backfillUserEventsBatch = internalMutation({
           userId,
           listId,
           cursor: result.continueCursor,
-          hydrateFollowerUserId,
+          hydrateFollowersOnComplete,
         },
       );
     } else if (!result.isDone) {
       console.error(
         `backfillUserEventsBatch: cursor stalled for user ${userId} list ${listId} at cursor ${cursor} — aborting`,
       );
-    } else if (hydrateFollowerUserId) {
-      await ctx.scheduler.runAfter(
-        0,
-        internal.feedHelpers.addListEventsToUserFeed,
-        { userId: hydrateFollowerUserId, listId },
-      );
+    } else if (hydrateFollowersOnComplete) {
+      // Fan out to every CURRENT follower so anyone who subscribed during
+      // the backfill window also gets hydrated, and anyone who unfollowed
+      // mid-backfill is skipped.
+      const follows = await ctx.db
+        .query("listFollows")
+        .withIndex("by_list", (q) => q.eq("listId", listId))
+        .collect();
+      for (const follow of follows) {
+        await ctx.scheduler.runAfter(
+          0,
+          internal.feedHelpers.addListEventsToUserFeed,
+          { userId: follow.userId, listId },
+        );
+      }
     }
 
     return { linked, isDone: result.isDone };
