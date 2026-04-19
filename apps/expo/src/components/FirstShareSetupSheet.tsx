@@ -18,6 +18,7 @@ import { useMutation, useQuery } from "convex/react";
 import { api } from "@soonlist/backend/convex/_generated/api";
 
 import type { LinkValues } from "./LinkIconRow";
+import { Camera } from "./icons";
 import { LinkIconRow } from "./LinkIconRow";
 
 interface FirstShareSetupSheetProps {
@@ -26,6 +27,11 @@ interface FirstShareSetupSheetProps {
   /** Called after a successful Share or Share now — opens the native share sheet. */
   onComplete: () => Promise<void> | void;
 }
+
+const INPUT_CLASSES =
+  "rounded-xl bg-interactive-3 px-4 text-base text-neutral-1";
+const INPUT_STYLE = { height: 48 } as const;
+const PLACEHOLDER_COLOR = "rgb(98, 116, 150)";
 
 export function FirstShareSetupSheet({
   visible,
@@ -180,12 +186,15 @@ export function FirstShareSetupSheet({
           className="rounded-t-3xl bg-white px-6 pt-3"
           style={{ paddingBottom: Math.max(insets.bottom, 16) + 8 }}
         >
-          <View className="mb-5 items-center">
+          <View className="mb-4 items-center">
             <View className="h-1 w-10 rounded-full bg-neutral-3" />
           </View>
 
-          <Text className="mb-6 text-center text-xl font-bold text-neutral-1">
+          <Text className="mb-1 text-center text-2xl font-bold text-neutral-1">
             Share your Soon List
+          </Text>
+          <Text className="mb-6 text-center text-sm text-neutral-2">
+            Make it yours before sending.
           </Text>
 
           <View className="mb-5">
@@ -193,13 +202,14 @@ export function FirstShareSetupSheet({
               List name
             </Text>
             <TextInput
-              className="rounded-xl border border-neutral-3 bg-white px-4 text-base text-neutral-1"
-              style={{ height: 48 }}
+              className={INPUT_CLASSES}
+              style={INPUT_STYLE}
               value={listName}
               onChangeText={(t) => {
                 setListName(t);
                 markDirty();
               }}
+              placeholderTextColor={PLACEHOLDER_COLOR}
               maxLength={80}
             />
           </View>
@@ -211,31 +221,36 @@ export function FirstShareSetupSheet({
             <View className="flex-row items-center gap-3">
               <Pressable
                 onPress={pickAvatar}
-                className="items-center justify-center overflow-hidden rounded-full bg-interactive-3"
-                style={{ height: 48, width: 48 }}
                 accessibilityLabel="Change photo"
+                style={{ height: 48, width: 48 }}
               >
-                {avatar ? (
-                  <Image
-                    source={{ uri: avatar }}
-                    style={{ height: 48, width: 48 }}
-                  />
-                ) : (
-                  <Text className="text-xs font-medium text-interactive-1">
-                    Photo
-                  </Text>
-                )}
+                <View className="h-12 w-12 items-center justify-center overflow-hidden rounded-full bg-interactive-3">
+                  {avatar ? (
+                    <Image
+                      source={{ uri: avatar }}
+                      style={{ height: 48, width: 48 }}
+                    />
+                  ) : (
+                    <Camera size={20} color="#5A32FB" />
+                  )}
+                </View>
+                <View
+                  className="absolute bottom-0 right-0 items-center justify-center rounded-full border-2 border-white bg-interactive-1"
+                  style={{ height: 18, width: 18 }}
+                >
+                  <Camera size={10} color="#fff" />
+                </View>
               </Pressable>
               <TextInput
-                className="flex-1 rounded-xl border border-neutral-3 bg-white px-4 text-base text-neutral-1"
-                style={{ height: 48 }}
+                className={`flex-1 ${INPUT_CLASSES}`}
+                style={INPUT_STYLE}
                 value={displayName}
                 onChangeText={(t) => {
                   setDisplayName(t);
                   markDirty();
                 }}
                 placeholder="Your name"
-                placeholderTextColor="rgb(98, 116, 150)"
+                placeholderTextColor={PLACEHOLDER_COLOR}
                 maxLength={50}
               />
             </View>
@@ -267,7 +282,12 @@ export function FirstShareSetupSheet({
             style={{
               height: 52,
               justifyContent: "center",
-              opacity: submitting ? 0.5 : 1,
+              opacity: submitting ? 0.6 : 1,
+              shadowColor: "#5A32FB",
+              shadowOffset: { width: 0, height: 4 },
+              shadowOpacity: 0.2,
+              shadowRadius: 8,
+              elevation: 4,
             }}
           >
             {submitting ? (
@@ -280,9 +300,9 @@ export function FirstShareSetupSheet({
           <Pressable
             disabled={submitting}
             onPress={() => void handleShareNow()}
-            className="items-center pt-3"
+            className="items-center pt-4"
           >
-            <Text className="text-sm font-medium text-neutral-2">
+            <Text className="text-sm font-semibold text-interactive-1">
               Share now without editing
             </Text>
           </Pressable>
