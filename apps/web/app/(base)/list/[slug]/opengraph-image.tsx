@@ -170,23 +170,25 @@ export default async function OgImage({ params }: Props) {
       zIndex: number;
     }[]
   > = {
-    1: [
-      { width: 240, height: 426, rotate: "4deg", translateX: 0, zIndex: 1 },
-    ],
+    1: [{ width: 240, height: 426, rotate: "4deg", translateX: 0, zIndex: 1 }],
     2: [
       { width: 216, height: 384, rotate: "-8deg", translateX: -90, zIndex: 1 },
       { width: 216, height: 384, rotate: "8deg", translateX: 90, zIndex: 2 },
     ],
     3: [
-      { width: 196, height: 348, rotate: "-14deg", translateX: -150, zIndex: 1 },
+      {
+        width: 196,
+        height: 348,
+        rotate: "-14deg",
+        translateX: -150,
+        zIndex: 1,
+      },
       { width: 224, height: 398, rotate: "6deg", translateX: 0, zIndex: 3 },
       { width: 196, height: 348, rotate: "-10deg", translateX: 150, zIndex: 2 },
     ],
   };
   const cardLayouts =
-    cardLayoutsByCount[
-      Math.min(upcomingEvents.length, 3) as 1 | 2 | 3
-    ];
+    cardLayoutsByCount[Math.min(upcomingEvents.length, 3) as 1 | 2 | 3];
   const eventPillLabel = `${list.eventCount} ${list.eventCount === 1 ? "EVENT" : "EVENTS"}`;
 
   return new ImageResponse(
