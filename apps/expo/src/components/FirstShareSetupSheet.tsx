@@ -31,7 +31,7 @@ interface FirstShareSetupSheetProps {
 
 const INPUT_CLASSES =
   "rounded-xl bg-interactive-3 px-4 text-base text-neutral-1";
-const INPUT_STYLE = { height: 48 } as const;
+const INPUT_STYLE = { paddingVertical: 14 } as const;
 const PLACEHOLDER_COLOR = "rgb(98, 116, 150)";
 
 export function FirstShareSetupSheet({
@@ -278,7 +278,7 @@ export function FirstShareSetupSheet({
           <Pressable
             disabled={submitting}
             onPress={() => void handleShare()}
-            className="items-center rounded-2xl bg-interactive-1"
+            className="items-center rounded-full bg-interactive-1"
             style={{
               height: 52,
               justifyContent: "center",
@@ -300,7 +300,7 @@ export function FirstShareSetupSheet({
           <Pressable
             disabled={submitting}
             onPress={() => void handleShareNow()}
-            className="items-center pt-3"
+            className="items-center pt-5"
           >
             <Text className="text-sm font-semibold text-interactive-1">
               Share now without editing
