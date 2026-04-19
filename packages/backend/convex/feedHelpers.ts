@@ -205,8 +205,12 @@ export const removeEventFromFeeds = internalMutation({
   args: {
     eventId: v.string(),
     keepCreatorFeed: v.optional(v.boolean()),
+    keepListFeeds: v.optional(v.boolean()),
   },
-  handler: async (ctx, { eventId, keepCreatorFeed = true }) => {
+  handler: async (
+    ctx,
+    { eventId, keepCreatorFeed = true, keepListFeeds = true },
+  ) => {
     // Get all feed entries for this event
     const feedEntries = await ctx.db
       .query("userFeeds")
@@ -228,6 +232,16 @@ export const removeEventFromFeeds = internalMutation({
     for (const entry of feedEntries) {
       // If keepCreatorFeed is true, skip only the creator's feed
       if (keepCreatorFeed && event && entry.feedId === `user_${event.userId}`) {
+        continue;
+      }
+
+      // List-detail feeds (`list_${listId}`) are persistent membership records,
+      // not fan-out targets — they live as long as the eventToLists junction
+      // does. Removing them here would lose membership across visibility
+      // toggles (private→public), since the restore path doesn't recreate
+      // them. getEventsForList filters by eventVisibility="public", so private
+      // events stay invisible without needing to delete the entry.
+      if (keepListFeeds && entry.feedId.startsWith("list_")) {
         continue;
       }
 
@@ -993,14 +1007,14 @@ export async function addEventToListFeedInline(
   ctx: MutationCtx,
   eventId: string,
   listId: string,
-): Promise<void> {
+): Promise<boolean> {
   const event = await ctx.db
     .query("events")
     .withIndex("by_custom_id", (q) => q.eq("id", eventId))
     .first();
 
   if (!event) {
-    return;
+    return false;
   }
 
   const eventStartTime = new Date(event.startDateTime).getTime();
@@ -1017,6 +1031,7 @@ export async function addEventToListFeedInline(
     event.similarityGroupId,
     event.visibility,
   );
+  return true;
 }
 
 export async function removeEventFromListFeedInline(

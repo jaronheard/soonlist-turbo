@@ -1102,6 +1102,17 @@ export async function updateEvent(
       similarityGroupId,
     });
 
+    if (visibilityChanged) {
+      // updateEventInFeeds only touches creator/follower/discover feeds, but
+      // the event also lives in list_${listId} entries that removeEventFromFeeds
+      // intentionally preserves. Sync their `eventVisibility` so the
+      // index-level filter in getEventsForList stays correct after toggles.
+      await ctx.runMutation(internal.feedHelpers.updateEventVisibilityInFeeds, {
+        eventId,
+        visibility: visibility || existingEvent.visibility,
+      });
+    }
+
     // If changing to public, fan out to list followers
     if (visibility === "public" && existingEvent.visibility === "private") {
       const eventToLists = await ctx.db
@@ -1185,10 +1196,13 @@ export async function deleteEvent(
     await ctx.db.delete(etl._id);
   }
 
-  // Remove event from all feeds
+  // Remove event from all feeds, including the list_${listId} membership
+  // entries — the event row itself is going away, so its dedicated list
+  // feeds must too.
   await ctx.runMutation(internal.feedHelpers.removeEventFromFeeds, {
     eventId,
     keepCreatorFeed: false,
+    keepListFeeds: false,
   });
 
   // Remove from aggregates before deleting the event
@@ -1532,6 +1546,14 @@ export async function toggleEventVisibility(
         );
       }
     }
+
+    // Sync eventVisibility on persistent feed entries (creator + list_*).
+    // updateEventInFeeds / removeEventFromFeeds don't touch list_* visibility,
+    // so the getEventsForList index filter would otherwise read a stale value.
+    await ctx.runMutation(internal.feedHelpers.updateEventVisibilityInFeeds, {
+      eventId,
+      visibility,
+    });
   }
 
   return event;

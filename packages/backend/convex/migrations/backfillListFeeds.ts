@@ -27,6 +27,7 @@ export const backfillListFeedsBatch = internalMutation({
   returns: v.object({
     processed: v.number(),
     upserted: v.number(),
+    skipped: v.number(),
     nextCursor: v.union(v.string(), v.null()),
     isDone: v.boolean(),
   }),
@@ -36,15 +37,29 @@ export const backfillListFeedsBatch = internalMutation({
       .paginate({ numItems: batchSize, cursor });
 
     let upserted = 0;
+    let skipped = 0;
 
     for (const etl of result.page) {
-      await addEventToListFeedInline(ctx, etl.eventId, etl.listId);
-      upserted++;
+      // addEventToListFeedInline returns false when the event row is
+      // missing — eventToLists can outlive its event during cascades or
+      // partial cleanups. Track those separately so the orchestrator log
+      // distinguishes real upserts from dangling-junction skips.
+      const didUpsert = await addEventToListFeedInline(
+        ctx,
+        etl.eventId,
+        etl.listId,
+      );
+      if (didUpsert) {
+        upserted++;
+      } else {
+        skipped++;
+      }
     }
 
     return {
       processed: result.page.length,
       upserted,
+      skipped,
       nextCursor: result.continueCursor,
       isDone: result.isDone,
     };
@@ -57,6 +72,7 @@ export const runBackfillListFeeds = internalAction({
   handler: async (ctx) => {
     let totalProcessed = 0;
     let totalUpserted = 0;
+    let totalSkipped = 0;
     let cursor: string | null = null;
     const batchSize = 50;
 
@@ -64,6 +80,7 @@ export const runBackfillListFeeds = internalAction({
       const result: {
         processed: number;
         upserted: number;
+        skipped: number;
         nextCursor: string | null;
         isDone: boolean;
       } = await ctx.runMutation(
@@ -73,6 +90,7 @@ export const runBackfillListFeeds = internalAction({
 
       totalProcessed += result.processed;
       totalUpserted += result.upserted;
+      totalSkipped += result.skipped;
 
       if (result.isDone) break;
       if (result.nextCursor === cursor) {
@@ -83,7 +101,7 @@ export const runBackfillListFeeds = internalAction({
     }
 
     console.log(
-      `list feed backfill: ${totalProcessed} eventToLists processed, ${totalUpserted} feed entries upserted`,
+      `list feed backfill: ${totalProcessed} eventToLists processed, ${totalUpserted} feed entries upserted, ${totalSkipped} skipped (missing event)`,
     );
     return null;
   },
