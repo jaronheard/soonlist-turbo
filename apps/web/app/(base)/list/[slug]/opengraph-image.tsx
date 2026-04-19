@@ -285,19 +285,21 @@ export default async function OgImage({ params }: Props) {
             opacity: 0.92,
           }}
         >
-          <img
-            src={owner.userImage}
-            width={28}
-            height={28}
-            alt=""
-            style={{
-              width: 28,
-              height: 28,
-              borderRadius: 9999,
-              objectFit: "cover",
-              border: "2px solid rgba(255, 255, 255, 0.85)",
-            }}
-          />
+          {owner.userImage ? (
+            <img
+              src={owner.userImage}
+              width={28}
+              height={28}
+              alt=""
+              style={{
+                width: 28,
+                height: 28,
+                borderRadius: 9999,
+                objectFit: "cover",
+                border: "2px solid rgba(255, 255, 255, 0.85)",
+              }}
+            />
+          ) : null}
           {owner.emoji ? (
             <div style={{ display: "flex", fontSize: 18 }}>{owner.emoji}</div>
           ) : null}

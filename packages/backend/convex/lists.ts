@@ -1353,10 +1353,11 @@ export const getOgData = query({
       return { status: "private" as const };
     }
 
-    // Bounded so unauthenticated crawlers can't trigger a huge fan-out against
-    // a pathologically large list; the OG image only needs a few upcoming
-    // events regardless.
-    const OG_EVENT_SCAN_LIMIT = 500;
+    // `.collect()` is bounded by Convex's implicit per-query read limit
+    // (~16k docs). Pathologically large lists will throw, and the caller's
+    // try/catch falls back to the branded-default OG image. Taking a smaller
+    // fixed slice here would let the pill count drift below the true upcoming
+    // count for large lists, so we scan the full set.
     const [owner, eventToLists] = await Promise.all([
       ctx.db
         .query("users")
@@ -1365,7 +1366,7 @@ export const getOgData = query({
       ctx.db
         .query("eventToLists")
         .withIndex("by_list", (q) => q.eq("listId", list.id))
-        .take(OG_EVENT_SCAN_LIMIT),
+        .collect(),
     ]);
 
     if (!owner) {
