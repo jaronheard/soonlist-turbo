@@ -95,26 +95,26 @@ export function LinkIconRow({ values, onChange }: LinkIconRowProps) {
       </View>
 
       {activeEntry ? (
-        <View
-          className="mt-3 rounded-xl bg-interactive-3 px-4"
-          style={{ height: 48, justifyContent: "center" }}
-        >
-          <TextInput
-            key={activeEntry.key}
-            autoFocus
-            className="text-base text-neutral-1"
-            style={{ padding: 0 }}
-            placeholder={activeEntry.placeholder}
-            placeholderTextColor="rgb(98, 116, 150)"
-            keyboardType={activeEntry.keyboard}
-            autoCapitalize="none"
-            value={values[activeEntry.key] ?? ""}
-            onChangeText={(text) => setField(activeEntry.key, text)}
-            onBlur={() => setActive(null)}
-            returnKeyType="done"
-            onSubmitEditing={() => setActive(null)}
-          />
-        </View>
+        <TextInput
+          key={activeEntry.key}
+          autoFocus
+          className="mt-3 rounded-xl bg-interactive-3 text-neutral-1"
+          style={{
+            paddingVertical: 14,
+            paddingHorizontal: 16,
+            fontSize: 16,
+            lineHeight: 20,
+          }}
+          placeholder={activeEntry.placeholder}
+          placeholderTextColor="rgb(98, 116, 150)"
+          keyboardType={activeEntry.keyboard}
+          autoCapitalize="none"
+          value={values[activeEntry.key] ?? ""}
+          onChangeText={(text) => setField(activeEntry.key, text)}
+          onBlur={() => setActive(null)}
+          returnKeyType="done"
+          onSubmitEditing={() => setActive(null)}
+        />
       ) : null}
     </View>
   );
