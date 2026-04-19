@@ -1171,6 +1171,15 @@ export const deleteUserAndCascade = internalMutation({
         await ctx.db.delete(etl._id);
       }
 
+      // Schedule cleanup of the list's own feed (list_${listId}) entries.
+      // Deferring to an action keeps this user-deletion mutation within
+      // transaction limits for users who own many lists with large feeds.
+      await ctx.scheduler.runAfter(
+        0,
+        internal.feedHelpers.removeListFeedAction,
+        { listId: list.id },
+      );
+
       // Delete the list itself
       await ctx.db.delete(list._id);
     }

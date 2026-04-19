@@ -15,7 +15,10 @@ import { List as ListIcon, ShareIcon } from "~/components/icons";
 import { SubscribeButton } from "~/components/SubscribeButton";
 import UserEventsList from "~/components/UserEventsList";
 import { useStablePaginatedQuery } from "~/hooks/useStableQuery";
-import { useStableTimestamp } from "~/store";
+import {
+  useLoadMoreHandler,
+  useUpcomingEventsFilter,
+} from "~/hooks/useUpcomingFeed";
 import { logError } from "~/utils/errorLogging";
 import { toast } from "~/utils/feedback";
 
@@ -25,7 +28,6 @@ export default function ListDetailScreen() {
   const router = useRouter();
   const { isAuthenticated } = useConvexAuth();
   const currentUser = useQuery(api.users.getCurrentUser);
-  const stableTimestamp = useStableTimestamp();
 
   const listResult = useQuery(
     api.lists.getBySlug,
@@ -44,12 +46,7 @@ export default function ListDetailScreen() {
     { initialNumItems: 50 },
   );
 
-  const upcomingEvents = useMemo(() => {
-    const currentTime = new Date(stableTimestamp).getTime();
-    return listEvents.filter(
-      (event) => new Date(event.endDateTime).getTime() >= currentTime,
-    );
-  }, [listEvents, stableTimestamp]);
+  const upcomingEvents = useUpcomingEventsFilter(listEvents);
 
   const followListMutation = useMutation(
     api.lists.followList,
@@ -126,11 +123,7 @@ export default function ListDetailScreen() {
     }
   }, [listData, normalizedSlug]);
 
-  const handleLoadMore = useCallback(() => {
-    if (status === "CanLoadMore") {
-      loadMore(25);
-    }
-  }, [status, loadMore]);
+  const handleLoadMore = useLoadMoreHandler(status, loadMore);
 
   const ListHeader = useCallback(
     () => (

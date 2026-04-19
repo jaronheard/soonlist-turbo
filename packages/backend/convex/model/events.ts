@@ -13,6 +13,10 @@ import {
   userFeedsAggregate,
 } from "../aggregates";
 import { DEFAULT_TIMEZONE } from "../constants";
+import {
+  addEventToListFeedInline,
+  removeEventFromListFeedInline,
+} from "../feedHelpers";
 import { getOrCreatePersonalList } from "../lists";
 import { generateNumericId, generatePublicId } from "../utils";
 import {
@@ -1383,6 +1387,10 @@ export async function addEventToList(
       listId,
     });
 
+    // Maintain the list's own feed (list_${listId}) so getEventsForList can
+    // paginate efficiently by the userFeeds visibility/hasEnded index.
+    await addEventToListFeedInline(ctx, eventId, listId);
+
     // Add event to followers' feeds
     await ctx.runMutation(internal.feedHelpers.addEventToListFollowersFeeds, {
       eventId,
@@ -1447,6 +1455,10 @@ export async function removeEventFromList(
     for (const link of existingLinks) {
       await ctx.db.delete(link._id);
     }
+
+    // Drop this event from the list's own feed before fanning out to
+    // followers, mirroring the symmetric write in addEventToList.
+    await removeEventFromListFeedInline(ctx, eventId, listId);
 
     // Remove event from followers' feeds
     await ctx.runMutation(

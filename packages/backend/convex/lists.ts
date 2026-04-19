@@ -11,6 +11,11 @@ import {
   query,
 } from "./_generated/server";
 import { listFollowsAggregate } from "./aggregates";
+import {
+  addEventToListFeedInline,
+  listFeedId,
+  removeEventFromListFeedInline,
+} from "./feedHelpers";
 import { enrichEventsAndFilterNulls } from "./model/events";
 import { getViewableListIds } from "./model/lists";
 import { generatePublicId } from "./utils";
@@ -1020,6 +1025,9 @@ export const removeContributorEventsBatch = internalMutation({
       if (event?.userId === contributorUserId) {
         await ctx.db.delete(entry._id);
 
+        // Keep the list's own feed (list_${listId}) in sync with eventToLists.
+        await removeEventFromListFeedInline(ctx, entry.eventId, listId);
+
         // Schedule feed cleanup in a separate transaction to reduce bandwidth
         // of this batch mutation — removeEventFromListFollowersFeeds does
         // multiple queries per follower
@@ -1138,6 +1146,11 @@ export const backfillContributorEventsBatch = internalMutation({
           listId,
         });
 
+        // Maintain the list's own feed (list_${listId}) inline in this
+        // batch — addEventToListFeedInline is a single upsert on userFeeds
+        // and stays well within the per-mutation transaction budget.
+        await addEventToListFeedInline(ctx, event.id, listId);
+
         // Schedule feed population in a separate transaction to avoid
         // hitting transaction limits when there are many followers
         await ctx.scheduler.runAfter(
@@ -1162,23 +1175,31 @@ export const backfillContributorEventsBatch = internalMutation({
 });
 
 /**
- * Get events for a list by slug, paginated to stay within Convex limits.
+ * Get events for a list by slug.
+ *
+ * Paginates the list's dedicated feed (`list_${listId}`) in `userFeeds` so
+ * every page comes back densely filled with matching events — previously we
+ * paginated the `eventToLists` junction and then discarded past/private
+ * events, which produced sparse pages on large lists.
+ *
+ * Write-path wiring that keeps the feed in sync lives in `feedHelpers.ts`
+ * (`addEventToListFeedInline` / `removeEventFromListFeedInline` /
+ * `removeListFeedAction`). Existing `eventToLists` rows are backfilled by
+ * `migrations/backfillListFeeds.ts`.
  */
 export const getEventsForList = query({
   args: {
     slug: v.string(),
     paginationOpts: paginationOptsValidator,
     filter: v.optional(v.union(v.literal("upcoming"), v.literal("past"))),
-    beforeThisDateTime: v.optional(v.string()),
   },
-  handler: async (
-    ctx,
-    { slug, paginationOpts, filter = "upcoming", beforeThisDateTime },
-  ) => {
+  handler: async (ctx, { slug, paginationOpts, filter = "upcoming" }) => {
     const emptyResults = async () => {
       const emptyPage = await ctx.db
-        .query("eventToLists")
-        .withIndex("by_list", (q) => q.eq("listId", "__missing_list__"))
+        .query("userFeeds")
+        .withIndex("by_feed_hasEnded_startTime", (q) =>
+          q.eq("feedId", "__missing_list__"),
+        )
         .paginate(paginationOpts);
       return {
         ...emptyPage,
@@ -1204,32 +1225,42 @@ export const getEventsForList = query({
       return emptyResults();
     }
 
-    // Paginate list memberships so large lists don't hydrate every event at once.
-    const eventToLists = await ctx.db
-      .query("eventToLists")
-      .withIndex("by_list", (q) => q.eq("listId", list.id))
+    const feedId = listFeedId(list.id);
+    const hasEnded = filter === "past";
+    const order = filter === "upcoming" ? "asc" : "desc";
+
+    // Filter + sort at the index BEFORE paginating so every page is densely
+    // populated with matching events (no sparse pages from post-filtering).
+    // `eventVisibility` is pinned to "public" to mirror the previous
+    // behavior of dropping private events from list detail views.
+    const feedResults = await ctx.db
+      .query("userFeeds")
+      .withIndex("by_feed_visibility_hasEnded_startTime", (q) =>
+        q
+          .eq("feedId", feedId)
+          .eq("eventVisibility", "public")
+          .eq("hasEnded", hasEnded),
+      )
+      .order(order)
       .paginate(paginationOpts);
 
     const events = await Promise.all(
-      eventToLists.page.map((etl) =>
+      feedResults.page.map((entry) =>
         ctx.db
           .query("events")
-          .withIndex("by_custom_id", (q) => q.eq("id", etl.eventId))
+          .withIndex("by_custom_id", (q) => q.eq("id", entry.eventId))
           .unique(),
       ),
     );
 
-    const referenceDateTime = beforeThisDateTime ?? new Date().toISOString();
-    const visibleEvents = events
-      .filter((event): event is NonNullable<typeof event> => event !== null)
-      .filter((event) => event.visibility !== "private")
-      .filter((event) =>
-        filter === "upcoming"
-          ? event.endDateTime >= referenceDateTime
-          : event.endDateTime < referenceDateTime,
-      );
+    const hydratedEvents = events.filter(
+      (event): event is NonNullable<typeof event> => event !== null,
+    );
 
-    const enrichedEvents = await enrichEventsAndFilterNulls(ctx, visibleEvents);
+    const enrichedEvents = await enrichEventsAndFilterNulls(
+      ctx,
+      hydratedEvents,
+    );
 
     // Strip private-unviewable lists from each event.lists before returning.
     // enrichEventsAndFilterNulls hydrates event.lists with ALL lists the
@@ -1249,7 +1280,7 @@ export const getEventsForList = query({
     }));
 
     return {
-      ...eventToLists,
+      ...feedResults,
       page: filteredEvents,
     };
   },

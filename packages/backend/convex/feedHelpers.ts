@@ -902,6 +902,10 @@ export const addEventToContributorLists = internalMutation({
           listId: membership.listId,
         });
 
+        // Maintain the list's own feed (list_${listId}) alongside the
+        // eventToLists insert so getEventsForList stays consistent.
+        await addEventToListFeedInline(ctx, eventId, membership.listId);
+
         // Schedule follower feed fan-out atomically with the insert.
         // Both the insert and this schedule commit in the same transaction,
         // matching the pattern in backfillContributorEventsBatch (lists.ts).
@@ -960,6 +964,169 @@ export const removeUserEventsFromUserFeed = internalMutation({
       }
     }
 
+    return null;
+  },
+});
+
+/**
+ * List detail feed: `list_${listId}`
+ *
+ * Every list has a feed mirroring its eventToLists membership so the list
+ * detail query can paginate directly off `userFeeds.by_feed_visibility_hasEnded_startTime`,
+ * matching how `getPublicUserFeed` reads `user_${userId}`. This avoids the
+ * sparse-page problem where paginating `eventToLists` and filtering after
+ * produced partial pages on large lists with many past or private events.
+ *
+ * Write-path rules:
+ * - Added on `addEventToList` / `addEventToContributorLists` / `backfillContributorEventsBatch`.
+ * - Removed on `removeEventFromList` / `removeContributorEventsBatch` and when a list is deleted.
+ * - Time/visibility/deletion of the underlying event are already fanned out
+ *   across every `userFeeds` entry by `updateEventTimesInAllFeeds`,
+ *   `updateEventVisibilityInFeeds`, and `removeEventFromFeeds`, so no extra
+ *   wiring is needed there.
+ */
+export function listFeedId(listId: string): string {
+  return `list_${listId}`;
+}
+
+export async function addEventToListFeedInline(
+  ctx: MutationCtx,
+  eventId: string,
+  listId: string,
+): Promise<void> {
+  const event = await ctx.db
+    .query("events")
+    .withIndex("by_custom_id", (q) => q.eq("id", eventId))
+    .first();
+
+  if (!event) {
+    return;
+  }
+
+  const eventStartTime = new Date(event.startDateTime).getTime();
+  const eventEndTime = new Date(event.endDateTime).getTime();
+  const currentTime = Date.now();
+
+  await upsertFeedEntry(
+    ctx,
+    listFeedId(listId),
+    eventId,
+    eventStartTime,
+    eventEndTime,
+    currentTime,
+    event.similarityGroupId,
+    event.visibility,
+  );
+}
+
+export async function removeEventFromListFeedInline(
+  ctx: MutationCtx,
+  eventId: string,
+  listId: string,
+): Promise<void> {
+  const feedId = listFeedId(listId);
+  const entry = await ctx.db
+    .query("userFeeds")
+    .withIndex("by_feed_event", (q) =>
+      q.eq("feedId", feedId).eq("eventId", eventId),
+    )
+    .first();
+
+  if (!entry) return;
+
+  const similarityGroupId = entry.similarityGroupId;
+  await userFeedsAggregate.deleteIfExists(ctx, entry);
+  await ctx.db.delete(entry._id);
+
+  if (similarityGroupId) {
+    await ctx.runMutation(internal.feedGroupHelpers.upsertGroupedFeedEntry, {
+      feedId,
+      similarityGroupId,
+    });
+  }
+}
+
+/**
+ * Batch-delete every `list_${listId}` feed entry. Used by the user-deletion
+ * cascade and by the migration's cleanup path. Idempotent and paginated to
+ * stay within Convex transaction limits.
+ */
+export const removeListFeedBatch = internalMutation({
+  args: {
+    listId: v.string(),
+    cursor: v.union(v.string(), v.null()),
+    batchSize: v.number(),
+  },
+  returns: v.object({
+    processed: v.number(),
+    removed: v.number(),
+    nextCursor: v.union(v.string(), v.null()),
+    isDone: v.boolean(),
+  }),
+  handler: async (ctx, { listId, cursor, batchSize }) => {
+    const feedId = listFeedId(listId);
+    const result = await ctx.db
+      .query("userFeeds")
+      .withIndex("by_feed_hasEnded_startTime", (q) => q.eq("feedId", feedId))
+      .paginate({ numItems: batchSize, cursor });
+
+    const affectedGroups = new Set<string>();
+    let removed = 0;
+
+    for (const entry of result.page) {
+      if (entry.similarityGroupId) {
+        affectedGroups.add(entry.similarityGroupId);
+      }
+      await userFeedsAggregate.deleteIfExists(ctx, entry);
+      await ctx.db.delete(entry._id);
+      removed++;
+    }
+
+    for (const similarityGroupId of affectedGroups) {
+      await ctx.runMutation(internal.feedGroupHelpers.upsertGroupedFeedEntry, {
+        feedId,
+        similarityGroupId,
+      });
+    }
+
+    return {
+      processed: result.page.length,
+      removed,
+      nextCursor: result.continueCursor,
+      isDone: result.isDone,
+    };
+  },
+});
+
+/**
+ * Orchestrator for `removeListFeedBatch`. Called by the user-deletion cascade
+ * where we don't want the caller to block waiting for many batches.
+ */
+export const removeListFeedAction = internalAction({
+  args: { listId: v.string() },
+  returns: v.null(),
+  handler: async (ctx, { listId }) => {
+    let cursor: string | null = null;
+    while (true) {
+      const result: {
+        processed: number;
+        removed: number;
+        nextCursor: string | null;
+        isDone: boolean;
+      } = await ctx.runMutation(internal.feedHelpers.removeListFeedBatch, {
+        listId,
+        cursor,
+        batchSize: 100,
+      });
+      if (result.isDone) break;
+      if (result.nextCursor === cursor) {
+        console.error(
+          `Cursor stalled in removeListFeed for listId=${listId} — aborting`,
+        );
+        break;
+      }
+      cursor = result.nextCursor;
+    }
     return null;
   },
 });
