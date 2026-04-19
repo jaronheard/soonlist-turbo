@@ -11,6 +11,11 @@ import {
   query,
 } from "./_generated/server";
 import { listFollowsAggregate } from "./aggregates";
+import {
+  addEventToListFeedInline,
+  listFeedId,
+  removeEventFromListFeedInline,
+} from "./feedHelpers";
 import { enrichEventsAndFilterNulls } from "./model/events";
 import { getViewableListIds } from "./model/lists";
 import { generatePublicId } from "./utils";
@@ -180,6 +185,10 @@ export async function getOrCreatePersonalList(
     slug: `user-${username}`,
     created_at: new Date().toISOString(),
     updatedAt: null,
+    // New lists never need the backfill fallback — the write path
+    // (addEventToList → addEventToListFeedInline) keeps the list feed in
+    // lockstep with eventToLists from day one.
+    feedBackfilledAt: new Date().toISOString(),
   });
 
   return (await ctx.db.get(docId))!;
@@ -1020,6 +1029,9 @@ export const removeContributorEventsBatch = internalMutation({
       if (event?.userId === contributorUserId) {
         await ctx.db.delete(entry._id);
 
+        // Keep the list's own feed (list_${listId}) in sync with eventToLists.
+        await removeEventFromListFeedInline(ctx, entry.eventId, listId);
+
         // Schedule feed cleanup in a separate transaction to reduce bandwidth
         // of this batch mutation — removeEventFromListFollowersFeeds does
         // multiple queries per follower
@@ -1138,6 +1150,11 @@ export const backfillContributorEventsBatch = internalMutation({
           listId,
         });
 
+        // Maintain the list's own feed (list_${listId}) inline in this
+        // batch — addEventToListFeedInline is a single upsert on userFeeds
+        // and stays well within the per-mutation transaction budget.
+        await addEventToListFeedInline(ctx, event.id, listId);
+
         // Schedule feed population in a separate transaction to avoid
         // hitting transaction limits when there are many followers
         await ctx.scheduler.runAfter(
@@ -1162,19 +1179,133 @@ export const backfillContributorEventsBatch = internalMutation({
 });
 
 /**
- * Get events for a list by slug, paginated to stay within Convex limits.
+ * Enrich a page of raw event docs with user / follows / lists data and
+ * strip lists the viewer can't see — shared by both the feed-backed path
+ * and the backfill-window fallback so they return the same shape.
+ */
+async function enrichListEventsForViewer(
+  ctx: QueryCtx,
+  events: Doc<"events">[],
+  viewerId: string | null,
+) {
+  const enrichedEvents = await enrichEventsAndFilterNulls(ctx, events);
+
+  // Strip private-unviewable lists from each event.lists before returning.
+  // enrichEventsAndFilterNulls hydrates event.lists with ALL lists the
+  // event belongs to, including ones this viewer can't see. The client
+  // (SavedByModal) trusts the server's filtering, so we must enforce
+  // visibility here — same contract as queryFeed/queryGroupedFeed in
+  // feeds.ts.
+  const allListsAcrossEvents = enrichedEvents.flatMap((e) => e.lists ?? []);
+  const viewableListIds = await getViewableListIds(
+    ctx,
+    allListsAcrossEvents,
+    viewerId,
+  );
+  return enrichedEvents.map((event) => ({
+    ...event,
+    lists: (event.lists ?? []).filter((l) => viewableListIds.has(l.id)),
+  }));
+}
+
+/**
+ * Continuation cursors emitted by the backfill-window fallback are tagged
+ * with this prefix so the next paginate call routes back to the fallback
+ * path. Without it, page 2 would feed an `eventToLists` cursor into the
+ * `userFeeds` index — Convex would reject it as an invalid cursor.
+ */
+const FALLBACK_CURSOR_PREFIX = "etl:";
+
+function isFallbackCursor(cursor: string | null): cursor is string {
+  return cursor?.startsWith(FALLBACK_CURSOR_PREFIX) ?? false;
+}
+
+/**
+ * Backfill-window fallback: paginate `eventToLists` directly and filter
+ * events in memory. Reproduces the pre-feed behavior — sparse pages and
+ * all — but only fires when `list_${listId}` has zero `userFeeds` entries
+ * for a list that still has membership rows. The migration drains this
+ * branch into the feed; once it completes for a list the dense feed path
+ * takes over.
+ *
+ * Once a request enters this path, every subsequent page must stay on it —
+ * the returned `continueCursor` is wrapped with `FALLBACK_CURSOR_PREFIX`
+ * and the main handler re-routes wrapped cursors back here.
+ */
+async function getEventsForListBackfillFallback(
+  ctx: QueryCtx,
+  listId: string,
+  paginationOpts: { numItems: number; cursor: string | null },
+  filter: "upcoming" | "past",
+  viewerId: string | null,
+) {
+  const eventToLists = await ctx.db
+    .query("eventToLists")
+    .withIndex("by_list", (q) => q.eq("listId", listId))
+    .paginate(paginationOpts);
+
+  const events = await Promise.all(
+    eventToLists.page.map((etl) =>
+      ctx.db
+        .query("events")
+        .withIndex("by_custom_id", (q) => q.eq("id", etl.eventId))
+        .unique(),
+    ),
+  );
+
+  const referenceDateTime = new Date().toISOString();
+  const visibleEvents = events
+    .filter((event): event is NonNullable<typeof event> => event !== null)
+    .filter((event) => event.visibility !== "private")
+    .filter((event) =>
+      filter === "upcoming"
+        ? event.endDateTime >= referenceDateTime
+        : event.endDateTime < referenceDateTime,
+    );
+
+  return {
+    ...eventToLists,
+    // Tag the cursor only when there's more data to fetch; once isDone the
+    // client won't call back, so leave the original (possibly empty) value.
+    continueCursor: eventToLists.isDone
+      ? eventToLists.continueCursor
+      : `${FALLBACK_CURSOR_PREFIX}${eventToLists.continueCursor}`,
+    page: await enrichListEventsForViewer(ctx, visibleEvents, viewerId),
+  };
+}
+
+/**
+ * Get events for a list by slug.
+ *
+ * Paginates the list's dedicated feed (`list_${listId}`) in `userFeeds` so
+ * every page comes back densely filled with matching events — previously we
+ * paginated the `eventToLists` junction and then discarded past/private
+ * events, which produced sparse pages on large lists.
+ *
+ * Write-path wiring that keeps the feed in sync lives in `feedHelpers.ts`
+ * (`addEventToListFeedInline` / `removeEventFromListFeedInline` /
+ * `removeListFeedAction`). Existing `eventToLists` rows are backfilled by
+ * `migrations/backfillListFeeds.ts`; lists not yet reached by the migration
+ * fall back to a legacy scan so the deploy window doesn't show empty lists.
  */
 export const getEventsForList = query({
   args: {
     slug: v.string(),
     paginationOpts: paginationOptsValidator,
+    filter: v.optional(v.union(v.literal("upcoming"), v.literal("past"))),
   },
-  handler: async (ctx, { slug, paginationOpts }) => {
+  handler: async (ctx, { slug, paginationOpts, filter = "upcoming" }) => {
     const emptyResults = async () => {
+      // Pass a null cursor rather than the incoming one: the page is empty
+      // anyway (isDone=true), and a tagged fallback cursor (`etl:...`) or
+      // any stale cursor from a deleted/inaccessible list would otherwise
+      // be rejected by `userFeeds.paginate` as invalid.
       const emptyPage = await ctx.db
-        .query("eventToLists")
-        .withIndex("by_list", (q) => q.eq("listId", "__missing_list__"))
-        .paginate(paginationOpts);
+        .query("userFeeds")
+        .withIndex("by_feed_hasEnded_startTime", (q) =>
+          q.eq("feedId", "__missing_list__"),
+        )
+        .paginate({ numItems: paginationOpts.numItems, cursor: null });
       return {
         ...emptyPage,
         page: [] as EnrichedEvent[],
@@ -1199,47 +1330,78 @@ export const getEventsForList = query({
       return emptyResults();
     }
 
-    // Paginate list memberships so large lists don't hydrate every event at once.
-    const eventToLists = await ctx.db
-      .query("eventToLists")
-      .withIndex("by_list", (q) => q.eq("listId", list.id))
+    // If the previous page came from the backfill fallback, its cursor is
+    // tagged so we stay on the same path — feeding an `eventToLists`
+    // cursor into the `userFeeds` index would fail.
+    if (isFallbackCursor(paginationOpts.cursor)) {
+      return getEventsForListBackfillFallback(
+        ctx,
+        list.id,
+        {
+          numItems: paginationOpts.numItems,
+          cursor: paginationOpts.cursor.slice(FALLBACK_CURSOR_PREFIX.length),
+        },
+        filter,
+        viewerId,
+      );
+    }
+
+    // Backfill-window safety: a list is only known to have its `list_*`
+    // feed fully mirrored from `eventToLists` once `list.feedBackfilledAt`
+    // is populated. New lists set this at creation; pre-existing lists get
+    // it set by `migrations/backfillListFeeds.runBackfillListFeeds`. When
+    // the marker is absent we fall back to the junction scan unconditionally
+    // — the feed may already have some entries (partial migration) but we
+    // can't trust that they're complete, so returning a partial first page
+    // would silently hide unmigrated events.
+    //
+    // Gated on cursor=null because subsequent pages within a fallback run
+    // already route via `isFallbackCursor` above.
+    if (paginationOpts.cursor === null && !list.feedBackfilledAt) {
+      return getEventsForListBackfillFallback(
+        ctx,
+        list.id,
+        paginationOpts,
+        filter,
+        viewerId,
+      );
+    }
+
+    const feedId = listFeedId(list.id);
+    const hasEnded = filter === "past";
+    const order = filter === "upcoming" ? "asc" : "desc";
+
+    // Filter + sort at the index BEFORE paginating so every page is densely
+    // populated with matching events (no sparse pages from post-filtering).
+    // `eventVisibility` is pinned to "public" to mirror the previous
+    // behavior of dropping private events from list detail views.
+    const feedResults = await ctx.db
+      .query("userFeeds")
+      .withIndex("by_feed_visibility_hasEnded_startTime", (q) =>
+        q
+          .eq("feedId", feedId)
+          .eq("eventVisibility", "public")
+          .eq("hasEnded", hasEnded),
+      )
+      .order(order)
       .paginate(paginationOpts);
 
     const events = await Promise.all(
-      eventToLists.page.map((etl) =>
+      feedResults.page.map((entry) =>
         ctx.db
           .query("events")
-          .withIndex("by_custom_id", (q) => q.eq("id", etl.eventId))
+          .withIndex("by_custom_id", (q) => q.eq("id", entry.eventId))
           .unique(),
       ),
     );
 
-    const visibleEvents = events
-      .filter((event): event is NonNullable<typeof event> => event !== null)
-      .filter((event) => event.visibility !== "private");
-
-    const enrichedEvents = await enrichEventsAndFilterNulls(ctx, visibleEvents);
-
-    // Strip private-unviewable lists from each event.lists before returning.
-    // enrichEventsAndFilterNulls hydrates event.lists with ALL lists the
-    // event belongs to, including ones this viewer can't see. The client
-    // (SavedByModal) trusts the server's filtering, so we must enforce
-    // visibility here — same contract as queryFeed/queryGroupedFeed in
-    // feeds.ts.
-    const allListsAcrossEvents = enrichedEvents.flatMap((e) => e.lists ?? []);
-    const viewableListIds = await getViewableListIds(
-      ctx,
-      allListsAcrossEvents,
-      viewerId,
+    const hydratedEvents = events.filter(
+      (event): event is NonNullable<typeof event> => event !== null,
     );
-    const filteredEvents = enrichedEvents.map((event) => ({
-      ...event,
-      lists: (event.lists ?? []).filter((l) => viewableListIds.has(l.id)),
-    }));
 
     return {
-      ...eventToLists,
-      page: filteredEvents,
+      ...feedResults,
+      page: await enrichListEventsForViewer(ctx, hydratedEvents, viewerId),
     };
   },
 });

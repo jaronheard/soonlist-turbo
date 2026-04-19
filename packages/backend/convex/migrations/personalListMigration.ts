@@ -2,6 +2,7 @@ import { v } from "convex/values";
 
 import { internal } from "../_generated/api";
 import { internalAction, internalMutation } from "../_generated/server";
+import { addEventToListFeedInline } from "../feedHelpers";
 import { getOrCreatePersonalList } from "../lists";
 
 const EVENTS_PER_BATCH = 100;
@@ -100,6 +101,12 @@ export const backfillUserEventsBatch = internalMutation({
           eventId: event.id,
           listId,
         });
+        // Keep the list's `list_${listId}` feed in lockstep with the
+        // junction. `getOrCreatePersonalList` stamps `feedBackfilledAt`
+        // at creation, so `getEventsForList` trusts the feed for these
+        // lists — skipping this call would leave migrated personal lists
+        // with an empty feed and return empty pages to users.
+        await addEventToListFeedInline(ctx, event.id, listId);
         linked++;
       }
     }

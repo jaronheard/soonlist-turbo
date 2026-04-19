@@ -15,6 +15,10 @@ import { List as ListIcon, ShareIcon } from "~/components/icons";
 import { SubscribeButton } from "~/components/SubscribeButton";
 import UserEventsList from "~/components/UserEventsList";
 import { useStablePaginatedQuery } from "~/hooks/useStableQuery";
+import {
+  useLoadMoreHandler,
+  useUpcomingEventsFilter,
+} from "~/hooks/useUpcomingFeed";
 import { logError } from "~/utils/errorLogging";
 import { toast } from "~/utils/feedback";
 
@@ -36,9 +40,13 @@ export default function ListDetailScreen() {
     loadMore,
   } = useStablePaginatedQuery(
     api.lists.getEventsForList,
-    normalizedSlug ? { slug: normalizedSlug } : "skip",
+    normalizedSlug
+      ? { slug: normalizedSlug, filter: "upcoming" as const }
+      : "skip",
     { initialNumItems: 50 },
   );
+
+  const upcomingEvents = useUpcomingEventsFilter(listEvents);
 
   const followListMutation = useMutation(
     api.lists.followList,
@@ -115,11 +123,7 @@ export default function ListDetailScreen() {
     }
   }, [listData, normalizedSlug]);
 
-  const handleLoadMore = useCallback(() => {
-    if (status === "CanLoadMore") {
-      loadMore(25);
-    }
-  }, [status, loadMore]);
+  const handleLoadMore = useLoadMoreHandler(status, loadMore);
 
   const ListHeader = useCallback(
     () => (
@@ -193,7 +197,7 @@ export default function ListDetailScreen() {
     return null;
   }
 
-  const events = listEvents.map((event) => ({
+  const events = upcomingEvents.map((event) => ({
     event,
     similarEvents: [],
     similarityGroupId: event.id,

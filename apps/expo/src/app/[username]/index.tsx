@@ -21,7 +21,10 @@ import UserEventsList from "~/components/UserEventsList";
 import { UserProfileFlair } from "~/components/UserProfileFlair";
 import { useEventActions } from "~/hooks/useEventActions";
 import { useStablePaginatedQuery } from "~/hooks/useStableQuery";
-import { useStableTimestamp } from "~/store";
+import {
+  useLoadMoreHandler,
+  useUpcomingEventsFilter,
+} from "~/hooks/useUpcomingFeed";
 import { logError } from "~/utils/errorLogging";
 import { toast } from "~/utils/feedback";
 
@@ -91,7 +94,6 @@ function ProfileSaveShareActionButton({
 
 export default function UserProfilePage() {
   const { username } = useLocalSearchParams<{ username: string }>();
-  const stableTimestamp = useStableTimestamp();
   const router = useRouter();
   const { isAuthenticated } = useConvexAuth();
 
@@ -157,19 +159,9 @@ export default function UserProfilePage() {
     { initialNumItems: 50 },
   );
 
-  const filteredEvents = useMemo(() => {
-    const currentTime = new Date(stableTimestamp).getTime();
-    return events.filter((event) => {
-      const eventEndTime = new Date(event.endDateTime).getTime();
-      return eventEndTime >= currentTime;
-    });
-  }, [events, stableTimestamp]);
+  const filteredEvents = useUpcomingEventsFilter(events);
 
-  const handleLoadMore = () => {
-    if (status === "CanLoadMore") {
-      loadMore(25);
-    }
-  };
+  const handleLoadMore = useLoadMoreHandler(status, loadMore);
 
   const followedLists = useQuery(
     api.lists.getFollowedLists,
