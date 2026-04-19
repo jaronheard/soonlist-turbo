@@ -85,27 +85,32 @@ export default function SharePromptSheet() {
         </Text>
       </View>
 
-      <View style={{ paddingHorizontal: 16, paddingBottom: 24, gap: 12 }}>
+      <View style={{ paddingHorizontal: 20, paddingBottom: 16, gap: 4 }}>
         <Pressable
           accessibilityRole="button"
           accessibilityLabel="Share your Soonlist"
           onPress={handleShare}
-          className="rounded-full bg-interactive-1"
+          className="items-center rounded-full bg-interactive-1"
           style={({ pressed }) => ({
-            paddingVertical: 16,
+            height: 52,
+            justifyContent: "center",
             opacity: pressed ? 0.85 : 1,
+            shadowColor: "#5A32FB",
+            shadowOffset: { width: 0, height: 4 },
+            shadowOpacity: 0.2,
+            shadowRadius: 8,
+            elevation: 4,
           })}
         >
-          <Text className="text-center text-base font-semibold text-white">
-            Share
-          </Text>
+          <Text className="text-base font-semibold text-white">Share</Text>
         </Pressable>
         <Pressable
           accessibilityRole="button"
           accessibilityLabel="Not now"
           onPress={handleNotNow}
           style={({ pressed }) => ({
-            paddingVertical: 12,
+            height: 44,
+            justifyContent: "center",
             opacity: pressed ? 0.6 : 1,
           })}
         >
