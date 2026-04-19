@@ -156,20 +156,37 @@ export default async function OgImage({ params }: Props) {
       : null,
   ].filter((f): f is NonNullable<typeof f> => f !== null);
 
-  // Outer cards translate far enough (±150) to remain visible under the
-  // middle card's 224px width; tilts fan outward so the stack reads as
-  // a scattered hand, not a centered pile.
-  const cardLayouts: {
-    width: number;
-    height: number;
-    rotate: string;
-    translateX: number;
-    zIndex: number;
-  }[] = [
-    { width: 196, height: 348, rotate: "-14deg", translateX: -150, zIndex: 1 },
-    { width: 224, height: 398, rotate: "6deg", translateX: 0, zIndex: 3 },
-    { width: 196, height: 348, rotate: "-10deg", translateX: 150, zIndex: 2 },
-  ];
+  // Layout variants per count so 1- and 2-event lists stay centered and
+  // symmetric; only the 3-event variant fans out. The 3-card layout picks
+  // translateX (±150) so outer cards peek out past the middle card's 224px
+  // width; tilts fan outward so the stack reads as a scattered hand.
+  const cardLayoutsByCount: Record<
+    1 | 2 | 3,
+    {
+      width: number;
+      height: number;
+      rotate: string;
+      translateX: number;
+      zIndex: number;
+    }[]
+  > = {
+    1: [
+      { width: 240, height: 426, rotate: "4deg", translateX: 0, zIndex: 1 },
+    ],
+    2: [
+      { width: 216, height: 384, rotate: "-8deg", translateX: -90, zIndex: 1 },
+      { width: 216, height: 384, rotate: "8deg", translateX: 90, zIndex: 2 },
+    ],
+    3: [
+      { width: 196, height: 348, rotate: "-14deg", translateX: -150, zIndex: 1 },
+      { width: 224, height: 398, rotate: "6deg", translateX: 0, zIndex: 3 },
+      { width: 196, height: 348, rotate: "-10deg", translateX: 150, zIndex: 2 },
+    ],
+  };
+  const cardLayouts =
+    cardLayoutsByCount[
+      Math.min(upcomingEvents.length, 3) as 1 | 2 | 3
+    ];
   const eventPillLabel = `${list.eventCount} ${list.eventCount === 1 ? "EVENT" : "EVENTS"}`;
 
   return new ImageResponse(
