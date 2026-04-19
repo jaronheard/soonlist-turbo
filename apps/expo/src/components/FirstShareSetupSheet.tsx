@@ -190,7 +190,7 @@ export function FirstShareSetupSheet({
           }}
         >
           <Text className="mb-1 text-center text-2xl font-bold text-neutral-1">
-            Share your Soon List
+            Share your Soonlist
           </Text>
           <Text className="mb-8 text-center text-sm text-neutral-2">
             Make it yours before sending.
