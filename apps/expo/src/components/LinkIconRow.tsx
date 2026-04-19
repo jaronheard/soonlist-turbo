@@ -1,5 +1,5 @@
-import React, { useState } from "react";
-import { Pressable, TextInput, View } from "react-native";
+import React from "react";
+import { TextInput, View } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 
 type LinkField =
@@ -22,7 +22,7 @@ interface LinkIconRowProps {
 
 type IoniconName = React.ComponentProps<typeof Ionicons>["name"];
 
-const ICONS: {
+const FIELDS: {
   key: LinkField;
   name: IoniconName;
   placeholder: string;
@@ -32,90 +32,76 @@ const ICONS: {
   {
     key: "publicInsta",
     name: "logo-instagram",
-    placeholder: "@handle",
+    placeholder: "Instagram handle",
     label: "Instagram",
     keyboard: "default",
   },
   {
     key: "publicWebsite",
     name: "globe-outline",
-    placeholder: "https://…",
+    placeholder: "Website URL",
     label: "Website",
     keyboard: "url",
   },
   {
     key: "publicEmail",
     name: "mail-outline",
-    placeholder: "you@example.com",
+    placeholder: "Email address",
     label: "Email",
     keyboard: "email-address",
   },
   {
     key: "publicPhone",
     name: "call-outline",
-    placeholder: "+1 555 123 4567",
+    placeholder: "Phone number",
     label: "Phone",
     keyboard: "phone-pad",
   },
 ];
 
 export function LinkIconRow({ values, onChange }: LinkIconRowProps) {
-  const [active, setActive] = useState<LinkField | null>(null);
-
   const setField = (key: LinkField, value: string) => {
     onChange({ ...values, [key]: value.length === 0 ? null : value });
   };
 
-  const activeEntry = ICONS.find((i) => i.key === active);
-
   return (
-    <View>
-      <View className="flex-row gap-3">
-        {ICONS.map(({ key, name, label }) => {
-          const filled = Boolean(values[key]);
-          const isActive = active === key;
-          return (
-            <Pressable
-              key={key}
-              onPress={() => setActive(isActive ? null : key)}
-              accessibilityLabel={`Edit ${label}`}
+    <View style={{ gap: 8 }}>
+      {FIELDS.map(({ key, name, placeholder, keyboard, label }) => {
+        const value = values[key] ?? "";
+        const filled = Boolean(value);
+        return (
+          <View key={key} className="flex-row items-center" style={{ gap: 12 }}>
+            <View
               className={`items-center justify-center rounded-full ${
-                filled || isActive ? "bg-interactive-2" : "bg-interactive-3"
+                filled ? "bg-interactive-2" : "bg-interactive-3"
               }`}
-              style={{ height: 48, width: 48 }}
+              style={{ height: 40, width: 40 }}
             >
               <Ionicons
                 name={name}
-                size={22}
-                color={filled || isActive ? "#5A32FB" : "#627496"}
+                size={20}
+                color={filled ? "#5A32FB" : "#627496"}
               />
-            </Pressable>
-          );
-        })}
-      </View>
-
-      {activeEntry ? (
-        <TextInput
-          key={activeEntry.key}
-          autoFocus
-          className="mt-3 rounded-xl bg-interactive-3 text-neutral-1"
-          style={{
-            paddingVertical: 14,
-            paddingHorizontal: 16,
-            fontSize: 16,
-            lineHeight: 20,
-          }}
-          placeholder={activeEntry.placeholder}
-          placeholderTextColor="rgb(98, 116, 150)"
-          keyboardType={activeEntry.keyboard}
-          autoCapitalize="none"
-          value={values[activeEntry.key] ?? ""}
-          onChangeText={(text) => setField(activeEntry.key, text)}
-          onBlur={() => setActive(null)}
-          returnKeyType="done"
-          onSubmitEditing={() => setActive(null)}
-        />
-      ) : null}
+            </View>
+            <TextInput
+              className="flex-1 rounded-xl bg-interactive-3 text-neutral-1"
+              style={{
+                paddingVertical: 14,
+                paddingHorizontal: 16,
+                fontSize: 16,
+                lineHeight: 20,
+              }}
+              placeholder={placeholder}
+              placeholderTextColor="rgb(98, 116, 150)"
+              keyboardType={keyboard}
+              autoCapitalize="none"
+              value={value}
+              onChangeText={(text) => setField(key, text)}
+              accessibilityLabel={label}
+            />
+          </View>
+        );
+      })}
     </View>
   );
 }
