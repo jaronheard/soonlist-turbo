@@ -13,6 +13,7 @@ import { Image as ExpoImage } from "expo-image";
 
 import type { Event } from "~/components/UserEventsList";
 import { PlusIcon } from "~/components/icons";
+import { SaveSticker } from "~/components/onboarding-stickers";
 import { QuestionContainer } from "~/components/QuestionContainer";
 import { UserEventListItem } from "~/components/UserEventsList";
 import { useOnboarding } from "~/hooks/useOnboarding";
@@ -205,13 +206,16 @@ export default function TryItScreen() {
             entering={FadeIn.duration(500)}
             className="-mx-2 flex-1 justify-center"
           >
-            <UserEventListItem
-              event={demoEvent}
-              showCreator="never"
-              isSaved={false}
-              demoMode={true}
-              index={0}
-            />
+            <View>
+              <UserEventListItem
+                event={demoEvent}
+                showCreator="never"
+                isSaved={false}
+                demoMode={true}
+                index={0}
+              />
+              <SaveSticker style={{ top: -80, right: -4 }} />
+            </View>
           </Animated.View>
         ) : (
           <View className="flex-1 justify-center">

@@ -1,14 +1,18 @@
 import type { ImageSource } from "expo-image";
-import React, { useMemo } from "react";
+import React, { useMemo, useState } from "react";
 import { Pressable, Text, View } from "react-native";
 import { SymbolView } from "expo-symbols";
 
 import type { EventWithSimilarity } from "~/utils/similarEvents";
+import {
+  EventDetailSticker,
+  SubscribeSticker,
+} from "~/components/onboarding-stickers";
 import { QuestionContainer } from "~/components/QuestionContainer";
 import UserEventsList from "~/components/UserEventsList";
 import { useOnboarding } from "~/hooks/useOnboarding";
 import { usePendingFollowUsername } from "~/store";
-import { hapticLight } from "~/utils/feedback";
+import { hapticLight, hapticMedium } from "~/utils/feedback";
 
 // eslint-disable-next-line @typescript-eslint/no-require-imports, @typescript-eslint/no-unsafe-assignment
 const lloydMallCrawlImage: ImageSource = require("../../../assets/demo-lloyd-mall-crawl.webp");
@@ -16,6 +20,10 @@ const lloydMallCrawlImage: ImageSource = require("../../../assets/demo-lloyd-mal
 const jamieXxImage: ImageSource = require("../../../assets/demo-jamie-xx.webp");
 // eslint-disable-next-line @typescript-eslint/no-require-imports, @typescript-eslint/no-unsafe-assignment
 const sharpieSmileImage: ImageSource = require("../../../assets/demo-sharpie-smile.webp");
+
+// Demo curator handle used on screen 02's fake URL bar. Chosen to match
+// the Portland-area demo events (Lloyd Center, Pioneer Courthouse Square).
+const DEMO_CURATOR_HANDLE = "soonlist.com/portland";
 
 function makeDemoEvent(
   id: string,
@@ -123,21 +131,35 @@ function getDemoEvents(): EventWithSimilarity[] {
   ];
 }
 
+type Phase = "meet" | "subscribed";
+
 export default function YourListScreen() {
   const pendingFollowUsername = usePendingFollowUsername();
   const { saveStep } = useOnboarding();
   const totalSteps = pendingFollowUsername ? 7 : 6;
   const groupedEvents = useMemo(() => getDemoEvents(), []);
+  const [phase, setPhase] = useState<Phase>("meet");
 
   const handleContinue = () => {
     void hapticLight();
     saveStep("yourList", {}, "/(onboarding)/onboarding/03-notifications");
   };
 
+  const handleSubscribe = () => {
+    void hapticMedium();
+    setPhase("subscribed");
+  };
+
+  const isSubscribed = phase === "subscribed";
+
   return (
     <QuestionContainer
-      question="Meet your Soonlist"
-      subtitle="All in one place. Share with just a link."
+      question={isSubscribed ? "Subscribed ✓" : "Meet a Soonlist"}
+      subtitle={
+        isSubscribed
+          ? "Tap any event to see details."
+          : "Subscribe to follow a curator's events."
+      }
       currentStep={2}
       totalSteps={totalSteps}
     >
@@ -149,18 +171,55 @@ export default function YourListScreen() {
             borderColor: "#FFFFFF",
           }}
         >
-          {/* Share hint */}
+          {/* URL bar */}
           <View className="flex-row items-center justify-between bg-interactive-2 px-4 py-2">
             <Text className="text-sm font-semibold text-interactive-1">
-              soonlist.com/you
+              {DEMO_CURATOR_HANDLE}
             </Text>
-            <SymbolView
-              name="square.and.arrow.up"
-              size={16}
-              tintColor="#5A32FB"
-            />
+            {isSubscribed ? (
+              <View className="rounded-full bg-interactive-1 px-2 py-0.5">
+                <Text className="text-[10px] font-semibold text-white">
+                  ✓ subscribed
+                </Text>
+              </View>
+            ) : (
+              <SymbolView
+                name="square.and.arrow.up"
+                size={16}
+                tintColor="#5A32FB"
+              />
+            )}
           </View>
-          <View style={{ marginLeft: -6, marginRight: 6 }} className="flex-1">
+
+          {/* Demo Subscribe button / confirmation */}
+          <View className="px-4 py-3">
+            {isSubscribed ? (
+              <View className="rounded-full border border-interactive-1/30 bg-white/70 py-2.5">
+                <Text className="text-center text-base font-semibold text-interactive-1">
+                  Subscribed ✓
+                </Text>
+              </View>
+            ) : (
+              <View style={{ position: "relative" }}>
+                <Pressable
+                  onPress={handleSubscribe}
+                  className="rounded-full bg-interactive-1 py-2.5 active:scale-[0.98]"
+                  accessibilityRole="button"
+                  accessibilityLabel="Subscribe"
+                >
+                  <Text className="text-center text-base font-semibold text-white">
+                    + Subscribe
+                  </Text>
+                </Pressable>
+                <SubscribeSticker style={{ top: -54, right: 0 }} />
+              </View>
+            )}
+          </View>
+
+          <View
+            style={{ marginLeft: -6, marginRight: 6, position: "relative" }}
+            className="flex-1"
+          >
             <UserEventsList
               groupedEvents={groupedEvents}
               demoMode={true}
@@ -169,6 +228,9 @@ export default function YourListScreen() {
               onEndReached={() => {}}
               isFetchingNextPage={false}
             />
+            {isSubscribed && (
+              <EventDetailSticker style={{ top: -24, left: 16 }} />
+            )}
           </View>
         </View>
 
