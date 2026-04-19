@@ -1296,17 +1296,16 @@ export const backfillContributorEvents = internalAction({
   },
 });
 
-// Filters out relative paths, bad protocols, and unparseable garbage before
-// URLs reach @vercel/og. satori fails the whole render on a bad image fetch,
-// so we'd rather skip the screenshot than crash the OG route.
-function isLikelyHttpUrl(value: unknown): value is string {
-  if (typeof value !== "string" || value.length === 0) return false;
-  try {
-    const u = new URL(value);
-    return u.protocol === "http:" || u.protocol === "https:";
-  } catch {
-    return false;
-  }
+// Only return images hosted on our Bytescale account. @vercel/og (satori)
+// only decodes PNG/JPEG, and the OG route relies on Bytescale's `/image/`
+// processor with `f=jpg` to transcode WebP origin bytes — a trick that only
+// works for URLs on our account. External WebP URLs (scraped from other
+// CDNs) would fail satori's image fetch and crash the entire render.
+const OUR_BYTESCALE_URL_PREFIX = "https://upcdn.io/12a1yek/";
+function isRenderableEventImage(value: unknown): value is string {
+  return (
+    typeof value === "string" && value.startsWith(OUR_BYTESCALE_URL_PREFIX)
+  );
 }
 
 /**
@@ -1411,7 +1410,7 @@ export const getOgData = query({
       .sort((a, b) => a.startDateTime.localeCompare(b.startDateTime));
 
     const upcomingEvents = upcomingPublic
-      .filter((e) => isLikelyHttpUrl(e.image))
+      .filter((e) => isRenderableEventImage(e.image))
       .slice(0, 3)
       .map((e) => ({ image: e.image! }));
 
