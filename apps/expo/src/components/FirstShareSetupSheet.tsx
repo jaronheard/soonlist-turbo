@@ -1,0 +1,277 @@
+import React, { useCallback, useEffect, useRef, useState } from "react";
+import {
+  ActivityIndicator,
+  Image,
+  KeyboardAvoidingView,
+  Modal,
+  Platform,
+  Pressable,
+  ScrollView,
+  Text,
+  TextInput,
+  View,
+} from "react-native";
+import * as ImagePicker from "expo-image-picker";
+import { useUser } from "@clerk/clerk-expo";
+import { useMutation, useQuery } from "convex/react";
+
+import { api } from "@soonlist/backend/convex/_generated/api";
+
+import type { LinkValues } from "./LinkIconRow";
+import { LinkIconRow } from "./LinkIconRow";
+
+interface FirstShareSetupSheetProps {
+  visible: boolean;
+  onClose: () => void;
+  /** Called after a successful Share or Share now — opens the native share sheet. */
+  onComplete: () => Promise<void> | void;
+}
+
+export function FirstShareSetupSheet({
+  visible,
+  onClose,
+  onComplete,
+}: FirstShareSetupSheetProps) {
+  const { user } = useUser();
+  const currentUser = useQuery(api.users.getCurrentUser);
+  const completeSetup = useMutation(api.users.completeFirstShareSetup);
+  const markSharedWithoutEdits = useMutation(api.users.markSharedWithoutEdits);
+
+  const defaultListName = currentUser?.publicListName
+    ? currentUser.publicListName
+    : `${currentUser?.displayName ?? user?.firstName ?? "My"}'s Soonlist`;
+
+  const [listName, setListName] = useState(defaultListName);
+  const [displayName, setDisplayName] = useState(
+    currentUser?.displayName ?? "",
+  );
+  const [links, setLinks] = useState<LinkValues>({
+    publicInsta: currentUser?.publicInsta ?? null,
+    publicWebsite: currentUser?.publicWebsite ?? null,
+    publicEmail: currentUser?.publicEmail ?? null,
+    publicPhone: currentUser?.publicPhone ?? null,
+  });
+  const [avatar, setAvatar] = useState<string | null>(
+    currentUser?.userImage ?? null,
+  );
+  const [submitting, setSubmitting] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [isDirty, setIsDirty] = useState(false);
+
+  // Re-seed defaults when the sheet opens with fresh currentUser data.
+  // We keep latest values in a ref so we re-seed only on the open transition
+  // (when `visible` flips to true), not on every Convex query refresh.
+  const seedRef = useRef({ defaultListName, currentUser });
+  seedRef.current = { defaultListName, currentUser };
+  useEffect(() => {
+    if (!visible) return;
+    const { defaultListName: seedListName, currentUser: seedUser } =
+      seedRef.current;
+    setListName(seedListName);
+    setDisplayName(seedUser?.displayName ?? "");
+    setLinks({
+      publicInsta: seedUser?.publicInsta ?? null,
+      publicWebsite: seedUser?.publicWebsite ?? null,
+      publicEmail: seedUser?.publicEmail ?? null,
+      publicPhone: seedUser?.publicPhone ?? null,
+    });
+    setAvatar(seedUser?.userImage ?? null);
+    setError(null);
+    setIsDirty(false);
+  }, [visible]);
+
+  const markDirty = useCallback(() => setIsDirty(true), []);
+
+  const pickAvatar = useCallback(async () => {
+    const result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ImagePicker.MediaTypeOptions.Images,
+      allowsEditing: true,
+      aspect: [1, 1],
+      quality: 0.1,
+      base64: true,
+    });
+    if (result.canceled || !result.assets[0]?.base64) return;
+    const base64 = `data:image/jpeg;base64,${result.assets[0].base64}`;
+    try {
+      await user?.setProfileImage({ file: base64 });
+      setAvatar(result.assets[0].uri);
+      markDirty();
+    } catch {
+      setError("Couldn't update photo. Try again.");
+    }
+  }, [user, markDirty]);
+
+  const userId = currentUser?.id;
+
+  const handleShare = useCallback(async () => {
+    if (!userId) return;
+    setSubmitting(true);
+    setError(null);
+    try {
+      await completeSetup({
+        userId,
+        publicListName: listName,
+        displayName,
+        publicInsta: links.publicInsta ?? null,
+        publicWebsite: links.publicWebsite ?? null,
+        publicEmail: links.publicEmail ?? null,
+        publicPhone: links.publicPhone ?? null,
+      });
+      await onComplete();
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Something went wrong");
+    } finally {
+      setSubmitting(false);
+    }
+  }, [userId, listName, displayName, links, completeSetup, onComplete]);
+
+  const handleShareNow = useCallback(async () => {
+    if (!userId) return;
+    setSubmitting(true);
+    setError(null);
+    try {
+      if (isDirty) {
+        // "Share now" with edits keeps the edits — same as Share.
+        await completeSetup({
+          userId,
+          publicListName: listName,
+          displayName,
+          publicInsta: links.publicInsta ?? null,
+          publicWebsite: links.publicWebsite ?? null,
+          publicEmail: links.publicEmail ?? null,
+          publicPhone: links.publicPhone ?? null,
+        });
+      } else {
+        await markSharedWithoutEdits({ userId });
+      }
+      await onComplete();
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Something went wrong");
+    } finally {
+      setSubmitting(false);
+    }
+  }, [
+    userId,
+    isDirty,
+    listName,
+    displayName,
+    links,
+    completeSetup,
+    markSharedWithoutEdits,
+    onComplete,
+  ]);
+
+  return (
+    <Modal
+      visible={visible}
+      transparent
+      animationType="slide"
+      onRequestClose={onClose}
+    >
+      <KeyboardAvoidingView
+        behavior={Platform.OS === "ios" ? "padding" : undefined}
+        className="flex-1 justify-end bg-black/50"
+      >
+        <View className="rounded-t-2xl bg-white p-5">
+          <ScrollView keyboardShouldPersistTaps="handled">
+            <Text className="mb-4 text-xl font-semibold">
+              Share your Soon List
+            </Text>
+
+            <View className="mb-4">
+              <Text className="mb-1 text-xs uppercase text-neutral-500">
+                List name
+              </Text>
+              <TextInput
+                className="rounded-md border border-neutral-300 px-3 py-2 text-base"
+                value={listName}
+                onChangeText={(t) => {
+                  setListName(t);
+                  markDirty();
+                }}
+                maxLength={80}
+              />
+            </View>
+
+            <View className="mb-4 border-t border-neutral-200 pt-4">
+              <Text className="mb-2 text-xs uppercase text-neutral-500">
+                Your profile
+              </Text>
+              <View className="flex-row items-center gap-3">
+                <Pressable
+                  onPress={pickAvatar}
+                  className="h-14 w-14 items-center justify-center overflow-hidden rounded-full bg-neutral-200"
+                  accessibilityLabel="Change photo"
+                >
+                  {avatar ? (
+                    <Image source={{ uri: avatar }} className="h-14 w-14" />
+                  ) : (
+                    <Text className="text-xs text-neutral-500">Photo</Text>
+                  )}
+                </Pressable>
+                <TextInput
+                  className="flex-1 rounded-md border border-neutral-300 px-3 py-2 text-base"
+                  value={displayName}
+                  onChangeText={(t) => {
+                    setDisplayName(t);
+                    markDirty();
+                  }}
+                  placeholder="Your name"
+                  maxLength={50}
+                />
+              </View>
+            </View>
+
+            <View className="mb-4 border-t border-neutral-200 pt-4">
+              <Text className="mb-2 text-xs uppercase text-neutral-500">
+                Add links (optional)
+              </Text>
+              <LinkIconRow
+                values={links}
+                onChange={(next) => {
+                  setLinks(next);
+                  markDirty();
+                }}
+              />
+            </View>
+
+            {error ? (
+              <Text className="mb-2 text-sm text-red-600">{error}</Text>
+            ) : null}
+
+            <Pressable
+              disabled={submitting}
+              onPress={() => void handleShare()}
+              className="mb-2 items-center rounded-md bg-interactive-1 py-3"
+              style={{ opacity: submitting ? 0.5 : 1 }}
+            >
+              {submitting ? (
+                <ActivityIndicator color="#fff" />
+              ) : (
+                <Text className="font-semibold text-white">Share</Text>
+              )}
+            </Pressable>
+
+            <Pressable
+              disabled={submitting}
+              onPress={() => void handleShareNow()}
+              className="items-center py-2"
+            >
+              <Text className="text-sm text-neutral-500">
+                Share now without editing
+              </Text>
+            </Pressable>
+
+            <Pressable
+              disabled={submitting}
+              onPress={onClose}
+              className="items-center py-2"
+            >
+              <Text className="text-sm text-neutral-400">Cancel</Text>
+            </Pressable>
+          </ScrollView>
+        </View>
+      </KeyboardAvoidingView>
+    </Modal>
+  );
+}
