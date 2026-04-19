@@ -1492,16 +1492,6 @@ export const bulkUpdateEventVisibilityBatch = internalMutation({
         );
       }
 
-      // Sync eventVisibility on the persistent list_${listId} feed entries
-      // that removeEventFromFeeds preserves; without this their index value
-      // stays stale and getEventsForList returns the wrong set after a
-      // bulk toggle.
-      await ctx.scheduler.runAfter(
-        0,
-        internal.feedHelpers.updateEventVisibilityInFeeds,
-        { eventId: event.id, visibility },
-      );
-
       updated++;
     }
 

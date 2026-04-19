@@ -1205,12 +1205,28 @@ async function enrichListEventsForViewer(
 }
 
 /**
+ * Continuation cursors emitted by the backfill-window fallback are tagged
+ * with this prefix so the next paginate call routes back to the fallback
+ * path. Without it, page 2 would feed an `eventToLists` cursor into the
+ * `userFeeds` index — Convex would reject it as an invalid cursor.
+ */
+const FALLBACK_CURSOR_PREFIX = "etl:";
+
+function isFallbackCursor(cursor: string | null): cursor is string {
+  return cursor?.startsWith(FALLBACK_CURSOR_PREFIX) ?? false;
+}
+
+/**
  * Backfill-window fallback: paginate `eventToLists` directly and filter
  * events in memory. Reproduces the pre-feed behavior — sparse pages and
  * all — but only fires when `list_${listId}` has zero `userFeeds` entries
  * for a list that still has membership rows. The migration drains this
  * branch into the feed; once it completes for a list the dense feed path
  * takes over.
+ *
+ * Once a request enters this path, every subsequent page must stay on it —
+ * the returned `continueCursor` is wrapped with `FALLBACK_CURSOR_PREFIX`
+ * and the main handler re-routes wrapped cursors back here.
  */
 async function getEventsForListBackfillFallback(
   ctx: QueryCtx,
@@ -1245,6 +1261,11 @@ async function getEventsForListBackfillFallback(
 
   return {
     ...eventToLists,
+    // Tag the cursor only when there's more data to fetch; once isDone the
+    // client won't call back, so leave the original (possibly empty) value.
+    continueCursor: eventToLists.isDone
+      ? eventToLists.continueCursor
+      : `${FALLBACK_CURSOR_PREFIX}${eventToLists.continueCursor}`,
     page: await enrichListEventsForViewer(ctx, visibleEvents, viewerId),
   };
 }
@@ -1299,6 +1320,22 @@ export const getEventsForList = query({
     const accessResult = await checkListAccess(ctx, list.id, viewerId);
     if (accessResult.status !== "ok") {
       return emptyResults();
+    }
+
+    // If the previous page came from the backfill fallback, its cursor is
+    // tagged so we stay on the same path — feeding an `eventToLists`
+    // cursor into the `userFeeds` index would fail.
+    if (isFallbackCursor(paginationOpts.cursor)) {
+      return getEventsForListBackfillFallback(
+        ctx,
+        list.id,
+        {
+          numItems: paginationOpts.numItems,
+          cursor: paginationOpts.cursor.slice(FALLBACK_CURSOR_PREFIX.length),
+        },
+        filter,
+        viewerId,
+      );
     }
 
     const feedId = listFeedId(list.id);
