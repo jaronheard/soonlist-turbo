@@ -42,10 +42,9 @@ import {
   MapPinned,
   MoreVertical,
   ShareIcon,
-  User,
 } from "~/components/icons";
 import LoadingSpinner from "~/components/LoadingSpinner";
-import { UserProfileFlair } from "~/components/UserProfileFlair";
+import { UserAvatar } from "~/components/UserAvatar";
 import { useEventActions, useEventSaveActions } from "~/hooks/useEventActions";
 import { useRevenueCat } from "~/providers/RevenueCatProvider";
 import {
@@ -467,23 +466,16 @@ function EventDetail({ id }: { id: string }) {
                       className="-my-2 flex-row items-center gap-2 py-2"
                       hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
                     >
-                      <UserProfileFlair
-                        username={event.user?.username || ""}
-                        size="xs"
-                      >
-                        {event.user?.userImage ? (
-                          <ExpoImage
-                            source={{ uri: event.user.userImage }}
-                            style={{ width: 20, height: 20, borderRadius: 10 }}
-                            contentFit="cover"
-                            contentPosition="center"
-                            cachePolicy="disk"
-                            transition={100}
-                          />
-                        ) : (
-                          <User size={20} color="#627496" />
-                        )}
-                      </UserProfileFlair>
+                      {event.user ? (
+                        <UserAvatar
+                          user={{
+                            id: event.user.id,
+                            username: event.user.username,
+                            userImage: event.user.userImage,
+                          }}
+                          size={20}
+                        />
+                      ) : null}
                       <Text className="text-sm text-neutral-2">
                         {event.user?.displayName ||
                           event.user?.username ||

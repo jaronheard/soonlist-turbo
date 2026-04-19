@@ -22,6 +22,7 @@ import type { Doc } from "@soonlist/backend/convex/_generated/dataModel";
 import type { AddToCalendarButtonPropsRestricted } from "@soonlist/cal/types";
 import { getTimezoneAbbreviation } from "@soonlist/cal";
 
+import type { UserForDisplay } from "~/types/user";
 import type { EventWithSimilarity } from "~/utils/similarEvents";
 import {
   CalendarPlus,
@@ -30,9 +31,9 @@ import {
   MoreVertical,
   PenSquare,
   ShareIcon,
-  User,
 } from "~/components/icons";
 import { SavedByModal } from "~/components/SavedByModal";
+import { UserAvatar } from "~/components/UserAvatar";
 import { useAddEventFlow } from "~/hooks/useAddEventFlow";
 import { useEventActions } from "~/hooks/useEventActions";
 import { useUserTimezone } from "~/store";
@@ -45,11 +46,11 @@ import {
 } from "~/utils/dates";
 import { setEventCache } from "~/utils/eventCache";
 import { getEventEmoji } from "~/utils/eventEmoji";
+import { navigateToUser } from "~/utils/navigateToUser";
 import { collapseSimilarEvents } from "~/utils/similarEvents";
 import { EventMenu } from "./EventMenu";
 import { EventStats } from "./EventStats";
 import SaveButton from "./SaveButton";
-import { UserProfileFlair } from "./UserProfileFlair";
 
 type ShowCreatorOption = "always" | "otherUsers" | "never" | "savedFromOthers";
 
@@ -63,14 +64,6 @@ interface EnrichedEventFollow {
     displayName?: string | null;
     userImage?: string | null;
   } | null;
-}
-
-// Type for user display in stacked avatars
-interface UserForDisplay {
-  id: string;
-  username: string;
-  displayName?: string | null;
-  userImage?: string | null;
 }
 
 // Inline avatars component for showing multiple users who saved an event
@@ -110,14 +103,6 @@ function EventSaversRow({
   const remainingUsersCount = allUsers.length - displayUsers.length;
   const remainingListsCount = additionalSourceCount ?? 0;
 
-  const handleUserPress = (user: UserForDisplay) => {
-    if (currentUserId && user.id === currentUserId) {
-      router.push("/settings/account");
-    } else {
-      router.push(`/${user.username}`);
-    }
-  };
-
   const handleListPress = () => {
     if (sourceListSlug) {
       router.push(`/list/${sourceListSlug}`);
@@ -125,37 +110,6 @@ function EventSaversRow({
   };
 
   const avatarSize = iconSize * 0.9;
-
-  const renderAvatar = (user: UserForDisplay, recyclingKey: string) => (
-    <UserProfileFlair username={user.username} size="xs">
-      {user.userImage ? (
-        <ExpoImage
-          source={{ uri: user.userImage }}
-          style={{
-            width: avatarSize,
-            height: avatarSize,
-            borderRadius: 9999,
-          }}
-          contentFit="cover"
-          cachePolicy="disk"
-          recyclingKey={recyclingKey}
-        />
-      ) : (
-        <View
-          style={{
-            width: avatarSize,
-            height: avatarSize,
-            borderRadius: 9999,
-            backgroundColor: "#E0D9FF",
-            alignItems: "center",
-            justifyContent: "center",
-          }}
-        >
-          <User size={avatarSize * 0.6} color="#627496" />
-        </View>
-      )}
-    </UserProfileFlair>
-  );
 
   const listConnector = isOwnEvent ? "· Shared to" : "via";
   const hasAnyListInfo =
@@ -166,22 +120,30 @@ function EventSaversRow({
       <View className="mx-auto mt-1 flex-row flex-wrap items-center justify-center gap-1">
         {isOwnEvent ? (
           <Pressable
-            onPress={() => handleUserPress(creator)}
+            onPress={() => navigateToUser(creator, currentUserId)}
             hitSlop={{ top: 8, bottom: 8, left: 4, right: 4 }}
             className="flex-row items-center gap-1"
           >
-            {renderAvatar(creator, `${eventId}-creator-inline`)}
+            <UserAvatar
+              user={creator}
+              size={avatarSize}
+              recyclingKey={`${eventId}-creator-inline`}
+            />
             <Text className="text-xs text-neutral-2">You</Text>
           </Pressable>
         ) : (
           displayUsers.map((user, index) => (
             <Pressable
               key={user.id}
-              onPress={() => handleUserPress(user)}
+              onPress={() => navigateToUser(user, currentUserId)}
               hitSlop={{ top: 8, bottom: 8, left: 4, right: 4 }}
               className="flex-row items-center gap-1"
             >
-              {renderAvatar(user, `${eventId}-saver-inline-${user.id}`)}
+              <UserAvatar
+                user={user}
+                size={avatarSize}
+                recyclingKey={`${eventId}-saver-inline-${user.id}`}
+              />
               <Text className="text-xs text-neutral-2">
                 {user.displayName || user.username}
                 {index < displayUsers.length - 1 || remainingUsersCount > 0
