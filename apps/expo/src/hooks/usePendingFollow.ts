@@ -60,7 +60,6 @@ export function usePendingFollow() {
     }
 
     lastProcessedRef.current = pendingFollowUsername;
-    let cancelled = false;
 
     const usernameToFollow = pendingFollowUsername;
     const hasExistingFollows = followedLists.length > 0;
@@ -77,7 +76,10 @@ export function usePendingFollow() {
       return;
     }
 
-    // Returning user: preserve today's auto-follow + feed-nav flow.
+    // Returning user: preserve today's auto-follow + feed-nav flow. No
+    // `cancelled` guard — `lastProcessedRef` already blocks re-entry on
+    // dep re-emits, so cancelling the in-flight flow would leave the user
+    // stranded with a persisted pending referral and no feed navigation.
     void (async () => {
       try {
         const result = await convex.mutation(api.lists.followUserByUsername, {
@@ -96,17 +98,11 @@ export function usePendingFollow() {
         console.error("Auto-follow failed:", error);
       }
 
-      if (!cancelled) {
-        // Clear the pending follow BEFORE navigating so the effect cannot
-        // re-trigger between the state update and the push.
-        setPendingFollowUsername(null);
-        router.push("/(tabs)/feed");
-      }
+      // Clear pending BEFORE navigating so the state update doesn't
+      // re-trigger the effect between the push and the clear.
+      setPendingFollowUsername(null);
+      router.push("/(tabs)/feed");
     })();
-
-    return () => {
-      cancelled = true;
-    };
   }, [
     isAuthenticated,
     pendingFollowUsername,
