@@ -136,8 +136,15 @@ export const runBackfillListFeeds = internalAction({
 
       if (result.isDone) break;
       if (result.nextCursor === cursor) {
-        console.error("Cursor stalled in backfillListFeeds — aborting");
-        break;
+        // Throwing instead of breaking: stalling here means phase 1 only
+        // partially populated the feed. If we fell through to phase 2 we'd
+        // stamp `feedBackfilledAt` on every list, silencing the
+        // getEventsForList fallback even though many list_* feeds are
+        // still incomplete. Fail loud so an operator can investigate and
+        // re-run rather than leave users with quietly-wrong lists.
+        throw new Error(
+          `Cursor stalled in backfillListFeeds after ${totalProcessed} rows — phase 2 not run`,
+        );
       }
       cursor = result.nextCursor;
     }

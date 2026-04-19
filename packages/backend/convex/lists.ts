@@ -1296,12 +1296,16 @@ export const getEventsForList = query({
   },
   handler: async (ctx, { slug, paginationOpts, filter = "upcoming" }) => {
     const emptyResults = async () => {
+      // Pass a null cursor rather than the incoming one: the page is empty
+      // anyway (isDone=true), and a tagged fallback cursor (`etl:...`) or
+      // any stale cursor from a deleted/inaccessible list would otherwise
+      // be rejected by `userFeeds.paginate` as invalid.
       const emptyPage = await ctx.db
         .query("userFeeds")
         .withIndex("by_feed_hasEnded_startTime", (q) =>
           q.eq("feedId", "__missing_list__"),
         )
-        .paginate(paginationOpts);
+        .paginate({ numItems: paginationOpts.numItems, cursor: null });
       return {
         ...emptyPage,
         page: [] as EnrichedEvent[],
