@@ -1,4 +1,10 @@
-import React, { useCallback, useEffect, useMemo, useState } from "react";
+import React, {
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
 import { Platform, Share, Text, TouchableOpacity, View } from "react-native";
 import { Redirect } from "expo-router";
 import { SymbolView } from "expo-symbols";
@@ -90,14 +96,31 @@ function FollowingFeedContent() {
   const [emptyStateMode, setEmptyStateMode] = useState<
     "unset" | "show" | "dismissed"
   >("unset");
+  // Tracks whether we've ever observed `hasFollowings=true` so the
+  // dismissed→show re-latch only fires on a genuine unfollow-all. Without
+  // this, calling `setEmptyStateMode("dismissed")` from an empty-state's
+  // subscribe action would immediately flip back to "show" because Convex
+  // hasn't propagated the new follow yet — leaving users stuck returning
+  // to an empty state after successfully subscribing.
+  const sawFollowingsRef = useRef(false);
+  useEffect(() => {
+    if (hasFollowings) {
+      sawFollowingsRef.current = true;
+    }
+  }, [hasFollowings]);
   useEffect(() => {
     if (followedLists === undefined) return;
     if (emptyStateMode === "unset") {
       setEmptyStateMode(hasFollowings ? "dismissed" : "show");
       return;
     }
-    if (emptyStateMode === "dismissed" && !hasFollowings) {
+    if (
+      emptyStateMode === "dismissed" &&
+      !hasFollowings &&
+      sawFollowingsRef.current
+    ) {
       setEmptyStateMode("show");
+      sawFollowingsRef.current = false;
       // Reset to the default segment so the onboarding confirmation count and
       // the subsequent feed view both reflect upcoming events, not whatever
       // segment the user had picked under their prior subscriptions.

@@ -159,6 +159,10 @@ export function ReferralEmptyState({
             reason === "User has no personal list"
           ) {
             toast.error(`We couldn't find @${pendingFollowUsername}.`);
+            // Unrecoverable: no amount of retries will make this referral
+            // succeed. Clear pending so the user drops back to
+            // DefaultEmptyState instead of being stuck on a failing CTA.
+            setPendingFollowUsername(null);
           } else {
             toast.error("Something went wrong. Please try again.");
           }
