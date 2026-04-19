@@ -386,21 +386,10 @@ export const followUserByUsername = mutation({
       return { success: false as const, reason: "User not found" };
     }
 
-    // Get their personal list
-    const personalList = await ctx.db
-      .query("lists")
-      .withIndex("by_user_and_isSystemList_and_systemListType", (q) =>
-        q
-          .eq("userId", targetUser.id)
-          .eq("isSystemList", true)
-          .eq("systemListType", "personal"),
-      )
-      .first();
-
-    if (!personalList) {
-      return { success: false as const, reason: "User has no personal list" };
-    }
-
+    // Get or create their personal list. Older accounts may pre-date the
+    // personal-list system or have slipped past the migration, which
+    // previously made them un-subscribable.
+    const personalList = await getOrCreatePersonalList(ctx, targetUser.id);
     const listId = personalList.id;
 
     const accessResult = await checkListAccess(ctx, listId, userId);

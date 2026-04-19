@@ -120,6 +120,12 @@ function FeaturedListRow({
     ]);
   });
 
+  // Fallback for targets whose personal list doesn't exist yet; the server
+  // creates it on demand.
+  const followUserByUsernameMutation = useMutation(
+    api.lists.followUserByUsername,
+  );
+
   const unfollowListMutation = useMutation(
     api.lists.unfollowList,
   ).withOptimisticUpdate((localStore, args) => {
@@ -174,11 +180,14 @@ function FeaturedListRow({
   const isMutatingRef = useRef(false);
 
   const handleToggleSubscribe = useCallback(() => {
-    if (!personalList || isSelf || isMutatingRef.current) return;
+    if (isSelf || isMutatingRef.current) return;
     isMutatingRef.current = true;
-    const promise = isSubscribed
-      ? unfollowListMutation({ listId: personalList.id })
-      : followListMutation({ listId: personalList.id });
+    const promise =
+      isSubscribed && personalList
+        ? unfollowListMutation({ listId: personalList.id })
+        : personalList
+          ? followListMutation({ listId: personalList.id })
+          : followUserByUsernameMutation({ username });
     promise
       .catch((error) => {
         logError(
@@ -197,6 +206,8 @@ function FeaturedListRow({
     isSubscribed,
     unfollowListMutation,
     followListMutation,
+    followUserByUsernameMutation,
+    username,
   ]);
 
   const upcomingLabel =
@@ -245,7 +256,7 @@ function FeaturedListRow({
           </Text>
         </View>
       </TouchableOpacity>
-      {!isSelf && personalList ? (
+      {!isSelf && targetUserFound ? (
         <SubscribeButton
           isSubscribed={isSubscribed}
           onPress={handleToggleSubscribe}

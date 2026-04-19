@@ -119,6 +119,14 @@ export default function UserProfilePage() {
     ]);
   });
 
+  // Fallback mutation used when the target user has no personal list yet
+  // (older accounts that pre-date personal lists). The server creates the
+  // list on demand, so no optimistic update is possible — we rely on the
+  // reactive query refresh.
+  const followUserByUsernameMutation = useMutation(
+    api.lists.followUserByUsername,
+  );
+
   const unfollowListMutation = useMutation(
     api.lists.unfollowList,
   ).withOptimisticUpdate((localStore, args) => {
@@ -192,23 +200,32 @@ export default function UserProfilePage() {
     : false;
 
   const handleFollowListPress = useCallback(() => {
-    if (!personalList) return;
+    if (!targetUser) return;
     if (!isAuthenticated) {
       router.push("/(auth)/sign-in");
       return;
     }
-    const run = isFollowingPersonalList
-      ? unfollowListMutation
-      : followListMutation;
-    run({ listId: personalList.id }).catch((error: unknown) => {
+    const onError = (error: unknown) => {
       logError("Toggle follow personal list", error);
       toast.error("Couldn't update subscription");
-    });
+    };
+    if (isFollowingPersonalList && personalList) {
+      unfollowListMutation({ listId: personalList.id }).catch(onError);
+    } else if (personalList) {
+      followListMutation({ listId: personalList.id }).catch(onError);
+    } else {
+      // No personal list yet — ask the server to create and follow it.
+      followUserByUsernameMutation({ username: targetUser.username }).catch(
+        onError,
+      );
+    }
   }, [
+    targetUser,
     personalList,
     isAuthenticated,
     isFollowingPersonalList,
     followListMutation,
+    followUserByUsernameMutation,
     unfollowListMutation,
     router,
   ]);
@@ -277,21 +294,20 @@ export default function UserProfilePage() {
           headerTitleStyle: {
             color: "#5A32FB",
           },
-          unstable_headerRightItems:
-            isOwnProfile || !personalList
-              ? undefined
-              : () => [
-                  {
-                    type: "custom",
-                    element: (
-                      <SubscribeButton
-                        isSubscribed={isFollowingPersonalList}
-                        onPress={handleFollowListPress}
-                      />
-                    ),
-                    hidesSharedBackground: true,
-                  },
-                ],
+          unstable_headerRightItems: isOwnProfile
+            ? undefined
+            : () => [
+                {
+                  type: "custom",
+                  element: (
+                    <SubscribeButton
+                      isSubscribed={isFollowingPersonalList}
+                      onPress={handleFollowListPress}
+                    />
+                  ),
+                  hidesSharedBackground: true,
+                },
+              ],
         }}
       />
       <View className="flex-1 bg-interactive-3">
