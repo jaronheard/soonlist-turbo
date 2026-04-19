@@ -1,6 +1,6 @@
 import { useEffect, useRef } from "react";
 import { useRouter } from "expo-router";
-import { useConvex, useConvexAuth } from "convex/react";
+import { useConvex, useConvexAuth, useQuery } from "convex/react";
 
 import { api } from "@soonlist/backend/convex/_generated/api";
 
@@ -10,10 +10,14 @@ import { logDebug } from "~/utils/errorLogging";
 /**
  * Hook to process pending follow intents after user authentication.
  *
- * When a user clicks a follow link from the web but isn't authenticated,
- * the username is stored in Zustand. This hook watches for authentication
- * completion, calls the server-side followUserByUsername mutation to
- * auto-follow the referrer's personal list, then navigates to the feed.
+ * Behavior branches on whether the signed-in user already follows any lists:
+ * - **Returning user (has follows):** auto-call `followUserByUsername`, clear
+ *   `pendingFollowUsername`, and navigate to the feed. Preserves the legacy
+ *   invisible flow so a returning user clicking a new share link isn't
+ *   stranded on an empty-state screen they've already moved past.
+ * - **New user (no follows yet):** do NOT auto-follow and do NOT clear the
+ *   pending username. Route to `/(tabs)/following` so the new
+ *   `ReferralEmptyState` can render the hero and an explicit Subscribe CTA.
  */
 export function usePendingFollow() {
   const router = useRouter();
@@ -25,6 +29,10 @@ export function usePendingFollow() {
   const setPendingFollowUsername = useAppStore(
     (state) => state.setPendingFollowUsername,
   );
+  const followedLists = useQuery(
+    api.lists.getFollowedLists,
+    isAuthenticated ? {} : "skip",
+  );
   const hasProcessed = useRef(false);
 
   useEffect(() => {
@@ -32,15 +40,31 @@ export function usePendingFollow() {
       return;
     }
 
+    // Wait for the followed-lists query to resolve before deciding which
+    // branch to take — otherwise we may miss the returning-user optimization.
+    if (followedLists === undefined) {
+      return;
+    }
+
     hasProcessed.current = true;
     let cancelled = false;
 
     const usernameToFollow = pendingFollowUsername;
+    const hasExistingFollows = followedLists.length > 0;
 
     logDebug("Processing pending follow", {
       username: usernameToFollow,
+      hasExistingFollows,
     });
 
+    if (!hasExistingFollows) {
+      // New user: let ReferralEmptyState render on the Following tab. Leave
+      // `pendingFollowUsername` set; the explicit Subscribe tap clears it.
+      router.push("/(tabs)/following");
+      return;
+    }
+
+    // Returning user: preserve today's auto-follow + feed-nav flow.
     void (async () => {
       try {
         const result = await convex.mutation(api.lists.followUserByUsername, {
@@ -76,6 +100,7 @@ export function usePendingFollow() {
     setPendingFollowUsername,
     router,
     convex,
+    followedLists,
   ]);
 
   // Reset the hasProcessed flag when pendingFollowUsername changes
