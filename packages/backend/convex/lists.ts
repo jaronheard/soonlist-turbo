@@ -402,17 +402,6 @@ export const followUserByUsername = mutation({
       existingList ?? (await getOrCreatePersonalList(ctx, targetUser.id));
     const listId = personalList.id;
 
-    // If we just created the list on-demand, backfill the target user's
-    // historical events so the new follower's feed isn't empty. Run as a
-    // scheduled job to keep this mutation bounded for power users.
-    if (!existingList) {
-      await ctx.scheduler.runAfter(
-        0,
-        internal.migrations.personalListMigration.backfillUserEventsBatch,
-        { userId: targetUser.id, listId, cursor: null },
-      );
-    }
-
     const accessResult = await checkListAccess(ctx, listId, userId);
     if (accessResult.status !== "ok") {
       return {
@@ -440,10 +429,29 @@ export const followUserByUsername = mutation({
     const followDoc = (await ctx.db.get(followId))!;
     await listFollowsAggregate.insert(ctx, followDoc);
 
-    await ctx.runMutation(internal.feedHelpers.addListEventsToUserFeed, {
-      userId,
-      listId,
-    });
+    if (existingList) {
+      // Pre-existing list — eventToLists is already populated, so hydrate
+      // the follower's feed inline.
+      await ctx.runMutation(internal.feedHelpers.addListEventsToUserFeed, {
+        userId,
+        listId,
+      });
+    } else {
+      // List was just created on-demand for an older account. Schedule a
+      // bounded backfill of the owner's historical events; the backfill
+      // chain hydrates this follower's feed when it completes so they
+      // don't see an empty feed.
+      await ctx.scheduler.runAfter(
+        0,
+        internal.migrations.personalListMigration.backfillUserEventsBatch,
+        {
+          userId: targetUser.id,
+          listId,
+          cursor: null,
+          hydrateFollowerUserId: userId,
+        },
+      );
+    }
 
     return { success: true as const };
   },
