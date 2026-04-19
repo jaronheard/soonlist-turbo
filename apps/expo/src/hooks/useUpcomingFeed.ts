@@ -30,13 +30,13 @@ export function useUpcomingEventsFilter<T extends { endDateTime: string }>(
 }
 
 /**
- * Wraps `useStablePaginatedQuery`'s `loadMore` in the standard 25-item page
+ * Wraps `useStablePaginatedQuery`'s `loadMore` in the standard 50-item page
  * size + `CanLoadMore` guard used by every upcoming-events list screen.
  */
 export function useLoadMoreHandler(
   status: PaginationStatus,
   loadMore: (numItems: number) => void,
-  pageSize = 25,
+  pageSize = 50,
 ) {
   return useCallback(() => {
     if (status === "CanLoadMore") {
