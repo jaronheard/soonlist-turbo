@@ -1342,6 +1342,27 @@ export const getEventsForList = query({
       );
     }
 
+    // Backfill-window safety: a list is only known to have its `list_*`
+    // feed fully mirrored from `eventToLists` once `list.feedBackfilledAt`
+    // is populated. New lists set this at creation; pre-existing lists get
+    // it set by `migrations/backfillListFeeds.runBackfillListFeeds`. When
+    // the marker is absent we fall back to the junction scan unconditionally
+    // — the feed may already have some entries (partial migration) but we
+    // can't trust that they're complete, so returning a partial first page
+    // would silently hide unmigrated events.
+    //
+    // Gated on cursor=null because subsequent pages within a fallback run
+    // already route via `isFallbackCursor` above.
+    if (paginationOpts.cursor === null && !list.feedBackfilledAt) {
+      return getEventsForListBackfillFallback(
+        ctx,
+        list.id,
+        paginationOpts,
+        filter,
+        viewerId,
+      );
+    }
+
     const feedId = listFeedId(list.id);
     const hasEnded = filter === "past";
     const order = filter === "upcoming" ? "asc" : "desc";
@@ -1360,29 +1381,6 @@ export const getEventsForList = query({
       )
       .order(order)
       .paginate(paginationOpts);
-
-    // Backfill-window safety: a list is only known to have its `list_*`
-    // feed fully mirrored from `eventToLists` once `list.feedBackfilledAt`
-    // is populated. New lists set this at creation; pre-existing lists get
-    // it set by `migrations/backfillListFeeds.runBackfillListFeeds`. When
-    // the marker is absent we fall back to the junction scan to cover the
-    // deploy/backfill window — including partial-migration states where
-    // the feed already has some entries but not all for this list. Once
-    // the marker is populated this branch is an O(1) field check.
-    if (
-      paginationOpts.cursor === null &&
-      feedResults.page.length === 0 &&
-      feedResults.isDone &&
-      !list.feedBackfilledAt
-    ) {
-      return getEventsForListBackfillFallback(
-        ctx,
-        list.id,
-        paginationOpts,
-        filter,
-        viewerId,
-      );
-    }
 
     const events = await Promise.all(
       feedResults.page.map((entry) =>
