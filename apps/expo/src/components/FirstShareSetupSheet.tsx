@@ -11,7 +11,6 @@ import {
   TextInput,
   View,
 } from "react-native";
-import { useSafeAreaInsets } from "react-native-safe-area-context";
 import * as ImagePicker from "expo-image-picker";
 import { useUser } from "@clerk/clerk-expo";
 import { useMutation, useQuery } from "convex/react";
@@ -43,7 +42,6 @@ export function FirstShareSetupSheet({
   onClose,
   onComplete,
 }: FirstShareSetupSheetProps) {
-  const insets = useSafeAreaInsets();
   const { user } = useUser();
   const currentUser = useQuery(api.users.getCurrentUser);
   const completeSetup = useMutation(api.users.completeFirstShareSetup);
@@ -222,10 +220,7 @@ export function FirstShareSetupSheet({
           ) : null}
         </ScrollView>
 
-        <View
-          className="bg-white px-5 pt-4"
-          style={{ paddingBottom: Math.max(insets.bottom, 16) }}
-        >
+        <View className="bg-white px-5 pb-4 pt-4">
           <Pressable
             disabled={submitting}
             onPress={() => void handleShare()}
