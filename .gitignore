@@ -66,6 +66,7 @@ dist/
 
 # superpowers (local-only plans/specs)
 docs/superpowers/
+.superpowers/
 
 # claude code
 .claude/worktrees/
@@ -74,3 +75,6 @@ docs/superpowers/
 .claude/launch.json
 .claude/.worktree-ports
 .claude/.worktree-ports.lock
+
+# brainstorm mockups (local only)
+.superpowers/
