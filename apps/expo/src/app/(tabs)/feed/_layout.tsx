@@ -48,16 +48,6 @@ export default function FeedLayout() {
             ],
           }}
         />
-        <Stack.Screen
-          name="share-prompt"
-          options={{
-            presentation: "formSheet",
-            title: "",
-            headerShown: false,
-            sheetGrabberVisible: true,
-            sheetAllowedDetents: [0.3],
-          }}
-        />
       </Stack>
       <CaptureOverlayButton />
       <FirstShareSetupSheet

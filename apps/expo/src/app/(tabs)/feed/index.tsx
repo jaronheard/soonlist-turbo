@@ -7,7 +7,7 @@ import React, {
 } from "react";
 import { Platform, Text, TouchableOpacity, View } from "react-native";
 import * as Location from "expo-location";
-import { Redirect, router } from "expo-router";
+import { Redirect } from "expo-router";
 import { SymbolView } from "expo-symbols";
 import { useUser } from "@clerk/clerk-expo";
 import { Host, Picker, Text as SwiftUIText } from "@expo/ui/swift-ui";
@@ -186,7 +186,8 @@ function MyFeedContent() {
   useRatingPrompt(upcomingCount);
 
   const posthog = usePostHog();
-  const { shouldShowOneShot } = useShareListPrompt(upcomingCount);
+  const { shouldShowOneShot, markOneShotSeen } =
+    useShareListPrompt(upcomingCount);
 
   const {
     requestShare,
@@ -195,11 +196,31 @@ function MyFeedContent() {
     closeSetupSheetAndShare,
   } = useShareMyList();
 
+  // Threshold-crossing auto-trigger: open FirstShareSetupSheet directly.
+  // That sheet IS the "your Soonlist is ready to share" moment — no second
+  // prompt on top. For users who've already shared (hasSharedListBefore in
+  // useShareMyList), requestShare would auto-open native share, which we
+  // DON'T want here — so we only auto-trigger on the first-share path and
+  // mark the one-shot seen either way.
+  const currentUser = useQuery(api.users.getCurrentUser);
+  const hasSharedListBefore = currentUser?.hasSharedListBefore ?? false;
   useEffect(() => {
     if (!shouldShowOneShot) return;
-    const t = setTimeout(() => router.push("/feed/share-prompt"), 400);
+    const t = setTimeout(() => {
+      markOneShotSeen();
+      if (!hasSharedListBefore) {
+        posthog.capture("share_prompt_one_shot_shown");
+        requestShare();
+      }
+    }, 400);
     return () => clearTimeout(t);
-  }, [shouldShowOneShot]);
+  }, [
+    shouldShowOneShot,
+    hasSharedListBefore,
+    markOneShotSeen,
+    posthog,
+    requestShare,
+  ]);
 
   const handlePillShare = useCallback(() => {
     posthog.capture("share_prompt_pill_tapped");
