@@ -1,20 +1,14 @@
 import React from "react";
 import { Modal, ScrollView, Text, TouchableOpacity, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { Image as ExpoImage } from "expo-image";
 import { router } from "expo-router";
 
 import type { Doc } from "@soonlist/backend/convex/_generated/dataModel";
 
-import { ChevronRight, List, User } from "~/components/icons";
-import { UserProfileFlair } from "~/components/UserProfileFlair";
-
-interface UserForDisplay {
-  id: string;
-  username: string;
-  displayName?: string | null;
-  userImage?: string | null;
-}
+import type { UserForDisplay } from "~/types/user";
+import { ChevronRight, List } from "~/components/icons";
+import { UserAvatar } from "~/components/UserAvatar";
+import { navigateToUser } from "~/utils/navigateToUser";
 
 interface SavedByModalProps {
   visible: boolean;
@@ -58,11 +52,7 @@ export function SavedByModal({
 
   const handleUserPress = (user: UserForDisplay) => {
     onClose();
-    if (currentUserId && user.id === currentUserId) {
-      router.push("/settings/account");
-    } else {
-      router.push(`/${user.username}`);
-    }
+    navigateToUser(user, currentUserId);
   };
 
   const handleListPress = (list: Doc<"lists">) => {
@@ -70,28 +60,6 @@ export function SavedByModal({
     if (list.slug) {
       router.push(`/list/${list.slug}`);
     }
-  };
-
-  const renderAvatar = (user: UserForDisplay) => {
-    if (user.userImage) {
-      return (
-        <ExpoImage
-          source={{ uri: user.userImage }}
-          style={{
-            width: 40,
-            height: 40,
-            borderRadius: 9999,
-          }}
-          contentFit="cover"
-          cachePolicy="disk"
-        />
-      );
-    }
-    return (
-      <View className="h-10 w-10 items-center justify-center rounded-full bg-interactive-2">
-        <User size={20} color="#627496" />
-      </View>
-    );
   };
 
   return (
@@ -123,9 +91,7 @@ export function SavedByModal({
                 className="flex-row items-center py-3"
                 activeOpacity={0.7}
               >
-                <UserProfileFlair username={user.username} size="xs">
-                  {renderAvatar(user)}
-                </UserProfileFlair>
+                <UserAvatar user={user} size={40} />
                 <View className="ml-3 flex-1">
                   <Text className="text-base font-semibold text-neutral-1">
                     {user.displayName || user.username}

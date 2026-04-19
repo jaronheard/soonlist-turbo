@@ -1,20 +1,14 @@
 import React, { useState } from "react";
 import { Pressable, Text, View } from "react-native";
-import { Image as ExpoImage } from "expo-image";
 import { router } from "expo-router";
 
 import type { Doc } from "@soonlist/backend/convex/_generated/dataModel";
 
-import { List, User } from "~/components/icons";
+import type { UserForDisplay } from "~/types/user";
+import { List } from "~/components/icons";
 import { SavedByModal } from "~/components/SavedByModal";
-import { UserProfileFlair } from "~/components/UserProfileFlair";
-
-interface UserForDisplay {
-  id: string;
-  username: string;
-  displayName?: string | null;
-  userImage?: string | null;
-}
+import { UserAvatar } from "~/components/UserAvatar";
+import { navigateToUser } from "~/utils/navigateToUser";
 
 export type EventAttributionVariant = "list-primary" | "people-primary";
 
@@ -40,43 +34,6 @@ function combineUsers(creator: UserForDisplay, savers: UserForDisplay[]) {
     }
   }
   return out;
-}
-
-function navigateToUser(user: UserForDisplay, currentUserId?: string) {
-  if (currentUserId && user.id === currentUserId) {
-    router.push("/settings/account");
-  } else {
-    router.push(`/${user.username}`);
-  }
-}
-
-function Avatar({ user, size }: { user: UserForDisplay; size: number }) {
-  return (
-    <UserProfileFlair username={user.username} size="xs">
-      {user.userImage ? (
-        <ExpoImage
-          source={{ uri: user.userImage }}
-          style={{ width: size, height: size, borderRadius: 9999 }}
-          contentFit="cover"
-          cachePolicy="memory-disk"
-          recyclingKey={user.id}
-        />
-      ) : (
-        <View
-          style={{
-            width: size,
-            height: size,
-            borderRadius: 9999,
-            backgroundColor: "#E0D9FF",
-            alignItems: "center",
-            justifyContent: "center",
-          }}
-        >
-          <User size={size * 0.6} color="#627496" />
-        </View>
-      )}
-    </UserProfileFlair>
-  );
 }
 
 function ListChip({ name, slug }: { name?: string; slug?: string }) {
@@ -222,7 +179,7 @@ function ListPrimaryRow({
       accessibilityLabel="Go to your profile"
       className="flex-row items-center gap-1"
     >
-      <Avatar user={creator} size={avatarSize} />
+      <UserAvatar user={creator} size={avatarSize} />
       <Text className="text-xs text-neutral-2">You</Text>
     </Pressable>
   );
@@ -237,7 +194,7 @@ function ListPrimaryRow({
       >
         {stackUsers.map((user, index) => (
           <View key={user.id} style={{ marginLeft: index === 0 ? 0 : -6 }}>
-            <Avatar user={user} size={avatarSize} />
+            <UserAvatar user={user} size={avatarSize} />
           </View>
         ))}
         <OverflowPill count={extraCount} className="ml-1" />
@@ -317,7 +274,7 @@ function PeoplePrimaryRow({
             hitSlop={HIT_SLOP}
             className="flex-row items-center gap-1"
           >
-            <Avatar user={creator} size={avatarSize} />
+            <UserAvatar user={creator} size={avatarSize} />
             <Text className="text-xs text-neutral-2">You</Text>
           </Pressable>
         ) : (
@@ -328,7 +285,7 @@ function PeoplePrimaryRow({
               hitSlop={HIT_SLOP}
               className="flex-row items-center gap-1"
             >
-              <Avatar user={user} size={avatarSize} />
+              <UserAvatar user={user} size={avatarSize} />
               <Text className="text-xs text-neutral-2">
                 {user.displayName || user.username}
                 {index < displayUsers.length - 1 || remainingUsersCount > 0
