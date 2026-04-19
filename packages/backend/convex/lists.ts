@@ -1168,8 +1168,13 @@ export const getEventsForList = query({
   args: {
     slug: v.string(),
     paginationOpts: paginationOptsValidator,
+    filter: v.optional(v.union(v.literal("upcoming"), v.literal("past"))),
+    beforeThisDateTime: v.optional(v.string()),
   },
-  handler: async (ctx, { slug, paginationOpts }) => {
+  handler: async (
+    ctx,
+    { slug, paginationOpts, filter = "upcoming", beforeThisDateTime },
+  ) => {
     const emptyResults = async () => {
       const emptyPage = await ctx.db
         .query("eventToLists")
@@ -1214,9 +1219,15 @@ export const getEventsForList = query({
       ),
     );
 
+    const referenceDateTime = beforeThisDateTime ?? new Date().toISOString();
     const visibleEvents = events
       .filter((event): event is NonNullable<typeof event> => event !== null)
-      .filter((event) => event.visibility !== "private");
+      .filter((event) => event.visibility !== "private")
+      .filter((event) =>
+        filter === "upcoming"
+          ? event.endDateTime >= referenceDateTime
+          : event.endDateTime < referenceDateTime,
+      );
 
     const enrichedEvents = await enrichEventsAndFilterNulls(ctx, visibleEvents);
 
