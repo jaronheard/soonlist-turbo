@@ -5,7 +5,7 @@ import React, {
   useRef,
   useState,
 } from "react";
-import { Platform, Text, TouchableOpacity, View } from "react-native";
+import { Alert, Platform, Text, TouchableOpacity, View } from "react-native";
 import * as Location from "expo-location";
 import { Redirect } from "expo-router";
 import { SymbolView } from "expo-symbols";
@@ -24,7 +24,6 @@ import { api } from "@soonlist/backend/convex/_generated/api";
 
 import { FirstShareSetupSheet } from "~/components/FirstShareSetupSheet";
 import LoadingSpinner from "~/components/LoadingSpinner";
-import { ShareListPromptSheet } from "~/components/ShareListPromptSheet";
 import UserEventsList from "~/components/UserEventsList";
 import { useRatingPrompt } from "~/hooks/useRatingPrompt";
 import { useShareListPrompt } from "~/hooks/useShareListPrompt";
@@ -189,7 +188,6 @@ function MyFeedContent() {
   const posthog = usePostHog();
   const { shouldShowOneShot, markOneShotSeen } =
     useShareListPrompt(upcomingCount);
-  const [isShareSheetVisible, setIsShareSheetVisible] = useState(false);
 
   const {
     requestShare,
@@ -198,27 +196,46 @@ function MyFeedContent() {
     closeSetupSheetAndShare,
   } = useShareMyList();
 
+  // Stable refs so the threshold-crossing effect doesn't re-fire when its deps
+  // change identity — the alert should show exactly once per crossing.
+  const markOneShotSeenRef = useRef(markOneShotSeen);
+  markOneShotSeenRef.current = markOneShotSeen;
+  const requestShareRef = useRef(requestShare);
+  requestShareRef.current = requestShare;
+  const posthogRef = useRef(posthog);
+  posthogRef.current = posthog;
+
   useEffect(() => {
     if (!shouldShowOneShot) return;
-    const t = setTimeout(() => setIsShareSheetVisible(true), 400);
+    const t = setTimeout(() => {
+      posthogRef.current.capture("share_prompt_one_shot_shown");
+      Alert.alert(
+        "Your Soonlist is ready to share",
+        "Send your upcoming events to friends.",
+        [
+          {
+            text: "Not now",
+            style: "cancel",
+            onPress: () => {
+              posthogRef.current.capture("share_prompt_one_shot_dismissed", {
+                method: "not_now_button",
+              });
+              markOneShotSeenRef.current();
+            },
+          },
+          {
+            text: "Share",
+            onPress: () => {
+              posthogRef.current.capture("share_prompt_one_shot_share_tapped");
+              markOneShotSeenRef.current();
+              requestShareRef.current();
+            },
+          },
+        ],
+      );
+    }, 400);
     return () => clearTimeout(t);
   }, [shouldShowOneShot]);
-
-  const handleSheetShare = useCallback(() => {
-    posthog.capture("share_prompt_one_shot_share_tapped");
-    markOneShotSeen();
-    setIsShareSheetVisible(false);
-    requestShare();
-  }, [markOneShotSeen, posthog, requestShare]);
-
-  const handleSheetDismiss = useCallback(
-    (method: "not_now_button" | "swipe") => {
-      posthog.capture("share_prompt_one_shot_dismissed", { method });
-      markOneShotSeen();
-      setIsShareSheetVisible(false);
-    },
-    [markOneShotSeen, posthog],
-  );
 
   const handlePillShare = useCallback(() => {
     posthog.capture("share_prompt_pill_tapped");
@@ -309,11 +326,6 @@ function MyFeedContent() {
         HeaderComponent={HeaderComponent}
         upcomingEventCount={upcomingCount}
         onSharePress={handlePillShare}
-      />
-      <ShareListPromptSheet
-        isVisible={isShareSheetVisible}
-        onShare={handleSheetShare}
-        onDismiss={handleSheetDismiss}
       />
       <FirstShareSetupSheet
         visible={isSetupSheetVisible}
