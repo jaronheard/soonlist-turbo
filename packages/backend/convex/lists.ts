@@ -1296,6 +1296,19 @@ export const backfillContributorEvents = internalAction({
   },
 });
 
+// Filters out relative paths, bad protocols, and unparseable garbage before
+// URLs reach @vercel/og. satori fails the whole render on a bad image fetch,
+// so we'd rather skip the screenshot than crash the OG route.
+function isLikelyHttpUrl(value: unknown): value is string {
+  if (typeof value !== "string" || value.length === 0) return false;
+  try {
+    const u = new URL(value);
+    return u.protocol === "http:" || u.protocol === "https:";
+  } catch {
+    return false;
+  }
+}
+
 /**
  * Get the minimal data needed to render an OpenGraph preview image for a list.
  *
@@ -1398,7 +1411,7 @@ export const getOgData = query({
       .sort((a, b) => a.startDateTime.localeCompare(b.startDateTime));
 
     const upcomingEvents = upcomingPublic
-      .filter((e) => typeof e.image === "string" && e.image.length > 0)
+      .filter((e) => isLikelyHttpUrl(e.image))
       .slice(0, 3)
       .map((e) => ({ image: e.image! }));
 

@@ -15,9 +15,11 @@ import { getUnauthenticatedConvex } from "~/lib/convex-server";
 import { extractFilePath } from "~/lib/utils";
 
 export const runtime = "nodejs";
-// Link-preview unfurls don't need sub-hour freshness; longer TTL amortizes the
-// Convex query + font fetches + image rasterization across crawler bursts.
-export const revalidate = 3600;
+// Short TTL balances crawler-burst amortization against privacy: a list
+// flipped to private can't keep serving a cached rich preview for longer
+// than this window. On-demand revalidation via a Convex trigger would be
+// the rigorous fix (zero exposure) if/when it's worth the plumbing.
+export const revalidate = 300;
 
 export const alt = "Shared list on Soonlist";
 export const size = { width: 1200, height: 630 };
