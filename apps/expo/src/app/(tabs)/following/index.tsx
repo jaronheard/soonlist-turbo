@@ -181,14 +181,30 @@ function FeaturedListRow({
 
   const handleToggleSubscribe = useCallback(() => {
     if (isSelf || isMutatingRef.current) return;
-    isMutatingRef.current = true;
+    // personalList === undefined means the Convex query is still loading;
+    // ignore the tap so we don't drop the optimistic-update path for users
+    // whose list just hasn't resolved yet.
     const promise =
       isSubscribed && personalList
         ? unfollowListMutation({ listId: personalList.id })
         : personalList
           ? followListMutation({ listId: personalList.id })
-          : followUserByUsernameMutation({ username });
+          : personalList === null
+            ? followUserByUsernameMutation({ username })
+            : null;
+    if (!promise) return;
+    isMutatingRef.current = true;
     promise
+      .then((result) => {
+        // followUserByUsername returns { success, reason } without throwing;
+        // surface that as an error so the user gets feedback. follow/unfollow
+        // both always return { success: true }.
+        if (result && "reason" in result && !result.success) {
+          logError("followUserByUsername returned failure", {
+            reason: result.reason,
+          });
+        }
+      })
       .catch((error) => {
         logError(
           isSubscribed

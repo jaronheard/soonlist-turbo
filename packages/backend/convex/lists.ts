@@ -389,8 +389,29 @@ export const followUserByUsername = mutation({
     // Get or create their personal list. Older accounts may pre-date the
     // personal-list system or have slipped past the migration, which
     // previously made them un-subscribable.
-    const personalList = await getOrCreatePersonalList(ctx, targetUser.id);
+    const existingList = await ctx.db
+      .query("lists")
+      .withIndex("by_user_and_isSystemList_and_systemListType", (q) =>
+        q
+          .eq("userId", targetUser.id)
+          .eq("isSystemList", true)
+          .eq("systemListType", "personal"),
+      )
+      .first();
+    const personalList =
+      existingList ?? (await getOrCreatePersonalList(ctx, targetUser.id));
     const listId = personalList.id;
+
+    // If we just created the list on-demand, backfill the target user's
+    // historical events so the new follower's feed isn't empty. Run as a
+    // scheduled job to keep this mutation bounded for power users.
+    if (!existingList) {
+      await ctx.scheduler.runAfter(
+        0,
+        internal.migrations.personalListMigration.backfillUserEventsBatch,
+        { userId: targetUser.id, listId, cursor: null },
+      );
+    }
 
     const accessResult = await checkListAccess(ctx, listId, userId);
     if (accessResult.status !== "ok") {

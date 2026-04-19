@@ -213,12 +213,20 @@ export default function UserProfilePage() {
       unfollowListMutation({ listId: personalList.id }).catch(onError);
     } else if (personalList) {
       followListMutation({ listId: personalList.id }).catch(onError);
-    } else {
-      // No personal list yet — ask the server to create and follow it.
-      followUserByUsernameMutation({ username: targetUser.username }).catch(
-        onError,
-      );
+    } else if (personalList === null) {
+      // Confirmed: no personal list yet — ask the server to create and follow it.
+      followUserByUsernameMutation({ username: targetUser.username })
+        .then((result) => {
+          if (!result.success) {
+            logError("followUserByUsername returned failure", {
+              reason: result.reason,
+            });
+            toast.error("Couldn't update subscription");
+          }
+        })
+        .catch(onError);
     }
+    // personalList === undefined means the query is still loading; ignore the tap.
   }, [
     targetUser,
     personalList,
