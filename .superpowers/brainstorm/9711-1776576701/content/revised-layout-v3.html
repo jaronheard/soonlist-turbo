@@ -1,0 +1,76 @@
+<h2>Revised v2: Tighter sheet</h2>
+<p class="subtitle">Removed list-name helper text. Dropped location. Links as icon row (tap each to add).</p>
+
+<div style="display:flex;gap:24px;justify-content:center;align-items:flex-start;flex-wrap:wrap;">
+
+  <div class="mockup" style="max-width:340px;">
+    <div class="mockup-header">Share your Soon List</div>
+    <div class="mockup-body" style="padding:16px;">
+
+      <div style="margin-bottom:16px;">
+        <div class="label" style="margin-bottom:6px;">LIST NAME</div>
+        <div class="mock-input">Jaron&rsquo;s Soonlist</div>
+      </div>
+
+      <div style="border-top:1px solid #eee;padding-top:16px;margin-bottom:16px;">
+        <div class="label" style="margin-bottom:8px;">YOUR PROFILE</div>
+        <div style="display:flex;align-items:center;gap:10px;">
+          <div class="placeholder" style="width:48px;height:48px;border-radius:50%;flex-shrink:0;"></div>
+          <div style="flex:1;">
+            <div class="mock-input">Jaron Heard</div>
+          </div>
+        </div>
+      </div>
+
+      <div style="border-top:1px solid #eee;padding-top:12px;margin-bottom:16px;">
+        <div class="label" style="margin-bottom:10px;">ADD LINKS (OPTIONAL)</div>
+        <div style="display:flex;gap:10px;">
+          <div style="width:40px;height:40px;border-radius:50%;border:1.5px dashed #ccc;display:flex;align-items:center;justify-content:center;font-size:18px;color:#999;" title="Instagram">&#x1F4F7;</div>
+          <div style="width:40px;height:40px;border-radius:50%;border:1.5px dashed #ccc;display:flex;align-items:center;justify-content:center;font-size:18px;color:#999;" title="Website">&#x1F310;</div>
+          <div style="width:40px;height:40px;border-radius:50%;border:1.5px dashed #ccc;display:flex;align-items:center;justify-content:center;font-size:18px;color:#999;" title="Email">&#9993;</div>
+          <div style="width:40px;height:40px;border-radius:50%;border:1.5px dashed #ccc;display:flex;align-items:center;justify-content:center;font-size:18px;color:#999;" title="Phone">&#9742;</div>
+        </div>
+      </div>
+
+      <button class="mock-button" style="width:100%;margin-bottom:8px;">Share</button>
+      <div style="text-align:center;font-size:12px;color:#999;">Share now without editing</div>
+
+    </div>
+  </div>
+
+  <div style="max-width:300px;font-size:13px;line-height:1.6;">
+    <h3 style="margin-top:0;">What changed</h3>
+    <ul style="padding-left:18px;color:#444;">
+      <li>Removed &ldquo;Shown to anyone you share with&rdquo; helper text under list name</li>
+      <li>Removed <strong>location</strong> from profile (so no schema change needed)</li>
+      <li>Links = row of <strong>icons</strong> (Instagram, website, email, phone). Dashed = empty; tap to add.</li>
+      <li>Filled icons become solid colored + show the value on tap-to-edit</li>
+    </ul>
+
+    <h3>Filled state (example)</h3>
+    <div style="display:flex;gap:10px;margin-top:8px;">
+      <div style="width:40px;height:40px;border-radius:50%;background:#E0D9FF;color:#5A32FB;display:flex;align-items:center;justify-content:center;font-size:18px;">&#x1F4F7;</div>
+      <div style="width:40px;height:40px;border-radius:50%;background:#E0D9FF;color:#5A32FB;display:flex;align-items:center;justify-content:center;font-size:18px;">&#x1F310;</div>
+      <div style="width:40px;height:40px;border-radius:50%;border:1.5px dashed #ccc;display:flex;align-items:center;justify-content:center;font-size:18px;color:#999;">&#9993;</div>
+      <div style="width:40px;height:40px;border-radius:50%;border:1.5px dashed #ccc;display:flex;align-items:center;justify-content:center;font-size:18px;color:#999;">&#9742;</div>
+    </div>
+  </div>
+
+</div>
+
+<div class="options" style="margin-top:28px;">
+  <div class="option" data-choice="yes" onclick="toggleSelect(this)">
+    <div class="letter">&#10003;</div>
+    <div class="content">
+      <h3>Yes, ship this shape</h3>
+      <p>Write it up as the design doc.</p>
+    </div>
+  </div>
+  <div class="option" data-choice="tweak" onclick="toggleSelect(this)">
+    <div class="letter">&#9998;</div>
+    <div class="content">
+      <h3>One more tweak</h3>
+      <p>Tell me in terminal.</p>
+    </div>
+  </div>
+</div>

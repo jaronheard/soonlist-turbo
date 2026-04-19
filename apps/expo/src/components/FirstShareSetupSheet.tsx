@@ -29,9 +29,13 @@ interface FirstShareSetupSheetProps {
   onComplete: () => Promise<void> | void;
 }
 
-const INPUT_CLASSES =
-  "rounded-xl bg-interactive-3 px-4 text-base text-neutral-1";
-const INPUT_STYLE = { paddingVertical: 14 } as const;
+const INPUT_WRAPPER_CLASSES = "rounded-xl bg-interactive-3 px-4";
+const INPUT_WRAPPER_STYLE = {
+  height: 48,
+  justifyContent: "center" as const,
+};
+const INPUT_TEXT_CLASSES = "text-base text-neutral-1";
+const INPUT_TEXT_STYLE = { padding: 0 } as const;
 const PLACEHOLDER_COLOR = "rgb(98, 116, 150)";
 
 export function FirstShareSetupSheet({
@@ -196,17 +200,19 @@ export function FirstShareSetupSheet({
             <Text className="mb-2 text-xs font-semibold uppercase tracking-wider text-neutral-2">
               List name
             </Text>
-            <TextInput
-              className={INPUT_CLASSES}
-              style={INPUT_STYLE}
-              value={listName}
-              onChangeText={(t) => {
-                setListName(t);
-                markDirty();
-              }}
-              placeholderTextColor={PLACEHOLDER_COLOR}
-              maxLength={80}
-            />
+            <View className={INPUT_WRAPPER_CLASSES} style={INPUT_WRAPPER_STYLE}>
+              <TextInput
+                className={INPUT_TEXT_CLASSES}
+                style={INPUT_TEXT_STYLE}
+                value={listName}
+                onChangeText={(t) => {
+                  setListName(t);
+                  markDirty();
+                }}
+                placeholderTextColor={PLACEHOLDER_COLOR}
+                maxLength={80}
+              />
+            </View>
           </View>
 
           <View className="mb-5">
@@ -236,18 +242,23 @@ export function FirstShareSetupSheet({
                   <Camera size={10} color="#fff" />
                 </View>
               </Pressable>
-              <TextInput
-                className={`flex-1 ${INPUT_CLASSES}`}
-                style={INPUT_STYLE}
-                value={displayName}
-                onChangeText={(t) => {
-                  setDisplayName(t);
-                  markDirty();
-                }}
-                placeholder="Your name"
-                placeholderTextColor={PLACEHOLDER_COLOR}
-                maxLength={50}
-              />
+              <View
+                className={`flex-1 ${INPUT_WRAPPER_CLASSES}`}
+                style={INPUT_WRAPPER_STYLE}
+              >
+                <TextInput
+                  className={INPUT_TEXT_CLASSES}
+                  style={INPUT_TEXT_STYLE}
+                  value={displayName}
+                  onChangeText={(t) => {
+                    setDisplayName(t);
+                    markDirty();
+                  }}
+                  placeholder="Your name"
+                  placeholderTextColor={PLACEHOLDER_COLOR}
+                  maxLength={50}
+                />
+              </View>
             </View>
           </View>
 
