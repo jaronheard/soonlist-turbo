@@ -125,4 +125,13 @@ export function usePendingFollow() {
       lastProcessedRef.current = null;
     }
   }, [isAuthenticated]);
+
+  // Reset when pending is cleared so the SAME referral username can be
+  // processed again later in the session (e.g. returning user auto-follows
+  // "anise", pending is cleared, user clicks Anise's share link again).
+  useEffect(() => {
+    if (!pendingFollowUsername) {
+      lastProcessedRef.current = null;
+    }
+  }, [pendingFollowUsername]);
 }
