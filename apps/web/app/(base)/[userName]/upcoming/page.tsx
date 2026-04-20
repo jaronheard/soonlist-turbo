@@ -33,65 +33,56 @@ const transformConvexUser = (user: Doc<"users">): User => {
 function transformConvexEvents(
   events:
     | FunctionReturnType<typeof api.feeds.getMyFeed>["page"]
-    | FunctionReturnType<typeof api.feeds.getUserCreatedEvents>["page"],
+    | FunctionReturnType<typeof api.feeds.getPublicUserFeed>["page"],
 ): EventWithUser[] {
-  return events.map((event) => ({
-    id: event.id,
-    userId: event.userId,
-    updatedAt: event.updatedAt ? new Date(event.updatedAt) : null,
-    userName: event.userName,
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
-    event: event.event,
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
-    eventMetadata: event.eventMetadata,
-    endDateTime: new Date(event.endDateTime),
-    startDateTime: new Date(event.startDateTime),
-    visibility: event.visibility,
-    createdAt: new Date(event._creationTime),
-    user: transformConvexUser(event.user!),
-    // Preserve follow state so save/unsave UI reflects current user state.
-    eventFollows: event.eventFollows,
-    comments: [],
-    eventToLists: [],
-  }));
+  return events
+    .filter((event) => event.user !== null)
+    .map((event) => ({
+      id: event.id,
+      userId: event.userId,
+      updatedAt: event.updatedAt ? new Date(event.updatedAt) : null,
+      userName: event.userName,
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+      event: event.event,
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+      eventMetadata: event.eventMetadata,
+      endDateTime: new Date(event.endDateTime),
+      startDateTime: new Date(event.startDateTime),
+      visibility: event.visibility,
+      createdAt: new Date(event._creationTime),
+      // eslint-disable-next-line @typescript-eslint/no-non-null-assertion -- user is guaranteed after filter
+      user: transformConvexUser(event.user!),
+      // Preserve follow state so save/unsave UI reflects current user state.
+      eventFollows: event.eventFollows,
+      comments: [],
+      eventToLists: [],
+    }));
 }
 
 export default function Page({ params }: Props) {
   const { userName } = use(params);
   const currentUser = useQuery(api.users.getCurrentUser);
-  const targetUser = useQuery(api.users.getByUsername, { userName });
   const self = currentUser?.username === userName;
   const stableNow = useStableTimestamp();
 
-  // For the authenticated user viewing their own feed, use getMyFeed (includes followed events)
-  // For viewing another user's feed, only show their created events
-  const myFeedArgs = {
-    filter: "upcoming" as const,
-  };
-
-  const userCreatedArgs = targetUser
-    ? {
-        userId: targetUser.id,
-        filter: "upcoming" as const,
-      }
-    : "skip";
-
+  // Self: full personal feed (created + followed + from followed lists).
+  // Other users: their public feed (same union, public events only).
   const myFeedQuery = usePaginatedQuery(
     api.feeds.getMyFeed,
-    self ? myFeedArgs : "skip",
+    self ? { filter: "upcoming" as const } : "skip",
     { initialNumItems: 100 },
   );
-  const userCreatedQuery = usePaginatedQuery(
-    api.feeds.getUserCreatedEvents,
-    !self ? userCreatedArgs : "skip",
+  const publicFeedQuery = usePaginatedQuery(
+    api.feeds.getPublicUserFeed,
+    !self ? { username: userName, filter: "upcoming" as const } : "skip",
     { initialNumItems: 100 },
   );
 
   const { results: convexEvents, status } = self
     ? myFeedQuery
-    : userCreatedQuery;
+    : publicFeedQuery;
 
-  const isLoading = status === "LoadingFirstPage" || (!self && !targetUser);
+  const isLoading = status === "LoadingFirstPage";
   const events = convexEvents ? transformConvexEvents(convexEvents) : [];
 
   // Client-side safety filter: hide events that have ended

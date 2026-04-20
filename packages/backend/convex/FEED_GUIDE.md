@@ -55,10 +55,10 @@ const { results, status } = usePaginatedQuery(
   { initialNumItems: 50 },
 );
 
-// Get user's created events only (for public profiles)
+// Get a user's public feed (for public profiles — public events only)
 const { results, status } = usePaginatedQuery(
-  api.feeds.getUserCreatedEvents,
-  { userId: "user_123" },
+  api.feeds.getPublicUserFeed,
+  { username: "ada", filter: "upcoming" },
   { initialNumItems: 50 },
 );
 ```

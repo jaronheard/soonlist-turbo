@@ -11,7 +11,7 @@ import {
   query,
 } from "./_generated/server";
 import { userFeedsAggregate } from "./aggregates";
-import { enrichEventsAndFilterNulls, getEventById } from "./model/events";
+import { getEventById } from "./model/events";
 import { getViewableListIds } from "./model/lists";
 
 // Helper function to get the current user ID from auth
@@ -430,57 +430,6 @@ export const getPublicUserFeed = query({
     );
 
     return { ...feedResults, page: events.filter((e) => e !== null) };
-  },
-});
-
-// Query to get only events created by a specific user (sorted by start time)
-export const getUserCreatedEvents = query({
-  args: {
-    userId: v.string(),
-    paginationOpts: paginationOptsValidator,
-    filter: v.optional(v.union(v.literal("upcoming"), v.literal("past"))),
-    beforeThisDateTime: v.optional(v.string()),
-  },
-  handler: async (
-    ctx,
-    { userId, paginationOpts, filter = "upcoming", beforeThisDateTime },
-  ) => {
-    // Only the owner may see their private events; anyone else gets public-only.
-    const identity = await ctx.auth.getUserIdentity();
-    const isOwner = identity?.subject === userId;
-
-    // Build query with proper index
-    let eventsQuery = ctx.db
-      .query("events")
-      .withIndex("by_user_and_startDateTime", (q) => q.eq("userId", userId));
-
-    // Apply time filter - use current time if not provided
-    const referenceDateTime = beforeThisDateTime || new Date().toISOString();
-    eventsQuery = eventsQuery.filter((q) => {
-      const dateFilter =
-        filter === "upcoming"
-          ? q.gte(q.field("endDateTime"), referenceDateTime)
-          : q.lt(q.field("endDateTime"), referenceDateTime);
-      if (isOwner) return dateFilter;
-      return q.and(dateFilter, q.eq(q.field("visibility"), "public"));
-    });
-
-    // Apply ordering based on filter
-    const orderedQuery =
-      filter === "upcoming"
-        ? eventsQuery.order("asc")
-        : eventsQuery.order("desc");
-
-    // Paginate
-    const results = await orderedQuery.paginate(paginationOpts);
-
-    // Enrich events with user, eventFollows, comments, and lists data
-    const enrichedEvents = await enrichEventsAndFilterNulls(ctx, results.page);
-
-    return {
-      ...results,
-      page: enrichedEvents,
-    };
   },
 });
 
