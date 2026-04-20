@@ -1,10 +1,16 @@
 import React from "react";
 import { Pressable, Text, View } from "react-native";
+import * as StoreReview from "expo-store-review";
 
 import { Check } from "~/components/icons";
 import { QuestionContainer } from "~/components/QuestionContainer";
 import { useOnboarding } from "~/hooks/useOnboarding";
-import { usePendingFollowUsername, useSetHasSeenOnboarding } from "~/store";
+import {
+  useHasShownRatingPrompt,
+  useMarkRatingPromptShown,
+  usePendingFollowUsername,
+  useSetHasSeenOnboarding,
+} from "~/store";
 import { hapticLight } from "~/utils/feedback";
 
 const BULLETS = [
@@ -16,6 +22,8 @@ const BULLETS = [
 export default function CommunitySupportedScreen() {
   const pendingFollowUsername = usePendingFollowUsername();
   const setHasSeenOnboarding = useSetHasSeenOnboarding();
+  const hasShownRatingPrompt = useHasShownRatingPrompt();
+  const markRatingPromptShown = useMarkRatingPromptShown();
   const { saveStep } = useOnboarding();
 
   // Keep the existing step math: this screen sits at totalSteps - 2,
@@ -27,6 +35,14 @@ export default function CommunitySupportedScreen() {
   const handleContinue = () => {
     void hapticLight();
     setHasSeenOnboarding(true);
+    if (!hasShownRatingPrompt) {
+      void (async () => {
+        if (await StoreReview.hasAction()) {
+          await StoreReview.requestReview();
+        }
+        markRatingPromptShown();
+      })();
+    }
     saveStep("paywall", {}, "/(onboarding)/onboarding/05-sign-in");
   };
 

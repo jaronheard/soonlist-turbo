@@ -2,11 +2,7 @@ import { useEffect, useRef } from "react";
 import { usePostHog } from "posthog-react-native";
 import { shallow } from "zustand/shallow";
 
-import {
-  useHasSeenShareListPrompt,
-  useHasShownRatingPrompt,
-  useSetShareListPromptSeen,
-} from "~/store";
+import { useHasSeenShareListPrompt, useSetShareListPromptSeen } from "~/store";
 import { useInFlightEventStore } from "~/store/useInFlightEventStore";
 
 export const SHARE_PROMPT_THRESHOLD = 3;
@@ -19,7 +15,6 @@ export const SHARE_PROMPT_THRESHOLD = 3;
 export function useShareListPrompt(upcomingEventCount: number) {
   const hasSeen = useHasSeenShareListPrompt();
   const markSeen = useSetShareListPromptSeen();
-  const hasShownRatingPrompt = useHasShownRatingPrompt();
   const posthog = usePostHog();
   const pendingBatchIds = useInFlightEventStore(
     (s) => s.pendingBatchIds,
@@ -52,12 +47,7 @@ export function useShareListPrompt(upcomingEventCount: number) {
     }
   }, [isShareEligible, posthog, upcomingEventCount]);
 
-  // Defer until the rating prompt has already fired so the two one-shot
-  // prompts don't stack on the same threshold crossing. On fresh logins
-  // both flags reset; rating fires at 1000ms, share follows on the next
-  // state update once its flag is set.
-  const shouldShowOneShot =
-    isShareEligible && !hasSeen && !isBatchInFlight && hasShownRatingPrompt;
+  const shouldShowOneShot = isShareEligible && !hasSeen && !isBatchInFlight;
 
   return {
     isShareEligible,
