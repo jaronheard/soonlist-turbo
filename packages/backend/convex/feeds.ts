@@ -445,6 +445,10 @@ export const getUserCreatedEvents = query({
     ctx,
     { userId, paginationOpts, filter = "upcoming", beforeThisDateTime },
   ) => {
+    // Only the owner may see their private events; anyone else gets public-only.
+    const identity = await ctx.auth.getUserIdentity();
+    const isOwner = identity?.subject === userId;
+
     // Build query with proper index
     let eventsQuery = ctx.db
       .query("events")
@@ -452,11 +456,14 @@ export const getUserCreatedEvents = query({
 
     // Apply time filter - use current time if not provided
     const referenceDateTime = beforeThisDateTime || new Date().toISOString();
-    eventsQuery = eventsQuery.filter((q) =>
-      filter === "upcoming"
-        ? q.gte(q.field("endDateTime"), referenceDateTime)
-        : q.lt(q.field("endDateTime"), referenceDateTime),
-    );
+    eventsQuery = eventsQuery.filter((q) => {
+      const dateFilter =
+        filter === "upcoming"
+          ? q.gte(q.field("endDateTime"), referenceDateTime)
+          : q.lt(q.field("endDateTime"), referenceDateTime);
+      if (isOwner) return dateFilter;
+      return q.and(dateFilter, q.eq(q.field("visibility"), "public"));
+    });
 
     // Apply ordering based on filter
     const orderedQuery =

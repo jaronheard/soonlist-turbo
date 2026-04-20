@@ -1052,12 +1052,16 @@ export const getPublicListEvents = query({
       .query("events")
       .withIndex("by_user_and_startDateTime", (q) => q.eq("userId", user.id));
 
-    // Apply time filter - use current time if not provided
+    // Apply time filter - use current time if not provided.
+    // Always restrict to public events: this query powers the public list.
     const referenceDateTime = beforeThisDateTime || new Date().toISOString();
     eventsQuery = eventsQuery.filter((q) =>
-      filter === "upcoming"
-        ? q.gte(q.field("endDateTime"), referenceDateTime)
-        : q.lt(q.field("endDateTime"), referenceDateTime),
+      q.and(
+        filter === "upcoming"
+          ? q.gte(q.field("endDateTime"), referenceDateTime)
+          : q.lt(q.field("endDateTime"), referenceDateTime),
+        q.eq(q.field("visibility"), "public"),
+      ),
     );
 
     // Apply ordering based on filter
