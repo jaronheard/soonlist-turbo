@@ -1,4 +1,10 @@
-import React, { useCallback, useEffect, useRef, useState } from "react";
+import React, {
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
 import {
   ActivityIndicator,
   Image,
@@ -20,10 +26,10 @@ import { useMutation, useQuery } from "convex/react";
 import { api } from "@soonlist/backend/convex/_generated/api";
 
 import type { LinkValues } from "~/components/LinkIconRow";
-import { Camera } from "~/components/icons";
+import { Camera, User } from "~/components/icons";
+import ScenePreviewThreeUp from "~/components/ScenePreviewThreeUp";
 import { useStablePaginatedQuery } from "~/hooks/useStableQuery";
 import Config from "~/utils/config";
-import { formatEventDateRangeCompact } from "~/utils/dates";
 import { logError } from "~/utils/errorLogging";
 
 const INPUT_CLASSES = "rounded-xl bg-interactive-3 text-neutral-1";
@@ -140,12 +146,24 @@ export default function ShareSetupScreen() {
     }
   }, [userId, listName, displayName, links, completeSetup, username]);
 
-  // Preview the user's first few upcoming events inside the card.
-  const { results: previewEvents } = useStablePaginatedQuery(
+  // Preview the user's first few upcoming events as tilted image tiles.
+  const { results: previewGroups } = useStablePaginatedQuery(
     api.feeds.getMyFeedGrouped,
     { filter: "upcoming" },
-    { initialNumItems: 3 },
+    { initialNumItems: 10 },
   );
+
+  const previewImageUris = useMemo(() => {
+    const urls: string[] = [];
+    for (const group of previewGroups) {
+      const image = (group.event as { image?: string | null }).image;
+      if (typeof image === "string" && image.length > 0) {
+        urls.push(image);
+        if (urls.length >= 3) break;
+      }
+    }
+    return [urls[0] ?? null, urls[1] ?? null, urls[2] ?? null];
+  }, [previewGroups]);
 
   const subtitle =
     typeof count === "number" && count > 0
@@ -185,7 +203,7 @@ export default function ShareSetupScreen() {
           listName={listName}
           avatar={avatar}
           byName={byName}
-          previewEvents={previewEvents.slice(0, 3)}
+          imageUris={previewImageUris}
           onEditPress={() => setIsEditing(true)}
         />
       )}
@@ -243,48 +261,14 @@ export default function ShareSetupScreen() {
   );
 }
 
-interface PreviewEvent {
-  id: string;
-  name: string;
-  dateLabel: string;
-}
-
 interface PreviewContentProps {
   title: string;
   subtitle: string;
   listName: string;
   avatar: string | null;
   byName: string;
-  previewEvents: PreviewEventInput[];
+  imageUris: (string | null)[];
   onEditPress: () => void;
-}
-
-// Shape of a group item from api.feeds.getMyFeedGrouped.
-interface PreviewEventInput {
-  event: {
-    id: string;
-    name?: string | null;
-    startDate?: string | null;
-    startTime?: string | null;
-    endTime?: string | null;
-    timeZone?: string | null;
-  };
-}
-
-function toPreviewEvent(group: PreviewEventInput): PreviewEvent {
-  const e = group.event;
-  const { date, time } = formatEventDateRangeCompact(
-    e.startDate ?? "",
-    e.startTime ?? undefined,
-    e.endTime ?? undefined,
-    e.timeZone ?? "",
-  );
-  const dateLabel = time ? `${date} · ${time}` : date;
-  return {
-    id: e.id,
-    name: e.name ?? "Untitled event",
-    dateLabel,
-  };
 }
 
 function PreviewContent({
@@ -293,11 +277,9 @@ function PreviewContent({
   listName,
   avatar,
   byName,
-  previewEvents,
+  imageUris,
   onEditPress,
 }: PreviewContentProps) {
-  const events = previewEvents.map(toPreviewEvent);
-
   return (
     <View collapsable={false} className="flex-1 px-5 pt-6">
       <Text className="text-center text-2xl font-bold text-neutral-1">
@@ -307,77 +289,45 @@ function PreviewContent({
         {subtitle}
       </Text>
 
-      <View className="rounded-2xl bg-interactive-3 p-4">
-        <View className="flex-row items-start justify-between">
+      <View className="flex-row items-center gap-3 rounded-2xl bg-interactive-3 p-4">
+        <ScenePreviewThreeUp imageUris={imageUris} align="start" />
+        <View className="min-w-0 flex-1">
           <Text
             numberOfLines={1}
-            className="flex-1 text-lg font-bold text-neutral-1"
+            className="text-base font-semibold text-neutral-1"
           >
             {listName}
           </Text>
-          <Pressable
-            accessibilityRole="button"
-            accessibilityLabel="Edit list details"
-            onPress={onEditPress}
-            hitSlop={8}
-            style={({ pressed }) => ({
-              marginLeft: 12,
-              opacity: pressed ? 0.6 : 1,
-            })}
-          >
-            <Text className="text-base font-semibold text-interactive-1">
-              Edit
-            </Text>
-          </Pressable>
-        </View>
-
-        {events.length > 0 ? (
-          <View style={{ marginTop: 12, gap: 8 }}>
-            {events.map((event) => (
-              <View key={event.id} className="rounded-xl bg-white px-3 py-2">
-                <Text
-                  numberOfLines={1}
-                  className="text-sm font-semibold text-neutral-1"
-                >
-                  {event.name}
-                </Text>
-                {event.dateLabel ? (
-                  <Text className="text-xs text-neutral-2">
-                    {event.dateLabel}
-                  </Text>
-                ) : null}
-              </View>
-            ))}
-          </View>
-        ) : null}
-
-        <View
-          style={{
-            marginTop: 12,
-            paddingTop: 12,
-            borderTopWidth: 1,
-            borderTopColor: "rgba(90, 50, 251, 0.12)",
-            flexDirection: "row",
-            alignItems: "center",
-          }}
-        >
-          <View className="h-7 w-7 items-center justify-center overflow-hidden rounded-full bg-white">
+          <View className="mt-1 flex-row items-center gap-1.5">
             {avatar ? (
               <Image
                 source={{ uri: avatar }}
-                style={{ height: 28, width: 28 }}
+                style={{ width: 18, height: 18, borderRadius: 9 }}
               />
             ) : (
-              <Camera size={14} color="#5A32FB" />
+              <View className="h-[18px] w-[18px] items-center justify-center rounded-full bg-neutral-4">
+                <User size={11} color="#627496" />
+              </View>
             )}
-          </View>
-          <Text className="ml-2 text-sm text-neutral-2">
-            by{" "}
-            <Text className="font-semibold text-neutral-1">
-              {byName || "you"}
+            <Text numberOfLines={1} className="flex-1 text-sm text-neutral-2">
+              by{" "}
+              <Text className="font-semibold text-neutral-1">
+                {byName || "you"}
+              </Text>
             </Text>
-          </Text>
+          </View>
         </View>
+        <Pressable
+          accessibilityRole="button"
+          accessibilityLabel="Edit list details"
+          onPress={onEditPress}
+          hitSlop={8}
+          style={({ pressed }) => ({ opacity: pressed ? 0.6 : 1 })}
+        >
+          <Text className="text-base font-semibold text-interactive-1">
+            Edit
+          </Text>
+        </Pressable>
       </View>
     </View>
   );
