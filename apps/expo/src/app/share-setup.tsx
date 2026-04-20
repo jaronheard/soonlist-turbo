@@ -315,8 +315,18 @@ function EditForm({
   onDone,
 }: EditFormProps) {
   return (
-    <>
-      <View className="flex-row items-center justify-between px-5 pb-2 pt-4">
+    <View style={{ flex: 1 }}>
+      <View
+        style={{
+          flexDirection: "row",
+          alignItems: "center",
+          justifyContent: "space-between",
+          paddingHorizontal: 20,
+          paddingTop: 12,
+          paddingBottom: 8,
+          backgroundColor: "white",
+        }}
+      >
         <Text className="text-xl font-bold text-neutral-1">Edit</Text>
         <Pressable
           accessibilityRole="button"
@@ -331,7 +341,7 @@ function EditForm({
       </View>
 
       <ScrollView
-        className="flex-1"
+        style={{ flex: 1 }}
         keyboardShouldPersistTaps="handled"
         contentContainerStyle={{
           paddingHorizontal: 20,
@@ -464,6 +474,6 @@ function EditForm({
           <Text className="mb-3 text-center text-sm text-red-600">{error}</Text>
         ) : null}
       </ScrollView>
-    </>
+    </View>
   );
 }
