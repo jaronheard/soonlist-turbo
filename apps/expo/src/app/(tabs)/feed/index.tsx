@@ -24,7 +24,6 @@ import { api } from "@soonlist/backend/convex/_generated/api";
 
 import LoadingSpinner from "~/components/LoadingSpinner";
 import UserEventsList from "~/components/UserEventsList";
-import { useRatingPrompt } from "~/hooks/useRatingPrompt";
 import { useShareListPrompt } from "~/hooks/useShareListPrompt";
 import { useShareMyList } from "~/hooks/useShareMyList";
 import { useStablePaginatedQuery } from "~/hooks/useStableQuery";
@@ -180,9 +179,6 @@ function MyFeedContent() {
 
   const upcomingCount =
     selectedSegment === "upcoming" ? enrichedEvents.length : 0;
-
-  // Trigger rating prompt when user has 3+ upcoming events
-  useRatingPrompt(upcomingCount);
 
   const posthog = usePostHog();
   const { shouldShowOneShot, markOneShotSeen } =
