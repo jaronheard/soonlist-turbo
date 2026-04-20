@@ -63,6 +63,12 @@ export default function Page({ params }: Props) {
   const { userName } = use(params);
   const currentUser = useQuery(api.users.getCurrentUser);
   const self = currentUser?.username === userName;
+  // Look up the user first so we can skip the feed query for invalid
+  // usernames — getPublicUserFeed throws "User not found" otherwise.
+  const targetUser = useQuery(
+    api.users.getByUsername,
+    self ? "skip" : { userName },
+  );
   const stableNow = useStableTimestamp();
 
   // Self: full personal feed (created + followed + from followed lists).
@@ -74,7 +80,9 @@ export default function Page({ params }: Props) {
   );
   const publicFeedQuery = usePaginatedQuery(
     api.feeds.getPublicUserFeed,
-    !self ? { username: userName, filter: "upcoming" as const } : "skip",
+    !self && targetUser
+      ? { username: userName, filter: "upcoming" as const }
+      : "skip",
     { initialNumItems: 100 },
   );
 
@@ -82,7 +90,8 @@ export default function Page({ params }: Props) {
     ? myFeedQuery
     : publicFeedQuery;
 
-  const isLoading = status === "LoadingFirstPage";
+  const isLoading =
+    status === "LoadingFirstPage" || (!self && targetUser === undefined);
   const events = convexEvents ? transformConvexEvents(convexEvents) : [];
 
   // Client-side safety filter: hide events that have ended

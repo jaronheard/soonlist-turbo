@@ -1,4 +1,3 @@
-import { paginationOptsValidator } from "convex/server";
 import { ConvexError, v } from "convex/values";
 
 import type { DatabaseReader } from "./_generated/server";
