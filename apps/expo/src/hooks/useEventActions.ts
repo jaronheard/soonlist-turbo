@@ -10,7 +10,6 @@ import {
 } from "convex/react";
 import { usePostHog } from "posthog-react-native";
 
-import type { AddToCalendarButtonPropsRestricted } from "@soonlist/cal/types";
 import { api } from "@soonlist/backend/convex/_generated/api";
 
 import { useToast } from "~/components/Toast";
@@ -160,17 +159,15 @@ export function useEventActions({
     if (!event || checkDemoMode()) return;
     void hapticSuccess();
 
-    const eventData = event.event as AddToCalendarButtonPropsRestricted;
-
     try {
       // Track share initiated
       posthog.capture("share_event_initiated", {
         event_id: event.id,
-        event_title: eventData.name ?? "Unknown",
+        event_title: event.name ?? "Unknown",
         source: source ?? "event_detail",
         is_owner: Boolean(isOwner),
         is_saved: Boolean(isSaved),
-        has_location: !!eventData.location,
+        has_location: !!event.location,
       });
 
       const result = await Share.share({
@@ -181,7 +178,7 @@ export function useEventActions({
       if (result.action === Share.sharedAction) {
         posthog.capture("share_event_completed", {
           event_id: event.id,
-          event_title: eventData.name ?? "Unknown",
+          event_title: event.name ?? "Unknown",
           source: source ?? "event_detail",
           is_owner: Boolean(isOwner),
           is_saved: Boolean(isSaved),
@@ -193,7 +190,7 @@ export function useEventActions({
       } else if (result.action === Share.dismissedAction) {
         posthog.capture("share_event_dismissed", {
           event_id: event.id,
-          event_title: eventData.name ?? "Unknown",
+          event_title: event.name ?? "Unknown",
           source: source ?? "event_detail",
           is_owner: Boolean(isOwner),
           is_saved: Boolean(isSaved),
@@ -212,10 +209,9 @@ export function useEventActions({
   const handleDirections = () => {
     if (!event || checkDemoMode()) return;
     void hapticSuccess();
-    const eventData = event.event as AddToCalendarButtonPropsRestricted;
-    if (eventData.location) {
+    if (event.location) {
       const url = `https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(
-        eventData.location,
+        event.location,
       )}`;
       void Linking.openURL(url);
     } else {

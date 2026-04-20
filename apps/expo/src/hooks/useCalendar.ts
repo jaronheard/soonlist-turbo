@@ -5,7 +5,6 @@ import * as Calendar from "expo-calendar";
 import { Temporal } from "@js-temporal/polyfill";
 
 import type { api } from "@soonlist/backend/convex/_generated/api";
-import type { AddToCalendarButtonPropsRestricted } from "@soonlist/cal/types";
 
 import type { CalendarAppInfo } from "~/utils/calendarAppDetection";
 import { usePreferredCalendarApp, useSetPreferredCalendarApp } from "~/store";
@@ -105,10 +104,6 @@ export function useCalendar() {
         }
       }
 
-      // The event.event comes from Convex and should match our expected interface
-
-      const calendarEvent = event.event as AddToCalendarButtonPropsRestricted;
-
       // Build enriched description (used for Google Calendar as well)
       const baseUrlForDesc = Config.apiBaseUrl;
       const eventUrlForDesc =
@@ -123,7 +118,7 @@ export function useCalendar() {
           : baseUrlForDesc
             ? `Captured on Soonlist\n(${baseUrlForDesc})`
             : "Captured on Soonlist";
-      const fullDescriptionForGoogle = `${calendarEvent.description}\n\n${additionalTextForDesc}`;
+      const fullDescriptionForGoogle = `${event.description ?? ""}\n\n${additionalTextForDesc}`;
 
       // If Google Calendar is preferred and installed, use it
       if (currentPreferred === "google") {
@@ -132,14 +127,14 @@ export function useCalendar() {
           sourceApps.find((app) => app.id === "google")?.isInstalled === true;
         if (googleInstalled) {
           const googleCalendarUrl = createGoogleCalendarLink({
-            name: calendarEvent.name,
+            name: event.name,
             description: fullDescriptionForGoogle,
-            location: calendarEvent.location,
-            startDate: calendarEvent.startDate,
-            startTime: calendarEvent.startTime,
-            endDate: calendarEvent.endDate,
-            endTime: calendarEvent.endTime,
-            timeZone: calendarEvent.timeZone,
+            location: event.location,
+            startDate: event.startDate,
+            startTime: event.startTime,
+            endDate: event.endDate,
+            endTime: event.endTime,
+            timeZone: event.timeZone,
           });
 
           const canOpen = await Linking.canOpenURL(googleCalendarUrl);
@@ -201,31 +196,23 @@ export function useCalendar() {
         }
       };
 
-      const eventTimezone = calendarEvent.timeZone || Temporal.Now.timeZoneId();
+      const eventTimezone = event.timeZone || Temporal.Now.timeZoneId();
 
       let startDate: Date;
       let endDate: Date;
 
-      if (calendarEvent.startDate && calendarEvent.startTime) {
-        startDate = parseDate(
-          calendarEvent.startDate,
-          calendarEvent.startTime,
-          eventTimezone,
-        );
-      } else if (calendarEvent.startDate) {
-        startDate = parseDate(calendarEvent.startDate, "00:00", eventTimezone);
+      if (event.startDate && event.startTime) {
+        startDate = parseDate(event.startDate, event.startTime, eventTimezone);
+      } else if (event.startDate) {
+        startDate = parseDate(event.startDate, "00:00", eventTimezone);
       } else {
         throw new Error("Start date is required");
       }
 
-      if (calendarEvent.endDate && calendarEvent.endTime) {
-        endDate = parseDate(
-          calendarEvent.endDate,
-          calendarEvent.endTime,
-          eventTimezone,
-        );
-      } else if (calendarEvent.endDate) {
-        endDate = parseDate(calendarEvent.endDate, "23:59", eventTimezone);
+      if (event.endDate && event.endTime) {
+        endDate = parseDate(event.endDate, event.endTime, eventTimezone);
+      } else if (event.endDate) {
+        endDate = parseDate(event.endDate, "23:59", eventTimezone);
       } else {
         endDate = new Date(startDate.getTime() + 60 * 60 * 1000);
       }
@@ -249,13 +236,13 @@ export function useCalendar() {
           ? `Captured by ${displayName} on Soonlist. \nFull details: ${eventUrl}`
           : `Captured on Soonlist\n(${baseUrl})`;
 
-      const fullDescription = `${calendarEvent.description}\n\n${additionalText}`;
+      const fullDescription = `${event.description ?? ""}\n\n${additionalText}`;
 
       const eventDetails = {
-        title: calendarEvent.name,
+        title: event.name,
         startDate,
         endDate,
-        location: calendarEvent.location,
+        location: event.location,
         notes: fullDescription,
         timeZone: eventTimezone,
         url: eventUrl, // iOS only, but included for platforms that support it

@@ -5,9 +5,9 @@ import { useQuery } from "convex/react";
 
 import type { Doc } from "@soonlist/backend/convex/_generated/dataModel";
 import type { EventMetadata } from "@soonlist/cal";
-import type { AddToCalendarButtonPropsRestricted } from "@soonlist/cal/types";
 import type { User } from "@soonlist/validators";
 import { api } from "@soonlist/backend/convex/_generated/api";
+import { getEventDetails } from "@soonlist/cal";
 import { Skeleton } from "@soonlist/ui/skeleton";
 
 import { EventPage } from "~/components/EventDisplays";
@@ -75,10 +75,9 @@ export default function EventPageClient({ eventId }: { eventId: string }) {
     );
   }
 
-  const calendarData = event.event as AddToCalendarButtonPropsRestricted;
   const metadata = event.eventMetadata as EventMetadata;
 
-  const fullImageUrl = calendarData.images?.[3] || null;
+  const fullImageUrl = getEventDetails(event).images?.[3] || null;
 
   const user = event.user ? transformConvexUser(event.user) : undefined;
   const createdAt = new Date(event._creationTime);
@@ -92,7 +91,7 @@ export default function EventPageClient({ eventId }: { eventId: string }) {
         comments={event.comments ?? []}
         key={event.id}
         id={event.id}
-        event={calendarData}
+        event={event}
         eventMetadata={metadata}
         createdAt={createdAt}
         visibility={event.visibility}

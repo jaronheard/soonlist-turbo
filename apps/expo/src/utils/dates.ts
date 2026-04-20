@@ -1,8 +1,6 @@
 import * as Localization from "expo-localization";
 import { Temporal } from "@js-temporal/polyfill";
 
-import type { AddToCalendarButtonProps } from "@soonlist/cal/types";
-
 import { logError } from "./errorLogging";
 
 // Existing event defaults
@@ -15,17 +13,15 @@ export const blankEvent = {
     "MicrosoftTeams",
     "Outlook.com",
     "Yahoo",
-  ] as
-    | (
-        | "Apple"
-        | "Google"
-        | "iCal"
-        | "Microsoft365"
-        | "MicrosoftTeams"
-        | "Outlook.com"
-        | "Yahoo"
-      )[]
-    | undefined,
+  ] as (
+    | "Apple"
+    | "Google"
+    | "iCal"
+    | "Microsoft365"
+    | "MicrosoftTeams"
+    | "Outlook.com"
+    | "Yahoo"
+  )[],
   buttonStyle: "text" as const,
   name: "Manual entry" as const,
   description: "" as const,
@@ -35,7 +31,7 @@ export const blankEvent = {
   startTime: "" as const,
   endTime: "" as const,
   timeZone: "" as const,
-} as AddToCalendarButtonProps;
+};
 
 const daysOfWeekTemporal = [
   "Monday",

@@ -21,6 +21,15 @@ export interface Event {
   endDateTime: Date | string;
   startDateTime: Date | string;
   visibility: "public" | "private";
+  name?: string;
+  image?: string | null;
+  startDate?: string;
+  startTime?: string;
+  endDate?: string;
+  endTime?: string;
+  location?: string;
+  timeZone?: string;
+  description?: string;
 }
 
 export interface EventFollow {

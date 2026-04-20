@@ -2,6 +2,26 @@ import { Temporal } from "@js-temporal/polyfill";
 
 import type { AddToCalendarButtonProps } from "./types";
 
+export interface EventDetails {
+  images?: string[];
+  description?: string;
+}
+
+export function getEventDetails(event: { event?: unknown }): EventDetails {
+  const blob = event.event;
+  if (!blob || typeof blob !== "object") return {};
+  const { images, description } = blob as {
+    images?: unknown;
+    description?: unknown;
+  };
+  return {
+    images: Array.isArray(images)
+      ? images.filter((i): i is string => typeof i === "string")
+      : undefined,
+    description: typeof description === "string" ? description : undefined,
+  };
+}
+
 export const blankEvent = {
   options: [
     "Apple",

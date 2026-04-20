@@ -3,8 +3,8 @@ import QRCode from "react-native-qrcode-svg";
 import { router, useLocalSearchParams } from "expo-router";
 import { useQuery } from "convex/react";
 
-import type { AddToCalendarButtonProps } from "@soonlist/cal/types";
 import { api } from "@soonlist/backend/convex/_generated/api";
+import { getEventDetails } from "@soonlist/cal";
 
 import { X } from "~/components/icons";
 import { Logo } from "~/components/Logo";
@@ -17,10 +17,9 @@ export default function QRModal() {
 
   if (!event) return null;
 
-  // eslint-disable-next-line @typescript-eslint/consistent-type-assertions
-  const eventData = event.event as AddToCalendarButtonProps;
+  const { images } = getEventDetails(event);
   const qrValue = `${Config.apiBaseUrl}/event/${id}`;
-  const eventImage = eventData.images?.[0];
+  const eventImage = images?.[0];
 
   return (
     <View className="flex-1 bg-interactive-3">
@@ -65,7 +64,7 @@ export default function QRModal() {
           />
 
           <Text className="mt-6 text-center text-xl font-semibold text-black">
-            {eventData.name}
+            {event.name}
           </Text>
 
           <Text className="mt-2 text-sm text-zinc-600">

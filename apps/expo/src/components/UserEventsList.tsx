@@ -19,8 +19,7 @@ import { useUser } from "@clerk/clerk-expo";
 
 import type { api } from "@soonlist/backend/convex/_generated/api";
 import type { Doc } from "@soonlist/backend/convex/_generated/dataModel";
-import type { AddToCalendarButtonPropsRestricted } from "@soonlist/cal/types";
-import { getTimezoneAbbreviation } from "@soonlist/cal";
+import { getEventDetails, getTimezoneAbbreviation } from "@soonlist/cal";
 
 import type { EventAttributionVariant } from "~/components/EventAttributionRow";
 import type { EventWithSimilarity } from "~/utils/similarEvents";
@@ -118,7 +117,7 @@ export function UserEventListItem(props: UserEventListItemProps) {
     source,
   });
   const id = event.id;
-  const e = event.event as AddToCalendarButtonPropsRestricted;
+  const { images: eventImages } = getEventDetails(event);
   const userTimezone = useUserTimezone();
 
   // Normalize timezones for comparison
@@ -127,7 +126,7 @@ export function UserEventListItem(props: UserEventListItemProps) {
     return tz.trim().toLowerCase();
   };
 
-  const normalizedEventTz = normalizeTimezone(e.timeZone);
+  const normalizedEventTz = normalizeTimezone(event.timeZone);
   const normalizedUserTz = normalizeTimezone(userTimezone);
 
   // Get timezone abbreviation if timezones differ
@@ -135,32 +134,32 @@ export function UserEventListItem(props: UserEventListItemProps) {
     normalizedEventTz &&
     normalizedUserTz &&
     normalizedEventTz !== normalizedUserTz &&
-    e.startTime; // Only show for timed events
+    event.startTime; // Only show for timed events
 
   const timezoneAbbreviation = shouldShowTimezone
-    ? getTimezoneAbbreviation(e.timeZone || "")
+    ? getTimezoneAbbreviation(event.timeZone || "")
     : undefined;
 
   const dateString = formatEventDateRange(
-    e.startDate || "",
-    e.startTime,
-    e.endTime,
-    e.timeZone || "",
+    event.startDate || "",
+    event.startTime,
+    event.endTime,
+    event.timeZone || "",
     timezoneAbbreviation,
   );
 
   const startDateInfo = useMemo(
-    () => getDateTimeInfo(e.startDate || "", e.startTime || ""),
-    [e.startDate, e.startTime],
+    () => getDateTimeInfo(event.startDate || "", event.startTime || ""),
+    [event.startDate, event.startTime],
   );
 
   const endDateInfo = useMemo(
     () =>
       getDateTimeInfo(
-        e.endDate || e.startDate || "",
-        e.endTime || e.startTime || "",
+        event.endDate || event.startDate || "",
+        event.endTime || event.startTime || "",
       ),
-    [e.endDate, e.startDate, e.endTime, e.startTime],
+    [event.endDate, event.startDate, event.endTime, event.startTime],
   );
 
   const eventIsOver = useMemo(() => {
@@ -182,11 +181,11 @@ export function UserEventListItem(props: UserEventListItemProps) {
 
   // Prefetch the full-size image for the detail screen so it loads instantly
   useEffect(() => {
-    const imageUrl = e.images?.[3];
+    const imageUrl = eventImages?.[3];
     if (imageUrl && typeof imageUrl === "string") {
       void ExpoImage.prefetch(`${imageUrl}?max-w=1284&fit=contain&f=webp&q=80`);
     }
-  }, [e.images]);
+  }, [eventImages]);
 
   const isRecent = useMemo(() => {
     const threeHoursAgoTimestamp = Date.now() - 3 * 60 * 60 * 1000;
@@ -294,15 +293,11 @@ export function UserEventListItem(props: UserEventListItemProps) {
                 backgroundColor: "white",
               }}
             >
-              {e.images?.[3] ? (
+              {eventImages?.[3] ? (
                 <ExpoImage
-                  source={
-                    typeof e.images[3] === "number"
-                      ? e.images[3]
-                      : {
-                          uri: `${e.images[3]}?w=160&h=160&fit=cover&f=webp&q=80`,
-                        }
-                  }
+                  source={{
+                    uri: `${eventImages[3]}?w=160&h=160&fit=cover&f=webp&q=80`,
+                  }}
                   style={{
                     width: imageWidth,
                     height: imageHeight,
@@ -368,16 +363,16 @@ export function UserEventListItem(props: UserEventListItemProps) {
               numberOfLines={1}
               ellipsizeMode="tail"
             >
-              {e.name}
+              {event.name}
             </Text>
-            {e.location ? (
+            {event.location ? (
               <View className="mb-1 flex-shrink flex-row items-center">
                 <Text
                   className="text-sm text-neutral-2"
                   numberOfLines={1}
                   ellipsizeMode="tail"
                 >
-                  {e.location}
+                  {event.location}
                 </Text>
               </View>
             ) : null}
