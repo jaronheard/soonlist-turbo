@@ -7,6 +7,10 @@ import { ConvexProviderWithClerk } from "convex/react-clerk";
 import { posthog } from "posthog-js";
 import { PostHogProvider } from "posthog-js/react";
 
+import { Toaster } from "@soonlist/ui/sonner";
+
+import { BatchStatusToastContainer } from "~/components/BatchStatusToast";
+import { WorkflowStatusToastContainer } from "~/components/WorkflowStatusToast";
 import ContextProvider from "~/context/ContextProvider";
 import { env } from "~/env";
 import { convex } from "~/lib/convex";
@@ -37,7 +41,12 @@ export function Providers({ children }: { children: React.ReactNode }) {
           <Suspense>
             <IntercomProvider> </IntercomProvider>
           </Suspense>
-          <ContextProvider>{children}</ContextProvider>
+          <ContextProvider>
+            {children}
+            <Toaster />
+            <WorkflowStatusToastContainer />
+            <BatchStatusToastContainer />
+          </ContextProvider>
         </QueryClientProvider>
       </ConvexProviderWithClerk>
     </ClerkProvider>
