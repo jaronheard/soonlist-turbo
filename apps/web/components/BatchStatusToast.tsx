@@ -16,7 +16,7 @@ interface BatchStatusToastProps {
 
 function BatchStatusToast({ batchId }: BatchStatusToastProps) {
   const router = useRouter();
-  const { removeBatchId } = useBatchStore();
+  const removeBatchId = useBatchStore((state) => state.removeBatchId);
   const toastIdRef = useRef<string | number | null>(null);
   const hasShownCompletionRef = useRef(false);
   const cleanupTimeoutRef = useRef<NodeJS.Timeout | null>(null);
@@ -80,7 +80,6 @@ function BatchStatusToast({ batchId }: BatchStatusToastProps) {
 
       toastIdRef.current = null;
 
-      // Remove from store after the toast has had a chance to display
       cleanupTimeoutRef.current = setTimeout(
         () => removeBatchId(batchId),
         6000,
@@ -105,19 +104,13 @@ function BatchStatusToast({ batchId }: BatchStatusToastProps) {
 }
 
 export function BatchStatusToastContainer() {
-  const { batchIds } = useBatchStore();
-
-  if (batchIds.length === 0) {
-    return null;
-  }
+  const batchIds = useBatchStore((state) => state.batchIds);
 
   return (
     <>
-      {batchIds
-        .filter((batchId) => batchId && typeof batchId === "string")
-        .map((batchId) => (
-          <BatchStatusToast key={batchId} batchId={batchId} />
-        ))}
+      {batchIds.map((batchId) => (
+        <BatchStatusToast key={batchId} batchId={batchId} />
+      ))}
     </>
   );
 }

@@ -254,7 +254,6 @@ export function useDragAndDropHandler(
         });
 
         if (result.batchId) {
-          // Track the batch globally so the status toast survives navigation
           addBatchId(result.batchId);
 
           // For multi-image batches, we don't get a single workflowId
