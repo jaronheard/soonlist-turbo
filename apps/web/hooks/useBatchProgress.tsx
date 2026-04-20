@@ -8,24 +8,29 @@ import { toast } from "sonner";
 
 import { api } from "@soonlist/backend/convex/_generated/api";
 
-import { useBatchStore } from "~/hooks/useBatchStore";
-
-interface BatchStatusToastProps {
-  batchId: string;
+interface UseBatchProgressOptions {
+  batchId: string | null;
 }
 
-function BatchStatusToast({ batchId }: BatchStatusToastProps) {
+/**
+ * Hook to track batch upload progress with updating toast
+ * Updates the same toast from loading to success/error state
+ */
+export function useBatchProgress({ batchId }: UseBatchProgressOptions): void {
   const router = useRouter();
-  const removeBatchId = useBatchStore((state) => state.removeBatchId);
   const toastIdRef = useRef<string | number | null>(null);
   const hasShownCompletionRef = useRef(false);
-  const cleanupTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
-  const batchStatus = useQuery(api.eventBatches.getBatchStatus, { batchId });
+  // Use Convex query to reactively track batch status
+  const batchStatus = useQuery(
+    api.eventBatches.getBatchStatus,
+    batchId ? { batchId } : "skip",
+  );
 
   useEffect(() => {
     if (!batchStatus) return;
 
+    // Show initial loading toast
     if (batchStatus.status === "processing" && !toastIdRef.current) {
       toastIdRef.current = toast.loading(
         <div className="flex items-center gap-2">
@@ -35,11 +40,13 @@ function BatchStatusToast({ batchId }: BatchStatusToastProps) {
             {batchStatus.totalCount === 1 ? "event" : "events"}...
           </span>
         </div>,
-        { duration: Infinity },
+        {
+          duration: Infinity,
+        },
       );
-      return;
     }
 
+    // Update the same toast when completed/failed (or create a new one if no loading toast exists)
     if (
       (batchStatus.status === "completed" || batchStatus.status === "failed") &&
       !hasShownCompletionRef.current
@@ -49,10 +56,10 @@ function BatchStatusToast({ batchId }: BatchStatusToastProps) {
       const hasErrors = batchStatus.failureCount > 0;
 
       if (hasErrors) {
+        const successCount = batchStatus.successCount;
+        const totalCount = batchStatus.totalCount;
         toast.error(
-          `${batchStatus.successCount} out of ${batchStatus.totalCount} ${
-            batchStatus.totalCount === 1 ? "event" : "events"
-          } captured successfully`,
+          `${successCount} out of ${totalCount} ${totalCount === 1 ? "event" : "events"} captured successfully`,
           {
             id: toastIdRef.current ?? undefined,
             duration: 6000,
@@ -78,43 +85,19 @@ function BatchStatusToast({ batchId }: BatchStatusToastProps) {
         });
       }
 
+      // Clear the ref since the toast is now handled
       toastIdRef.current = null;
-
-      cleanupTimeoutRef.current = setTimeout(
-        () => {
-          cleanupTimeoutRef.current = null;
-          removeBatchId(batchId);
-        },
-        hasErrors ? 6000 : 4000,
-      );
     }
-  }, [batchStatus, batchId, router, removeBatchId]);
+  }, [batchStatus]);
 
+  // Cleanup: dismiss toast when component unmounts or batchId changes
   useEffect(() => {
     return () => {
       if (toastIdRef.current) {
         toast.dismiss(toastIdRef.current);
         toastIdRef.current = null;
       }
-      if (cleanupTimeoutRef.current) {
-        clearTimeout(cleanupTimeoutRef.current);
-        cleanupTimeoutRef.current = null;
-        removeBatchId(batchId);
-      }
+      hasShownCompletionRef.current = false;
     };
-  }, [batchId, removeBatchId]);
-
-  return null;
-}
-
-export function BatchStatusToastContainer() {
-  const batchIds = useBatchStore((state) => state.batchIds);
-
-  return (
-    <>
-      {batchIds.map((batchId) => (
-        <BatchStatusToast key={batchId} batchId={batchId} />
-      ))}
-    </>
-  );
+  }, [batchId]);
 }

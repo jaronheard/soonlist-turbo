@@ -1,6 +1,5 @@
 import { Toaster } from "@soonlist/ui/sonner";
 
-import { BatchStatusToastContainer } from "~/components/BatchStatusToast";
 import { DragAndDropProvider } from "~/components/DragAndDropProvider";
 import { Footer } from "~/components/Footer";
 import { Header } from "~/components/Header";
@@ -17,7 +16,6 @@ export default function Layout({ children }: { children: React.ReactNode }) {
         <div className="h-14" aria-hidden />
         <Toaster />
         <WorkflowStatusToastContainer />
-        <BatchStatusToastContainer />
         <main className="mx-auto min-h-[calc(100vh-4.5rem)] w-full max-w-2xl px-6 pb-16 pt-6 sm:min-h-[calc(100vh-5.75rem)] lg:px-8 lg:py-24">
           {children}
         </main>
