@@ -208,9 +208,7 @@ export default function ShareSetupScreen() {
           {submitting ? (
             <ActivityIndicator color="#fff" />
           ) : (
-            <Text className="text-base font-semibold text-white">
-              Share list
-            </Text>
+            <Text className="text-base font-semibold text-white">Share</Text>
           )}
         </Pressable>
         {!isEditing ? (
@@ -221,7 +219,7 @@ export default function ShareSetupScreen() {
             style={({ pressed }) => ({
               height: 44,
               justifyContent: "center",
-              marginTop: 4,
+              marginTop: 16,
               opacity: pressed ? 0.6 : 1,
             })}
           >
