@@ -188,9 +188,9 @@ export default function ShareSetupScreen() {
         style={{
           flexShrink: 0,
           paddingHorizontal: 20,
-          paddingTop: 20,
-          paddingBottom: Math.max(insets.bottom, 20),
-          gap: 24,
+          paddingTop: 12,
+          paddingBottom: Math.max(insets.bottom, 16),
+          gap: 12,
         }}
       >
         <Pressable
@@ -221,7 +221,7 @@ export default function ShareSetupScreen() {
             onPress={() => router.back()}
             style={({ pressed }) => ({
               justifyContent: "center",
-              paddingVertical: 12,
+              paddingVertical: 8,
               opacity: pressed ? 0.6 : 1,
             })}
           >
