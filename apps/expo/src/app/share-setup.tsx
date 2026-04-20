@@ -184,10 +184,13 @@ export default function ShareSetupScreen() {
 
       <View
         collapsable={false}
-        className="bg-white px-5 pt-3"
+        className="bg-white"
         style={{
           flexShrink: 0,
-          paddingBottom: Math.max(insets.bottom, 16),
+          paddingHorizontal: 20,
+          paddingTop: 20,
+          paddingBottom: Math.max(insets.bottom, 20),
+          gap: 24,
         }}
       >
         <Pressable
@@ -217,9 +220,8 @@ export default function ShareSetupScreen() {
             accessibilityLabel="Not now"
             onPress={() => router.back()}
             style={({ pressed }) => ({
-              height: 44,
               justifyContent: "center",
-              marginTop: 16,
+              paddingVertical: 12,
               opacity: pressed ? 0.6 : 1,
             })}
           >
