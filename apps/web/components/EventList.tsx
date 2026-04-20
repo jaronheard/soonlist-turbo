@@ -3,7 +3,6 @@
 import { clsx } from "clsx";
 import { useQuery } from "convex/react";
 
-import type { AddToCalendarButtonPropsRestricted } from "@soonlist/cal/types";
 import type {
   Comment,
   Event,
@@ -150,7 +149,7 @@ export function EventList({
                       eventFollows={item.eventFollows}
                       comments={item.comments}
                       id={item.id}
-                      event={item.event as AddToCalendarButtonPropsRestricted}
+                      event={item}
                       visibility={item.visibility}
                       lists={item.eventToLists?.map(
                         (list: EventToListsWithList) => list.list,
@@ -202,7 +201,7 @@ export function EventList({
                       eventFollows={item.eventFollows}
                       comments={item.comments}
                       id={item.id}
-                      event={item.event as AddToCalendarButtonPropsRestricted}
+                      event={item}
                       visibility={item.visibility}
                       lists={item.eventToLists?.map(
                         (list: EventToListsWithList) => list.list,
@@ -255,7 +254,7 @@ export function EventList({
                     eventFollows={item.eventFollows}
                     comments={item.comments}
                     id={item.id}
-                    event={item.event as AddToCalendarButtonPropsRestricted}
+                    event={item}
                     visibility={item.visibility}
                     lists={item.eventToLists?.map(
                       (list: EventToListsWithList) => list.list,

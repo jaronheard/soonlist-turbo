@@ -3,15 +3,23 @@
 import { Share } from "lucide-react";
 import { toast } from "sonner";
 
-import type { AddToCalendarButtonProps } from "@soonlist/cal/types";
 import { Button } from "@soonlist/ui/button";
 
 import { env } from "~/env";
 import { DropdownMenuItem } from "./DropdownMenu";
 
+export interface ShareButtonEventData {
+  name?: string;
+  startDate?: string;
+  startTime?: string;
+  endTime?: string;
+  location?: string;
+  description?: string;
+}
+
 export interface ShareButtonProps {
   id: string;
-  event: AddToCalendarButtonProps;
+  event: ShareButtonEventData;
   type: "button" | "dropdown" | "icon";
 }
 

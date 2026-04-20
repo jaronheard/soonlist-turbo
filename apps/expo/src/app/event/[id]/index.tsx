@@ -27,9 +27,8 @@ import { useUser } from "@clerk/clerk-expo";
 import { useQuery } from "convex/react";
 
 import type { EventMetadata } from "@soonlist/cal";
-import type { AddToCalendarButtonPropsRestricted } from "@soonlist/cal/types";
 import { api } from "@soonlist/backend/convex/_generated/api";
-import { getTimezoneAbbreviation } from "@soonlist/cal";
+import { getEventDetails, getTimezoneAbbreviation } from "@soonlist/cal";
 
 import { EventMenu } from "~/components/EventMenu";
 import { HeaderLogo } from "~/components/HeaderLogo";
@@ -205,25 +204,25 @@ function EventDetail({ id }: { id: string }) {
 
   // Pre-calculate the image URI for the event image
   const imageUri = useMemo(() => {
-    if (!event?.event) return null;
+    if (!event) return null;
 
-    const eventData = event.event as AddToCalendarButtonPropsRestricted;
-    const eventImage = eventData?.images?.[3];
+    const { images } = getEventDetails(event);
+    const eventImage = images?.[3];
     if (!eventImage) {
       return null;
     }
     return `${eventImage}?max-w=1284&fit=contain&f=webp&q=80`;
-  }, [event?.event?.images]);
+  }, [event]);
 
   // Thumbnail URI matching what the list items cache (used as a placeholder)
   const thumbnailUri = useMemo(() => {
-    if (!event?.event) return null;
+    if (!event) return null;
 
-    const eventData = event.event as AddToCalendarButtonPropsRestricted;
-    const eventImage = eventData?.images?.[3];
+    const { images } = getEventDetails(event);
+    const eventImage = images?.[3];
     if (!eventImage) return null;
     return `${eventImage}?w=160&h=160&fit=cover&f=webp&q=80`;
-  }, [event?.event?.images]);
+  }, [event]);
 
   // Build the header-left UI if we can't go back
   const HeaderLeft = useCallback(() => {
@@ -345,7 +344,6 @@ function EventDetail({ id }: { id: string }) {
   }
 
   // Normal render
-  const eventData = event.event as AddToCalendarButtonPropsRestricted;
   const isCurrentUserEvent = currentUser?.id === event.userId;
 
   // Normalize timezones for comparison
@@ -354,7 +352,7 @@ function EventDetail({ id }: { id: string }) {
     return tz.trim().toLowerCase();
   };
 
-  const normalizedEventTz = normalizeTimezone(eventData.timeZone);
+  const normalizedEventTz = normalizeTimezone(event.timeZone);
   const normalizedUserTz = normalizeTimezone(userTimezone);
 
   // Get timezone abbreviation if timezones differ
@@ -362,18 +360,18 @@ function EventDetail({ id }: { id: string }) {
     normalizedEventTz &&
     normalizedUserTz &&
     normalizedEventTz !== normalizedUserTz &&
-    eventData.startTime; // Only show for timed events
+    event.startTime; // Only show for timed events
 
   const timezoneAbbreviation = shouldShowTimezone
-    ? getTimezoneAbbreviation(eventData.timeZone || "")
+    ? getTimezoneAbbreviation(event.timeZone || "")
     : undefined;
 
   // Compute event date/time strings
   const { date, time, eventTime } = formatEventDateRange(
-    eventData.startDate || "",
-    eventData.startTime,
-    eventData.endTime,
-    eventData.timeZone || "",
+    event.startDate || "",
+    event.startTime,
+    event.endTime,
+    event.timeZone || "",
     timezoneAbbreviation,
   );
 
@@ -418,18 +416,18 @@ function EventDetail({ id }: { id: string }) {
               </Text>
             </View>
             <Text className="font-heading text-3xl font-bold text-neutral-1">
-              {eventData.name}
+              {event.name}
             </Text>
           </View>
 
           {/* Meta rows (venue + visibility/author) */}
-          {(eventData.location || showDiscover) && (
+          {(event.location || showDiscover) && (
             <View className="mt-4 flex flex-col gap-2">
               {/* Location link */}
-              {eventData.location && (
+              {event.location && (
                 <Link
                   href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(
-                    eventData.location,
+                    event.location,
                   )}`}
                   asChild
                 >
@@ -437,7 +435,7 @@ function EventDetail({ id }: { id: string }) {
                     <View className="flex-row items-center">
                       <MapPinned size={16} color="#5A32FB" />
                       <Text className="ml-1 text-interactive-1">
-                        {eventData.location}
+                        {event.location}
                       </Text>
                     </View>
                   </Pressable>
@@ -491,7 +489,7 @@ function EventDetail({ id }: { id: string }) {
 
           {/* Description */}
           <View className="mb-3 mt-6">
-            <Text className="text-neutral-1">{eventData.description}</Text>
+            <Text className="text-neutral-1">{event.description}</Text>
           </View>
 
           {/* Metadata Section */}

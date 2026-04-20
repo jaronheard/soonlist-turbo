@@ -53,6 +53,15 @@ function transformConvexEvents(
     eventFollows: event.eventFollows,
     comments: [],
     eventToLists: [],
+    name: event.name,
+    image: event.image,
+    startDate: event.startDate,
+    startTime: event.startTime,
+    endDate: event.endDate,
+    endTime: event.endTime,
+    location: event.location,
+    timeZone: event.timeZone,
+    description: event.description,
   }));
 }
 

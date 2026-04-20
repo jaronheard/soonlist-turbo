@@ -8,16 +8,14 @@ import { atcb_action } from "add-to-calendar-button-react";
 import { Copy, Earth, EyeOff, Instagram, MapPin } from "lucide-react";
 
 import type { DateInfo, EventMetadata, SimilarityDetails } from "@soonlist/cal";
-import type {
-  AddToCalendarButtonPropsRestricted,
-  ATCBActionEventConfig,
-} from "@soonlist/cal/types";
+import type { ATCBActionEventConfig } from "@soonlist/cal/types";
 import type { Comment, EventFollow, List, User } from "@soonlist/validators";
 import {
   eventTimesAreDefined,
   formatRelativeTime,
   getDateInfoUTC,
   getDateTimeInfo,
+  getEventDetails,
 } from "@soonlist/cal";
 
 import type { AddToCalendarCardProps } from "./AddToCalendarCard";
@@ -174,6 +172,22 @@ export function EventMetadataDisplay({
   );
 }
 
+// Narrow shape describing the event fields these display components read.
+// Fulfilled by both `EventWithUser` rows from Convex and
+// `AddToCalendarCardProps` used in the new-event preview flow.
+export interface EventDisplayData {
+  name?: string;
+  description?: string;
+  startDate?: string;
+  startTime?: string;
+  endDate?: string;
+  endTime?: string;
+  timeZone?: string;
+  location?: string;
+  // Raw calendar event blob, used to pull `images` via getEventDetails.
+  event?: unknown;
+}
+
 interface EventListItemProps {
   list?: List; // this is the list that this is a part of
   variant?: "card" | "minimal";
@@ -182,7 +196,7 @@ interface EventListItemProps {
   comments: Comment[];
   id: string;
   createdAt?: Date | string;
-  event: AddToCalendarCardProps;
+  event: EventDisplayData;
   visibility: "public" | "private";
   hideCurator?: boolean;
   showOtherCurators?: boolean;
@@ -202,7 +216,7 @@ interface EventPageProps {
   comments: Comment[];
   id: string;
   createdAt?: Date | string;
-  event: AddToCalendarButtonPropsRestricted;
+  event: EventDisplayData;
   image?: string | null;
   visibility: "public" | "private";
   singleEvent?: boolean;
@@ -575,7 +589,7 @@ function EventActionButtons({
   size,
 }: {
   user?: User;
-  event: AddToCalendarButtonPropsRestricted;
+  event: EventDisplayData;
   id: string;
   isOwner: boolean;
   isFollowing?: boolean;
@@ -590,6 +604,17 @@ function EventActionButtons({
     return <></>;
   }
 
+  const atcbEventConfig: ATCBActionEventConfig = {
+    name: event.name,
+    description: event.description,
+    startDate: event.startDate,
+    startTime: event.startTime,
+    endDate: event.endDate,
+    endTime: event.endTime,
+    timeZone: event.timeZone,
+    location: event.location,
+  };
+
   if (variant === "minimal") {
     const scale =
       size === "sm" ? "transform scale-[0.55] origin-bottom-right" : "";
@@ -598,7 +623,7 @@ function EventActionButtons({
         <ShareButton type="icon" event={event} id={id} />
         <CalendarButton
           type="icon"
-          event={event as ATCBActionEventConfig}
+          event={atcbEventConfig}
           id={id}
           username={user.username}
         />
@@ -648,7 +673,7 @@ function EventActionButtons({
       <ShareButton type="icon" event={event} id={id} />
       <CalendarButton
         type="icon"
-        event={event as ATCBActionEventConfig}
+        event={atcbEventConfig}
         id={id}
         username={user.username}
       />
@@ -678,7 +703,7 @@ export function EventListItem(props: EventListItemProps) {
     (item) => item.userId === clerkUser?.id,
   );
   const image =
-    event.images?.[3] ||
+    getEventDetails(event).images?.[3] ||
     (filePath ? buildDefaultUrl(props.filePath || "") : undefined);
 
   if (!props.variant || props.variant === "minimal") {
@@ -1107,7 +1132,7 @@ export function EventListItem(props: EventListItemProps) {
       <div className="absolute bottom-2 right-2 z-20">
         <EventActionButtons
           user={user}
-          event={event as AddToCalendarButtonPropsRestricted}
+          event={event}
           id={id}
           isOwner={!!isOwner}
           isFollowing={isFollowing}
@@ -1372,8 +1397,19 @@ export function EventPage(props: EventPageProps) {
     return null;
   }
 
+  const atcbEventConfig: ATCBActionEventConfig = {
+    name: event.name,
+    description: event.description,
+    startDate: event.startDate,
+    startTime: event.startTime,
+    endDate: event.endDate,
+    endTime: event.endTime,
+    timeZone: event.timeZone,
+    location: event.location,
+  };
+
   const handleAddToCalendar = () => {
-    const eventForCalendar = { ...event } as ATCBActionEventConfig;
+    const eventForCalendar: ATCBActionEventConfig = { ...atcbEventConfig };
     const displayName =
       user?.displayName || (user?.username ? `@${user.username}` : "");
     const additionalText =
@@ -1448,7 +1484,7 @@ export function EventPage(props: EventPageProps) {
       eventMetadata={props.eventMetadata}
       calendarButton={
         <CalendarButton
-          event={event as ATCBActionEventConfig}
+          event={atcbEventConfig}
           id={id}
           username={user?.username}
           type="button"

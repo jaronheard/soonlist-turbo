@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 
-import type { AddToCalendarButtonPropsRestricted } from "@soonlist/cal/types";
 import { api } from "@soonlist/backend/convex/_generated/api";
+import { getEventDetails } from "@soonlist/cal";
 
 import { getAuthenticatedConvex } from "~/lib/convex-server";
 import EventPageClient from "./EventPageClient";
@@ -33,18 +33,17 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
       };
     }
 
-    const eventData = event.event as AddToCalendarButtonPropsRestricted;
-    const eventImage = eventData.images?.[0];
+    const eventImage = getEventDetails(event).images?.[0];
+    const eventName = event.name;
+    const eventDescription = event.description;
 
     // Generate Open Graph metadata with Smart App Banner for iOS
     return {
-      title: `${eventData.name} | Soonlist`,
-      description:
-        eventData.description || `Join ${eventData.name} on Soonlist`,
+      title: `${eventName} | Soonlist`,
+      description: eventDescription || `Join ${eventName} on Soonlist`,
       openGraph: {
-        title: eventData.name || "Event on Soonlist",
-        description:
-          eventData.description || `Join ${eventData.name} on Soonlist`,
+        title: eventName || "Event on Soonlist",
+        description: eventDescription || `Join ${eventName} on Soonlist`,
         type: "website",
         images: eventImage
           ? [
@@ -52,7 +51,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
                 url: eventImage,
                 width: 1200,
                 height: 630,
-                alt: eventData.name || "Event image",
+                alt: eventName || "Event image",
               },
             ]
           : [],
@@ -61,9 +60,8 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
       },
       twitter: {
         card: eventImage ? "summary_large_image" : "summary",
-        title: eventData.name || "Event on Soonlist",
-        description:
-          eventData.description || `Join ${eventData.name} on Soonlist`,
+        title: eventName || "Event on Soonlist",
+        description: eventDescription || `Join ${eventName} on Soonlist`,
         images: eventImage ? [eventImage] : undefined,
       },
       // iOS Smart App Banner - prompts users to open in the Soonlist app

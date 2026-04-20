@@ -6,8 +6,8 @@ import Link from "next/link";
 import { usePaginatedQuery } from "convex/react";
 import { Globe2, Grid3X3, List } from "lucide-react";
 
-import type { AddToCalendarButtonPropsRestricted } from "@soonlist/cal/types";
 import { api } from "@soonlist/backend/convex/_generated/api";
+import { getEventDetails } from "@soonlist/cal";
 
 import { UserProfileFlair } from "~/components/UserProfileFlair";
 import { useStableTimestamp } from "~/hooks/useStableQuery";
@@ -25,30 +25,18 @@ interface PosterEvent {
   startDateTime: Date;
 }
 
-// Extract first image from event
-function getFirstImage(
-  event: AddToCalendarButtonPropsRestricted,
-): string | null {
-  if (!event.images) return null;
-  if (typeof event.images === "string") return event.images;
-  if (Array.isArray(event.images) && event.images.length > 0)
-    return event.images[0]!;
-  return null;
-}
-
 // Transform Convex events to poster format
 function transformToPosterEvents(
   events: FunctionReturnType<typeof api.feeds.getDiscoverFeed>["page"],
 ): PosterEvent[] {
   return events
     .map((event) => {
-      const eventData = event.event as AddToCalendarButtonPropsRestricted;
-      const image = getFirstImage(eventData);
+      const image = getEventDetails(event).images?.[0];
       if (!image || !event.user) return null;
 
       return {
         id: event.id,
-        name: eventData.name || "Untitled Event",
+        name: event.name || "Untitled Event",
         images: [image],
         user: {
           username: event.user.username,
