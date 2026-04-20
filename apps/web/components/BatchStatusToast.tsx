@@ -82,7 +82,7 @@ function BatchStatusToast({ batchId }: BatchStatusToastProps) {
 
       cleanupTimeoutRef.current = setTimeout(
         () => removeBatchId(batchId),
-        6000,
+        hasErrors ? 6000 : 4000,
       );
     }
   }, [batchStatus, batchId, router, removeBatchId]);
