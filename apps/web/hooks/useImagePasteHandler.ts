@@ -8,6 +8,7 @@ import { toast } from "sonner";
 import { api } from "@soonlist/backend/convex/_generated/api";
 
 import { TimezoneContext } from "~/context/TimezoneContext";
+import { useBatchStore } from "~/hooks/useBatchStore";
 import {
   generateBatchId,
   generateTempId,
@@ -33,7 +34,6 @@ interface UseImagePasteHandlerReturn {
   isProcessing: boolean;
   error: string | null;
   lastProcessedImage: string | null;
-  currentBatchId: string | null;
 }
 
 export function useImagePasteHandler(
@@ -50,12 +50,12 @@ export function useImagePasteHandler(
   const [lastProcessedImage, setLastProcessedImage] = useState<string | null>(
     null,
   );
-  const [currentBatchId, setCurrentBatchId] = useState<string | null>(null);
 
   // Synchronous ref lock to prevent duplicate event creation on rapid paste
   const isProcessingRef = useRef(false);
 
   const createEventBatch = useMutation(api.ai.createEventBatch);
+  const addBatchId = useBatchStore((state) => state.addBatchId);
 
   // Helper function to check if paste event should be handled
   const shouldHandlePasteEventInternal = useCallback(
@@ -182,8 +182,7 @@ export function useImagePasteHandler(
         });
 
         if (result.batchId) {
-          // Store the batchId for progress tracking
-          setCurrentBatchId(result.batchId);
+          addBatchId(result.batchId);
 
           // For multi-image batches, we don't get a single workflowId
           // The backend processes them asynchronously
@@ -215,6 +214,7 @@ export function useImagePasteHandler(
       currentUser,
       timezone,
       createEventBatch,
+      addBatchId,
       onSuccess,
       onError,
       router,
@@ -249,6 +249,5 @@ export function useImagePasteHandler(
     isProcessing,
     error,
     lastProcessedImage,
-    currentBatchId,
   };
 }
