@@ -9,10 +9,15 @@ import { api } from "@soonlist/backend/convex/_generated/api";
 import Config from "~/utils/config";
 import { logError } from "~/utils/errorLogging";
 
+interface RequestShareOptions {
+  /** Upcoming event count to display in the share-setup preview subtitle. */
+  eventCount?: number;
+}
+
 /**
  * Kicks off a share of the user's personal Soonlist. On the first share
  * attempt (hasSharedListBefore false/undefined), routes to the share-setup
- * modal screen. Returning users skip setup and get the native share sheet.
+ * modal. Returning users skip setup and get the native share sheet.
  */
 export function useShareMyList() {
   const { user } = useUser();
@@ -29,13 +34,22 @@ export function useShareMyList() {
     }
   }, [user?.username, currentUser?.username]);
 
-  const requestShare = useCallback(() => {
-    if (currentUser?.hasSharedListBefore) {
-      void openNativeShare();
-      return;
-    }
-    router.push("/share-setup");
-  }, [currentUser?.hasSharedListBefore, openNativeShare]);
+  const requestShare = useCallback(
+    (options?: RequestShareOptions) => {
+      if (currentUser?.hasSharedListBefore) {
+        void openNativeShare();
+        return;
+      }
+      router.push({
+        pathname: "/share-setup",
+        params:
+          typeof options?.eventCount === "number"
+            ? { count: String(options.eventCount) }
+            : {},
+      });
+    },
+    [currentUser?.hasSharedListBefore, openNativeShare],
+  );
 
   return { requestShare };
 }

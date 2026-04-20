@@ -202,7 +202,7 @@ function MyFeedContent() {
       markOneShotSeen();
       if (!hasSharedListBefore) {
         posthog.capture("share_prompt_one_shot_shown");
-        requestShare();
+        requestShare({ eventCount: upcomingCount });
       }
     }, 400);
     return () => clearTimeout(t);
@@ -212,12 +212,13 @@ function MyFeedContent() {
     markOneShotSeen,
     posthog,
     requestShare,
+    upcomingCount,
   ]);
 
   const handlePillShare = useCallback(() => {
     posthog.capture("share_prompt_pill_tapped");
-    requestShare();
-  }, [posthog, requestShare]);
+    requestShare({ eventCount: upcomingCount });
+  }, [posthog, requestShare, upcomingCount]);
 
   // Update tab badge count based on upcoming events
   const setMyListBadgeCount = useAppStore((s) => s.setMyListBadgeCount);

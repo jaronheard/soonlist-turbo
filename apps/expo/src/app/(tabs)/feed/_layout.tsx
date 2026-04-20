@@ -30,7 +30,7 @@ export default function FeedLayout() {
                 type: "button",
                 label: "",
                 icon: { type: "sfSymbol", name: "square.and.arrow.up" },
-                onPress: requestShare,
+                onPress: () => requestShare(),
                 accessibilityLabel: "Share",
                 tintColor: "#5A32FB",
               },

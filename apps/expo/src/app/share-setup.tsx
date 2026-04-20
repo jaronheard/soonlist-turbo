@@ -12,7 +12,7 @@ import {
   View,
 } from "react-native";
 import * as ImagePicker from "expo-image-picker";
-import { router } from "expo-router";
+import { router, useLocalSearchParams, useNavigation } from "expo-router";
 import { useUser } from "@clerk/clerk-expo";
 import { useMutation, useQuery } from "convex/react";
 
@@ -20,7 +20,6 @@ import { api } from "@soonlist/backend/convex/_generated/api";
 
 import type { LinkValues } from "~/components/LinkIconRow";
 import { Camera } from "~/components/icons";
-import { LinkIconRow } from "~/components/LinkIconRow";
 import Config from "~/utils/config";
 import { logError } from "~/utils/errorLogging";
 
@@ -37,28 +36,29 @@ export default function ShareSetupScreen() {
   const { user } = useUser();
   const currentUser = useQuery(api.users.getCurrentUser);
   const completeSetup = useMutation(api.users.completeFirstShareSetup);
+  const navigation = useNavigation();
 
-  const defaultListName = currentUser?.publicListName
-    ? currentUser.publicListName
-    : `${currentUser?.displayName ?? user?.firstName ?? "My"}'s Soonlist`;
+  const { count: countParam } = useLocalSearchParams<{ count?: string }>();
+  const count = countParam ? Number.parseInt(countParam, 10) : undefined;
+
+  const defaultListName =
+    currentUser?.publicListName ||
+    `${currentUser?.displayName ?? user?.firstName ?? "My"}'s Soonlist`;
 
   const [listName, setListName] = useState(defaultListName);
-  const [displayName, setDisplayName] = useState(
-    currentUser?.displayName ?? "",
-  );
+  const [displayName, setDisplayName] = useState("");
   const [links, setLinks] = useState<LinkValues>({
-    publicInsta: currentUser?.publicInsta ?? null,
-    publicWebsite: currentUser?.publicWebsite ?? null,
-    publicEmail: currentUser?.publicEmail ?? null,
-    publicPhone: currentUser?.publicPhone ?? null,
+    publicInsta: null,
+    publicWebsite: null,
+    publicEmail: null,
+    publicPhone: null,
   });
-  const [avatar, setAvatar] = useState<string | null>(
-    currentUser?.userImage ?? null,
-  );
+  const [avatar, setAvatar] = useState<string | null>(null);
+  const [isEditing, setIsEditing] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  // Seed form values once when currentUser resolves (query starts undefined).
+  // Seed draft state once when currentUser resolves.
   const seededRef = useRef(false);
   useEffect(() => {
     if (seededRef.current || !currentUser) return;
@@ -76,6 +76,13 @@ export default function ShareSetupScreen() {
     });
     setAvatar(currentUser.userImage ?? null);
   }, [currentUser, user?.firstName]);
+
+  // Animate between medium (preview) and large (edit) detents.
+  useEffect(() => {
+    navigation.setOptions({
+      sheetAllowedDetents: isEditing ? [1.0] : [0.5],
+    });
+  }, [isEditing, navigation]);
 
   const pickAvatar = useCallback(async () => {
     const result = await ImagePicker.launchImageLibraryAsync({
@@ -129,92 +136,46 @@ export default function ShareSetupScreen() {
     }
   }, [userId, listName, displayName, links, completeSetup, username]);
 
+  const countText =
+    typeof count === "number"
+      ? `${count} upcoming ${count === 1 ? "event" : "events"}`
+      : "Your upcoming events";
+
+  const subtitle =
+    typeof count === "number" && count > 0
+      ? `You've saved ${count} upcoming ${count === 1 ? "event" : "events"} — send it to a friend.`
+      : "Send your upcoming events to friends.";
+
   return (
     <KeyboardAvoidingView
       behavior={Platform.OS === "ios" ? "padding" : undefined}
       className="flex-1 bg-white"
     >
-      <ScrollView
-        keyboardShouldPersistTaps="handled"
-        contentContainerStyle={{
-          paddingHorizontal: 20,
-          paddingTop: 20,
-          paddingBottom: 32,
-        }}
-      >
-        <Text className="mb-1 text-center text-2xl font-bold text-neutral-1">
-          Share your Soonlist
-        </Text>
-        <Text className="mb-8 text-center text-sm text-neutral-2">
-          Make it yours before sending.
-        </Text>
+      {isEditing ? (
+        <EditForm
+          listName={listName}
+          setListName={setListName}
+          displayName={displayName}
+          setDisplayName={setDisplayName}
+          avatar={avatar}
+          pickAvatar={pickAvatar}
+          links={links}
+          setLinks={setLinks}
+          error={error}
+          onDone={() => setIsEditing(false)}
+        />
+      ) : (
+        <PreviewContent
+          title="Your Soonlist is ready to share"
+          subtitle={subtitle}
+          listName={listName}
+          avatar={avatar}
+          countText={countText}
+          onEditPress={() => setIsEditing(true)}
+        />
+      )}
 
-        <View className="mb-5">
-          <Text className="mb-2 text-xs font-semibold uppercase tracking-wider text-neutral-2">
-            List name
-          </Text>
-          <TextInput
-            className={INPUT_CLASSES}
-            style={INPUT_STYLE}
-            value={listName}
-            onChangeText={setListName}
-            placeholderTextColor={PLACEHOLDER_COLOR}
-            maxLength={80}
-          />
-        </View>
-
-        <View className="mb-5">
-          <Text className="mb-2 text-xs font-semibold uppercase tracking-wider text-neutral-2">
-            Your profile
-          </Text>
-          <View className="flex-row items-center gap-3">
-            <Pressable
-              onPress={pickAvatar}
-              accessibilityLabel="Change photo"
-              style={{ height: 48, width: 48 }}
-            >
-              <View className="h-12 w-12 items-center justify-center overflow-hidden rounded-full bg-interactive-3">
-                {avatar ? (
-                  <Image
-                    source={{ uri: avatar }}
-                    style={{ height: 48, width: 48 }}
-                  />
-                ) : (
-                  <Camera size={20} color="#5A32FB" />
-                )}
-              </View>
-              <View
-                className="absolute bottom-0 right-0 items-center justify-center rounded-full border-2 border-white bg-interactive-1"
-                style={{ height: 18, width: 18 }}
-              >
-                <Camera size={10} color="#fff" />
-              </View>
-            </Pressable>
-            <TextInput
-              className={`flex-1 ${INPUT_CLASSES}`}
-              style={INPUT_STYLE}
-              value={displayName}
-              onChangeText={setDisplayName}
-              placeholder="Your name"
-              placeholderTextColor={PLACEHOLDER_COLOR}
-              maxLength={50}
-            />
-          </View>
-        </View>
-
-        <View className="mb-6">
-          <Text className="mb-2 text-xs font-semibold uppercase tracking-wider text-neutral-2">
-            Add links (optional)
-          </Text>
-          <LinkIconRow values={links} onChange={setLinks} />
-        </View>
-
-        {error ? (
-          <Text className="mb-3 text-center text-sm text-red-600">{error}</Text>
-        ) : null}
-      </ScrollView>
-
-      <View className="bg-white px-5 pb-4 pt-4">
+      <View className="bg-white px-5 pb-4 pt-3">
         <Pressable
           disabled={submitting}
           onPress={() => void handleShare()}
@@ -234,11 +195,268 @@ export default function ShareSetupScreen() {
             <ActivityIndicator color="#fff" />
           ) : (
             <Text className="text-base font-semibold text-white">
-              Save & Share
+              Share list
             </Text>
           )}
         </Pressable>
+        {!isEditing ? (
+          <Pressable
+            accessibilityRole="button"
+            accessibilityLabel="Not now"
+            onPress={() => router.back()}
+            style={({ pressed }) => ({
+              height: 44,
+              justifyContent: "center",
+              marginTop: 4,
+              opacity: pressed ? 0.6 : 1,
+            })}
+          >
+            <Text className="text-center text-base font-medium text-neutral-2">
+              Not now
+            </Text>
+          </Pressable>
+        ) : null}
       </View>
     </KeyboardAvoidingView>
+  );
+}
+
+interface PreviewContentProps {
+  title: string;
+  subtitle: string;
+  listName: string;
+  avatar: string | null;
+  countText: string;
+  onEditPress: () => void;
+}
+
+function PreviewContent({
+  title,
+  subtitle,
+  listName,
+  avatar,
+  countText,
+  onEditPress,
+}: PreviewContentProps) {
+  return (
+    <View className="flex-1 px-5 pt-6">
+      <Text className="text-center text-2xl font-bold text-neutral-1">
+        {title}
+      </Text>
+      <Text className="mb-5 mt-2 text-center text-sm text-neutral-2">
+        {subtitle}
+      </Text>
+
+      <View className="flex-row items-center rounded-2xl bg-interactive-3 p-4">
+        <View className="h-12 w-12 items-center justify-center overflow-hidden rounded-full bg-white">
+          {avatar ? (
+            <Image source={{ uri: avatar }} style={{ height: 48, width: 48 }} />
+          ) : (
+            <Camera size={20} color="#5A32FB" />
+          )}
+        </View>
+        <View className="ml-3 flex-1">
+          <Text
+            numberOfLines={1}
+            className="text-base font-semibold text-neutral-1"
+          >
+            {listName}
+          </Text>
+          <Text className="text-sm text-neutral-2">{countText}</Text>
+        </View>
+        <Pressable
+          accessibilityRole="button"
+          accessibilityLabel="Edit list details"
+          onPress={onEditPress}
+          style={({ pressed }) => ({
+            paddingVertical: 8,
+            paddingHorizontal: 12,
+            opacity: pressed ? 0.6 : 1,
+          })}
+        >
+          <Text className="text-base font-semibold text-interactive-1">
+            Edit
+          </Text>
+        </Pressable>
+      </View>
+    </View>
+  );
+}
+
+interface EditFormProps {
+  listName: string;
+  setListName: (v: string) => void;
+  displayName: string;
+  setDisplayName: (v: string) => void;
+  avatar: string | null;
+  pickAvatar: () => void;
+  links: LinkValues;
+  setLinks: (v: LinkValues) => void;
+  error: string | null;
+  onDone: () => void;
+}
+
+function EditForm({
+  listName,
+  setListName,
+  displayName,
+  setDisplayName,
+  avatar,
+  pickAvatar,
+  links,
+  setLinks,
+  error,
+  onDone,
+}: EditFormProps) {
+  return (
+    <>
+      <View className="flex-row items-center justify-between px-5 pb-2 pt-4">
+        <Text className="text-xl font-bold text-neutral-1">Edit</Text>
+        <Pressable
+          accessibilityRole="button"
+          accessibilityLabel="Done editing"
+          onPress={onDone}
+          style={({ pressed }) => ({ opacity: pressed ? 0.6 : 1 })}
+        >
+          <Text className="text-base font-semibold text-interactive-1">
+            Done
+          </Text>
+        </Pressable>
+      </View>
+
+      <ScrollView
+        keyboardShouldPersistTaps="handled"
+        contentContainerStyle={{
+          paddingHorizontal: 20,
+          paddingTop: 8,
+          paddingBottom: 16,
+        }}
+      >
+        <View className="mb-5">
+          <Text className="mb-2 text-xs font-semibold uppercase tracking-wider text-neutral-2">
+            List name
+          </Text>
+          <TextInput
+            className={INPUT_CLASSES}
+            style={INPUT_STYLE}
+            value={listName}
+            onChangeText={setListName}
+            placeholderTextColor={PLACEHOLDER_COLOR}
+            maxLength={80}
+          />
+        </View>
+
+        <View className="mb-5">
+          <Text className="mb-2 text-xs font-semibold uppercase tracking-wider text-neutral-2">
+            Display name
+          </Text>
+          <TextInput
+            className={INPUT_CLASSES}
+            style={INPUT_STYLE}
+            value={displayName}
+            onChangeText={setDisplayName}
+            placeholder="Your name"
+            placeholderTextColor={PLACEHOLDER_COLOR}
+            maxLength={50}
+          />
+        </View>
+
+        <View className="mb-5">
+          <Text className="mb-2 text-xs font-semibold uppercase tracking-wider text-neutral-2">
+            Avatar
+          </Text>
+          <Pressable
+            onPress={pickAvatar}
+            accessibilityLabel="Change photo"
+            className="flex-row items-center gap-3"
+          >
+            <View className="h-14 w-14 items-center justify-center overflow-hidden rounded-full bg-interactive-3">
+              {avatar ? (
+                <Image
+                  source={{ uri: avatar }}
+                  style={{ height: 56, width: 56 }}
+                />
+              ) : (
+                <Camera size={22} color="#5A32FB" />
+              )}
+            </View>
+            <Text className="text-base font-medium text-interactive-1">
+              Change photo
+            </Text>
+          </Pressable>
+        </View>
+
+        <View className="mb-5">
+          <Text className="mb-2 text-xs font-semibold uppercase tracking-wider text-neutral-2">
+            Instagram
+          </Text>
+          <TextInput
+            className={INPUT_CLASSES}
+            style={INPUT_STYLE}
+            value={links.publicInsta ?? ""}
+            onChangeText={(v) => setLinks({ ...links, publicInsta: v || null })}
+            placeholder="@handle"
+            placeholderTextColor={PLACEHOLDER_COLOR}
+            autoCapitalize="none"
+            autoCorrect={false}
+          />
+        </View>
+
+        <View className="mb-5">
+          <Text className="mb-2 text-xs font-semibold uppercase tracking-wider text-neutral-2">
+            Website
+          </Text>
+          <TextInput
+            className={INPUT_CLASSES}
+            style={INPUT_STYLE}
+            value={links.publicWebsite ?? ""}
+            onChangeText={(v) =>
+              setLinks({ ...links, publicWebsite: v || null })
+            }
+            placeholder="https://"
+            placeholderTextColor={PLACEHOLDER_COLOR}
+            autoCapitalize="none"
+            autoCorrect={false}
+            keyboardType="url"
+          />
+        </View>
+
+        <View className="mb-5">
+          <Text className="mb-2 text-xs font-semibold uppercase tracking-wider text-neutral-2">
+            Email
+          </Text>
+          <TextInput
+            className={INPUT_CLASSES}
+            style={INPUT_STYLE}
+            value={links.publicEmail ?? ""}
+            onChangeText={(v) => setLinks({ ...links, publicEmail: v || null })}
+            placeholder="you@example.com"
+            placeholderTextColor={PLACEHOLDER_COLOR}
+            autoCapitalize="none"
+            autoCorrect={false}
+            keyboardType="email-address"
+          />
+        </View>
+
+        <View className="mb-5">
+          <Text className="mb-2 text-xs font-semibold uppercase tracking-wider text-neutral-2">
+            Phone
+          </Text>
+          <TextInput
+            className={INPUT_CLASSES}
+            style={INPUT_STYLE}
+            value={links.publicPhone ?? ""}
+            onChangeText={(v) => setLinks({ ...links, publicPhone: v || null })}
+            placeholder="+1 555 555 5555"
+            placeholderTextColor={PLACEHOLDER_COLOR}
+            keyboardType="phone-pad"
+          />
+        </View>
+
+        {error ? (
+          <Text className="mb-3 text-center text-sm text-red-600">{error}</Text>
+        ) : null}
+      </ScrollView>
+    </>
   );
 }

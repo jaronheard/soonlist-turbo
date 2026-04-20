@@ -527,7 +527,7 @@ export default function EditProfileScreen() {
                         <Copy size={20} color="#5A32FB" />
                       </TouchableOpacity>
                       <TouchableOpacity
-                        onPress={requestShare}
+                        onPress={() => requestShare()}
                         className="items-center justify-center rounded-lg border border-interactive-1 bg-interactive-1/5 p-3"
                         activeOpacity={0.7}
                         accessible={true}
