@@ -81,7 +81,10 @@ function BatchStatusToast({ batchId }: BatchStatusToastProps) {
       toastIdRef.current = null;
 
       cleanupTimeoutRef.current = setTimeout(
-        () => removeBatchId(batchId),
+        () => {
+          cleanupTimeoutRef.current = null;
+          removeBatchId(batchId);
+        },
         hasErrors ? 6000 : 4000,
       );
     }
@@ -96,9 +99,10 @@ function BatchStatusToast({ batchId }: BatchStatusToastProps) {
       if (cleanupTimeoutRef.current) {
         clearTimeout(cleanupTimeoutRef.current);
         cleanupTimeoutRef.current = null;
+        removeBatchId(batchId);
       }
     };
-  }, []);
+  }, [batchId, removeBatchId]);
 
   return null;
 }
