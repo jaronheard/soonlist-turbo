@@ -18,12 +18,15 @@ import {
   Unauthenticated,
   useQuery,
 } from "convex/react";
+import { usePostHog } from "posthog-react-native";
 
 import { api } from "@soonlist/backend/convex/_generated/api";
 
 import LoadingSpinner from "~/components/LoadingSpinner";
 import UserEventsList from "~/components/UserEventsList";
 import { useRatingPrompt } from "~/hooks/useRatingPrompt";
+import { useShareListPrompt } from "~/hooks/useShareListPrompt";
+import { useShareMyList } from "~/hooks/useShareMyList";
 import { useStablePaginatedQuery } from "~/hooks/useStableQuery";
 import { useAppStore, useStableTimestamp } from "~/store";
 
@@ -175,8 +178,47 @@ function MyFeedContent() {
     return events;
   }, [groupedEvents, stableTimestamp, selectedSegment]);
 
+  const upcomingCount =
+    selectedSegment === "upcoming" ? enrichedEvents.length : 0;
+
   // Trigger rating prompt when user has 3+ upcoming events
-  useRatingPrompt(selectedSegment === "upcoming" ? enrichedEvents.length : 0);
+  useRatingPrompt(upcomingCount);
+
+  const posthog = usePostHog();
+  const { shouldShowOneShot, markOneShotSeen } =
+    useShareListPrompt(upcomingCount);
+
+  const { requestShare } = useShareMyList();
+
+  // On threshold crossing, route to the share-setup modal (which is the
+  // "your Soonlist is ready to share" moment). Skip for users who've already
+  // shared — requestShare would auto-launch native share, which we don't
+  // want here. Either way mark the one-shot seen.
+  const currentUser = useQuery(api.users.getCurrentUser);
+  const hasSharedListBefore = currentUser?.hasSharedListBefore ?? false;
+  useEffect(() => {
+    if (!shouldShowOneShot) return;
+    const t = setTimeout(() => {
+      markOneShotSeen();
+      if (!hasSharedListBefore) {
+        posthog.capture("share_prompt_one_shot_shown");
+        requestShare({ eventCount: upcomingCount });
+      }
+    }, 400);
+    return () => clearTimeout(t);
+  }, [
+    shouldShowOneShot,
+    hasSharedListBefore,
+    markOneShotSeen,
+    posthog,
+    requestShare,
+    upcomingCount,
+  ]);
+
+  const handlePillShare = useCallback(() => {
+    posthog.capture("share_prompt_pill_tapped");
+    requestShare({ eventCount: upcomingCount });
+  }, [posthog, requestShare, upcomingCount]);
 
   // Update tab badge count based on upcoming events
   const setMyListBadgeCount = useAppStore((s) => s.setMyListBadgeCount);
@@ -197,7 +239,7 @@ function MyFeedContent() {
           className="mb-1 text-base font-medium text-neutral-2"
           style={{ paddingLeft: 6 }}
         >
-          Events I&apos;m tracking
+          Events I&apos;m interested in
         </Text>
         {contributingCount > 0 && (
           <View
@@ -259,6 +301,8 @@ function MyFeedContent() {
       savedEventIds={savedEventIds}
       source={selectedSegment === "upcoming" ? "feed" : "past"}
       HeaderComponent={HeaderComponent}
+      upcomingEventCount={upcomingCount}
+      onSharePress={handlePillShare}
     />
   );
 }

@@ -3,17 +3,11 @@ import { View } from "react-native";
 import { Stack } from "expo-router";
 
 import { CaptureOverlayButton } from "~/components/CaptureOverlayButton";
-import { FirstShareSetupSheet } from "~/components/FirstShareSetupSheet";
 import { ProfileMenu } from "~/components/ProfileMenu";
 import { useShareMyList } from "~/hooks/useShareMyList";
 
 export default function FeedLayout() {
-  const {
-    requestShare,
-    isSetupSheetVisible,
-    closeSetupSheet,
-    closeSetupSheetAndShare,
-  } = useShareMyList();
+  const { requestShare } = useShareMyList();
 
   return (
     <View style={{ flex: 1 }}>
@@ -36,7 +30,7 @@ export default function FeedLayout() {
                 type: "button",
                 label: "",
                 icon: { type: "sfSymbol", name: "square.and.arrow.up" },
-                onPress: requestShare,
+                onPress: () => requestShare(),
                 accessibilityLabel: "Share",
                 tintColor: "#5A32FB",
               },
@@ -50,11 +44,6 @@ export default function FeedLayout() {
         />
       </Stack>
       <CaptureOverlayButton />
-      <FirstShareSetupSheet
-        visible={isSetupSheetVisible}
-        onClose={closeSetupSheet}
-        onComplete={closeSetupSheetAndShare}
-      />
     </View>
   );
 }

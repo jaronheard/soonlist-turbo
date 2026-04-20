@@ -1,5 +1,6 @@
-import { useCallback, useState } from "react";
+import { useCallback } from "react";
 import { Platform, Share } from "react-native";
+import { router } from "expo-router";
 import { useUser } from "@clerk/clerk-expo";
 import { useQuery } from "convex/react";
 
@@ -8,20 +9,19 @@ import { api } from "@soonlist/backend/convex/_generated/api";
 import Config from "~/utils/config";
 import { logError } from "~/utils/errorLogging";
 
+interface RequestShareOptions {
+  /** Upcoming event count to display in the share-setup preview subtitle. */
+  eventCount?: number;
+}
+
 /**
- * Wraps Share.share for the user's personal Soon List. On the first share
- * attempt (when hasSharedListBefore is false/undefined), opens the
- * FirstShareSetupSheet instead of calling Share.share directly. After the
- * sheet commits or is dismissed via "Share now", the actual share sheet
- * is opened.
- *
- * Swipe-to-dismiss on the sheet does NOT trigger a share and does NOT
- * set hasSharedListBefore — the sheet will reappear on next attempt.
+ * Kicks off a share of the user's personal Soonlist. On the first share
+ * attempt (hasSharedListBefore false/undefined), routes to the share-setup
+ * modal. Returning users skip setup and get the native share sheet.
  */
 export function useShareMyList() {
   const { user } = useUser();
   const currentUser = useQuery(api.users.getCurrentUser);
-  const [isSetupSheetVisible, setSetupSheetVisible] = useState(false);
 
   const openNativeShare = useCallback(async () => {
     const username = user?.username ?? currentUser?.username ?? "";
@@ -34,27 +34,22 @@ export function useShareMyList() {
     }
   }, [user?.username, currentUser?.username]);
 
-  const requestShare = useCallback(() => {
-    if (currentUser?.hasSharedListBefore) {
-      void openNativeShare();
-      return;
-    }
-    setSetupSheetVisible(true);
-  }, [currentUser?.hasSharedListBefore, openNativeShare]);
+  const requestShare = useCallback(
+    (options?: RequestShareOptions) => {
+      if (currentUser?.hasSharedListBefore) {
+        void openNativeShare();
+        return;
+      }
+      router.push({
+        pathname: "/share-setup",
+        params:
+          typeof options?.eventCount === "number"
+            ? { count: String(options.eventCount) }
+            : {},
+      });
+    },
+    [currentUser?.hasSharedListBefore, openNativeShare],
+  );
 
-  const closeSetupSheet = useCallback(() => {
-    setSetupSheetVisible(false);
-  }, []);
-
-  const closeSetupSheetAndShare = useCallback(async () => {
-    setSetupSheetVisible(false);
-    await openNativeShare();
-  }, [openNativeShare]);
-
-  return {
-    requestShare,
-    isSetupSheetVisible,
-    closeSetupSheet,
-    closeSetupSheetAndShare,
-  };
+  return { requestShare };
 }

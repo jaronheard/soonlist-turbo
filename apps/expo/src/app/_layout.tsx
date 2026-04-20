@@ -273,6 +273,17 @@ const InitialLayout = () => {
         }}
       />
       <Stack.Screen
+        name="share-setup"
+        options={{
+          presentation: "formSheet",
+          title: "",
+          headerShown: false,
+          sheetAllowedDetents: [0.5],
+          sheetGrabberVisible: true,
+          sheetCornerRadius: 24,
+        }}
+      />
+      <Stack.Screen
         name="event/[id]/edit"
         options={{
           presentation: "modal",
