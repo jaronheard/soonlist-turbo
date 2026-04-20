@@ -183,6 +183,7 @@ export default function ShareSetupScreen() {
       )}
 
       <View
+        collapsable={false}
         className="bg-white px-5 pt-3"
         style={{
           flexShrink: 0,
@@ -252,7 +253,7 @@ function PreviewContent({
   onEditPress,
 }: PreviewContentProps) {
   return (
-    <View className="flex-1 px-5 pt-6">
+    <View collapsable={false} className="flex-1 px-5 pt-6">
       <Text className="text-center text-2xl font-bold text-neutral-1">
         {title}
       </Text>
@@ -322,8 +323,9 @@ function EditForm({
   onDone,
 }: EditFormProps) {
   return (
-    <View style={{ flex: 1, flexDirection: "column" }}>
+    <View collapsable={false} style={{ flex: 1, flexDirection: "column" }}>
       <View
+        collapsable={false}
         style={{
           flexShrink: 0,
           flexDirection: "row",
