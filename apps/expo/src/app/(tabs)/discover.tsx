@@ -1,11 +1,6 @@
 import type { FunctionReturnType } from "convex/server";
 import React, { useCallback, useMemo } from "react";
-import {
-  Text,
-  TouchableOpacity,
-  useWindowDimensions,
-  View,
-} from "react-native";
+import { Text, TouchableOpacity, useWindowDimensions } from "react-native";
 import { Redirect } from "expo-router";
 import { useUser } from "@clerk/clerk-expo";
 import {
@@ -19,7 +14,7 @@ import { api } from "@soonlist/backend/convex/_generated/api";
 
 import DiscoverShareBanner from "~/components/DiscoverShareBanner";
 import { ShareIcon } from "~/components/icons";
-import LoadingSpinner from "~/components/LoadingSpinner";
+import { MatchAuthLoadingSurface } from "~/components/MatchAuthLoadingSurface";
 import SaveButton from "~/components/SaveButton";
 import UserEventsList from "~/components/UserEventsList";
 import { useEventActions } from "~/hooks/useEventActions";
@@ -151,7 +146,7 @@ function DiscoverContent() {
       events={enrichedEvents}
       onEndReached={handleLoadMore}
       isFetchingNextPage={status === "LoadingMore"}
-      isLoadingFirstPage={status === "LoadingFirstPage"}
+      listBodyLoading={status === "LoadingFirstPage"}
       ActionButton={({ event }) => (
         <SaveOrShareActionButton
           event={event}
@@ -174,10 +169,7 @@ export default function Page() {
   return (
     <>
       <AuthLoading>
-        <View className="flex-1 bg-interactive-3">
-          <View className="h-[100px]" />
-          <LoadingSpinner />
-        </View>
+        <MatchAuthLoadingSurface />
       </AuthLoading>
 
       <Unauthenticated>

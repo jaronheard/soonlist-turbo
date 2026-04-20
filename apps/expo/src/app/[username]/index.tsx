@@ -291,7 +291,7 @@ export default function UserProfilePage() {
           events={filteredEvents}
           onEndReached={handleLoadMore}
           isFetchingNextPage={status === "LoadingMore"}
-          isLoadingFirstPage={status === "LoadingFirstPage"}
+          listBodyLoading={status === "LoadingFirstPage"}
           showCreator="never"
           isDiscoverFeed={false}
           primaryAction={isOwnProfile ? "addToCalendar" : "save"}

@@ -50,6 +50,7 @@ import { getEventEmoji } from "~/utils/eventEmoji";
 import { collapseSimilarEvents } from "~/utils/similarEvents";
 import { EventMenu } from "./EventMenu";
 import { EventStats } from "./EventStats";
+import { MatchAuthLoadingSurface } from "./MatchAuthLoadingSurface";
 import SaveButton from "./SaveButton";
 
 type ShowCreatorOption = "always" | "otherUsers" | "never" | "savedFromOthers";
@@ -929,7 +930,12 @@ interface UserEventsListProps {
   showCreator: ShowCreatorOption;
   onEndReached: () => void;
   isFetchingNextPage: boolean;
-  isLoadingFirstPage?: boolean;
+  /**
+   * Purple spinner: list body when `HeaderComponent`/`stats` exist, otherwise
+   * full-screen loading (MatchAuthLoadingSurface). Use for initial load / segment
+   * refetch so titles and toggles stay on the FlatList.
+   */
+  listBodyLoading?: boolean;
   showSourceStickers?: boolean;
   demoMode?: boolean;
   stats?: EventStatsData;
@@ -952,7 +958,7 @@ export default function UserEventsList(props: UserEventsListProps) {
     showCreator,
     onEndReached,
     isFetchingNextPage,
-    isLoadingFirstPage = false,
+    listBodyLoading = false,
     showSourceStickers = false,
     demoMode,
     stats,
@@ -1001,20 +1007,8 @@ export default function UserEventsList(props: UserEventsListProps) {
     );
   };
 
-  if (isLoadingFirstPage) {
-    return (
-      <ScrollView
-        contentInsetAdjustmentBehavior="automatic"
-        style={{ flex: 1, backgroundColor: "#F4F1FF" }}
-        contentContainerStyle={{
-          flexGrow: 1,
-          justifyContent: "center",
-          alignItems: "center",
-        }}
-      >
-        <ActivityIndicator size="large" color="#5A32FB" />
-      </ScrollView>
-    );
+  if (listBodyLoading && !HeaderComponent && !stats) {
+    return <MatchAuthLoadingSurface />;
   }
 
   if (collapsedEvents.length === 0) {
@@ -1025,6 +1019,25 @@ export default function UserEventsList(props: UserEventsListProps) {
       return renderEmptyState();
     }
   }
+
+  const renderListEmpty = () => {
+    if (listBodyLoading) {
+      return (
+        <View
+          style={{
+            flexGrow: 1,
+            minHeight: 320,
+            justifyContent: "center",
+            alignItems: "center",
+            paddingBottom: 40,
+          }}
+        >
+          <ActivityIndicator size="large" color="#5A32FB" />
+        </View>
+      );
+    }
+    return renderEmptyState(true);
+  };
 
   const renderFooter = () => {
     if (collapsedEvents.length === 0) return null;
@@ -1069,7 +1082,7 @@ export default function UserEventsList(props: UserEventsListProps) {
       data={collapsedEvents}
       keyExtractor={(item) => item.event.id}
       ListHeaderComponent={renderHeader}
-      ListEmptyComponent={() => renderEmptyState(true)}
+      ListEmptyComponent={renderListEmpty}
       renderItem={({ item, index }) => {
         const eventData = item.event;
         // Use savedEventIds if provided, otherwise check eventFollows

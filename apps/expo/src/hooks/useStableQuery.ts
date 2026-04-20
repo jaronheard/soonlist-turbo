@@ -38,7 +38,9 @@ export const useStableQuery = ((name, ...args) => {
  *
  * Note: the returned `status` reflects the live status (including
  * "LoadingMore") so callers can render load-more spinners while pagination
- * is in flight. Only the `results` array is stabilized.
+ * is in flight. Only the `results` array is stabilized. When query args change
+ * (e.g. Upcoming/Past), results stay on the previous page until the new one
+ * loads — pair with segment-aware UI filtering (see `~/utils/feedSegment.ts`).
  *
  * See https://stack.convex.dev/help-my-app-is-overreacting for details.
  *
