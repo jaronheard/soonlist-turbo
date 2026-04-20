@@ -11,6 +11,7 @@ import {
   TextInput,
   View,
 } from "react-native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 import * as ImagePicker from "expo-image-picker";
 import { router, useLocalSearchParams, useNavigation } from "expo-router";
 import { useUser } from "@clerk/clerk-expo";
@@ -37,6 +38,7 @@ export default function ShareSetupScreen() {
   const currentUser = useQuery(api.users.getCurrentUser);
   const completeSetup = useMutation(api.users.completeFirstShareSetup);
   const navigation = useNavigation();
+  const insets = useSafeAreaInsets();
 
   const { count: countParam } = useLocalSearchParams<{ count?: string }>();
   const count = countParam ? Number.parseInt(countParam, 10) : undefined;
@@ -150,6 +152,7 @@ export default function ShareSetupScreen() {
     <KeyboardAvoidingView
       behavior={Platform.OS === "ios" ? "padding" : undefined}
       className="flex-1 bg-white"
+      style={{ paddingTop: insets.top }}
     >
       {isEditing ? (
         <EditForm
@@ -175,7 +178,10 @@ export default function ShareSetupScreen() {
         />
       )}
 
-      <View className="bg-white px-5 pb-4 pt-3">
+      <View
+        className="bg-white px-5 pt-3"
+        style={{ paddingBottom: Math.max(insets.bottom, 16) }}
+      >
         <Pressable
           disabled={submitting}
           onPress={() => void handleShare()}
