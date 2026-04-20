@@ -273,7 +273,7 @@ const InitialLayout = () => {
           presentation: "formSheet",
           title: "",
           headerShown: false,
-          sheetAllowedDetents: [0.5],
+          sheetAllowedDetents: [0.4, 0.8],
           sheetGrabberVisible: true,
           sheetCornerRadius: 24,
         }}
