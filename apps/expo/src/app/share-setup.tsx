@@ -21,7 +21,9 @@ import { api } from "@soonlist/backend/convex/_generated/api";
 
 import type { LinkValues } from "~/components/LinkIconRow";
 import { Camera } from "~/components/icons";
+import { useStablePaginatedQuery } from "~/hooks/useStableQuery";
 import Config from "~/utils/config";
+import { formatEventDateRangeCompact } from "~/utils/dates";
 import { logError } from "~/utils/errorLogging";
 
 const INPUT_CLASSES = "rounded-xl bg-interactive-3 text-neutral-1";
@@ -138,15 +140,20 @@ export default function ShareSetupScreen() {
     }
   }, [userId, listName, displayName, links, completeSetup, username]);
 
-  const countText =
-    typeof count === "number"
-      ? `${count} upcoming ${count === 1 ? "event" : "events"}`
-      : "Your upcoming events";
+  // Preview the user's first few upcoming events inside the card.
+  const { results: previewEvents } = useStablePaginatedQuery(
+    api.feeds.getMyFeedGrouped,
+    { filter: "upcoming" },
+    { initialNumItems: 3 },
+  );
 
   const subtitle =
     typeof count === "number" && count > 0
       ? `You've saved ${count} upcoming ${count === 1 ? "event" : "events"} — send it to a friend.`
       : "Send your upcoming events to friends.";
+
+  const byName =
+    displayName || currentUser?.displayName || user?.firstName || "";
 
   return (
     <KeyboardAvoidingView
@@ -177,7 +184,8 @@ export default function ShareSetupScreen() {
           subtitle={subtitle}
           listName={listName}
           avatar={avatar}
-          countText={countText}
+          byName={byName}
+          previewEvents={previewEvents.slice(0, 3)}
           onEditPress={() => setIsEditing(true)}
         />
       )}
@@ -235,13 +243,48 @@ export default function ShareSetupScreen() {
   );
 }
 
+interface PreviewEvent {
+  id: string;
+  name: string;
+  dateLabel: string;
+}
+
 interface PreviewContentProps {
   title: string;
   subtitle: string;
   listName: string;
   avatar: string | null;
-  countText: string;
+  byName: string;
+  previewEvents: PreviewEventInput[];
   onEditPress: () => void;
+}
+
+// Shape of a group item from api.feeds.getMyFeedGrouped.
+interface PreviewEventInput {
+  event: {
+    id: string;
+    name?: string | null;
+    startDate?: string | null;
+    startTime?: string | null;
+    endTime?: string | null;
+    timeZone?: string | null;
+  };
+}
+
+function toPreviewEvent(group: PreviewEventInput): PreviewEvent {
+  const e = group.event;
+  const { date, time } = formatEventDateRangeCompact(
+    e.startDate ?? "",
+    e.startTime ?? undefined,
+    e.endTime ?? undefined,
+    e.timeZone ?? "",
+  );
+  const dateLabel = time ? `${date} · ${time}` : date;
+  return {
+    id: e.id,
+    name: e.name ?? "Untitled event",
+    dateLabel,
+  };
 }
 
 function PreviewContent({
@@ -249,9 +292,12 @@ function PreviewContent({
   subtitle,
   listName,
   avatar,
-  countText,
+  byName,
+  previewEvents,
   onEditPress,
 }: PreviewContentProps) {
+  const events = previewEvents.map(toPreviewEvent);
+
   return (
     <View collapsable={false} className="flex-1 px-5 pt-6">
       <Text className="text-center text-2xl font-bold text-neutral-1">
@@ -261,37 +307,77 @@ function PreviewContent({
         {subtitle}
       </Text>
 
-      <View className="flex-row items-center rounded-2xl bg-interactive-3 p-4">
-        <View className="h-12 w-12 items-center justify-center overflow-hidden rounded-full bg-white">
-          {avatar ? (
-            <Image source={{ uri: avatar }} style={{ height: 48, width: 48 }} />
-          ) : (
-            <Camera size={20} color="#5A32FB" />
-          )}
-        </View>
-        <View className="ml-3 flex-1">
+      <View className="rounded-2xl bg-interactive-3 p-4">
+        <View className="flex-row items-start justify-between">
           <Text
             numberOfLines={1}
-            className="text-base font-semibold text-neutral-1"
+            className="flex-1 text-lg font-bold text-neutral-1"
           >
             {listName}
           </Text>
-          <Text className="text-sm text-neutral-2">{countText}</Text>
+          <Pressable
+            accessibilityRole="button"
+            accessibilityLabel="Edit list details"
+            onPress={onEditPress}
+            hitSlop={8}
+            style={({ pressed }) => ({
+              marginLeft: 12,
+              opacity: pressed ? 0.6 : 1,
+            })}
+          >
+            <Text className="text-base font-semibold text-interactive-1">
+              Edit
+            </Text>
+          </Pressable>
         </View>
-        <Pressable
-          accessibilityRole="button"
-          accessibilityLabel="Edit list details"
-          onPress={onEditPress}
-          style={({ pressed }) => ({
-            paddingVertical: 8,
-            paddingHorizontal: 12,
-            opacity: pressed ? 0.6 : 1,
-          })}
+
+        {events.length > 0 ? (
+          <View style={{ marginTop: 12, gap: 8 }}>
+            {events.map((event) => (
+              <View key={event.id} className="rounded-xl bg-white px-3 py-2">
+                <Text
+                  numberOfLines={1}
+                  className="text-sm font-semibold text-neutral-1"
+                >
+                  {event.name}
+                </Text>
+                {event.dateLabel ? (
+                  <Text className="text-xs text-neutral-2">
+                    {event.dateLabel}
+                  </Text>
+                ) : null}
+              </View>
+            ))}
+          </View>
+        ) : null}
+
+        <View
+          style={{
+            marginTop: 12,
+            paddingTop: 12,
+            borderTopWidth: 1,
+            borderTopColor: "rgba(90, 50, 251, 0.12)",
+            flexDirection: "row",
+            alignItems: "center",
+          }}
         >
-          <Text className="text-base font-semibold text-interactive-1">
-            Edit
+          <View className="h-7 w-7 items-center justify-center overflow-hidden rounded-full bg-white">
+            {avatar ? (
+              <Image
+                source={{ uri: avatar }}
+                style={{ height: 28, width: 28 }}
+              />
+            ) : (
+              <Camera size={14} color="#5A32FB" />
+            )}
+          </View>
+          <Text className="ml-2 text-sm text-neutral-2">
+            by{" "}
+            <Text className="font-semibold text-neutral-1">
+              {byName || "you"}
+            </Text>
           </Text>
-        </Pressable>
+        </View>
       </View>
     </View>
   );
