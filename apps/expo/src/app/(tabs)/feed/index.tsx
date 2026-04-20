@@ -239,7 +239,7 @@ function MyFeedContent() {
           className="mb-1 text-base font-medium text-neutral-2"
           style={{ paddingLeft: 6 }}
         >
-          Events I&apos;m tracking
+          Events I&apos;m interested in
         </Text>
         {contributingCount > 0 && (
           <View
