@@ -171,15 +171,10 @@ function RootLayout() {
                   options={{
                     host: "https://us.i.posthog.com",
                     disabled: isDev,
-                    enableSessionReplay: !isDev,
-                    sessionReplayConfig: {
-                      maskAllTextInputs: false,
-                      maskAllImages: false,
-                      captureLog: false,
-                      captureNetworkTelemetry: true,
-                      androidDebouncerDelayMs: 500,
-                      iOSdebouncerDelayMs: 1000,
-                    },
+                    // Session replay disabled — causes scroll jank on iOS
+                    // list views (same symptom class as Sentry's
+                    // mobileReplayIntegration, disabled above).
+                    enableSessionReplay: false,
                   }}
                 >
                   <PostHogIdentityTracker />
