@@ -7,7 +7,6 @@ import { toast } from "sonner";
 
 import { api } from "@soonlist/backend/convex/_generated/api";
 
-import { useBatchProgress } from "~/hooks/useBatchProgress";
 import { useDragAndDropHandler } from "~/hooks/useDragAndDropHandler";
 import { isTargetPage } from "~/lib/pasteEventUtils";
 
@@ -22,19 +21,13 @@ export function DragAndDropProvider({ children }: DragAndDropProviderProps) {
   // Only enable the drag and drop handler on target pages and when user is authenticated
   const shouldEnable = isTargetPage(pathname) && !!currentUser;
 
-  const { isDragging, imageCount, currentBatchId, hasValidationError } =
-    useDragAndDropHandler({
-      enabled: shouldEnable,
-      onError: (error) => {
-        toast.error(`Failed to process images: ${error.message}`, {
-          duration: 6000, // Increased duration for error toasts
-        });
-      },
-    });
-
-  // Track batch progress with toast notifications
-  useBatchProgress({
-    batchId: currentBatchId,
+  const { isDragging, imageCount, hasValidationError } = useDragAndDropHandler({
+    enabled: shouldEnable,
+    onError: (error) => {
+      toast.error(`Failed to process images: ${error.message}`, {
+        duration: 6000, // Increased duration for error toasts
+      });
+    },
   });
 
   return (
