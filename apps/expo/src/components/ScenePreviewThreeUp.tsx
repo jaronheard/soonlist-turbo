@@ -41,7 +41,7 @@ export function ScenePreviewThreeUp({
           {uri ? (
             <Image
               source={{
-                uri: `${uri}?w=168&h=216&fit=cover&f=webp&q=80`,
+                uri: `${uri}${uri.includes("?") ? "&" : "?"}w=168&h=216&fit=cover&f=webp&q=80`,
               }}
               style={{ width: "100%", height: "100%" }}
               contentFit="cover"
