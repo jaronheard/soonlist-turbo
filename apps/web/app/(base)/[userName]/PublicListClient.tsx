@@ -101,8 +101,6 @@ export default function PublicListClient({ params }: Props) {
     { initialNumItems: 100 },
   );
 
-  // No longer using getPublicListEvents - we either use getPublicUserFeed or show no data
-
   const updatePublicListSettings = useMutation(
     api.users.updatePublicListSettings,
   );

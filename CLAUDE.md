@@ -33,3 +33,6 @@ emergency: `git commit --no-verify`.
 - **Backend**: Use Convex for all new features (tRPC is legacy)
 - **Auth**: Clerk
 - **Styling**: TailwindCSS (web), NativeWind (mobile)
+- **No public API**: Convex queries are only consumed by this repo's own web
+  and expo apps. If a query is unused, delete it rather than keeping it
+  around for hypothetical external callers.
