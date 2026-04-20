@@ -331,6 +331,7 @@ function EditForm({
       </View>
 
       <ScrollView
+        className="flex-1"
         keyboardShouldPersistTaps="handled"
         contentContainerStyle={{
           paddingHorizontal: 20,
