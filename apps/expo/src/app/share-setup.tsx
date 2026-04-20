@@ -151,8 +151,12 @@ export default function ShareSetupScreen() {
   return (
     <KeyboardAvoidingView
       behavior={Platform.OS === "ios" ? "padding" : undefined}
-      className="flex-1 bg-white"
-      style={{ paddingTop: insets.top }}
+      style={{
+        flex: 1,
+        flexDirection: "column",
+        backgroundColor: "white",
+        paddingTop: insets.top,
+      }}
     >
       {isEditing ? (
         <EditForm
@@ -180,7 +184,10 @@ export default function ShareSetupScreen() {
 
       <View
         className="bg-white px-5 pt-3"
-        style={{ paddingBottom: Math.max(insets.bottom, 16) }}
+        style={{
+          flexShrink: 0,
+          paddingBottom: Math.max(insets.bottom, 16),
+        }}
       >
         <Pressable
           disabled={submitting}
@@ -315,9 +322,10 @@ function EditForm({
   onDone,
 }: EditFormProps) {
   return (
-    <View style={{ flex: 1 }}>
+    <View style={{ flex: 1, flexDirection: "column" }}>
       <View
         style={{
+          flexShrink: 0,
           flexDirection: "row",
           alignItems: "center",
           justifyContent: "space-between",
