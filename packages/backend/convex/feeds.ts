@@ -433,6 +433,57 @@ export const getPublicUserFeed = query({
   },
 });
 
+/** Total public feed entries for a user (matches `getPublicUserFeed` filters). */
+async function countPublicUserFeedEntries(
+  ctx: QueryCtx,
+  feedId: string,
+  hasEnded: boolean,
+): Promise<number> {
+  let total = 0;
+  let cursor: string | null = null;
+  for (let i = 0; i < 250; i++) {
+    const result = await ctx.db
+      .query("userFeeds")
+      .withIndex("by_feed_visibility_hasEnded_startTime", (q) =>
+        q
+          .eq("feedId", feedId)
+          .eq("eventVisibility", "public")
+          .eq("hasEnded", hasEnded),
+      )
+      .paginate({ numItems: 500, cursor });
+    total += result.page.length;
+    if (result.isDone) break;
+    cursor = result.continueCursor;
+  }
+  return total;
+}
+
+export const getPublicUserFeedCounts = query({
+  args: { username: v.string() },
+  returns: v.object({
+    upcoming: v.number(),
+    past: v.number(),
+  }),
+  handler: async (ctx, { username }) => {
+    const user = await ctx.db
+      .query("users")
+      .withIndex("by_username", (q) => q.eq("username", username))
+      .unique();
+
+    if (!user) {
+      throw new ConvexError("User not found");
+    }
+
+    const feedId = `user_${user.id}`;
+    const [upcoming, past] = await Promise.all([
+      countPublicUserFeedEntries(ctx, feedId, false),
+      countPublicUserFeedEntries(ctx, feedId, true),
+    ]);
+
+    return { upcoming, past };
+  },
+});
+
 // Internal mutation to update hasEndedFlags for a batch of userFeeds entries
 export const updateHasEndedFlagsBatch = internalMutation({
   args: {
