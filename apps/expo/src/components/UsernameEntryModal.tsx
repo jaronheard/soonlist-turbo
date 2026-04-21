@@ -157,7 +157,7 @@ export function UsernameEntryModal({
           ) : (
             <>
               <Text className="mb-6 text-center font-heading text-xl font-bold text-gray-700">
-                Enter their username
+                Find by username
               </Text>
 
               <View

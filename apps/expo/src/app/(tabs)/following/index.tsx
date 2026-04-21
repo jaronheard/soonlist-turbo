@@ -240,7 +240,7 @@ function FollowingFeedContent() {
           className="mb-1 text-base font-medium text-neutral-2"
           style={{ paddingLeft: 6 }}
         >
-          Events from lists I subscribe to
+          Events from Soonlists I subscribe to
         </Text>
         {followedListCount > 0 && (
           <TouchableOpacity
