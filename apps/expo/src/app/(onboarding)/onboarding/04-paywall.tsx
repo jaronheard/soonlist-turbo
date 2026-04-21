@@ -84,8 +84,8 @@ export default function CommunitySupportedScreen() {
               }}
             >
               Jaron
-            </Text>
-            {" "}& friends
+            </Text>{" "}
+            & friends
           </Text>
           <Pressable
             onPress={handleContinue}

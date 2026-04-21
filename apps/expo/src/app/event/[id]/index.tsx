@@ -423,8 +423,7 @@ function EventDetail({ id }: { id: string }) {
           </View>
 
           {/* Meta rows (venue + visibility) */}
-          {(eventData.location ||
-            (showDiscover && isCurrentUserEvent)) && (
+          {(eventData.location || (showDiscover && isCurrentUserEvent)) && (
             <View className="mt-4 flex flex-col gap-2">
               {/* Location link */}
               {eventData.location && (

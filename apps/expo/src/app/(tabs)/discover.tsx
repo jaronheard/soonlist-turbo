@@ -1,4 +1,3 @@
-import type { FunctionReturnType } from "convex/server";
 import React, { useCallback, useMemo } from "react";
 import { Redirect } from "expo-router";
 import { useUser } from "@clerk/clerk-expo";

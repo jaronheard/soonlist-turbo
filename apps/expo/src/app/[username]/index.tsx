@@ -18,22 +18,16 @@ import { useConvexAuth, useMutation, useQuery } from "convex/react";
 import type { Doc } from "@soonlist/backend/convex/_generated/dataModel";
 import { api } from "@soonlist/backend/convex/_generated/api";
 
-import {
-  Globe,
-  Instagram,
-  Mail,
-  Phone,
-  User,
-} from "~/components/icons";
+import { Globe, Instagram, Mail, Phone, User } from "~/components/icons";
 import { SubscribeButton } from "~/components/SubscribeButton";
 import UserEventsList from "~/components/UserEventsList";
 import { UserProfileFlair } from "~/components/UserProfileFlair";
-import { useLoadMoreHandler } from "~/hooks/useUpcomingFeed";
 import { useStablePaginatedQuery } from "~/hooks/useStableQuery";
+import { useLoadMoreHandler } from "~/hooks/useUpcomingFeed";
 import { useStableTimestamp } from "~/store";
-import { eventMatchesFeedSegment } from "~/utils/feedSegment";
 import { logError } from "~/utils/errorLogging";
 import { toast } from "~/utils/feedback";
+import { eventMatchesFeedSegment } from "~/utils/feedSegment";
 
 type ProfileSegment = "upcoming" | "past";
 
@@ -190,9 +184,7 @@ function ProfileHeroAndSoonlist({
     Boolean(websiteTrimmed);
 
   const lastUpdatedLine =
-    lastUpdatedAt === undefined
-      ? "…"
-      : formatLastUpdated(lastUpdatedAt);
+    lastUpdatedAt === undefined ? "…" : formatLastUpdated(lastUpdatedAt);
 
   return (
     <View className="px-4 pb-2 pt-2">
@@ -312,9 +304,7 @@ function ProfileHeroAndSoonlist({
               }}
               modifiers={[pickerStyle("segmented")]}
             >
-              <SwiftUIText modifiers={[tag("upcoming")]}>
-                Upcoming
-              </SwiftUIText>
+              <SwiftUIText modifiers={[tag("upcoming")]}>Upcoming</SwiftUIText>
               <SwiftUIText modifiers={[tag("past")]}>Past</SwiftUIText>
             </Picker>
           </Host>
@@ -331,8 +321,7 @@ function ProfileHeroAndSoonlist({
 
 export default function UserProfilePage() {
   const params = useLocalSearchParams<{ username: string }>();
-  const username =
-    typeof params.username === "string" ? params.username : "";
+  const username = typeof params.username === "string" ? params.username : "";
   const router = useRouter();
   const { isAuthenticated } = useConvexAuth();
   const [selectedSegment, setSelectedSegment] =
@@ -482,12 +471,7 @@ export default function UserProfilePage() {
         onSegmentChange={setSelectedSegment}
       />
     );
-  }, [
-    targetUser,
-    listTitle,
-    lastUpdatedAt,
-    selectedSegment,
-  ]);
+  }, [targetUser, listTitle, lastUpdatedAt, selectedSegment]);
 
   if (isUserLoading) {
     return (
