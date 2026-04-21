@@ -734,6 +734,7 @@ export const getBySlug = query({
         slug: v.optional(v.string()),
         created_at: v.string(),
         updatedAt: v.union(v.string(), v.null()),
+        feedBackfilledAt: v.optional(v.string()),
         owner: listOwnerValidator,
         contributorCount: v.number(),
         followerCount: v.number(),
