@@ -433,36 +433,42 @@ export const getPublicUserFeed = query({
   },
 });
 
-/** Total public feed entries for a user (matches `getPublicUserFeed` filters). */
-async function countPublicUserFeedEntries(
+/** Sample size for public feed counts (Convex: no `.paginate()` — use `.take()` only). */
+const PUBLIC_FEED_COUNT_CAP = 50;
+const PUBLIC_FEED_COUNT_TAKE = PUBLIC_FEED_COUNT_CAP + 1;
+
+async function samplePublicUserFeedCount(
   ctx: QueryCtx,
   feedId: string,
   hasEnded: boolean,
-): Promise<number> {
-  let total = 0;
-  let cursor: string | null = null;
-  for (let i = 0; i < 250; i++) {
-    const result = await ctx.db
-      .query("userFeeds")
-      .withIndex("by_feed_visibility_hasEnded_startTime", (q) =>
-        q
-          .eq("feedId", feedId)
-          .eq("eventVisibility", "public")
-          .eq("hasEnded", hasEnded),
-      )
-      .paginate({ numItems: 500, cursor });
-    total += result.page.length;
-    if (result.isDone) break;
-    cursor = result.continueCursor;
-  }
-  return total;
+): Promise<{ count: number; capped: boolean }> {
+  const rows = await ctx.db
+    .query("userFeeds")
+    .withIndex("by_feed_visibility_hasEnded_startTime", (q) =>
+      q
+        .eq("feedId", feedId)
+        .eq("eventVisibility", "public")
+        .eq("hasEnded", hasEnded),
+    )
+    .order("asc")
+    .take(PUBLIC_FEED_COUNT_TAKE);
+
+  const capped = rows.length === PUBLIC_FEED_COUNT_TAKE;
+  const count = capped ? PUBLIC_FEED_COUNT_CAP : rows.length;
+  return { count, capped };
 }
 
 export const getPublicUserFeedCounts = query({
   args: { username: v.string() },
   returns: v.object({
-    upcoming: v.number(),
-    past: v.number(),
+    upcoming: v.object({
+      count: v.number(),
+      capped: v.boolean(),
+    }),
+    past: v.object({
+      count: v.number(),
+      capped: v.boolean(),
+    }),
   }),
   handler: async (ctx, { username }) => {
     const user = await ctx.db
@@ -476,8 +482,8 @@ export const getPublicUserFeedCounts = query({
 
     const feedId = `user_${user.id}`;
     const [upcoming, past] = await Promise.all([
-      countPublicUserFeedEntries(ctx, feedId, false),
-      countPublicUserFeedEntries(ctx, feedId, true),
+      samplePublicUserFeedCount(ctx, feedId, false),
+      samplePublicUserFeedCount(ctx, feedId, true),
     ]);
 
     return { upcoming, past };

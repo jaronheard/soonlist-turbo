@@ -149,6 +149,26 @@ type ProfileUser = NonNullable<
   FunctionReturnType<typeof api.users.getByUsername>
 >;
 
+type PublicFeedCountPart = { count: number; capped: boolean };
+
+/** Matches `PUBLIC_FEED_COUNT_CAP` in `packages/backend/convex/feeds.ts`. */
+const PUBLIC_FEED_COUNT_CAP = 50;
+
+function formatPublicFeedCount(part: PublicFeedCountPart): string {
+  return part.capped ? `${PUBLIC_FEED_COUNT_CAP}+` : String(part.count);
+}
+
+/** Exact sum when known; round "50+" if either segment hits the cap. */
+function publicFeedAllTimeLabel(
+  upcoming: PublicFeedCountPart,
+  past: PublicFeedCountPart,
+): string {
+  if (!upcoming.capped && !past.capped) {
+    return String(upcoming.count + past.count);
+  }
+  return `${PUBLIC_FEED_COUNT_CAP}+`;
+}
+
 function ProfileHeroAndSoonlist({
   user,
   listTitle,
@@ -158,14 +178,18 @@ function ProfileHeroAndSoonlist({
 }: {
   user: ProfileUser;
   listTitle: string;
-  feedCounts: { upcoming: number; past: number } | undefined;
+  feedCounts:
+    | { upcoming: PublicFeedCountPart; past: PublicFeedCountPart }
+    | undefined;
   selectedSegment: ProfileSegment;
   onSegmentChange: (s: ProfileSegment) => void;
 }) {
   const locationLine = profileLocationFromUser(user);
   const memberLine = formatMemberSince(user.created_at);
-  const totalPublic =
-    feedCounts !== undefined ? feedCounts.upcoming + feedCounts.past : null;
+  const totalPublicLabel =
+    feedCounts !== undefined
+      ? publicFeedAllTimeLabel(feedCounts.upcoming, feedCounts.past)
+      : null;
 
   const displayName =
     user.displayName?.trim() || `@${user.username}`;
@@ -270,8 +294,10 @@ function ProfileHeroAndSoonlist({
         <Text className="mt-1 text-sm text-neutral-2">
           {feedCounts !== undefined ? (
             <>
-              {feedCounts.upcoming} upcoming
-              {totalPublic !== null ? ` · ${totalPublic} events all-time` : ""}
+              {formatPublicFeedCount(feedCounts.upcoming)} upcoming
+              {totalPublicLabel !== null
+                ? ` · ${totalPublicLabel} events all-time`
+                : ""}
             </>
           ) : (
             "…"
