@@ -1,9 +1,9 @@
 import React, { useCallback } from "react";
 import {
   ActivityIndicator,
+  FlatList,
   Modal,
   Platform,
-  ScrollView,
   Share,
   Text,
   TouchableOpacity,
@@ -114,15 +114,22 @@ export function FollowedListsModal({
             </Text>
           </View>
         ) : (
-          <ScrollView
+          <FlatList
+            data={followedLists}
+            keyExtractor={(list) => list.id}
             contentContainerStyle={{
               paddingHorizontal: 16,
               paddingBottom: insets.bottom + 16,
             }}
-          >
-            <View className="rounded-2xl bg-interactive-3/60 px-4 pb-3 pt-3">
-              {followedLists.map((list) => (
-                <View key={list.id} className="flex-row items-center py-2.5">
+            renderItem={({ item: list, index }) => {
+              const isFirst = index === 0;
+              const isLast = index === followedLists.length - 1;
+              return (
+                <View
+                  className={`flex-row items-center bg-interactive-3/60 px-4 py-2.5 ${
+                    isFirst ? "rounded-t-2xl pt-3" : ""
+                  } ${isLast ? "rounded-b-2xl pb-3" : ""}`}
+                >
                   <TouchableOpacity
                     className="min-w-0 flex-1 flex-row items-center"
                     onPress={() => handleListPress(list)}
@@ -164,9 +171,9 @@ export function FollowedListsModal({
                     />
                   </View>
                 </View>
-              ))}
-            </View>
-          </ScrollView>
+              );
+            }}
+          />
         )}
       </View>
     </Modal>

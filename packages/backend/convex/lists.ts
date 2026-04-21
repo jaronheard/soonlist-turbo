@@ -858,12 +858,13 @@ export const getContributorsForList = query({
       return [];
     }
 
+    const boundedLimit = Math.max(1, Math.min(50, Math.floor(limit)));
     const members = await ctx.db
       .query("listMembers")
       .withIndex("by_list_and_role", (q) =>
         q.eq("listId", list.id).eq("role", "contributor"),
       )
-      .take(limit);
+      .take(boundedLimit);
 
     const users = await Promise.all(
       members.map((m) =>

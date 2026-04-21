@@ -87,6 +87,7 @@ export function AttributionGrid({
     isCompact && people.length === 1 && visibleLists.length === 0;
 
   if (isSingleCreator) {
+    const prefix = creatorBadgeLabel === "owner" ? "Owned by" : "Captured by";
     return (
       <TouchableOpacity
         onPress={() => handleUserPress(creator)}
@@ -99,7 +100,7 @@ export function AttributionGrid({
       >
         <UserAvatar user={creator} size={24} />
         <Text className="ml-2 text-sm text-neutral-2" numberOfLines={1}>
-          Captured by{" "}
+          {prefix}{" "}
           <Text className="font-semibold text-neutral-1">
             {creator.displayName || creator.username}
           </Text>
