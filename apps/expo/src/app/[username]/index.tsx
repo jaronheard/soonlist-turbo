@@ -205,8 +205,7 @@ export default function UserProfilePage() {
       <Stack.Screen
         options={{
           title: screenTitle,
-          headerLargeTitle: true,
-          headerLargeTitleStyle: { color: "#5A32FB" },
+          headerLargeTitle: false,
           headerTransparent: true,
           headerBlurEffect: "none",
           headerShadowVisible: false,
