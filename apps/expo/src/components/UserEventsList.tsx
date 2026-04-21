@@ -23,6 +23,7 @@ import type { AddToCalendarButtonPropsRestricted } from "@soonlist/cal/types";
 import { getTimezoneAbbreviation } from "@soonlist/cal";
 
 import type { EventAttributionVariant } from "~/components/EventAttributionRow";
+import type { UserForDisplay } from "~/types/user";
 import type { EventWithSimilarity } from "~/utils/similarEvents";
 import { EventAttributionRow } from "~/components/EventAttributionRow";
 import {
@@ -244,10 +245,34 @@ export function UserEventListItem(props: UserEventListItemProps) {
 
   const isCurrentUser = currentUser?.id === eventUser.id;
 
+  // Savers surfaced from the grouped-feed enrichment (direct follows + users
+  // who captured a duplicate in the same similarity group). Falls back to
+  // raw eventFollows for surfaces that don't populate groupSavers.
+  const groupSavers = (event as { groupSavers?: UserForDisplay[] }).groupSavers;
+  const attributionSavers: UserForDisplay[] =
+    groupSavers ??
+    (event.eventFollows as EnrichedEventFollow[] | undefined)
+      ?.filter(
+        (
+          f,
+        ): f is EnrichedEventFollow & {
+          user: NonNullable<EnrichedEventFollow["user"]>;
+        } => f.user !== null,
+      )
+      .map((f) => ({
+        id: f.user.id,
+        username: f.user.username,
+        displayName: f.user.displayName,
+        userImage: f.user.userImage,
+      })) ??
+    [];
+  const hasOtherSavers = attributionSavers.some((s) => s.id !== eventUser.id);
+
   const shouldShowCreator =
     showCreator === "always" ||
     (showCreator === "otherUsers" && !isCurrentUser) ||
-    (isSaved && !isCurrentUser && showCreator === "savedFromOthers");
+    (showCreator === "savedFromOthers" &&
+      ((isSaved && !isCurrentUser) || (isCurrentUser && hasOtherSavers)));
 
   const isOwner = demoMode || isCurrentUser;
 
@@ -501,22 +526,7 @@ export function UserEventListItem(props: UserEventListItemProps) {
                 displayName: eventUser.displayName,
                 userImage: eventUser.userImage,
               }}
-              savers={
-                (event.eventFollows as EnrichedEventFollow[] | undefined)
-                  ?.filter(
-                    (
-                      f,
-                    ): f is EnrichedEventFollow & {
-                      user: NonNullable<EnrichedEventFollow["user"]>;
-                    } => f.user !== null,
-                  )
-                  .map((f) => ({
-                    id: f.user.id,
-                    username: f.user.username,
-                    displayName: f.user.displayName,
-                    userImage: f.user.userImage,
-                  })) ?? []
-              }
+              savers={attributionSavers}
               iconSize={iconSize}
               currentUserId={currentUser?.id}
               sourceListName={sourceListName}

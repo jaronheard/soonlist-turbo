@@ -251,8 +251,68 @@ async function queryGroupedFeed(
         (l) => !l.isSystemList && l.id !== sourceListId,
       ).length;
 
+      // Collect everyone who "saved" this event — directly via eventFollows
+      // on the primary, plus anyone who captured a duplicate in the same
+      // similarity group (either as that event's creator or as a follower of
+      // it). Private duplicate captures are excluded so we don't leak the
+      // existence of a private event by revealing its creator. The primary
+      // event's own creator is filtered out since they're attributed
+      // separately in the UI.
+      const groupMembers = await ctx.db
+        .query("events")
+        .withIndex("by_similarity_group", (q) =>
+          q.eq("similarityGroupId", groupEntry.similarityGroupId),
+        )
+        .collect();
+
+      const visibleGroupMembers = groupMembers.filter(
+        (m) => m.id === groupEntry.primaryEventId || m.visibility === "public",
+      );
+
+      const saverUserIds = new Set<string>();
+      for (const follow of event.eventFollows) {
+        saverUserIds.add(follow.userId);
+      }
+      const otherMembers = visibleGroupMembers.filter(
+        (m) => m.id !== groupEntry.primaryEventId,
+      );
+      for (const m of otherMembers) {
+        saverUserIds.add(m.userId);
+      }
+      if (otherMembers.length > 0) {
+        const otherFollowLists = await Promise.all(
+          otherMembers.map((m) =>
+            ctx.db
+              .query("eventFollows")
+              .withIndex("by_event", (q) => q.eq("eventId", m.id))
+              .collect(),
+          ),
+        );
+        for (const follows of otherFollowLists) {
+          for (const f of follows) saverUserIds.add(f.userId);
+        }
+      }
+      saverUserIds.delete(event.userId);
+
+      const saverUserDocs = await Promise.all(
+        [...saverUserIds].map((id) =>
+          ctx.db
+            .query("users")
+            .withIndex("by_custom_id", (q) => q.eq("id", id))
+            .unique(),
+        ),
+      );
+      const groupSavers = saverUserDocs
+        .filter((u): u is NonNullable<typeof u> => u !== null)
+        .map((u) => ({
+          id: u.id,
+          username: u.username,
+          displayName: u.displayName,
+          userImage: u.userImage,
+        }));
+
       return {
-        event: { ...event, lists: viewerFilteredLists },
+        event: { ...event, lists: viewerFilteredLists, groupSavers },
         similarEventsCount: groupEntry.similarEventsCount,
         similarityGroupId: groupEntry.similarityGroupId,
         sourceListId: sourceListVisible ? sourceListId : undefined,
