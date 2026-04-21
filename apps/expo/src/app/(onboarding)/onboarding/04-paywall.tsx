@@ -1,5 +1,5 @@
 import React from "react";
-import { Pressable, Text, View } from "react-native";
+import { Linking, Pressable, Text, View } from "react-native";
 import * as StoreReview from "expo-store-review";
 
 import { Check } from "~/components/icons";
@@ -14,10 +14,16 @@ import {
 import { hapticLight } from "~/utils/feedback";
 
 const BULLETS = [
-  "Free to save events & share lists",
-  "Built for real life, not algorithms",
-  "Community supported — optional supporter perks",
+  "Save events and share lists, free",
+  "No ads. No algorithm. No data sold.",
+  "Support for extras, not access",
 ];
+
+const JARON_INSTAGRAM_URL = "https://www.instagram.com/jaronherad/";
+
+function openJaronInstagram() {
+  void Linking.openURL(JARON_INSTAGRAM_URL);
+}
 
 export default function CommunitySupportedScreen() {
   const pendingFollowUsername = usePendingFollowUsername();
@@ -48,8 +54,8 @@ export default function CommunitySupportedScreen() {
 
   return (
     <QuestionContainer
-      question="Free to use. Community supported."
-      subtitle="Soonlist is an invitation to real life — not a feed."
+      question="Soonlist is free."
+      subtitle="Free because community access matters. You can support the app and unlock extras, but the essentials stay free for everyone."
       currentStep={currentStep}
       totalSteps={totalSteps}
     >
@@ -67,8 +73,19 @@ export default function CommunitySupportedScreen() {
 
         <View>
           <Text className="mb-4 text-center text-sm text-white/70">
-            No ads. No algorithms. All features are free — supporter perks come
-            later.
+            💖 Built in Portland by{" "}
+            <Text
+              accessibilityRole="link"
+              accessibilityLabel="Jaron on Instagram"
+              className="text-sm text-white underline"
+              onPress={() => {
+                void hapticLight();
+                openJaronInstagram();
+              }}
+            >
+              Jaron
+            </Text>
+            {" "}& friends
           </Text>
           <Pressable
             onPress={handleContinue}

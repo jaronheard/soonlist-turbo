@@ -182,14 +182,14 @@ export default function TryItScreen() {
     <QuestionContainer
       question={
         phase === "result"
-          ? "That's it!"
+          ? "Captured!"
           : phase === "parsing"
             ? "Capturing..."
             : "Capture any event"
       }
       subtitle={
         phase === "result"
-          ? "Screenshots become organized events, automatically"
+          ? "Screenshots become events you can share and add to calendar."
           : phase === "parsing"
             ? undefined
             : "Screenshots, pictures of flyers, and links"
