@@ -85,7 +85,6 @@ interface UserEventListItemProps {
   similarEventsCount?: number;
   demoMode?: boolean;
   index: number;
-  isDiscoverFeed?: boolean;
   primaryAction?: "addToCalendar" | "save";
   source?: string;
   sourceListName?: string;
@@ -104,7 +103,6 @@ export function UserEventListItem(props: UserEventListItemProps) {
     similarEventsCount,
     demoMode,
     index,
-    isDiscoverFeed = false,
     primaryAction = "addToCalendar",
     source,
     sourceListName,
@@ -389,30 +387,29 @@ export function UserEventListItem(props: UserEventListItemProps) {
                 <>
                   <ActionButton event={event} />
 
-                  {!isDiscoverFeed &&
-                    (isOwner && primaryAction !== "addToCalendar" ? (
-                      <TouchableOpacity
-                        className="rounded-full p-2.5"
-                        onPress={() => {
-                          router.navigate(`/event/${id}/edit`);
-                        }}
-                        accessibilityLabel="Edit"
-                        accessibilityRole="button"
-                        hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
-                      >
-                        <PenSquare size={iconSize * 1.1} color="#5A32FB" />
-                      </TouchableOpacity>
-                    ) : (
-                      <TouchableOpacity
-                        className="rounded-full p-2.5"
-                        onPress={handleShare}
-                        accessibilityLabel="Share"
-                        accessibilityRole="button"
-                        hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
-                      >
-                        <ShareIcon size={iconSize * 1.1} color="#5A32FB" />
-                      </TouchableOpacity>
-                    ))}
+                  {isOwner && primaryAction !== "addToCalendar" ? (
+                    <TouchableOpacity
+                      className="rounded-full p-2.5"
+                      onPress={() => {
+                        router.navigate(`/event/${id}/edit`);
+                      }}
+                      accessibilityLabel="Edit"
+                      accessibilityRole="button"
+                      hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+                    >
+                      <PenSquare size={iconSize * 1.1} color="#5A32FB" />
+                    </TouchableOpacity>
+                  ) : (
+                    <TouchableOpacity
+                      className="rounded-full p-2.5"
+                      onPress={handleShare}
+                      accessibilityLabel="Share"
+                      accessibilityRole="button"
+                      hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+                    >
+                      <ShareIcon size={iconSize * 1.1} color="#5A32FB" />
+                    </TouchableOpacity>
+                  )}
 
                   <EventMenu
                     event={event}
@@ -939,7 +936,6 @@ interface UserEventsListProps {
   showSourceStickers?: boolean;
   demoMode?: boolean;
   stats?: EventStatsData;
-  isDiscoverFeed?: boolean;
   primaryAction?: "addToCalendar" | "save";
   savedEventIds?: Set<string>;
   HeaderComponent?: React.ComponentType<Record<string, never>>;
@@ -962,7 +958,6 @@ export default function UserEventsList(props: UserEventsListProps) {
     showSourceStickers = false,
     demoMode,
     stats,
-    isDiscoverFeed = false,
     primaryAction = "addToCalendar",
     savedEventIds,
     HeaderComponent,
@@ -1117,7 +1112,6 @@ export default function UserEventsList(props: UserEventsListProps) {
             }
             demoMode={demoMode}
             index={index}
-            isDiscoverFeed={isDiscoverFeed}
             primaryAction={primaryAction}
             source={source}
             sourceListName={sourceListName}

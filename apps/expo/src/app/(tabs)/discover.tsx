@@ -1,6 +1,5 @@
 import type { FunctionReturnType } from "convex/server";
 import React, { useCallback, useMemo } from "react";
-import { Text, TouchableOpacity, useWindowDimensions } from "react-native";
 import { Redirect } from "expo-router";
 import { useUser } from "@clerk/clerk-expo";
 import {
@@ -13,58 +12,11 @@ import {
 import { api } from "@soonlist/backend/convex/_generated/api";
 
 import DiscoverShareBanner from "~/components/DiscoverShareBanner";
-import { ShareIcon } from "~/components/icons";
 import { MatchAuthLoadingSurface } from "~/components/MatchAuthLoadingSurface";
-import SaveButton from "~/components/SaveButton";
 import UserEventsList from "~/components/UserEventsList";
-import { useEventActions } from "~/hooks/useEventActions";
 import { useStablePaginatedQuery } from "~/hooks/useStableQuery";
 import { useAppStore, useStableTimestamp } from "~/store";
 import { getPlanStatusFromUser } from "~/utils/plan";
-
-type DiscoverEvent = NonNullable<FunctionReturnType<typeof api.events.get>>;
-
-function SaveOrShareActionButton({
-  event,
-  savedEventIds,
-  currentUser,
-}: {
-  event: DiscoverEvent;
-  savedEventIds: Set<string>;
-  currentUser: { id: string } | null | undefined;
-}) {
-  const { fontScale } = useWindowDimensions();
-  const iconSize = 16 * fontScale;
-  const isSaved = savedEventIds.has(event.id);
-  const { handleShare } = useEventActions({
-    event,
-    isSaved,
-    source: "discover_list",
-  });
-
-  // Only show save/share button for authenticated users
-  if (!currentUser) {
-    return null;
-  }
-
-  const isOwnEvent = event.userId === currentUser.id;
-
-  return isOwnEvent ? (
-    <TouchableOpacity
-      className="-mb-0.5 -ml-2.5 flex-row items-center gap-2 bg-interactive-2 px-4 py-2.5"
-      style={{ borderRadius: 16 }}
-      onPress={handleShare}
-      accessibilityLabel="Share"
-      accessibilityRole="button"
-      hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
-    >
-      <ShareIcon size={iconSize * 1.1} color="#5A32FB" />
-      <Text className="text-base font-bold text-interactive-1">Share</Text>
-    </TouchableOpacity>
-  ) : (
-    <SaveButton eventId={event.id} isSaved={isSaved} source="discover_list" />
-  );
-}
 
 function DiscoverContent() {
   const { user } = useUser();
@@ -94,7 +46,7 @@ function DiscoverContent() {
     },
   );
 
-  // Memoize saved events query args to prevent unnecessary re-renders
+  // Memoize saved events query args to avoid unnecessary re-renders
   const savedEventsQueryArgs = useMemo(() => {
     if (!canAccessDiscover || !user?.username) return "skip";
     return { userName: user.username };
@@ -147,17 +99,10 @@ function DiscoverContent() {
       onEndReached={handleLoadMore}
       isFetchingNextPage={status === "LoadingMore"}
       listBodyLoading={status === "LoadingFirstPage"}
-      ActionButton={({ event }) => (
-        <SaveOrShareActionButton
-          event={event}
-          savedEventIds={savedEventIds}
-          currentUser={user}
-        />
-      )}
       showCreator="always"
-      isDiscoverFeed={true}
       primaryAction="save"
       savedEventIds={savedEventIds}
+      source="discover_list"
       HeaderComponent={DiscoverShareBanner}
     />
   );

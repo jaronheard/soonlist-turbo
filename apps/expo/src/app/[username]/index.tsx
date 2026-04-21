@@ -1,11 +1,5 @@
 import React, { useCallback, useMemo } from "react";
-import {
-  ActivityIndicator,
-  Text,
-  TouchableOpacity,
-  useWindowDimensions,
-  View,
-} from "react-native";
+import { ActivityIndicator, Text, View } from "react-native";
 import { Image } from "expo-image";
 import { Stack, useLocalSearchParams, useRouter } from "expo-router";
 import { useConvexAuth, useMutation, useQuery } from "convex/react";
@@ -13,13 +7,10 @@ import { useConvexAuth, useMutation, useQuery } from "convex/react";
 import type { Doc } from "@soonlist/backend/convex/_generated/dataModel";
 import { api } from "@soonlist/backend/convex/_generated/api";
 
-import type { Event } from "~/components/UserEventsList";
-import { ShareIcon, User } from "~/components/icons";
-import SaveButton from "~/components/SaveButton";
+import { User } from "~/components/icons";
 import { SubscribeButton } from "~/components/SubscribeButton";
 import UserEventsList from "~/components/UserEventsList";
 import { UserProfileFlair } from "~/components/UserProfileFlair";
-import { useEventActions } from "~/hooks/useEventActions";
 import { useStablePaginatedQuery } from "~/hooks/useStableQuery";
 import {
   useLoadMoreHandler,
@@ -44,52 +35,6 @@ function profileLocationFromUser(user: {
     }
   }
   return null;
-}
-
-function ProfileSaveShareActionButton({
-  event,
-  savedEventIds,
-  currentUser,
-  isAuthenticated,
-}: {
-  event: Event;
-  savedEventIds: Set<string>;
-  currentUser: { id: string } | null | undefined;
-  isAuthenticated: boolean;
-}) {
-  const { fontScale } = useWindowDimensions();
-  const iconSize = 16 * fontScale;
-  const isSaved = savedEventIds.has(event.id);
-  const { handleShare } = useEventActions({
-    event,
-    isSaved,
-    source: "user_profile",
-  });
-
-  if (!isAuthenticated || !currentUser) {
-    return null;
-  }
-  const isOwnEvent = event.userId === currentUser.id;
-
-  if (isOwnEvent) {
-    return (
-      <TouchableOpacity
-        className="-mb-0.5 -ml-2.5 flex-row items-center gap-2 bg-interactive-2 px-4 py-2.5"
-        style={{ borderRadius: 16 }}
-        onPress={handleShare}
-        accessibilityLabel="Share"
-        accessibilityRole="button"
-        hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
-      >
-        <ShareIcon size={iconSize * 1.1} color="#5A32FB" />
-        <Text className="text-base font-bold text-interactive-1">Share</Text>
-      </TouchableOpacity>
-    );
-  }
-
-  return (
-    <SaveButton eventId={event.id} isSaved={isSaved} source="user_profile" />
-  );
 }
 
 export default function UserProfilePage() {
@@ -293,17 +238,9 @@ export default function UserProfilePage() {
           isFetchingNextPage={status === "LoadingMore"}
           listBodyLoading={status === "LoadingFirstPage"}
           showCreator="never"
-          isDiscoverFeed={false}
           primaryAction={isOwnProfile ? "addToCalendar" : "save"}
-          ActionButton={({ event }) => (
-            <ProfileSaveShareActionButton
-              event={event}
-              savedEventIds={savedEventIds}
-              currentUser={currentUser}
-              isAuthenticated={isAuthenticated}
-            />
-          )}
           savedEventIds={savedEventIds}
+          source="user_profile"
           HeaderComponent={renderListHeader}
         />
       </View>
