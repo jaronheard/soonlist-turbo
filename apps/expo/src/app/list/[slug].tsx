@@ -6,8 +6,8 @@ import { useConvexAuth, useMutation, useQuery } from "convex/react";
 import { api } from "@soonlist/backend/convex/_generated/api";
 
 import type { SoonlistHeroSegment } from "~/components/SoonlistHero";
-import { FloatingShareButton } from "~/components/FloatingShareButton";
 import { AttributionGrid } from "~/components/AttributionGrid";
+import { FloatingShareButton } from "~/components/FloatingShareButton";
 import { SoonlistHero } from "~/components/SoonlistHero";
 import { SubscribeButton } from "~/components/SubscribeButton";
 import UserEventsList from "~/components/UserEventsList";
@@ -191,13 +191,7 @@ export default function ListDetailScreen() {
         onSegmentChange={setSelectedSegment}
       />
     );
-  }, [
-    listData,
-    lastUpdatedAt,
-    selectedSegment,
-    contributors,
-    currentUser?.id,
-  ]);
+  }, [listData, lastUpdatedAt, selectedSegment, contributors, currentUser?.id]);
 
   if (
     !normalizedSlug ||

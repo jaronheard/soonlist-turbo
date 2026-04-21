@@ -31,8 +31,8 @@ import type { AddToCalendarButtonPropsRestricted } from "@soonlist/cal/types";
 import { api } from "@soonlist/backend/convex/_generated/api";
 import { getTimezoneAbbreviation } from "@soonlist/cal";
 
-import { EventMenu } from "~/components/EventMenu";
 import { AttributionGrid } from "~/components/AttributionGrid";
+import { EventMenu } from "~/components/EventMenu";
 import { HeaderLogo } from "~/components/HeaderLogo";
 import {
   CalendarPlus,
