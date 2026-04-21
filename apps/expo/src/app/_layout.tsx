@@ -217,9 +217,9 @@ const InitialLayout = () => {
         },
       }}
     >
-      {/* Publicly mountable routes. The tabs self-gate via <Unauthenticated>
-          in their own screens, so we let them mount and defer to that logic
-          (which also owns the onboarding-vs-sign-in branching). */}
+      {/* Tabs aren't protected: the feed tab's <Unauthenticated> owns the
+          onboarding-vs-sign-in branching, which Stack.Protected's anchor
+          redirect alone can't express. */}
       <Stack.Screen
         name="index"
         options={{
