@@ -31,11 +31,6 @@ interface SoonlistHeroProps {
    */
   selectedSegment?: SoonlistHeroSegment;
   onSegmentChange?: (s: SoonlistHeroSegment) => void;
-  /**
-   * Optional block rendered below the tabs. List detail uses this for a
-   * `FromTheseSoonlists` card showing owner + contributors.
-   */
-  footer?: React.ReactNode;
 }
 
 /**
@@ -49,7 +44,6 @@ export function SoonlistHero({
   lastUpdatedAt,
   selectedSegment,
   onSegmentChange,
-  footer,
 }: SoonlistHeroProps) {
   const hasTabs =
     selectedSegment !== undefined && onSegmentChange !== undefined;
@@ -81,8 +75,6 @@ export function SoonlistHero({
           />
         </View>
       ) : null}
-
-      {footer ? <View className="mt-4">{footer}</View> : null}
     </View>
   );
 }

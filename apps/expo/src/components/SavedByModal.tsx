@@ -5,7 +5,7 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import type { Doc } from "@soonlist/backend/convex/_generated/dataModel";
 
 import type { UserForDisplay } from "~/types/user";
-import { FromTheseSoonlists } from "~/components/FromTheseSoonlists";
+import { AttributionGrid } from "~/components/AttributionGrid";
 import { X } from "~/components/icons";
 import { SheetHeader } from "~/components/SheetHeader";
 
@@ -58,7 +58,7 @@ export function SavedByModal({
             paddingBottom: insets.bottom + 16,
           }}
         >
-          <FromTheseSoonlists
+          <AttributionGrid
             creator={creator}
             savers={savers}
             lists={lists}

@@ -7,7 +7,7 @@ import { api } from "@soonlist/backend/convex/_generated/api";
 
 import type { SoonlistHeroSegment } from "~/components/SoonlistHero";
 import { FloatingShareButton } from "~/components/FloatingShareButton";
-import { FromTheseSoonlists } from "~/components/FromTheseSoonlists";
+import { AttributionGrid } from "~/components/AttributionGrid";
 import { SoonlistHero } from "~/components/SoonlistHero";
 import { SubscribeButton } from "~/components/SubscribeButton";
 import UserEventsList from "~/components/UserEventsList";
@@ -156,13 +156,6 @@ export default function ListDetailScreen() {
 
   const handleLoadMore = useLoadMoreHandler(status, loadMore);
 
-  const ownerByline = useMemo(() => {
-    if (!listData?.owner) return undefined;
-    const name =
-      listData.owner.displayName.trim() || listData.owner.username || "owner";
-    return `by ${name}`;
-  }, [listData?.owner]);
-
   const renderListHeader = useCallback(() => {
     if (!listData) return null;
 
@@ -179,31 +172,26 @@ export default function ListDetailScreen() {
       <SoonlistHero
         title={listData.name}
         subtitle={
-          ownerByline ? (
-            <Text className="text-sm text-neutral-2">{ownerByline}</Text>
-          ) : undefined
-        }
-        lastUpdatedAt={lastUpdatedAt}
-        selectedSegment={selectedSegment}
-        onSegmentChange={setSelectedSegment}
-        footer={
           ownerForDisplay ? (
-            <FromTheseSoonlists
+            <AttributionGrid
               creator={ownerForDisplay}
               savers={contributors ?? []}
               lists={[]}
               currentUserId={currentUser?.id}
               variant="compact"
-              showLabel={false}
+              background="white"
+              label="List contributors:"
               creatorBadgeLabel="owner"
             />
           ) : null
         }
+        lastUpdatedAt={lastUpdatedAt}
+        selectedSegment={selectedSegment}
+        onSegmentChange={setSelectedSegment}
       />
     );
   }, [
     listData,
-    ownerByline,
     lastUpdatedAt,
     selectedSegment,
     contributors,

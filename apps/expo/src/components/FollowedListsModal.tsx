@@ -118,7 +118,7 @@ export function FollowedListsModal({
             }}
           >
             {/* Single tinted card wrapping all rows — matches the
-                FromTheseSoonlists "card" variant: borderless rows, circle
+                AttributionGrid "card" variant: borderless rows, circle
                 icons, no chevron when trailing actions are present. */}
             <View className="rounded-2xl bg-interactive-3/60 px-4 pb-3 pt-3">
               {followedLists.map((list) => (

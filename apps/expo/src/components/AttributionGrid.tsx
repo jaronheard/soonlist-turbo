@@ -9,7 +9,7 @@ import { ChevronRight, List as ListIcon } from "~/components/icons";
 import { UserAvatar } from "~/components/UserAvatar";
 import { navigateToUser } from "~/utils/navigateToUser";
 
-interface FromTheseSoonlistsProps {
+interface AttributionGridProps {
   creator: UserForDisplay;
   savers: UserForDisplay[];
   lists: Doc<"lists">[];
@@ -30,9 +30,18 @@ interface FromTheseSoonlistsProps {
    * "captured" (event-detail semantics). List detail uses "owner".
    */
   creatorBadgeLabel?: string;
+  /**
+   * Card background tone.
+   * - "tint" (default): muted-brand wash — used on event detail + modals
+   *   where the card sits on the app's white canvas and needs to feel
+   *   attached to the item it describes.
+   * - "white": crisp white — used in list detail, where the card itself
+   *   sits on the tinted hero background and needs contrast the other way.
+   */
+  background?: "tint" | "white";
 }
 
-export function FromTheseSoonlists({
+export function AttributionGrid({
   creator,
   savers,
   lists,
@@ -42,7 +51,8 @@ export function FromTheseSoonlists({
   showLabel = true,
   label = "From these Soonlists:",
   creatorBadgeLabel = "captured",
-}: FromTheseSoonlistsProps) {
+  background = "tint",
+}: AttributionGridProps) {
   // People: creator first, then savers, deduped.
   const people: UserForDisplay[] = [creator];
   for (const saver of savers) {
@@ -202,7 +212,8 @@ export function FromTheseSoonlists({
   // Both variants share the same tinted, borderless card. The card variant
   // is simply the compact design scaled up for use in the modal / +N more
   // detail view.
-  const containerClass = `rounded-2xl bg-interactive-3/60 ${containerPadding}`;
+  const bgClass = background === "white" ? "bg-white" : "bg-interactive-3/60";
+  const containerClass = `rounded-2xl ${bgClass} ${containerPadding}`;
 
   return (
     <View className={containerClass}>
