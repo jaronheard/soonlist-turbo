@@ -112,10 +112,6 @@ export function AttributionGrid({
   const rowPaddingY = isCompact ? "py-2" : "py-2.5";
   const containerPadding = isCompact ? "px-3 pb-2 pt-2" : "px-4 pb-3 pt-3";
   const labelMargin = isCompact ? "mb-1" : "mb-2";
-  // Both variants share the same visual language: tinted card, no dividers
-  // between rows, muted-brand chevron. Rows are grouped by the tint + row
-  // padding, not by lines. The card variant is simply the compact design
-  // scaled up.
   const chevronColor = "#8F7AD6";
 
   const rows: React.ReactNode[] = [];
@@ -209,9 +205,6 @@ export function AttributionGrid({
 
   if (rows.length === 0) return null;
 
-  // Both variants share the same tinted, borderless card. The card variant
-  // is simply the compact design scaled up for use in the modal / +N more
-  // detail view.
   const bgClass = background === "white" ? "bg-white" : "bg-interactive-3/60";
   const containerClass = `rounded-2xl ${bgClass} ${containerPadding}`;
 

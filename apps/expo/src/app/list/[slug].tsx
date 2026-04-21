@@ -1,5 +1,5 @@
 import React, { useCallback, useMemo, useState } from "react";
-import { ActivityIndicator, Share, Text, View } from "react-native";
+import { ActivityIndicator, Platform, Share, Text, View } from "react-native";
 import { Stack, useLocalSearchParams, useRouter } from "expo-router";
 import { useConvexAuth, useMutation, useQuery } from "convex/react";
 
@@ -17,6 +17,7 @@ import {
   useUpcomingEventsFilter,
 } from "~/hooks/useUpcomingFeed";
 import { useStableTimestamp } from "~/store";
+import Config from "~/utils/config";
 import { logError } from "~/utils/errorLogging";
 import { toast } from "~/utils/feedback";
 import { eventMatchesFeedSegment } from "~/utils/feedSegment";
@@ -63,8 +64,6 @@ export default function ListDetailScreen() {
     initialNumItems: 50,
   });
 
-  // Upcoming uses the freshness-filter helper for parity with the profile
-  // screen; past just trusts the server filter and the segment guard below.
   const upcomingEventsFiltered = useUpcomingEventsFilter(
     selectedSegment === "upcoming" ? listEvents : [],
   );
@@ -144,11 +143,13 @@ export default function ListDetailScreen() {
 
   const handleShare = useCallback(async () => {
     if (!listData || !normalizedSlug) return;
+    const url = `${Config.apiBaseUrl}/list/${normalizedSlug}`;
     try {
-      await Share.share({
-        message: `Check out ${listData.name} on Soonlist`,
-        url: `https://soonlist.com/list/${normalizedSlug}`,
-      });
+      await Share.share(
+        Platform.OS === "ios"
+          ? { url }
+          : { message: `Check out ${listData.name} on Soonlist: ${url}` },
+      );
     } catch (error) {
       logError("Error sharing list", error);
     }

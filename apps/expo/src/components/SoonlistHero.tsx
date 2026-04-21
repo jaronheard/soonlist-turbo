@@ -13,31 +13,12 @@ export type SoonlistHeroSegment = "upcoming" | "past";
 
 interface SoonlistHeroProps {
   title: string;
-  /**
-   * Content between the title and the last-updated / tabs rows.
-   *
-   * - User profile: a full `SoonlistHeroBylineRow` (avatar + @handle +
-   *   secondary line + contact icons).
-   * - List detail: a simple "by <owner>" subtitle text.
-   *
-   * Rendered as-is so each screen can shape its own byline.
-   */
   subtitle?: React.ReactNode;
-  /** Rendered as "Last updated X ago". Omit to hide. */
   lastUpdatedAt?: number | null | undefined;
-  /**
-   * Upcoming / Past segmented control. Both are required to render the
-   * control; omit either to hide it.
-   */
   selectedSegment?: SoonlistHeroSegment;
   onSegmentChange?: (s: SoonlistHeroSegment) => void;
 }
 
-/**
- * Shared hero for user profile (`[username]/index.tsx`) and list detail
- * (`list/[slug].tsx`). Enforces consistent spacing, typography, and the
- * big-purple title treatment across both screens.
- */
 export function SoonlistHero({
   title,
   subtitle,
@@ -48,7 +29,11 @@ export function SoonlistHero({
   const hasTabs =
     selectedSegment !== undefined && onSegmentChange !== undefined;
   const lastUpdatedLine =
-    lastUpdatedAt === undefined ? null : formatLastUpdated(lastUpdatedAt);
+    lastUpdatedAt === undefined
+      ? null
+      : lastUpdatedAt === null
+        ? "…"
+        : formatLastUpdated(lastUpdatedAt);
 
   return (
     <View className="px-4 pb-2 pt-2">
@@ -62,9 +47,7 @@ export function SoonlistHero({
       {subtitle ? <View className="mt-3">{subtitle}</View> : null}
 
       {lastUpdatedLine !== null ? (
-        <Text className="mt-2 text-sm text-neutral-2">
-          {lastUpdatedLine === "" ? "…" : lastUpdatedLine}
-        </Text>
+        <Text className="mt-2 text-sm text-neutral-2">{lastUpdatedLine}</Text>
       ) : null}
 
       {hasTabs ? (
@@ -85,13 +68,9 @@ interface ContactLinkButtonProps {
   children: React.ReactNode;
 }
 
-const BYLINE_CONTACT_ICON_SIZE = 16;
-const BYLINE_CONTACT_ICON_COLOR = "#5A32FB";
+export const SOONLIST_HERO_CONTACT_ICON_SIZE = 16;
+export const SOONLIST_HERO_CONTACT_ICON_COLOR = "#5A32FB";
 
-/**
- * Single circular contact-icon chip used in the hero byline row. Exported so
- * callers can compose their own icon sets (Mail/Phone/Instagram/Globe).
- */
 export function SoonlistHeroContactButton({
   accessibilityLabel,
   onPress,
@@ -110,23 +89,14 @@ export function SoonlistHeroContactButton({
   );
 }
 
-export const SOONLIST_HERO_CONTACT_ICON_SIZE = BYLINE_CONTACT_ICON_SIZE;
-export const SOONLIST_HERO_CONTACT_ICON_COLOR = BYLINE_CONTACT_ICON_COLOR;
-
 interface BylineRowProps {
   avatar: React.ReactNode;
   primaryText: string;
   primaryAccessibilityLabel?: string;
   secondaryText?: string;
-  /** Trailing contact icon chips — use `SoonlistHeroContactButton`. */
   contacts?: React.ReactNode;
 }
 
-/**
- * Standard hero byline: avatar + primary text (`@handle`) + optional
- * secondary line + optional trailing contact icon chips. Used by user
- * profile. List detail uses a plain "by <owner>" subtitle instead.
- */
 export function SoonlistHeroBylineRow({
   avatar,
   primaryText,
@@ -220,8 +190,7 @@ function UpcomingPastSegmentedControl({
   );
 }
 
-function formatLastUpdated(addedAtMs: number | null | undefined): string {
-  if (addedAtMs === null || addedAtMs === undefined) return "";
+function formatLastUpdated(addedAtMs: number): string {
   const now = Date.now();
   const diffMs = Math.max(0, now - addedAtMs);
   const minutes = Math.floor(diffMs / 60_000);

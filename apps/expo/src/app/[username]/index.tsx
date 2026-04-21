@@ -1,6 +1,13 @@
 import type { FunctionReturnType } from "convex/server";
 import React, { useCallback, useMemo, useState } from "react";
-import { ActivityIndicator, Linking, Share, Text, View } from "react-native";
+import {
+  ActivityIndicator,
+  Linking,
+  Platform,
+  Share,
+  Text,
+  View,
+} from "react-native";
 import { Image } from "expo-image";
 import { Stack, useLocalSearchParams, useRouter } from "expo-router";
 import { useConvexAuth, useMutation, useQuery } from "convex/react";
@@ -24,11 +31,10 @@ import { UserProfileFlair } from "~/components/UserProfileFlair";
 import { useStablePaginatedQuery } from "~/hooks/useStableQuery";
 import { useLoadMoreHandler } from "~/hooks/useUpcomingFeed";
 import { useStableTimestamp } from "~/store";
+import Config from "~/utils/config";
 import { logError } from "~/utils/errorLogging";
 import { toast } from "~/utils/feedback";
 import { eventMatchesFeedSegment } from "~/utils/feedSegment";
-
-type ProfileSegment = SoonlistHeroSegment;
 
 function formatMemberSince(createdAtIso: string): string {
   const d = new Date(createdAtIso);
@@ -171,7 +177,7 @@ export default function UserProfilePage() {
   const router = useRouter();
   const { isAuthenticated } = useConvexAuth();
   const [selectedSegment, setSelectedSegment] =
-    useState<ProfileSegment>("upcoming");
+    useState<SoonlistHeroSegment>("upcoming");
   const stableTimestamp = useStableTimestamp();
 
   const targetUser = useQuery(
@@ -307,13 +313,9 @@ export default function UserProfilePage() {
 
   const handleShareProfile = useCallback(async () => {
     if (!targetUser) return;
+    const url = `${Config.apiBaseUrl}/${targetUser.username}`;
     try {
-      await Share.share({
-        message: `Check out ${
-          targetUser.displayName.trim() || targetUser.username
-        }'s Soonlist`,
-        url: `https://soonlist.com/${targetUser.username}`,
-      });
+      await Share.share(Platform.OS === "ios" ? { url } : { message: url });
     } catch (error) {
       logError("Error sharing profile", error);
     }

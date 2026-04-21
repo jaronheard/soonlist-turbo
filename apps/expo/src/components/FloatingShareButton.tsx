@@ -9,11 +9,6 @@ interface FloatingShareButtonProps {
   accessibilityLabel?: string;
 }
 
-/**
- * Shared bottom-anchored share CTA used by the list detail screen and user
- * profile. The parent must render this inside a relatively-positioned
- * container (e.g., sibling of the scrollable list under a `flex-1` parent).
- */
 export function FloatingShareButton({
   onPress,
   label = "Share",

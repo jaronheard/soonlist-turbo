@@ -2,6 +2,7 @@ import React, { useCallback } from "react";
 import {
   ActivityIndicator,
   Modal,
+  Platform,
   ScrollView,
   Share,
   Text,
@@ -18,6 +19,7 @@ import { api } from "@soonlist/backend/convex/_generated/api";
 import { List, ShareIcon } from "~/components/icons";
 import { SheetHeader } from "~/components/SheetHeader";
 import { SubscribeButton } from "~/components/SubscribeButton";
+import Config from "~/utils/config";
 import { logError } from "~/utils/errorLogging";
 import { toast } from "~/utils/feedback";
 
@@ -57,13 +59,14 @@ export function FollowedListsModal({
   const handleShareList = useCallback(
     async (listName: string, listSlug?: string) => {
       const shareUrl = listSlug
-        ? `https://soonlist.com/list/${listSlug}`
-        : "https://soonlist.com";
+        ? `${Config.apiBaseUrl}/list/${listSlug}`
+        : Config.apiBaseUrl;
       try {
-        await Share.share({
-          message: `Check out ${listName} on Soonlist`,
-          url: shareUrl,
-        });
+        await Share.share(
+          Platform.OS === "ios"
+            ? { url: shareUrl }
+            : { message: `Check out ${listName} on Soonlist: ${shareUrl}` },
+        );
       } catch (error) {
         logError("Error sharing list", error);
       }
@@ -117,9 +120,6 @@ export function FollowedListsModal({
               paddingBottom: insets.bottom + 16,
             }}
           >
-            {/* Single tinted card wrapping all rows — matches the
-                AttributionGrid "card" variant: borderless rows, circle
-                icons, no chevron when trailing actions are present. */}
             <View className="rounded-2xl bg-interactive-3/60 px-4 pb-3 pt-3">
               {followedLists.map((list) => (
                 <View key={list.id} className="flex-row items-center py-2.5">
