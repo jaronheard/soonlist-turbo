@@ -820,6 +820,72 @@ export const getBySlug = query({
 });
 
 /**
+ * Get contributors (non-owner members with role="contributor") for a list.
+ *
+ * Used by the list detail hero to show who has captured events into the list,
+ * mirroring the "From these Soonlists" attribution on event detail (owner is
+ * the creator-equivalent, contributors are the savers-equivalent).
+ *
+ * Returns a bounded slice of UserForDisplay-shaped users. Respects list
+ * access rules — private lists only yield contributors to authorized viewers.
+ */
+export const getContributorsForList = query({
+  args: {
+    slug: v.string(),
+    limit: v.optional(v.number()),
+  },
+  returns: v.array(
+    v.object({
+      id: v.string(),
+      username: v.string(),
+      displayName: v.string(),
+      userImage: v.string(),
+    }),
+  ),
+  handler: async (ctx, { slug, limit = 20 }) => {
+    const list = await ctx.db
+      .query("lists")
+      .withIndex("by_slug", (q) => q.eq("slug", slug))
+      .first();
+
+    if (!list) {
+      return [];
+    }
+
+    const viewerId = await getUserId(ctx);
+    const access = await checkListAccess(ctx, list.id, viewerId);
+    if (access.status !== "ok") {
+      return [];
+    }
+
+    const members = await ctx.db
+      .query("listMembers")
+      .withIndex("by_list_and_role", (q) =>
+        q.eq("listId", list.id).eq("role", "contributor"),
+      )
+      .take(limit);
+
+    const users = await Promise.all(
+      members.map((m) =>
+        ctx.db
+          .query("users")
+          .withIndex("by_custom_id", (q) => q.eq("id", m.userId))
+          .first(),
+      ),
+    );
+
+    return users
+      .filter((u): u is NonNullable<typeof u> => u !== null)
+      .map((u) => ({
+        id: u.id,
+        username: u.username,
+        displayName: u.displayName,
+        userImage: u.userImage,
+      }));
+  },
+});
+
+/**
  * Get all system lists
  */
 export const getSystemLists = query({

@@ -21,8 +21,15 @@ interface FromTheseSoonlistsProps {
    * - "compact": tighter, borderless, tinted card for inline use.
    */
   variant?: "card" | "compact";
-  /** Whether to show the "From these Soonlists" section label. */
+  /** Whether to show the section label. */
   showLabel?: boolean;
+  /** Override the section label. Defaults to "From these Soonlists:". */
+  label?: string;
+  /**
+   * Override the pill label shown next to the creator row. Defaults to
+   * "captured" (event-detail semantics). List detail uses "owner".
+   */
+  creatorBadgeLabel?: string;
 }
 
 export function FromTheseSoonlists({
@@ -33,6 +40,8 @@ export function FromTheseSoonlists({
   onNavigate,
   variant = "card",
   showLabel = true,
+  label = "From these Soonlists:",
+  creatorBadgeLabel = "captured",
 }: FromTheseSoonlistsProps) {
   // People: creator first, then savers, deduped.
   const people: UserForDisplay[] = [creator];
@@ -127,7 +136,7 @@ export function FromTheseSoonlists({
           {isCreator ? (
             <View className="ml-2 shrink-0 rounded-full bg-accent-yellow px-2 py-0.5">
               <Text className="text-[11px] font-semibold text-neutral-1">
-                captured
+                {creatorBadgeLabel}
               </Text>
             </View>
           ) : null}
@@ -203,7 +212,7 @@ export function FromTheseSoonlists({
             isCompact ? "text-xs" : "text-sm"
           } text-neutral-2`}
         >
-          From these Soonlists:
+          {label}
         </Text>
       ) : null}
       {rows}

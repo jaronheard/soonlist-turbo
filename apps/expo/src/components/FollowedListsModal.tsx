@@ -1,8 +1,8 @@
 import React, { useCallback } from "react";
 import {
   ActivityIndicator,
-  FlatList,
   Modal,
+  ScrollView,
   Share,
   Text,
   TouchableOpacity,
@@ -15,7 +15,8 @@ import { useMutation, useQuery } from "convex/react";
 import type { Doc } from "@soonlist/backend/convex/_generated/dataModel";
 import { api } from "@soonlist/backend/convex/_generated/api";
 
-import { ChevronRight, List, ShareIcon } from "~/components/icons";
+import { List, ShareIcon } from "~/components/icons";
+import { SheetHeader } from "~/components/SheetHeader";
 import { SubscribeButton } from "~/components/SubscribeButton";
 import { logError } from "~/utils/errorLogging";
 import { toast } from "~/utils/feedback";
@@ -88,17 +89,16 @@ export function FollowedListsModal({
       onRequestClose={onClose}
     >
       <View className="flex-1 bg-white" style={{ paddingTop: insets.top }}>
-        {/* Header */}
-        <View className="flex-row items-center justify-between border-b border-neutral-3 px-4 py-3">
-          <Text className="text-lg font-bold text-neutral-1">
-            Subscribed lists
-          </Text>
-          <TouchableOpacity onPress={onClose} activeOpacity={0.7}>
-            <Text className="text-base font-semibold text-interactive-1">
-              Done
-            </Text>
-          </TouchableOpacity>
-        </View>
+        <SheetHeader
+          title="Subscribed lists"
+          trailing={
+            <TouchableOpacity onPress={onClose} activeOpacity={0.7}>
+              <Text className="text-base font-semibold text-interactive-1">
+                Done
+              </Text>
+            </TouchableOpacity>
+          }
+        />
 
         {followedLists === undefined ? (
           <View className="flex-1 items-center justify-center">
@@ -111,31 +111,29 @@ export function FollowedListsModal({
             </Text>
           </View>
         ) : (
-          <FlatList
-            data={followedLists}
-            keyExtractor={(list) => list.id}
+          <ScrollView
             contentContainerStyle={{
               paddingHorizontal: 16,
-              paddingTop: 16,
               paddingBottom: insets.bottom + 16,
             }}
-            ListHeaderComponent={
-              <Text className="mb-2 text-xs font-semibold uppercase tracking-wider text-neutral-2">
-                Lists
-              </Text>
-            }
-            renderItem={({ item: list }) => {
-              return (
-                <View className="flex-row items-center py-3">
+          >
+            {/* Single tinted card wrapping all rows — matches the
+                FromTheseSoonlists "card" variant: borderless rows, circle
+                icons, no chevron when trailing actions are present. */}
+            <View className="rounded-2xl bg-interactive-3/60 px-4 pb-3 pt-3">
+              {followedLists.map((list) => (
+                <View key={list.id} className="flex-row items-center py-2.5">
                   <TouchableOpacity
-                    className="flex-1 flex-row items-center"
+                    className="min-w-0 flex-1 flex-row items-center"
                     onPress={() => handleListPress(list)}
                     activeOpacity={0.7}
+                    accessibilityRole="button"
+                    accessibilityLabel={`Open list ${list.name}`}
                   >
-                    <View className="h-10 w-10 items-center justify-center rounded-xl bg-interactive-2">
+                    <View className="h-11 w-11 shrink-0 items-center justify-center rounded-full bg-interactive-3">
                       <List size={20} color="#5A32FB" />
                     </View>
-                    <View className="ml-3 flex-1">
+                    <View className="ml-3 min-w-0 flex-1">
                       <Text
                         className="text-base font-semibold text-neutral-1"
                         numberOfLines={1}
@@ -143,7 +141,6 @@ export function FollowedListsModal({
                         {list.name}
                       </Text>
                     </View>
-                    <ChevronRight size={16} color="#DCE0E8" />
                   </TouchableOpacity>
 
                   <TouchableOpacity
@@ -167,9 +164,9 @@ export function FollowedListsModal({
                     />
                   </View>
                 </View>
-              );
-            }}
-          />
+              ))}
+            </View>
+          </ScrollView>
         )}
       </View>
     </Modal>
