@@ -433,15 +433,17 @@ export const getPublicUserFeed = query({
   },
 });
 
-/** Sample size for public feed counts (Convex: no `.paginate()` — use `.take()` only). */
-const PUBLIC_FEED_COUNT_CAP = 50;
-const PUBLIC_FEED_COUNT_TAKE = PUBLIC_FEED_COUNT_CAP + 1;
+/**
+ * Bound the scan for "last updated" — we only need the max `addedAt` across a
+ * recent window per bucket, not every historical feed entry.
+ */
+const PUBLIC_FEED_LAST_UPDATED_TAKE = 100;
 
-async function samplePublicUserFeedCount(
+async function sampleMaxAddedAt(
   ctx: QueryCtx,
   feedId: string,
   hasEnded: boolean,
-): Promise<{ count: number; capped: boolean }> {
+): Promise<number> {
   const rows = await ctx.db
     .query("userFeeds")
     .withIndex("by_feed_visibility_hasEnded_startTime", (q) =>
@@ -450,26 +452,17 @@ async function samplePublicUserFeedCount(
         .eq("eventVisibility", "public")
         .eq("hasEnded", hasEnded),
     )
-    .order("asc")
-    .take(PUBLIC_FEED_COUNT_TAKE);
-
-  const capped = rows.length === PUBLIC_FEED_COUNT_TAKE;
-  const count = capped ? PUBLIC_FEED_COUNT_CAP : rows.length;
-  return { count, capped };
+    .take(PUBLIC_FEED_LAST_UPDATED_TAKE);
+  let max = 0;
+  for (const row of rows) {
+    if (row.addedAt > max) max = row.addedAt;
+  }
+  return max;
 }
 
-export const getPublicUserFeedCounts = query({
+export const getPublicUserFeedLastUpdated = query({
   args: { username: v.string() },
-  returns: v.object({
-    upcoming: v.object({
-      count: v.number(),
-      capped: v.boolean(),
-    }),
-    past: v.object({
-      count: v.number(),
-      capped: v.boolean(),
-    }),
-  }),
+  returns: v.union(v.number(), v.null()),
   handler: async (ctx, { username }) => {
     const user = await ctx.db
       .query("users")
@@ -481,12 +474,12 @@ export const getPublicUserFeedCounts = query({
     }
 
     const feedId = `user_${user.id}`;
-    const [upcoming, past] = await Promise.all([
-      samplePublicUserFeedCount(ctx, feedId, false),
-      samplePublicUserFeedCount(ctx, feedId, true),
+    const [upcomingMax, pastMax] = await Promise.all([
+      sampleMaxAddedAt(ctx, feedId, false),
+      sampleMaxAddedAt(ctx, feedId, true),
     ]);
-
-    return { upcoming, past };
+    const max = Math.max(upcomingMax, pastMax);
+    return max > 0 ? max : null;
   },
 });
 

@@ -3,6 +3,7 @@ import React, { useCallback, useMemo, useState } from "react";
 import {
   ActivityIndicator,
   Linking,
+  Platform,
   Pressable,
   Text,
   TouchableOpacity,
@@ -10,12 +11,20 @@ import {
 } from "react-native";
 import { Image } from "expo-image";
 import { Stack, useLocalSearchParams, useRouter } from "expo-router";
+import { Host, Picker, Text as SwiftUIText } from "@expo/ui/swift-ui";
+import { pickerStyle, tag } from "@expo/ui/swift-ui/modifiers";
 import { useConvexAuth, useMutation, useQuery } from "convex/react";
 
 import type { Doc } from "@soonlist/backend/convex/_generated/dataModel";
 import { api } from "@soonlist/backend/convex/_generated/api";
 
-import { User } from "~/components/icons";
+import {
+  Globe,
+  Instagram,
+  Mail,
+  Phone,
+  User,
+} from "~/components/icons";
 import { SubscribeButton } from "~/components/SubscribeButton";
 import UserEventsList from "~/components/UserEventsList";
 import { UserProfileFlair } from "~/components/UserProfileFlair";
@@ -28,24 +37,6 @@ import { toast } from "~/utils/feedback";
 
 type ProfileSegment = "upcoming" | "past";
 
-function isRecord(value: unknown): value is Record<string, unknown> {
-  return typeof value === "object" && value !== null && !Array.isArray(value);
-}
-
-function profileLocationFromUser(user: {
-  publicMetadata?: unknown;
-}): string | null {
-  const meta = user.publicMetadata;
-  if (!isRecord(meta)) return null;
-  for (const key of ["location", "city", "hometown"] as const) {
-    const v = meta[key];
-    if (typeof v === "string" && v.trim().length > 0) {
-      return v.trim();
-    }
-  }
-  return null;
-}
-
 function formatMemberSince(createdAtIso: string): string {
   const d = new Date(createdAtIso);
   if (Number.isNaN(d.getTime())) return "";
@@ -54,7 +45,7 @@ function formatMemberSince(createdAtIso: string): string {
   if (days <= 30) {
     return "New member";
   }
-  return `Since ${d.toLocaleDateString(undefined, { month: "long", year: "numeric" })}`;
+  return `Joined ${d.toLocaleDateString(undefined, { month: "long", year: "numeric" })}`;
 }
 
 function websiteHref(raw: string): string {
@@ -74,48 +65,42 @@ function instaHref(raw: string): string {
   return `https://instagram.com/${handle}`;
 }
 
-function ProfileSegmentToggle({
-  selected,
-  onChange,
+function SegmentedControlFallback({
+  selectedSegment,
+  onSegmentChange,
 }: {
-  selected: ProfileSegment;
-  onChange: (s: ProfileSegment) => void;
+  selectedSegment: ProfileSegment;
+  onSegmentChange: (segment: ProfileSegment) => void;
 }) {
   return (
-    <View className="mt-3 flex-row rounded-lg bg-neutral-4/40 p-1">
+    <View className="flex-row rounded-lg bg-gray-100 p-1">
       <TouchableOpacity
-        className={`flex-1 items-center rounded-md py-2 ${
-          selected === "upcoming" ? "bg-white shadow-sm" : ""
+        className={`items-center rounded-md px-4 py-2 ${
+          selectedSegment === "upcoming" ? "bg-white shadow-sm" : ""
         }`}
-        onPress={() => onChange("upcoming")}
-        accessibilityRole="button"
-        accessibilityState={{ selected: selected === "upcoming" }}
-        accessibilityLabel="Upcoming events"
+        onPress={() => onSegmentChange("upcoming")}
       >
         <Text
           className={
-            selected === "upcoming"
-              ? "font-semibold text-neutral-1"
-              : "text-neutral-2"
+            selectedSegment === "upcoming"
+              ? "font-semibold text-gray-900"
+              : "text-gray-500"
           }
         >
           Upcoming
         </Text>
       </TouchableOpacity>
       <TouchableOpacity
-        className={`flex-1 items-center rounded-md py-2 ${
-          selected === "past" ? "bg-white shadow-sm" : ""
+        className={`items-center rounded-md px-4 py-2 ${
+          selectedSegment === "past" ? "bg-white shadow-sm" : ""
         }`}
-        onPress={() => onChange("past")}
-        accessibilityRole="button"
-        accessibilityState={{ selected: selected === "past" }}
-        accessibilityLabel="Past events"
+        onPress={() => onSegmentChange("past")}
       >
         <Text
           className={
-            selected === "past"
-              ? "font-semibold text-neutral-1"
-              : "text-neutral-2"
+            selectedSegment === "past"
+              ? "font-semibold text-gray-900"
+              : "text-gray-500"
           }
         >
           Past
@@ -125,22 +110,27 @@ function ProfileSegmentToggle({
   );
 }
 
-function ProfileLinkRow({
-  label,
+const PROFILE_CONTACT_ICON_SIZE = 16;
+const PROFILE_CONTACT_ICON_COLOR = "#5A32FB";
+
+function ProfileContactIconButton({
+  accessibilityLabel,
   onPress,
+  children,
 }: {
-  label: string;
+  accessibilityLabel: string;
   onPress: () => void;
+  children: React.ReactNode;
 }) {
   return (
     <Pressable
       onPress={onPress}
-      accessibilityRole="link"
-      className="mt-1 active:opacity-70"
+      accessibilityRole="button"
+      accessibilityLabel={accessibilityLabel}
+      hitSlop={8}
+      className="h-8 w-8 items-center justify-center rounded-full bg-neutral-4/70 active:opacity-70"
     >
-      <Text className="text-sm font-medium text-interactive-1" numberOfLines={2}>
-        {label}
-      </Text>
+      {children}
     </Pressable>
   );
 }
@@ -149,164 +139,191 @@ type ProfileUser = NonNullable<
   FunctionReturnType<typeof api.users.getByUsername>
 >;
 
-type PublicFeedCountPart = { count: number; capped: boolean };
-
-/** Matches `PUBLIC_FEED_COUNT_CAP` in `packages/backend/convex/feeds.ts`. */
-const PUBLIC_FEED_COUNT_CAP = 50;
-
-function formatPublicFeedCount(part: PublicFeedCountPart): string {
-  return part.capped ? `${PUBLIC_FEED_COUNT_CAP}+` : String(part.count);
-}
-
-/** Exact sum when known; round "50+" if either segment hits the cap. */
-function publicFeedAllTimeLabel(
-  upcoming: PublicFeedCountPart,
-  past: PublicFeedCountPart,
-): string {
-  if (!upcoming.capped && !past.capped) {
-    return String(upcoming.count + past.count);
+function formatLastUpdated(addedAtMs: number | null | undefined): string {
+  if (addedAtMs === null || addedAtMs === undefined) return "";
+  const now = Date.now();
+  const diffMs = Math.max(0, now - addedAtMs);
+  const minutes = Math.floor(diffMs / 60_000);
+  if (minutes < 1) return "Last updated just now";
+  if (minutes < 60) {
+    return `Last updated ${minutes} minute${minutes === 1 ? "" : "s"} ago`;
   }
-  return `${PUBLIC_FEED_COUNT_CAP}+`;
+  const hours = Math.floor(minutes / 60);
+  if (hours < 24) {
+    return `Last updated ${hours} hour${hours === 1 ? "" : "s"} ago`;
+  }
+  const days = Math.floor(hours / 24);
+  if (days < 30) {
+    return `Last updated ${days} day${days === 1 ? "" : "s"} ago`;
+  }
+  const d = new Date(addedAtMs);
+  return `Last updated ${d.toLocaleDateString(undefined, {
+    month: "long",
+    year: "numeric",
+  })}`;
 }
 
 function ProfileHeroAndSoonlist({
   user,
   listTitle,
-  feedCounts,
+  lastUpdatedAt,
   selectedSegment,
   onSegmentChange,
 }: {
   user: ProfileUser;
   listTitle: string;
-  feedCounts:
-    | { upcoming: PublicFeedCountPart; past: PublicFeedCountPart }
-    | undefined;
+  lastUpdatedAt: number | null | undefined;
   selectedSegment: ProfileSegment;
   onSegmentChange: (s: ProfileSegment) => void;
 }) {
-  const locationLine = profileLocationFromUser(user);
   const memberLine = formatMemberSince(user.created_at);
-  const totalPublicLabel =
-    feedCounts !== undefined
-      ? publicFeedAllTimeLabel(feedCounts.upcoming, feedCounts.past)
-      : null;
 
-  const displayName =
-    user.displayName?.trim() || `@${user.username}`;
+  const emailTrimmed = user.publicEmail?.trim() ?? "";
+  const phoneTrimmed = user.publicPhone?.trim() ?? "";
+  const instaTrimmed = user.publicInsta?.trim() ?? "";
+  const instaHandle = instaTrimmed.replace(/^@/, "");
+  const websiteTrimmed = user.publicWebsite?.trim() ?? "";
+  const hasContact =
+    Boolean(emailTrimmed) ||
+    Boolean(phoneTrimmed) ||
+    Boolean(instaTrimmed) ||
+    Boolean(websiteTrimmed);
+
+  const lastUpdatedLine =
+    lastUpdatedAt === undefined
+      ? "…"
+      : formatLastUpdated(lastUpdatedAt);
 
   return (
     <View className="px-4 pb-2 pt-2">
-      <View className="flex-row gap-4">
-        <UserProfileFlair username={user.username} size="lg">
+      <Text
+        className="text-3xl font-bold leading-tight text-interactive-1"
+        numberOfLines={2}
+      >
+        {listTitle}
+      </Text>
+
+      {/* Byline: avatar + @username + joined + contact icons */}
+      <View className="mt-3 flex-row items-center gap-3">
+        <UserProfileFlair username={user.username} size="sm">
           {user.userImage ? (
             <Image
               source={{ uri: user.userImage }}
-              style={{ width: 80, height: 80, borderRadius: 40 }}
+              style={{ width: 36, height: 36, borderRadius: 18 }}
               contentFit="cover"
               cachePolicy="disk"
             />
           ) : (
-            <View className="h-20 w-20 items-center justify-center rounded-full bg-neutral-4">
-              <User size={40} color="#627496" />
+            <View className="h-9 w-9 items-center justify-center rounded-full bg-neutral-4">
+              <User size={20} color="#627496" />
             </View>
           )}
         </UserProfileFlair>
 
         <View className="min-w-0 flex-1">
           <Text
-            className="text-xl font-bold text-neutral-1"
-            numberOfLines={2}
+            className="text-sm font-semibold text-neutral-1"
+            numberOfLines={1}
+            accessibilityLabel={
+              user.displayName?.trim()
+                ? `${user.displayName.trim()}, @${user.username}`
+                : `@${user.username}`
+            }
           >
-            {displayName}
+            @{user.username}
           </Text>
-          <Text className="text-sm text-neutral-2">@{user.username}</Text>
-
-          {user.bio?.trim() ? (
-            <Text className="mt-2 text-sm leading-5 text-neutral-1">
-              {user.bio.trim()}
-            </Text>
-          ) : null}
-
-          {locationLine ? (
-            <Text
-              className="mt-2 text-sm text-neutral-2"
-              numberOfLines={2}
-            >
-              {locationLine}
-            </Text>
-          ) : null}
-
           {memberLine ? (
-            <Text className="mt-1 text-sm text-neutral-2">{memberLine}</Text>
-          ) : null}
-
-          {user.publicEmail?.trim() ? (
-            <ProfileLinkRow
-              label={user.publicEmail.trim()}
-              onPress={() => {
-                void Linking.openURL(
-                  `mailto:${encodeURIComponent(user.publicEmail!.trim())}`,
-                );
-              }}
-            />
-          ) : null}
-
-          {user.publicPhone?.trim() ? (
-            <ProfileLinkRow
-              label={user.publicPhone.trim()}
-              onPress={() => {
-                const n = user.publicPhone!.replace(/[^\d+]/g, "");
-                void Linking.openURL(`tel:${n}`);
-              }}
-            />
-          ) : null}
-
-          {user.publicInsta?.trim() ? (
-            <ProfileLinkRow
-              label={`Instagram: @${user.publicInsta.trim().replace(/^@/, "")}`}
-              onPress={() => {
-                void Linking.openURL(instaHref(user.publicInsta!));
-              }}
-            />
-          ) : null}
-
-          {user.publicWebsite?.trim() ? (
-            <ProfileLinkRow
-              label={user.publicWebsite.trim()}
-              onPress={() => {
-                void Linking.openURL(websiteHref(user.publicWebsite!));
-              }}
-            />
+            <Text className="text-xs text-neutral-2" numberOfLines={1}>
+              {memberLine}
+            </Text>
           ) : null}
         </View>
+
+        {hasContact ? (
+          <View className="flex-row items-center gap-1.5">
+            {emailTrimmed ? (
+              <ProfileContactIconButton
+                accessibilityLabel={`Email ${emailTrimmed}`}
+                onPress={() => {
+                  void Linking.openURL(
+                    `mailto:${encodeURIComponent(emailTrimmed)}`,
+                  );
+                }}
+              >
+                <Mail
+                  size={PROFILE_CONTACT_ICON_SIZE}
+                  color={PROFILE_CONTACT_ICON_COLOR}
+                />
+              </ProfileContactIconButton>
+            ) : null}
+            {phoneTrimmed ? (
+              <ProfileContactIconButton
+                accessibilityLabel={`Call ${phoneTrimmed}`}
+                onPress={() => {
+                  const n = phoneTrimmed.replace(/[^\d+]/g, "");
+                  void Linking.openURL(`tel:${n}`);
+                }}
+              >
+                <Phone
+                  size={PROFILE_CONTACT_ICON_SIZE}
+                  color={PROFILE_CONTACT_ICON_COLOR}
+                />
+              </ProfileContactIconButton>
+            ) : null}
+            {instaTrimmed ? (
+              <ProfileContactIconButton
+                accessibilityLabel={`Instagram @${instaHandle}`}
+                onPress={() => {
+                  void Linking.openURL(instaHref(instaTrimmed));
+                }}
+              >
+                <Instagram
+                  size={PROFILE_CONTACT_ICON_SIZE}
+                  color={PROFILE_CONTACT_ICON_COLOR}
+                />
+              </ProfileContactIconButton>
+            ) : null}
+            {websiteTrimmed ? (
+              <ProfileContactIconButton
+                accessibilityLabel={`Website ${websiteTrimmed}`}
+                onPress={() => {
+                  void Linking.openURL(websiteHref(websiteTrimmed));
+                }}
+              >
+                <Globe
+                  size={PROFILE_CONTACT_ICON_SIZE}
+                  color={PROFILE_CONTACT_ICON_COLOR}
+                />
+              </ProfileContactIconButton>
+            ) : null}
+          </View>
+        ) : null}
       </View>
 
-      <View className="mt-5 border-t border-neutral-4/80 pt-4">
-        <Text className="text-xs font-semibold uppercase tracking-wide text-neutral-2">
-          Soonlist
-        </Text>
-        <Text
-          className="mt-1 text-lg font-bold text-interactive-1"
-          numberOfLines={2}
-        >
-          {listTitle}
-        </Text>
-        <Text className="mt-1 text-sm text-neutral-2">
-          {feedCounts !== undefined ? (
-            <>
-              {formatPublicFeedCount(feedCounts.upcoming)} upcoming
-              {totalPublicLabel !== null
-                ? ` · ${totalPublicLabel} events all-time`
-                : ""}
-            </>
-          ) : (
-            "…"
-          )}
-        </Text>
-        <ProfileSegmentToggle
-          selected={selectedSegment}
-          onChange={onSegmentChange}
-        />
+      <Text className="mt-2 text-sm text-neutral-2">{lastUpdatedLine}</Text>
+
+      <View className="mt-3" style={{ width: 260 }}>
+        {Platform.OS === "ios" ? (
+          <Host matchContents>
+            <Picker
+              selection={selectedSegment}
+              onSelectionChange={(value) => {
+                onSegmentChange(value as ProfileSegment);
+              }}
+              modifiers={[pickerStyle("segmented")]}
+            >
+              <SwiftUIText modifiers={[tag("upcoming")]}>
+                Upcoming
+              </SwiftUIText>
+              <SwiftUIText modifiers={[tag("past")]}>Past</SwiftUIText>
+            </Picker>
+          </Host>
+        ) : (
+          <SegmentedControlFallback
+            selectedSegment={selectedSegment}
+            onSegmentChange={onSegmentChange}
+          />
+        )}
       </View>
     </View>
   );
@@ -334,8 +351,8 @@ export default function UserProfilePage() {
     targetUser?.id ? { userId: targetUser.id } : "skip",
   );
 
-  const feedCounts = useQuery(
-    api.feeds.getPublicUserFeedCounts,
+  const lastUpdatedAt = useQuery(
+    api.feeds.getPublicUserFeedLastUpdated,
     targetUser ? { username } : "skip",
   );
 
@@ -460,7 +477,7 @@ export default function UserProfilePage() {
       <ProfileHeroAndSoonlist
         user={targetUser}
         listTitle={listTitle}
-        feedCounts={feedCounts}
+        lastUpdatedAt={lastUpdatedAt}
         selectedSegment={selectedSegment}
         onSegmentChange={setSelectedSegment}
       />
@@ -468,7 +485,7 @@ export default function UserProfilePage() {
   }, [
     targetUser,
     listTitle,
-    feedCounts,
+    lastUpdatedAt,
     selectedSegment,
   ]);
 
