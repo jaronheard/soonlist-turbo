@@ -46,9 +46,7 @@ export function FromTheseSoonlists({
   // `queryFeed`/`queryGroupedFeed`, which filter `event.lists` through
   // `getViewableListIds`). Here we only strip system/personal lists, which
   // are an implementation detail and not meaningful attribution.
-  const visibleLists = lists.filter(
-    (list) => !list.isSystemList && !!list.slug,
-  );
+  const visibleLists = lists.filter((list) => !list.isSystemList);
 
   const handleUserPress = (user: UserForDisplay) => {
     onNavigate?.();
@@ -141,34 +139,53 @@ export function FromTheseSoonlists({
 
   visibleLists.forEach((list) => {
     const iconSize = isCompact ? 32 : 44;
-    rows.push(
-      <TouchableOpacity
-        key={`list-${list.id}`}
-        onPress={() => handleListPress(list)}
-        className={`flex-row items-center ${rowPaddingY}`}
-        activeOpacity={0.7}
-        accessibilityRole="button"
-        accessibilityLabel={`Open list ${list.name}`}
+    const icon = (
+      <View
+        className="items-center justify-center rounded-full bg-interactive-3"
+        style={{ width: iconSize, height: iconSize }}
       >
-        <View
-          className="items-center justify-center rounded-full bg-interactive-3"
-          style={{ width: iconSize, height: iconSize }}
-        >
-          <ListIcon size={isCompact ? 16 : 20} color="#5A32FB" />
-        </View>
-        <View className="ml-3 flex-1">
-          <Text
-            className={`${
-              isCompact ? "text-sm" : "text-base"
-            } font-semibold text-neutral-1`}
-            numberOfLines={1}
-          >
-            {list.name}
-          </Text>
-        </View>
-        <ChevronRight size={16} color={chevronColor} />
-      </TouchableOpacity>,
+        <ListIcon size={isCompact ? 16 : 20} color="#5A32FB" />
+      </View>
     );
+    const label = (
+      <View className="ml-3 flex-1">
+        <Text
+          className={`${
+            isCompact ? "text-sm" : "text-base"
+          } font-semibold text-neutral-1`}
+          numberOfLines={1}
+        >
+          {list.name}
+        </Text>
+      </View>
+    );
+
+    if (list.slug) {
+      rows.push(
+        <TouchableOpacity
+          key={`list-${list.id}`}
+          onPress={() => handleListPress(list)}
+          className={`flex-row items-center ${rowPaddingY}`}
+          activeOpacity={0.7}
+          accessibilityRole="button"
+          accessibilityLabel={`Open list ${list.name}`}
+        >
+          {icon}
+          {label}
+          <ChevronRight size={16} color={chevronColor} />
+        </TouchableOpacity>,
+      );
+    } else {
+      rows.push(
+        <View
+          key={`list-${list.id}`}
+          className={`flex-row items-center ${rowPaddingY}`}
+        >
+          {icon}
+          {label}
+        </View>,
+      );
+    }
   });
 
   if (rows.length === 0) return null;

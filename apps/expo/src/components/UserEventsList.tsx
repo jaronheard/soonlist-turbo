@@ -441,6 +441,18 @@ export function UserEventListItem(props: UserEventListItemProps) {
                     >
                       <CalendarPlus size={iconSize * 1.1} color="#5A32FB" />
                     </TouchableOpacity>
+                  ) : isOwner ? (
+                    <TouchableOpacity
+                      className="rounded-full p-2.5"
+                      onPress={() => {
+                        router.navigate(`/event/${id}/edit`);
+                      }}
+                      accessibilityLabel="Edit"
+                      accessibilityRole="button"
+                      hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+                    >
+                      <PenSquare size={iconSize * 1.1} color="#5A32FB" />
+                    </TouchableOpacity>
                   ) : (
                     <SaveButton
                       eventId={id}
