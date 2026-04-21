@@ -11,6 +11,7 @@ import { StatusBar } from "expo-status-bar";
 import { ClerkProvider, useAuth } from "@clerk/clerk-expo";
 import { resourceCache } from "@clerk/clerk-expo/resource-cache";
 import * as Sentry from "@sentry/react-native";
+import { useConvexAuth } from "convex/react";
 import { ConvexProviderWithClerk } from "convex/react-clerk";
 import { PostHogProvider, usePostHog } from "posthog-react-native";
 
@@ -200,6 +201,11 @@ export default Sentry.wrap(RootLayout);
 
 const InitialLayout = () => {
   useOTAUpdates();
+  const { isAuthenticated, isLoading: isAuthLoading } = useConvexAuth();
+  // Keep protected screens mounted during the auth hydration window so a
+  // signed-in user on a cold-start deep link doesn't get bounced to the anchor
+  // before Convex finishes validating the cached token.
+  const isAuthAllowed = isAuthLoading || isAuthenticated;
   return (
     <Stack
       screenOptions={{
@@ -211,6 +217,9 @@ const InitialLayout = () => {
         },
       }}
     >
+      {/* Tabs aren't protected: the feed tab's <Unauthenticated> owns the
+          onboarding-vs-sign-in branching, which Stack.Protected's anchor
+          redirect alone can't express. */}
       <Stack.Screen
         name="index"
         options={{
@@ -237,115 +246,120 @@ const InitialLayout = () => {
         }}
       />
       <Stack.Screen
-        name="event/[id]/index"
-        options={{
-          presentation: "modal",
-          title: "Event Details",
-          headerShown: true,
-        }}
-      />
-      <Stack.Screen
-        name="list/[slug]"
-        options={{
-          presentation: "modal",
-          title: "List Details",
-          headerShown: true,
-        }}
-      />
-      <Stack.Screen
-        name="[username]/index"
-        options={{
-          presentation: "modal",
-          title: "",
-          headerShown: true,
-        }}
-      />
-      <Stack.Screen
-        name="event/[id]/qr"
-        options={{
-          presentation: "modal",
-          headerShown: false,
-        }}
-      />
-      <Stack.Screen
-        name="share-setup"
-        options={{
-          presentation: "formSheet",
-          title: "",
-          headerShown: false,
-          sheetAllowedDetents: [0.4, 0.8],
-          sheetGrabberVisible: true,
-          sheetCornerRadius: 24,
-        }}
-      />
-      <Stack.Screen
-        name="event/[id]/edit"
-        options={{
-          presentation: "modal",
-          title: "Edit Event",
-          headerShown: true,
-          headerTransparent: false,
-          headerBackground: undefined,
-          headerStyle: { backgroundColor: "#E0D9FF" }, // interactive-2
-          headerTintColor: "#5A32FB", // interactive-1
-        }}
-      />
-      <Stack.Screen
-        name="batch/[batchId]/index"
-        options={{
-          title: "Recently Added",
-          headerShown: true,
-          headerBackTitle: "Back",
-          headerBackVisible: true,
-        }}
-      />
-      {/* SHARE EXTENSION ROUTE */}
-      <Stack.Screen
-        name="new"
-        options={{
-          presentation: "modal",
-          headerShown: true,
-        }}
-      />
-      {/* REGULAR ADD ROUTE */}
-      <Stack.Screen
-        name="add"
-        options={{
-          presentation: "modal",
-          headerShown: true,
-        }}
-      />
-      <Stack.Screen
         name="redirect"
         options={{
           headerShown: false,
           presentation: "containedModal",
         }}
       />
-      <Stack.Screen
-        name="settings/account"
-        options={{
-          title: "Account",
-          headerShown: true,
-          headerTransparent: false,
-          headerBackground: undefined,
-          headerStyle: { backgroundColor: "#F4F1FF" },
-          headerTintColor: "#5A32FB",
-          headerBackTitle: "Back",
-        }}
-      />
-      <Stack.Screen
-        name="settings/calendar"
-        options={{
-          title: "Calendar Settings",
-          headerShown: true,
-          headerTransparent: false,
-          headerBackground: undefined,
-          headerStyle: { backgroundColor: "#F4F1FF" },
-          headerTintColor: "#5A32FB",
-          headerBackTitle: "Back",
-        }}
-      />
+      {/* Content and create/settings routes: require auth. When the guard
+          flips false, expo-router redirects to the anchor (tabs), whose feed
+          screen in turn redirects to onboarding or sign-in. */}
+      <Stack.Protected guard={isAuthAllowed}>
+        <Stack.Screen
+          name="event/[id]/index"
+          options={{
+            presentation: "modal",
+            title: "Event Details",
+            headerShown: true,
+          }}
+        />
+        <Stack.Screen
+          name="list/[slug]"
+          options={{
+            presentation: "modal",
+            title: "List Details",
+            headerShown: true,
+          }}
+        />
+        <Stack.Screen
+          name="[username]/index"
+          options={{
+            presentation: "modal",
+            title: "",
+            headerShown: true,
+          }}
+        />
+        <Stack.Screen
+          name="event/[id]/qr"
+          options={{
+            presentation: "modal",
+            headerShown: false,
+          }}
+        />
+        <Stack.Screen
+          name="share-setup"
+          options={{
+            presentation: "formSheet",
+            title: "",
+            headerShown: false,
+            sheetAllowedDetents: [0.4, 0.8],
+            sheetGrabberVisible: true,
+            sheetCornerRadius: 24,
+          }}
+        />
+        <Stack.Screen
+          name="event/[id]/edit"
+          options={{
+            presentation: "modal",
+            title: "Edit Event",
+            headerShown: true,
+            headerTransparent: false,
+            headerBackground: undefined,
+            headerStyle: { backgroundColor: "#E0D9FF" }, // interactive-2
+            headerTintColor: "#5A32FB", // interactive-1
+          }}
+        />
+        <Stack.Screen
+          name="batch/[batchId]/index"
+          options={{
+            title: "Recently Added",
+            headerShown: true,
+            headerBackTitle: "Back",
+            headerBackVisible: true,
+          }}
+        />
+        {/* SHARE EXTENSION ROUTE */}
+        <Stack.Screen
+          name="new"
+          options={{
+            presentation: "modal",
+            headerShown: true,
+          }}
+        />
+        {/* REGULAR ADD ROUTE */}
+        <Stack.Screen
+          name="add"
+          options={{
+            presentation: "modal",
+            headerShown: true,
+          }}
+        />
+        <Stack.Screen
+          name="settings/account"
+          options={{
+            title: "Account",
+            headerShown: true,
+            headerTransparent: false,
+            headerBackground: undefined,
+            headerStyle: { backgroundColor: "#F4F1FF" },
+            headerTintColor: "#5A32FB",
+            headerBackTitle: "Back",
+          }}
+        />
+        <Stack.Screen
+          name="settings/calendar"
+          options={{
+            title: "Calendar Settings",
+            headerShown: true,
+            headerTransparent: false,
+            headerBackground: undefined,
+            headerStyle: { backgroundColor: "#F4F1FF" },
+            headerTintColor: "#5A32FB",
+            headerBackTitle: "Back",
+          }}
+        />
+      </Stack.Protected>
     </Stack>
   );
 };
