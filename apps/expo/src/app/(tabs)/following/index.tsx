@@ -5,8 +5,8 @@ import React, {
   useRef,
   useState,
 } from "react";
-import { Platform, Share, Text, TouchableOpacity, View } from "react-native";
-import { Redirect } from "expo-router";
+import { Platform, Text, TouchableOpacity, View } from "react-native";
+import { Redirect, useRouter } from "expo-router";
 import { SymbolView } from "expo-symbols";
 import { useUser } from "@clerk/clerk-expo";
 import { Host, Picker, Text as SwiftUIText } from "@expo/ui/swift-ui";
@@ -28,7 +28,6 @@ import UserEventsList from "~/components/UserEventsList";
 import { useStableFeedListBodyLoading } from "~/hooks/useStableFeedListBodyLoading";
 import { useStablePaginatedQuery } from "~/hooks/useStableQuery";
 import { useAppStore, useStableTimestamp } from "~/store";
-import { logError } from "~/utils/errorLogging";
 import { eventMatchesFeedSegment } from "~/utils/feedSegment";
 
 type Segment = "upcoming" | "past";
@@ -80,6 +79,7 @@ function SegmentedControlFallback({
 
 function FollowingFeedContent() {
   const { user } = useUser();
+  const router = useRouter();
   const [selectedSegment, setSelectedSegment] = useState<Segment>("upcoming");
   const [isModalVisible, setIsModalVisible] = useState(false);
   const stableTimestamp = useStableTimestamp();
@@ -216,23 +216,6 @@ function FollowingFeedContent() {
   const singleFollowedList =
     followedListCount === 1 ? followedLists?.[0] : null;
 
-  const handleShareList = useCallback(
-    async (listName: string, listSlug?: string) => {
-      const shareUrl = listSlug
-        ? `https://soonlist.com/list/${listSlug}`
-        : "https://soonlist.com";
-      try {
-        await Share.share({
-          message: `Check out ${listName} on Soonlist`,
-          url: shareUrl,
-        });
-      } catch (error) {
-        logError("Error sharing list", error);
-      }
-    },
-    [],
-  );
-
   const HeaderComponent = useCallback(() => {
     return (
       <View className="px-3 pb-2" style={{ marginTop: -4 }}>
@@ -245,11 +228,8 @@ function FollowingFeedContent() {
         {followedListCount > 0 && (
           <TouchableOpacity
             onPress={() => {
-              if (singleFollowedList) {
-                void handleShareList(
-                  singleFollowedList.name,
-                  singleFollowedList.slug ?? undefined,
-                );
+              if (singleFollowedList?.slug) {
+                router.push(`/list/${singleFollowedList.slug}`);
               } else {
                 setIsModalVisible(true);
               }
@@ -300,7 +280,7 @@ function FollowingFeedContent() {
     handleSegmentChange,
     followedListCount,
     singleFollowedList,
-    handleShareList,
+    router,
   ]);
 
   // Second branch avoids a one-frame flash before the latch effect commits.
