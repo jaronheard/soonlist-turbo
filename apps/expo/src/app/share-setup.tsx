@@ -130,7 +130,6 @@ export default function ShareSetupScreen() {
         publicEmail: links.publicEmail ?? null,
         publicPhone: links.publicPhone ?? null,
       });
-      router.back();
       if (username) {
         const url = `${Config.apiBaseUrl}/${username}`;
         try {
@@ -139,6 +138,7 @@ export default function ShareSetupScreen() {
           logError("Error sharing list", shareError);
         }
       }
+      router.back();
     } catch (e) {
       setError(e instanceof Error ? e.message : "Something went wrong");
     } finally {
