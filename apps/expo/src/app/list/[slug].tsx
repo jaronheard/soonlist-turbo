@@ -193,7 +193,7 @@ export default function ListDetailScreen() {
               savers={contributors ?? []}
               lists={[]}
               currentUserId={currentUser?.id}
-              variant="card"
+              variant="compact"
               showLabel={false}
               creatorBadgeLabel="owner"
             />
