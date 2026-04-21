@@ -9,6 +9,7 @@ import {
 } from "./_generated/server";
 import * as Events from "./model/events";
 import { enrichEventsAndFilterNulls } from "./model/events";
+import { getViewableListIds } from "./model/lists";
 
 // Validators for complex types
 const eventMetadataValidator = v.optional(
@@ -94,7 +95,21 @@ export const getSavedIdsForUser = query({
 export const get = query({
   args: { eventId: v.string() },
   handler: async (ctx, args) => {
-    return await Events.getEventById(ctx, args.eventId);
+    const event = await Events.getEventById(ctx, args.eventId);
+    if (!event) return null;
+
+    // Strip lists the viewer can't see so the event-detail attribution
+    // (FromTheseSoonlists / SavedByModal) doesn't leak private list
+    // names or slugs to non-members.
+    const identity = await ctx.auth.getUserIdentity();
+    const viewerId = identity?.subject ?? null;
+    const viewableListIds = await getViewableListIds(
+      ctx,
+      event.lists,
+      viewerId,
+    );
+    const lists = event.lists.filter((l) => viewableListIds.has(l.id));
+    return { ...event, lists };
   },
 });
 

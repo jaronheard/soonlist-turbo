@@ -376,8 +376,9 @@ export default function UserProfilePage() {
       : "skip",
   );
 
-  const savedEventIds = new Set(
-    savedEventIdsQuery?.map((event) => event.id) ?? [],
+  const savedEventIds = useMemo(
+    () => new Set(savedEventIdsQuery?.map((event) => event.id) ?? []),
+    [savedEventIdsQuery],
   );
 
   const feedQueryArgs = useMemo(

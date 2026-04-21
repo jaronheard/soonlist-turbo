@@ -19,7 +19,7 @@ const BULLETS = [
   "Support for extras, not access",
 ];
 
-const JARON_INSTAGRAM_URL = "https://www.instagram.com/jaronherad/";
+const JARON_INSTAGRAM_URL = "https://www.instagram.com/jaronheard/";
 
 function openJaronInstagram() {
   void Linking.openURL(JARON_INSTAGRAM_URL);

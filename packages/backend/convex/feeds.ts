@@ -452,6 +452,7 @@ async function sampleMaxAddedAt(
         .eq("eventVisibility", "public")
         .eq("hasEnded", hasEnded),
     )
+    .order("desc")
     .take(PUBLIC_FEED_LAST_UPDATED_TAKE);
   let max = 0;
   for (const row of rows) {

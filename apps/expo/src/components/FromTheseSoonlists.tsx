@@ -46,7 +46,9 @@ export function FromTheseSoonlists({
   // `queryFeed`/`queryGroupedFeed`, which filter `event.lists` through
   // `getViewableListIds`). Here we only strip system/personal lists, which
   // are an implementation detail and not meaningful attribution.
-  const visibleLists = lists.filter((list) => !list.isSystemList);
+  const visibleLists = lists.filter(
+    (list) => !list.isSystemList && !!list.slug,
+  );
 
   const handleUserPress = (user: UserForDisplay) => {
     onNavigate?.();
