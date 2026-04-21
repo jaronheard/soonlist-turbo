@@ -444,6 +444,12 @@ async function sampleMaxAddedAt(
   feedId: string,
   hasEnded: boolean,
 ): Promise<number> {
+  // The index is ordered by startTime, not addedAt. We don't have a recency
+  // index on addedAt, so we sample the slice most likely to contain recent
+  // additions: near-term upcoming (asc) or most-recent past (desc). A new
+  // event added far from "now" in startTime can still be missed, but most
+  // recent activity clusters here so the "Last updated" label stays fresh.
+  const order = hasEnded ? "desc" : "asc";
   const rows = await ctx.db
     .query("userFeeds")
     .withIndex("by_feed_visibility_hasEnded_startTime", (q) =>
@@ -452,7 +458,7 @@ async function sampleMaxAddedAt(
         .eq("eventVisibility", "public")
         .eq("hasEnded", hasEnded),
     )
-    .order("desc")
+    .order(order)
     .take(PUBLIC_FEED_LAST_UPDATED_TAKE);
   let max = 0;
   for (const row of rows) {
