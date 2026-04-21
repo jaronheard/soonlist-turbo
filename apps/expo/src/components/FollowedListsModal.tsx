@@ -15,7 +15,7 @@ import { useMutation, useQuery } from "convex/react";
 import type { Doc } from "@soonlist/backend/convex/_generated/dataModel";
 import { api } from "@soonlist/backend/convex/_generated/api";
 
-import { ChevronRight, List, ShareIcon } from "~/components/icons";
+import { List, ShareIcon } from "~/components/icons";
 import { SubscribeButton } from "~/components/SubscribeButton";
 import { logError } from "~/utils/errorLogging";
 import { toast } from "~/utils/feedback";
@@ -119,38 +119,44 @@ export function FollowedListsModal({
               paddingTop: 16,
               paddingBottom: insets.bottom + 16,
             }}
-            ListHeaderComponent={
-              <Text className="mb-2 text-xs font-semibold uppercase tracking-wider text-neutral-2">
-                Lists
-              </Text>
-            }
+            ItemSeparatorComponent={() => (
+              <View className="h-px bg-neutral-3" />
+            )}
             renderItem={({ item: list }) => {
+              const ownerName = list.ownerDisplayName ?? list.ownerUsername;
               return (
-                <View className="flex-row items-center py-3">
+                <View className="flex-row items-center gap-3 py-4">
                   <TouchableOpacity
-                    className="flex-1 flex-row items-center"
+                    className="min-w-0 flex-1 flex-row items-center gap-4"
                     onPress={() => handleListPress(list)}
                     activeOpacity={0.7}
                   >
-                    <View className="h-10 w-10 items-center justify-center rounded-xl bg-interactive-2">
-                      <List size={20} color="#5A32FB" />
+                    <View className="h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-interactive-2">
+                      <List size={24} color="#5A32FB" />
                     </View>
-                    <View className="ml-3 flex-1">
+                    <View className="min-w-0 flex-1">
                       <Text
-                        className="text-base font-semibold text-neutral-1"
+                        className="text-lg font-bold text-neutral-1"
                         numberOfLines={1}
                       >
                         {list.name}
                       </Text>
+                      {ownerName ? (
+                        <Text
+                          className="mt-0.5 text-sm text-neutral-2"
+                          numberOfLines={1}
+                        >
+                          by {ownerName}
+                        </Text>
+                      ) : null}
                     </View>
-                    <ChevronRight size={16} color="#DCE0E8" />
                   </TouchableOpacity>
 
                   <TouchableOpacity
                     onPress={() =>
                       void handleShareList(list.name, list.slug ?? undefined)
                     }
-                    className="ml-2 rounded-full p-2"
+                    className="rounded-full p-2"
                     activeOpacity={0.7}
                     accessibilityLabel={`Share ${list.name}`}
                     hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
@@ -158,14 +164,12 @@ export function FollowedListsModal({
                     <ShareIcon size={18} color="#5A32FB" />
                   </TouchableOpacity>
 
-                  <View className="ml-1">
-                    <SubscribeButton
-                      isSubscribed={true}
-                      onPress={() => handleUnfollow(list.id)}
-                      size="sm"
-                      accessibilityLabel={`Unsubscribe from ${list.name}`}
-                    />
-                  </View>
+                  <SubscribeButton
+                    isSubscribed={true}
+                    onPress={() => handleUnfollow(list.id)}
+                    size="sm"
+                    accessibilityLabel={`Unsubscribe from ${list.name}`}
+                  />
                 </View>
               );
             }}

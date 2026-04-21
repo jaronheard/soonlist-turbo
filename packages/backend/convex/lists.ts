@@ -482,14 +482,23 @@ export const unfollowList = mutation({
 });
 
 /**
- * Get all lists a user follows
+ * Get all lists a user follows.
+ *
+ * Enriched with `ownerDisplayName` / `ownerUsername` so the mobile
+ * Subscribed Lists UI can show "by {owner}" attribution without an extra
+ * per-row query. Both are optional so optimistic updates elsewhere that
+ * push bare `Doc<"lists">` entries into this query's cache continue to
+ * type-check — the server response fills them back in.
  */
 export const getFollowedLists = query({
   args: {},
   handler: async (ctx) => {
     const userId = await getUserId(ctx);
     if (!userId) {
-      return [];
+      return [] as (Doc<"lists"> & {
+        ownerDisplayName?: string;
+        ownerUsername?: string;
+      })[];
     }
 
     const follows = await ctx.db
@@ -513,7 +522,19 @@ export const getFollowedLists = query({
           return null;
         }
 
-        return list;
+        const owner = await ctx.db
+          .query("users")
+          .withIndex("by_custom_id", (q) => q.eq("id", list.userId))
+          .first();
+
+        return {
+          ...list,
+          ownerDisplayName: owner?.displayName,
+          ownerUsername: owner?.username,
+        } as Doc<"lists"> & {
+          ownerDisplayName?: string;
+          ownerUsername?: string;
+        };
       }),
     );
 
