@@ -6,7 +6,6 @@ import { toast } from "sonner";
 
 import { api } from "@soonlist/backend/convex/_generated/api";
 
-import { useBatchProgress } from "~/hooks/useBatchProgress";
 import { useImagePasteHandler } from "~/hooks/useImagePasteHandler";
 import { isTargetPage } from "~/lib/pasteEventUtils";
 
@@ -21,18 +20,13 @@ export function ImagePasteProvider({ children }: ImagePasteProviderProps) {
   // Only enable the paste handler on target pages and when user is authenticated
   const shouldEnable = isTargetPage(pathname) && !!currentUser;
 
-  const { currentBatchId } = useImagePasteHandler({
+  useImagePasteHandler({
     enabled: shouldEnable,
     onError: (error) => {
       toast.error(`Failed to process images: ${error.message}`, {
         duration: 6000, // Increased duration for error toasts
       });
     },
-  });
-
-  // Track batch progress with toast notifications
-  useBatchProgress({
-    batchId: currentBatchId,
   });
 
   return <>{children}</>;
