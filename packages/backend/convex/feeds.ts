@@ -11,7 +11,7 @@ import {
   query,
 } from "./_generated/server";
 import { userFeedsAggregate } from "./aggregates";
-import { getEventById } from "./model/events";
+import { batchGetUsersByIds, getEventById } from "./model/events";
 import { getViewableListIds } from "./model/lists";
 
 // Helper function to get the current user ID from auth
@@ -251,34 +251,34 @@ async function queryGroupedFeed(
         (l) => !l.isSystemList && l.id !== sourceListId,
       ).length;
 
-      // Collect everyone who "saved" this event — directly via eventFollows
-      // on the primary, plus anyone who captured a duplicate in the same
-      // similarity group (either as that event's creator or as a follower of
-      // it). Private duplicate captures are excluded so we don't leak the
-      // existence of a private event by revealing its creator. The primary
-      // event's own creator is filtered out since they're attributed
-      // separately in the UI.
-      const groupMembers = await ctx.db
-        .query("events")
-        .withIndex("by_similarity_group", (q) =>
-          q.eq("similarityGroupId", groupEntry.similarityGroupId),
-        )
-        .collect();
-
-      const visibleGroupMembers = groupMembers.filter(
-        (m) => m.id === groupEntry.primaryEventId || m.visibility === "public",
-      );
-
-      const saverUserIds = new Set<string>();
+      // Aggregate savers from direct follows and from anyone who captured a
+      // duplicate in the same similarity group. Private duplicates are
+      // excluded so their existence isn't leaked. The primary event's own
+      // creator is dropped since they're attributed separately in the UI.
+      const seenIds = new Set<string>([event.userId]);
+      const groupSavers: {
+        id: string;
+        username: string;
+        displayName: string;
+        userImage: string;
+      }[] = [];
       for (const follow of event.eventFollows) {
-        saverUserIds.add(follow.userId);
+        if (seenIds.has(follow.userId) || !follow.user) continue;
+        seenIds.add(follow.userId);
+        groupSavers.push(follow.user);
       }
-      const otherMembers = visibleGroupMembers.filter(
-        (m) => m.id !== groupEntry.primaryEventId,
+
+      const otherMembers = (
+        await ctx.db
+          .query("events")
+          .withIndex("by_similarity_group", (q) =>
+            q.eq("similarityGroupId", groupEntry.similarityGroupId),
+          )
+          .collect()
+      ).filter(
+        (m) => m.id !== groupEntry.primaryEventId && m.visibility === "public",
       );
-      for (const m of otherMembers) {
-        saverUserIds.add(m.userId);
-      }
+
       if (otherMembers.length > 0) {
         const otherFollowLists = await Promise.all(
           otherMembers.map((m) =>
@@ -288,28 +288,30 @@ async function queryGroupedFeed(
               .collect(),
           ),
         );
+        const newIds = new Set<string>();
+        for (const m of otherMembers) {
+          if (!seenIds.has(m.userId)) newIds.add(m.userId);
+        }
         for (const follows of otherFollowLists) {
-          for (const f of follows) saverUserIds.add(f.userId);
+          for (const f of follows) {
+            if (!seenIds.has(f.userId)) newIds.add(f.userId);
+          }
+        }
+        if (newIds.size > 0) {
+          const userMap = await batchGetUsersByIds(ctx, [...newIds]);
+          for (const id of newIds) {
+            const u = userMap.get(id);
+            if (!u) continue;
+            seenIds.add(id);
+            groupSavers.push({
+              id: u.id,
+              username: u.username,
+              displayName: u.displayName,
+              userImage: u.userImage,
+            });
+          }
         }
       }
-      saverUserIds.delete(event.userId);
-
-      const saverUserDocs = await Promise.all(
-        [...saverUserIds].map((id) =>
-          ctx.db
-            .query("users")
-            .withIndex("by_custom_id", (q) => q.eq("id", id))
-            .unique(),
-        ),
-      );
-      const groupSavers = saverUserDocs
-        .filter((u): u is NonNullable<typeof u> => u !== null)
-        .map((u) => ({
-          id: u.id,
-          username: u.username,
-          displayName: u.displayName,
-          userImage: u.userImage,
-        }));
 
       return {
         event: { ...event, lists: viewerFilteredLists, groupSavers },
