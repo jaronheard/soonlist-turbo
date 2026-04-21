@@ -29,11 +29,7 @@ export function SoonlistHero({
   const hasTabs =
     selectedSegment !== undefined && onSegmentChange !== undefined;
   const lastUpdatedLine =
-    lastUpdatedAt === undefined
-      ? null
-      : lastUpdatedAt === null
-        ? "…"
-        : formatLastUpdated(lastUpdatedAt);
+    typeof lastUpdatedAt === "number" ? formatLastUpdated(lastUpdatedAt) : null;
 
   return (
     <View className="px-4 pb-2 pt-2">

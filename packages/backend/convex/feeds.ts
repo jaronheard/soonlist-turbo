@@ -503,6 +503,16 @@ export const getPublicListFeedLastUpdated = query({
       return null;
     }
 
+    const viewerId = await getUserId(ctx);
+    const viewable = await getViewableListIds(
+      ctx,
+      [{ id: list.id, userId: list.userId, visibility: list.visibility }],
+      viewerId,
+    );
+    if (!viewable.has(list.id)) {
+      return null;
+    }
+
     const feedId = `list_${list.id}`;
     const [upcomingMax, pastMax] = await Promise.all([
       sampleMaxAddedAt(ctx, feedId, false),
