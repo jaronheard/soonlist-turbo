@@ -12,7 +12,7 @@ export const AppleSignInButton: React.FC<AppleSignInButtonProps> = ({
   onPress,
 }) => (
   <Pressable
-    className="rounded-full bg-black py-3 active:scale-[0.98] active:bg-neutral-800"
+    className="w-full rounded-full bg-black py-4 active:scale-[0.98] active:bg-neutral-800"
     onPress={() => {
       void hapticMedium();
       onPress();

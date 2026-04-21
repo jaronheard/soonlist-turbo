@@ -433,6 +433,63 @@ export const getPublicUserFeed = query({
   },
 });
 
+/**
+ * Bound the scan for "last updated" — we only need the max `addedAt` across a
+ * recent window per bucket, not every historical feed entry.
+ */
+const PUBLIC_FEED_LAST_UPDATED_TAKE = 100;
+
+async function sampleMaxAddedAt(
+  ctx: QueryCtx,
+  feedId: string,
+  hasEnded: boolean,
+): Promise<number> {
+  // The index is ordered by startTime, not addedAt. We don't have a recency
+  // index on addedAt, so we sample the slice most likely to contain recent
+  // additions: near-term upcoming (asc) or most-recent past (desc). A new
+  // event added far from "now" in startTime can still be missed, but most
+  // recent activity clusters here so the "Last updated" label stays fresh.
+  const order = hasEnded ? "desc" : "asc";
+  const rows = await ctx.db
+    .query("userFeeds")
+    .withIndex("by_feed_visibility_hasEnded_startTime", (q) =>
+      q
+        .eq("feedId", feedId)
+        .eq("eventVisibility", "public")
+        .eq("hasEnded", hasEnded),
+    )
+    .order(order)
+    .take(PUBLIC_FEED_LAST_UPDATED_TAKE);
+  let max = 0;
+  for (const row of rows) {
+    if (row.addedAt > max) max = row.addedAt;
+  }
+  return max;
+}
+
+export const getPublicUserFeedLastUpdated = query({
+  args: { username: v.string() },
+  returns: v.union(v.number(), v.null()),
+  handler: async (ctx, { username }) => {
+    const user = await ctx.db
+      .query("users")
+      .withIndex("by_username", (q) => q.eq("username", username))
+      .unique();
+
+    if (!user) {
+      throw new ConvexError("User not found");
+    }
+
+    const feedId = `user_${user.id}`;
+    const [upcomingMax, pastMax] = await Promise.all([
+      sampleMaxAddedAt(ctx, feedId, false),
+      sampleMaxAddedAt(ctx, feedId, true),
+    ]);
+    const max = Math.max(upcomingMax, pastMax);
+    return max > 0 ? max : null;
+  },
+});
+
 // Internal mutation to update hasEndedFlags for a batch of userFeeds entries
 export const updateHasEndedFlagsBatch = internalMutation({
   args: {

@@ -1,101 +1,332 @@
-import React, { useCallback, useMemo } from "react";
+import type { FunctionReturnType } from "convex/server";
+import React, { useCallback, useMemo, useState } from "react";
 import {
   ActivityIndicator,
+  Linking,
+  Platform,
+  Pressable,
   Text,
   TouchableOpacity,
-  useWindowDimensions,
   View,
 } from "react-native";
 import { Image } from "expo-image";
 import { Stack, useLocalSearchParams, useRouter } from "expo-router";
+import { Host, Picker, Text as SwiftUIText } from "@expo/ui/swift-ui";
+import { pickerStyle, tag } from "@expo/ui/swift-ui/modifiers";
 import { useConvexAuth, useMutation, useQuery } from "convex/react";
 
 import type { Doc } from "@soonlist/backend/convex/_generated/dataModel";
 import { api } from "@soonlist/backend/convex/_generated/api";
 
-import type { Event } from "~/components/UserEventsList";
-import { ShareIcon, User } from "~/components/icons";
-import SaveButton from "~/components/SaveButton";
+import { Globe, Instagram, Mail, Phone, User } from "~/components/icons";
 import { SubscribeButton } from "~/components/SubscribeButton";
 import UserEventsList from "~/components/UserEventsList";
 import { UserProfileFlair } from "~/components/UserProfileFlair";
-import { useEventActions } from "~/hooks/useEventActions";
 import { useStablePaginatedQuery } from "~/hooks/useStableQuery";
-import {
-  useLoadMoreHandler,
-  useUpcomingEventsFilter,
-} from "~/hooks/useUpcomingFeed";
+import { useLoadMoreHandler } from "~/hooks/useUpcomingFeed";
+import { useStableTimestamp } from "~/store";
 import { logError } from "~/utils/errorLogging";
 import { toast } from "~/utils/feedback";
+import { eventMatchesFeedSegment } from "~/utils/feedSegment";
 
-function isRecord(value: unknown): value is Record<string, unknown> {
-  return typeof value === "object" && value !== null && !Array.isArray(value);
-}
+type ProfileSegment = "upcoming" | "past";
 
-function profileLocationFromUser(user: {
-  publicMetadata?: unknown;
-}): string | null {
-  const meta = user.publicMetadata;
-  if (!isRecord(meta)) return null;
-  for (const key of ["location", "city", "hometown"] as const) {
-    const v = meta[key];
-    if (typeof v === "string" && v.trim().length > 0) {
-      return v.trim();
-    }
+function formatMemberSince(createdAtIso: string): string {
+  const d = new Date(createdAtIso);
+  if (Number.isNaN(d.getTime())) return "";
+  const now = new Date();
+  const days = (now.getTime() - d.getTime()) / 86_400_000;
+  if (days <= 30) {
+    return "New member";
   }
-  return null;
+  return `Joined ${d.toLocaleDateString(undefined, { month: "long", year: "numeric" })}`;
 }
 
-function ProfileSaveShareActionButton({
-  event,
-  savedEventIds,
-  currentUser,
-  isAuthenticated,
+function websiteHref(raw: string): string {
+  const t = raw.trim();
+  if (t.startsWith("http://") || t.startsWith("https://")) {
+    return t;
+  }
+  return `https://${t}`;
+}
+
+function instaHref(raw: string): string {
+  const t = raw.trim();
+  if (t.startsWith("http://") || t.startsWith("https://")) {
+    return t;
+  }
+  const handle = t.replace(/^@/, "");
+  return `https://instagram.com/${handle}`;
+}
+
+function SegmentedControlFallback({
+  selectedSegment,
+  onSegmentChange,
 }: {
-  event: Event;
-  savedEventIds: Set<string>;
-  currentUser: { id: string } | null | undefined;
-  isAuthenticated: boolean;
+  selectedSegment: ProfileSegment;
+  onSegmentChange: (segment: ProfileSegment) => void;
 }) {
-  const { fontScale } = useWindowDimensions();
-  const iconSize = 16 * fontScale;
-  const isSaved = savedEventIds.has(event.id);
-  const { handleShare } = useEventActions({
-    event,
-    isSaved,
-    source: "user_profile",
-  });
-
-  if (!isAuthenticated || !currentUser) {
-    return null;
-  }
-  const isOwnEvent = event.userId === currentUser.id;
-
-  if (isOwnEvent) {
-    return (
+  return (
+    <View className="flex-row rounded-lg bg-gray-100 p-1">
       <TouchableOpacity
-        className="-mb-0.5 -ml-2.5 flex-row items-center gap-2 bg-interactive-2 px-4 py-2.5"
-        style={{ borderRadius: 16 }}
-        onPress={handleShare}
-        accessibilityLabel="Share"
-        accessibilityRole="button"
-        hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+        className={`items-center rounded-md px-4 py-2 ${
+          selectedSegment === "upcoming" ? "bg-white shadow-sm" : ""
+        }`}
+        onPress={() => onSegmentChange("upcoming")}
       >
-        <ShareIcon size={iconSize * 1.1} color="#5A32FB" />
-        <Text className="text-base font-bold text-interactive-1">Share</Text>
+        <Text
+          className={
+            selectedSegment === "upcoming"
+              ? "font-semibold text-gray-900"
+              : "text-gray-500"
+          }
+        >
+          Upcoming
+        </Text>
       </TouchableOpacity>
-    );
+      <TouchableOpacity
+        className={`items-center rounded-md px-4 py-2 ${
+          selectedSegment === "past" ? "bg-white shadow-sm" : ""
+        }`}
+        onPress={() => onSegmentChange("past")}
+      >
+        <Text
+          className={
+            selectedSegment === "past"
+              ? "font-semibold text-gray-900"
+              : "text-gray-500"
+          }
+        >
+          Past
+        </Text>
+      </TouchableOpacity>
+    </View>
+  );
+}
+
+const PROFILE_CONTACT_ICON_SIZE = 16;
+const PROFILE_CONTACT_ICON_COLOR = "#5A32FB";
+
+function ProfileContactIconButton({
+  accessibilityLabel,
+  onPress,
+  children,
+}: {
+  accessibilityLabel: string;
+  onPress: () => void;
+  children: React.ReactNode;
+}) {
+  return (
+    <Pressable
+      onPress={onPress}
+      accessibilityRole="button"
+      accessibilityLabel={accessibilityLabel}
+      hitSlop={8}
+      className="h-8 w-8 items-center justify-center rounded-full bg-neutral-4/70 active:opacity-70"
+    >
+      {children}
+    </Pressable>
+  );
+}
+
+type ProfileUser = NonNullable<
+  FunctionReturnType<typeof api.users.getByUsername>
+>;
+
+function formatLastUpdated(addedAtMs: number | null | undefined): string {
+  if (addedAtMs === null || addedAtMs === undefined) return "";
+  const now = Date.now();
+  const diffMs = Math.max(0, now - addedAtMs);
+  const minutes = Math.floor(diffMs / 60_000);
+  if (minutes < 1) return "Last updated just now";
+  if (minutes < 60) {
+    return `Last updated ${minutes} minute${minutes === 1 ? "" : "s"} ago`;
   }
+  const hours = Math.floor(minutes / 60);
+  if (hours < 24) {
+    return `Last updated ${hours} hour${hours === 1 ? "" : "s"} ago`;
+  }
+  const days = Math.floor(hours / 24);
+  if (days < 30) {
+    return `Last updated ${days} day${days === 1 ? "" : "s"} ago`;
+  }
+  const d = new Date(addedAtMs);
+  return `Last updated ${d.toLocaleDateString(undefined, {
+    month: "long",
+    year: "numeric",
+  })}`;
+}
+
+function ProfileHeroAndSoonlist({
+  user,
+  listTitle,
+  lastUpdatedAt,
+  selectedSegment,
+  onSegmentChange,
+}: {
+  user: ProfileUser;
+  listTitle: string;
+  lastUpdatedAt: number | null | undefined;
+  selectedSegment: ProfileSegment;
+  onSegmentChange: (s: ProfileSegment) => void;
+}) {
+  const memberLine = formatMemberSince(user.created_at);
+
+  const emailTrimmed = user.publicEmail?.trim() ?? "";
+  const phoneTrimmed = user.publicPhone?.trim() ?? "";
+  const instaTrimmed = user.publicInsta?.trim() ?? "";
+  const instaHandle = instaTrimmed.replace(/^@/, "");
+  const websiteTrimmed = user.publicWebsite?.trim() ?? "";
+  const hasContact =
+    Boolean(emailTrimmed) ||
+    Boolean(phoneTrimmed) ||
+    Boolean(instaTrimmed) ||
+    Boolean(websiteTrimmed);
+
+  const lastUpdatedLine =
+    lastUpdatedAt === undefined ? "…" : formatLastUpdated(lastUpdatedAt);
 
   return (
-    <SaveButton eventId={event.id} isSaved={isSaved} source="user_profile" />
+    <View className="px-4 pb-2 pt-2">
+      <Text
+        className="text-3xl font-bold leading-tight text-interactive-1"
+        numberOfLines={2}
+      >
+        {listTitle}
+      </Text>
+
+      {/* Byline: avatar + @username + joined + contact icons */}
+      <View className="mt-3 flex-row items-center gap-3">
+        <UserProfileFlair username={user.username} size="sm">
+          {user.userImage ? (
+            <Image
+              source={{ uri: user.userImage }}
+              style={{ width: 36, height: 36, borderRadius: 18 }}
+              contentFit="cover"
+              cachePolicy="disk"
+            />
+          ) : (
+            <View className="h-9 w-9 items-center justify-center rounded-full bg-neutral-4">
+              <User size={20} color="#627496" />
+            </View>
+          )}
+        </UserProfileFlair>
+
+        <View className="min-w-0 flex-1">
+          <Text
+            className="text-sm font-semibold text-neutral-1"
+            numberOfLines={1}
+            accessibilityLabel={
+              user.displayName?.trim()
+                ? `${user.displayName.trim()}, @${user.username}`
+                : `@${user.username}`
+            }
+          >
+            @{user.username}
+          </Text>
+          {memberLine ? (
+            <Text className="text-xs text-neutral-2" numberOfLines={1}>
+              {memberLine}
+            </Text>
+          ) : null}
+        </View>
+
+        {hasContact ? (
+          <View className="flex-row items-center gap-1.5">
+            {emailTrimmed ? (
+              <ProfileContactIconButton
+                accessibilityLabel={`Email ${emailTrimmed}`}
+                onPress={() => {
+                  void Linking.openURL(
+                    `mailto:${encodeURIComponent(emailTrimmed)}`,
+                  );
+                }}
+              >
+                <Mail
+                  size={PROFILE_CONTACT_ICON_SIZE}
+                  color={PROFILE_CONTACT_ICON_COLOR}
+                />
+              </ProfileContactIconButton>
+            ) : null}
+            {phoneTrimmed ? (
+              <ProfileContactIconButton
+                accessibilityLabel={`Call ${phoneTrimmed}`}
+                onPress={() => {
+                  const n = phoneTrimmed.replace(/[^\d+]/g, "");
+                  void Linking.openURL(`tel:${n}`);
+                }}
+              >
+                <Phone
+                  size={PROFILE_CONTACT_ICON_SIZE}
+                  color={PROFILE_CONTACT_ICON_COLOR}
+                />
+              </ProfileContactIconButton>
+            ) : null}
+            {instaTrimmed ? (
+              <ProfileContactIconButton
+                accessibilityLabel={`Instagram @${instaHandle}`}
+                onPress={() => {
+                  void Linking.openURL(instaHref(instaTrimmed));
+                }}
+              >
+                <Instagram
+                  size={PROFILE_CONTACT_ICON_SIZE}
+                  color={PROFILE_CONTACT_ICON_COLOR}
+                />
+              </ProfileContactIconButton>
+            ) : null}
+            {websiteTrimmed ? (
+              <ProfileContactIconButton
+                accessibilityLabel={`Website ${websiteTrimmed}`}
+                onPress={() => {
+                  void Linking.openURL(websiteHref(websiteTrimmed));
+                }}
+              >
+                <Globe
+                  size={PROFILE_CONTACT_ICON_SIZE}
+                  color={PROFILE_CONTACT_ICON_COLOR}
+                />
+              </ProfileContactIconButton>
+            ) : null}
+          </View>
+        ) : null}
+      </View>
+
+      <Text className="mt-2 text-sm text-neutral-2">{lastUpdatedLine}</Text>
+
+      <View className="mt-3" style={{ width: 260 }}>
+        {Platform.OS === "ios" ? (
+          <Host matchContents>
+            <Picker
+              selection={selectedSegment}
+              onSelectionChange={(value) => {
+                onSegmentChange(value as ProfileSegment);
+              }}
+              modifiers={[pickerStyle("segmented")]}
+            >
+              <SwiftUIText modifiers={[tag("upcoming")]}>Upcoming</SwiftUIText>
+              <SwiftUIText modifiers={[tag("past")]}>Past</SwiftUIText>
+            </Picker>
+          </Host>
+        ) : (
+          <SegmentedControlFallback
+            selectedSegment={selectedSegment}
+            onSegmentChange={onSegmentChange}
+          />
+        )}
+      </View>
+    </View>
   );
 }
 
 export default function UserProfilePage() {
-  const { username } = useLocalSearchParams<{ username: string }>();
+  const params = useLocalSearchParams<{ username: string }>();
+  const username = typeof params.username === "string" ? params.username : "";
   const router = useRouter();
   const { isAuthenticated } = useConvexAuth();
+  const [selectedSegment, setSelectedSegment] =
+    useState<ProfileSegment>("upcoming");
+  const stableTimestamp = useStableTimestamp();
 
   const targetUser = useQuery(
     api.users.getByUsername,
@@ -107,6 +338,11 @@ export default function UserProfilePage() {
   const personalList = useQuery(
     api.lists.getPersonalListForUser,
     targetUser?.id ? { userId: targetUser.id } : "skip",
+  );
+
+  const lastUpdatedAt = useQuery(
+    api.feeds.getPublicUserFeedLastUpdated,
+    targetUser ? { username } : "skip",
   );
 
   const followListMutation = useMutation(
@@ -140,26 +376,36 @@ export default function UserProfilePage() {
       : "skip",
   );
 
-  const savedEventIds = new Set(
-    savedEventIdsQuery?.map((event) => event.id) ?? [],
+  const savedEventIds = useMemo(
+    () => new Set(savedEventIdsQuery?.map((event) => event.id) ?? []),
+    [savedEventIdsQuery],
+  );
+
+  const feedQueryArgs = useMemo(
+    () =>
+      username
+        ? {
+            username,
+            filter: selectedSegment,
+          }
+        : "skip",
+    [username, selectedSegment],
   );
 
   const {
     results: events,
     status,
     loadMore,
-  } = useStablePaginatedQuery(
-    api.feeds.getPublicUserFeed,
-    username
-      ? {
-          username: username,
-          filter: "upcoming" as const,
-        }
-      : "skip",
-    { initialNumItems: 50 },
-  );
+  } = useStablePaginatedQuery(api.feeds.getPublicUserFeed, feedQueryArgs, {
+    initialNumItems: 50,
+  });
 
-  const filteredEvents = useUpcomingEventsFilter(events);
+  const displayEvents = useMemo(() => {
+    const stableMs = new Date(stableTimestamp).getTime();
+    return events.filter((e) =>
+      eventMatchesFeedSegment(e.endDateTime, selectedSegment, stableMs),
+    );
+  }, [events, selectedSegment, stableTimestamp]);
 
   const handleLoadMore = useLoadMoreHandler(status, loadMore);
 
@@ -183,6 +429,14 @@ export default function UserProfilePage() {
     ? followingIds.has(personalList.id)
     : false;
 
+  const listTitle = useMemo(() => {
+    if (!targetUser) return "";
+    const fromList = personalList?.name?.trim();
+    const fromUser = targetUser.publicListName?.trim();
+    const fallback = `${targetUser.displayName?.trim() || targetUser.username}'s Soonlist`;
+    return fromList || fromUser || fallback;
+  }, [targetUser, personalList]);
+
   const handleFollowListPress = useCallback(() => {
     if (!personalList) return;
     if (!isAuthenticated) {
@@ -205,21 +459,20 @@ export default function UserProfilePage() {
     router,
   ]);
 
-  const listHeader = useMemo(() => {
+  const renderListHeader = useCallback(() => {
     if (!targetUser) {
-      return <></>;
+      return null;
     }
-    const upcomingCount = filteredEvents.length;
-
     return (
-      <ProfileIdentityHeader
+      <ProfileHeroAndSoonlist
         user={targetUser}
-        upcomingEventCount={upcomingCount}
+        listTitle={listTitle}
+        lastUpdatedAt={lastUpdatedAt}
+        selectedSegment={selectedSegment}
+        onSegmentChange={setSelectedSegment}
       />
     );
-  }, [targetUser, filteredEvents.length]);
-
-  const renderListHeader = useCallback(() => listHeader, [listHeader]);
+  }, [targetUser, listTitle, lastUpdatedAt, selectedSegment]);
 
   if (isUserLoading) {
     return (
@@ -260,8 +513,7 @@ export default function UserProfilePage() {
       <Stack.Screen
         options={{
           title: screenTitle,
-          headerLargeTitle: true,
-          headerLargeTitleStyle: { color: "#5A32FB" },
+          headerLargeTitle: false,
           headerTransparent: true,
           headerBlurEffect: "none",
           headerShadowVisible: false,
@@ -288,78 +540,18 @@ export default function UserProfilePage() {
       />
       <View className="flex-1 bg-interactive-3">
         <UserEventsList
-          events={filteredEvents}
+          events={displayEvents}
           onEndReached={handleLoadMore}
           isFetchingNextPage={status === "LoadingMore"}
-          isLoadingFirstPage={status === "LoadingFirstPage"}
+          listBodyLoading={status === "LoadingFirstPage"}
           showCreator="never"
-          isDiscoverFeed={false}
           primaryAction={isOwnProfile ? "addToCalendar" : "save"}
-          ActionButton={({ event }) => (
-            <ProfileSaveShareActionButton
-              event={event}
-              savedEventIds={savedEventIds}
-              currentUser={currentUser}
-              isAuthenticated={isAuthenticated}
-            />
-          )}
           savedEventIds={savedEventIds}
+          source="user_profile"
           HeaderComponent={renderListHeader}
         />
       </View>
     </>
-  );
-}
-
-interface ProfileIdentityHeaderProps {
-  user: {
-    id: string;
-    username: string;
-    displayName?: string | null;
-    userImage?: string | null;
-    publicMetadata?: unknown;
-  };
-  upcomingEventCount: number;
-}
-
-/** Profile header: avatar stacked above identity text block. */
-function ProfileIdentityHeader({
-  user,
-  upcomingEventCount,
-}: ProfileIdentityHeaderProps) {
-  const locationLine = profileLocationFromUser(user);
-
-  return (
-    <View className="items-start gap-3 px-4 pb-4 pt-2">
-      <UserProfileFlair username={user.username} size="lg">
-        {user.userImage ? (
-          <Image
-            source={{ uri: user.userImage }}
-            style={{ width: 80, height: 80, borderRadius: 40 }}
-            contentFit="cover"
-            cachePolicy="disk"
-          />
-        ) : (
-          <View className="h-20 w-20 items-center justify-center rounded-full bg-neutral-4">
-            <User size={40} color="#627496" />
-          </View>
-        )}
-      </UserProfileFlair>
-      <View className="w-full">
-        <Text className="text-xl font-bold text-neutral-1">
-          @{user.username}
-        </Text>
-        <Text className="text-sm text-neutral-2">
-          {upcomingEventCount}{" "}
-          {upcomingEventCount === 1 ? "upcoming event" : "upcoming events"}
-        </Text>
-        {locationLine ? (
-          <Text className="text-sm text-neutral-2" numberOfLines={1}>
-            {locationLine}
-          </Text>
-        ) : null}
-      </View>
-    </View>
   );
 }
 

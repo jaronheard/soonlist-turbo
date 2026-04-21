@@ -50,6 +50,7 @@ import { getEventEmoji } from "~/utils/eventEmoji";
 import { collapseSimilarEvents } from "~/utils/similarEvents";
 import { EventMenu } from "./EventMenu";
 import { EventStats } from "./EventStats";
+import { MatchAuthLoadingSurface } from "./MatchAuthLoadingSurface";
 import SaveButton from "./SaveButton";
 
 type ShowCreatorOption = "always" | "otherUsers" | "never" | "savedFromOthers";
@@ -84,7 +85,6 @@ interface UserEventListItemProps {
   similarEventsCount?: number;
   demoMode?: boolean;
   index: number;
-  isDiscoverFeed?: boolean;
   primaryAction?: "addToCalendar" | "save";
   source?: string;
   sourceListName?: string;
@@ -103,7 +103,6 @@ export function UserEventListItem(props: UserEventListItemProps) {
     similarEventsCount,
     demoMode,
     index,
-    isDiscoverFeed = false,
     primaryAction = "addToCalendar",
     source,
     sourceListName,
@@ -388,30 +387,29 @@ export function UserEventListItem(props: UserEventListItemProps) {
                 <>
                   <ActionButton event={event} />
 
-                  {!isDiscoverFeed &&
-                    (isOwner && primaryAction !== "addToCalendar" ? (
-                      <TouchableOpacity
-                        className="rounded-full p-2.5"
-                        onPress={() => {
-                          router.navigate(`/event/${id}/edit`);
-                        }}
-                        accessibilityLabel="Edit"
-                        accessibilityRole="button"
-                        hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
-                      >
-                        <PenSquare size={iconSize * 1.1} color="#5A32FB" />
-                      </TouchableOpacity>
-                    ) : (
-                      <TouchableOpacity
-                        className="rounded-full p-2.5"
-                        onPress={handleShare}
-                        accessibilityLabel="Share"
-                        accessibilityRole="button"
-                        hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
-                      >
-                        <ShareIcon size={iconSize * 1.1} color="#5A32FB" />
-                      </TouchableOpacity>
-                    ))}
+                  {isOwner && primaryAction !== "addToCalendar" ? (
+                    <TouchableOpacity
+                      className="rounded-full p-2.5"
+                      onPress={() => {
+                        router.navigate(`/event/${id}/edit`);
+                      }}
+                      accessibilityLabel="Edit"
+                      accessibilityRole="button"
+                      hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+                    >
+                      <PenSquare size={iconSize * 1.1} color="#5A32FB" />
+                    </TouchableOpacity>
+                  ) : (
+                    <TouchableOpacity
+                      className="rounded-full p-2.5"
+                      onPress={handleShare}
+                      accessibilityLabel="Share"
+                      accessibilityRole="button"
+                      hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+                    >
+                      <ShareIcon size={iconSize * 1.1} color="#5A32FB" />
+                    </TouchableOpacity>
+                  )}
 
                   <EventMenu
                     event={event}
@@ -442,6 +440,18 @@ export function UserEventListItem(props: UserEventListItemProps) {
                       hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
                     >
                       <CalendarPlus size={iconSize * 1.1} color="#5A32FB" />
+                    </TouchableOpacity>
+                  ) : isOwner ? (
+                    <TouchableOpacity
+                      className="rounded-full p-2.5"
+                      onPress={() => {
+                        router.navigate(`/event/${id}/edit`);
+                      }}
+                      accessibilityLabel="Edit"
+                      accessibilityRole="button"
+                      hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+                    >
+                      <PenSquare size={iconSize * 1.1} color="#5A32FB" />
                     </TouchableOpacity>
                   ) : (
                     <SaveButton
@@ -929,11 +939,15 @@ interface UserEventsListProps {
   showCreator: ShowCreatorOption;
   onEndReached: () => void;
   isFetchingNextPage: boolean;
-  isLoadingFirstPage?: boolean;
+  /**
+   * Purple spinner: list body when `HeaderComponent`/`stats` exist, otherwise
+   * full-screen loading (MatchAuthLoadingSurface). Use for initial load / segment
+   * refetch so titles and toggles stay on the FlatList.
+   */
+  listBodyLoading?: boolean;
   showSourceStickers?: boolean;
   demoMode?: boolean;
   stats?: EventStatsData;
-  isDiscoverFeed?: boolean;
   primaryAction?: "addToCalendar" | "save";
   savedEventIds?: Set<string>;
   HeaderComponent?: React.ComponentType<Record<string, never>>;
@@ -952,11 +966,10 @@ export default function UserEventsList(props: UserEventsListProps) {
     showCreator,
     onEndReached,
     isFetchingNextPage,
-    isLoadingFirstPage = false,
+    listBodyLoading = false,
     showSourceStickers = false,
     demoMode,
     stats,
-    isDiscoverFeed = false,
     primaryAction = "addToCalendar",
     savedEventIds,
     HeaderComponent,
@@ -1001,20 +1014,8 @@ export default function UserEventsList(props: UserEventsListProps) {
     );
   };
 
-  if (isLoadingFirstPage) {
-    return (
-      <ScrollView
-        contentInsetAdjustmentBehavior="automatic"
-        style={{ flex: 1, backgroundColor: "#F4F1FF" }}
-        contentContainerStyle={{
-          flexGrow: 1,
-          justifyContent: "center",
-          alignItems: "center",
-        }}
-      >
-        <ActivityIndicator size="large" color="#5A32FB" />
-      </ScrollView>
-    );
+  if (listBodyLoading && !HeaderComponent && !stats) {
+    return <MatchAuthLoadingSurface />;
   }
 
   if (collapsedEvents.length === 0) {
@@ -1025,6 +1026,25 @@ export default function UserEventsList(props: UserEventsListProps) {
       return renderEmptyState();
     }
   }
+
+  const renderListEmpty = () => {
+    if (listBodyLoading) {
+      return (
+        <View
+          style={{
+            flexGrow: 1,
+            minHeight: 320,
+            justifyContent: "center",
+            alignItems: "center",
+            paddingBottom: 40,
+          }}
+        >
+          <ActivityIndicator size="large" color="#5A32FB" />
+        </View>
+      );
+    }
+    return renderEmptyState(true);
+  };
 
   const renderFooter = () => {
     if (collapsedEvents.length === 0) return null;
@@ -1069,7 +1089,7 @@ export default function UserEventsList(props: UserEventsListProps) {
       data={collapsedEvents}
       keyExtractor={(item) => item.event.id}
       ListHeaderComponent={renderHeader}
-      ListEmptyComponent={() => renderEmptyState(true)}
+      ListEmptyComponent={renderListEmpty}
       renderItem={({ item, index }) => {
         const eventData = item.event;
         // Use savedEventIds if provided, otherwise check eventFollows
@@ -1104,7 +1124,6 @@ export default function UserEventsList(props: UserEventsListProps) {
             }
             demoMode={demoMode}
             index={index}
-            isDiscoverFeed={isDiscoverFeed}
             primaryAction={primaryAction}
             source={source}
             sourceListName={sourceListName}

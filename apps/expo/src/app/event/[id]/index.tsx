@@ -32,6 +32,7 @@ import { api } from "@soonlist/backend/convex/_generated/api";
 import { getTimezoneAbbreviation } from "@soonlist/cal";
 
 import { EventMenu } from "~/components/EventMenu";
+import { FromTheseSoonlists } from "~/components/FromTheseSoonlists";
 import { HeaderLogo } from "~/components/HeaderLogo";
 import {
   CalendarPlus,
@@ -44,7 +45,6 @@ import {
   ShareIcon,
 } from "~/components/icons";
 import LoadingSpinner from "~/components/LoadingSpinner";
-import { UserAvatar } from "~/components/UserAvatar";
 import { useEventActions, useEventSaveActions } from "~/hooks/useEventActions";
 import { useRevenueCat } from "~/providers/RevenueCatProvider";
 import {
@@ -422,8 +422,8 @@ function EventDetail({ id }: { id: string }) {
             </Text>
           </View>
 
-          {/* Meta rows (venue + visibility/author) */}
-          {(eventData.location || showDiscover) && (
+          {/* Meta rows (venue + visibility) */}
+          {(eventData.location || (showDiscover && isCurrentUserEvent)) && (
             <View className="mt-4 flex flex-col gap-2">
               {/* Location link */}
               {eventData.location && (
@@ -444,47 +444,21 @@ function EventDetail({ id }: { id: string }) {
                 </Link>
               )}
 
-              {/* Visibility or user info */}
-              {showDiscover && (
-                <>
-                  {isCurrentUserEvent ? (
-                    <View className="flex-row items-center gap-2">
-                      {event.visibility === "public" ? (
-                        <Globe2 size={16} color="#627496" />
-                      ) : (
-                        <EyeOff size={16} color="#627496" />
-                      )}
-                      <Text className="text-sm text-neutral-2">
-                        {event.visibility === "public"
-                          ? "Discoverable"
-                          : "Not discoverable"}
-                      </Text>
-                    </View>
+              {/* Visibility (owner-only info). Attribution now lives in the
+                  "From these Soonlists" section below. */}
+              {showDiscover && isCurrentUserEvent && (
+                <View className="flex-row items-center gap-2">
+                  {event.visibility === "public" ? (
+                    <Globe2 size={16} color="#627496" />
                   ) : (
-                    <Pressable
-                      onPress={() =>
-                        event.user?.username &&
-                        router.push(`/${event.user.username}`)
-                      }
-                      className="-my-2 flex-row items-center gap-2 py-2"
-                      hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
-                    >
-                      <UserAvatar
-                        user={{
-                          id: event.user?.id ?? "",
-                          username: event.user?.username ?? "",
-                          userImage: event.user?.userImage,
-                        }}
-                        size={20}
-                      />
-                      <Text className="text-sm text-neutral-2">
-                        {event.user?.displayName ||
-                          event.user?.username ||
-                          "unknown"}
-                      </Text>
-                    </Pressable>
+                    <EyeOff size={16} color="#627496" />
                   )}
-                </>
+                  <Text className="text-sm text-neutral-2">
+                    {event.visibility === "public"
+                      ? "Discoverable"
+                      : "Not discoverable"}
+                  </Text>
+                </View>
               )}
             </View>
           )}
@@ -616,6 +590,35 @@ function EventDetail({ id }: { id: string }) {
                 );
               })()}
             </>
+          )}
+
+          {/* From these Soonlists — unified attribution of people + lists.
+              Lives after the event content and source attribution so the
+              reading order is: what it is → what it's about → where it
+              came from → who has it. */}
+          {showDiscover && event.user && (
+            <View className="mb-4">
+              <FromTheseSoonlists
+                creator={{
+                  id: event.user.id,
+                  username: event.user.username,
+                  displayName: event.user.displayName,
+                  userImage: event.user.userImage,
+                }}
+                savers={event.eventFollows
+                  .map((f) => f.user)
+                  .filter((u): u is NonNullable<typeof u> => !!u)
+                  .map((u) => ({
+                    id: u.id,
+                    username: u.username,
+                    displayName: u.displayName,
+                    userImage: u.userImage,
+                  }))}
+                lists={event.lists}
+                currentUserId={currentUser?.id}
+                variant="compact"
+              />
+            </View>
           )}
 
           {/* Hidden probe to detect image dimensions without layout shift */}

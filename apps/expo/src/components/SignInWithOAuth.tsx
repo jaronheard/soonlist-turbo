@@ -23,6 +23,7 @@ import { api } from "@soonlist/backend/convex/_generated/api";
 import { X } from "~/components/icons";
 import { useGuestUser } from "~/hooks/useGuestUser";
 import { useAppStore } from "~/store";
+import { cn } from "~/utils/cn";
 import { useWarmUpBrowser } from "../hooks/useWarmUpBrowser";
 import { AF_EVENTS, trackAFEvent } from "../utils/appsflyerEvents";
 import { logError } from "../utils/errorLogging";
@@ -52,6 +53,12 @@ interface SignInWithOAuthProps {
   dark?: boolean;
   /** Shows an onboarding progress bar at the top. Pass the step out of total. */
   progress?: { current: number; total: number };
+  /**
+   * Match `QuestionContainer` / paywall footer: same horizontal inset, no extra
+   * bottom padding, progress bar spacing, and primary CTA (Apple) last so it
+   * aligns with the prior screen’s Continue button.
+   */
+  onboardingFooterAlign?: boolean;
 }
 
 const SignInWithOAuth = ({
@@ -63,6 +70,7 @@ const SignInWithOAuth = ({
   imageSlot,
   dark,
   progress,
+  onboardingFooterAlign,
 }: SignInWithOAuthProps) => {
   useWarmUpBrowser();
   const posthog = usePostHog();
@@ -339,21 +347,37 @@ const SignInWithOAuth = ({
       className={`flex-1 ${dark ? "bg-interactive-1" : "bg-interactive-3"}`}
     >
       <Stack.Screen options={{ headerShown: false }} />
-      {progress && (
-        <View className="pt-2">
+      {progress &&
+        (onboardingFooterAlign ? (
           <ProgressBar
             currentStep={progress.current}
             totalSteps={progress.total}
             backgroundColor="bg-neutral-3"
             foregroundColor="bg-neutral-1"
           />
-        </View>
-      )}
+        ) : (
+          <View className="pt-2">
+            <ProgressBar
+              currentStep={progress.current}
+              totalSteps={progress.total}
+              backgroundColor="bg-neutral-3"
+              foregroundColor="bg-neutral-1"
+            />
+          </View>
+        ))}
       {banner}
       <View
-        className={`flex-1 px-4 pb-8 ${
-          banner ? "pt-0" : progress ? "pt-10" : "pt-24"
-        }`}
+        className={cn(
+          "flex-1",
+          onboardingFooterAlign ? "px-6 pb-0" : "px-4 pb-8",
+          banner
+            ? "pt-0"
+            : progress
+              ? onboardingFooterAlign
+                ? "pt-8"
+                : "pt-10"
+              : "pt-24",
+        )}
       >
         <View className="flex-1">
           <View className="shrink-0">
@@ -406,24 +430,53 @@ const SignInWithOAuth = ({
             </View>
           )}
 
-          <View className="relative mt-4 w-full shrink-0">
-            <AppleSignInButton
-              onPress={() => void handleOAuthFlow("oauth_apple")}
-            />
-            <View className="h-3" />
-            <Pressable
-              onPress={toggleOtherOptions}
-              className="relative flex-row items-center justify-center rounded-full border border-gray-300 bg-white px-6 py-3 active:scale-[0.98] active:bg-neutral-100"
-            >
-              <Text className="text-base font-medium text-gray-700">
-                More ways to sign up
-              </Text>
-              {showOtherOptions && (
-                <View className="absolute right-6">
-                  <X size={20} color="#374151" />
-                </View>
-              )}
-            </Pressable>
+          <View
+            className={cn(
+              "relative w-full shrink-0",
+              !onboardingFooterAlign && "mt-4",
+            )}
+          >
+            {onboardingFooterAlign ? (
+              <>
+                <Pressable
+                  onPress={toggleOtherOptions}
+                  className="relative w-full flex-row items-center justify-center rounded-full border border-gray-300 bg-white px-6 py-4 active:scale-[0.98] active:bg-neutral-100"
+                >
+                  <Text className="text-base font-medium text-gray-700">
+                    More ways to sign up
+                  </Text>
+                  {showOtherOptions && (
+                    <View className="absolute right-6">
+                      <X size={20} color="#374151" />
+                    </View>
+                  )}
+                </Pressable>
+                <View className="h-3" />
+                <AppleSignInButton
+                  onPress={() => void handleOAuthFlow("oauth_apple")}
+                />
+              </>
+            ) : (
+              <>
+                <AppleSignInButton
+                  onPress={() => void handleOAuthFlow("oauth_apple")}
+                />
+                <View className="h-3" />
+                <Pressable
+                  onPress={toggleOtherOptions}
+                  className="relative w-full flex-row items-center justify-center rounded-full border border-gray-300 bg-white px-6 py-4 active:scale-[0.98] active:bg-neutral-100"
+                >
+                  <Text className="text-base font-medium text-gray-700">
+                    More ways to sign up
+                  </Text>
+                  {showOtherOptions && (
+                    <View className="absolute right-6">
+                      <X size={20} color="#374151" />
+                    </View>
+                  )}
+                </Pressable>
+              </>
+            )}
             {showOtherOptions && (
               <AnimatedView
                 entering={FadeIn.duration(400)}

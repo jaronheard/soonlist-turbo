@@ -22,12 +22,14 @@ import { usePostHog } from "posthog-react-native";
 
 import { api } from "@soonlist/backend/convex/_generated/api";
 
-import LoadingSpinner from "~/components/LoadingSpinner";
+import { MatchAuthLoadingSurface } from "~/components/MatchAuthLoadingSurface";
 import UserEventsList from "~/components/UserEventsList";
 import { useShareListPrompt } from "~/hooks/useShareListPrompt";
 import { useShareMyList } from "~/hooks/useShareMyList";
+import { useStableFeedListBodyLoading } from "~/hooks/useStableFeedListBodyLoading";
 import { useStablePaginatedQuery } from "~/hooks/useStableQuery";
 import { useAppStore, useStableTimestamp } from "~/store";
+import { eventMatchesFeedSegment } from "~/utils/feedSegment";
 
 type Segment = "upcoming" | "past";
 
@@ -117,6 +119,9 @@ function MyFeedContent() {
     initialNumItems: 50,
   });
 
+  const { listBodyLoading, markSegmentSwitchPending } =
+    useStableFeedListBodyLoading(status);
+
   // Memoize saved events query args to prevent unnecessary re-renders
   const savedEventsQueryArgs = useMemo(() => {
     if (!user?.username) return "skip";
@@ -134,8 +139,9 @@ function MyFeedContent() {
     }
   }, [status, loadMore]);
 
-  const savedEventIds = new Set(
-    savedEventIdsQuery?.map((event) => event.id) ?? [],
+  const savedEventIds = useMemo(
+    () => new Set(savedEventIdsQuery?.map((event) => event.id) ?? []),
+    [savedEventIdsQuery],
   );
 
   // Transform grouped events into the format UserEventsList expects
@@ -165,16 +171,14 @@ function MyFeedContent() {
       }),
     }));
 
-    // Client-side safety filter: hide events that have ended (upcoming only)
-    if (selectedSegment === "upcoming") {
-      const currentTime = new Date(stableTimestamp).getTime();
-      return events.filter((item) => {
-        const eventEndTime = new Date(item.event.endDateTime).getTime();
-        return eventEndTime >= currentTime;
-      });
-    }
-
-    return events;
+    const stableMs = new Date(stableTimestamp).getTime();
+    return events.filter((item) =>
+      eventMatchesFeedSegment(
+        item.event.endDateTime,
+        selectedSegment,
+        stableMs,
+      ),
+    );
   }, [groupedEvents, stableTimestamp, selectedSegment]);
 
   const upcomingCount =
@@ -224,9 +228,13 @@ function MyFeedContent() {
     }
   }, [enrichedEvents.length, selectedSegment, setMyListBadgeCount]);
 
-  const handleSegmentChange = useCallback((segment: Segment) => {
-    setSelectedSegment(segment);
-  }, []);
+  const handleSegmentChange = useCallback(
+    (segment: Segment) => {
+      markSegmentSwitchPending();
+      setSelectedSegment(segment);
+    },
+    [markSegmentSwitchPending],
+  );
 
   const HeaderComponent = useCallback(() => {
     return (
@@ -291,7 +299,7 @@ function MyFeedContent() {
       groupedEvents={enrichedEvents}
       onEndReached={handleLoadMore}
       isFetchingNextPage={status === "LoadingMore"}
-      isLoadingFirstPage={false}
+      listBodyLoading={listBodyLoading}
       showCreator="savedFromOthers"
       showSourceStickers
       savedEventIds={savedEventIds}
@@ -309,10 +317,7 @@ function MyFeed() {
   return (
     <>
       <AuthLoading>
-        <View className="flex-1 bg-interactive-3">
-          <View className="h-[100px]" />
-          <LoadingSpinner />
-        </View>
+        <MatchAuthLoadingSurface />
       </AuthLoading>
 
       <Unauthenticated>

@@ -41,6 +41,7 @@ export default function OnboardingSignInScreen() {
       imageSlot={<OrbitStage />}
       dark
       progress={{ current: currentStep, total: totalSteps }}
+      onboardingFooterAlign
     />
   );
 }

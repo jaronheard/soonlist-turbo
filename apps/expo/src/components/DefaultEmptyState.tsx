@@ -55,25 +55,29 @@ export function DefaultEmptyState({
             className="mb-1 text-base font-medium text-neutral-2"
             style={{ paddingLeft: 6 }}
           >
-            Events from lists I subscribe to
+            Events from Soonlists I subscribe to
           </Text>
         </View>
 
         <View className="px-6 pt-6">
-          {/* Shared-first primary block */}
-          <View className="mb-6 rounded-2xl border border-neutral-3 bg-white p-4">
-            <Text className="mb-3 text-base font-semibold text-neutral-1">
-              Someone shared a list with you?
+          {/* Shared-first primary block — soft surface so it doesn’t read as a stark white slab */}
+          <View
+            className="mb-6 rounded-2xl border border-neutral-3/70 p-3"
+            style={{ backgroundColor: "rgba(255,255,255,0.72)" }}
+          >
+            <Text className="mb-2 text-sm font-medium text-neutral-2">
+              Someone shared their Soonlist with you?
             </Text>
             <TouchableOpacity
               onPress={() => setIsModalVisible(true)}
               activeOpacity={0.85}
               accessibilityRole="button"
-              accessibilityLabel="Enter their username"
-              className="w-full rounded-full bg-interactive-1 py-3"
+              accessibilityLabel="Find by username"
+              className="w-full self-center rounded-full bg-interactive-1 px-6 py-2"
+              style={{ maxWidth: 320 }}
             >
-              <Text className="text-center text-base font-semibold text-white">
-                Enter their username
+              <Text className="text-center text-sm font-semibold text-white">
+                Find by username
               </Text>
             </TouchableOpacity>
           </View>
@@ -82,8 +86,8 @@ export function DefaultEmptyState({
           {featuredLists.length > 0 ? (
             <View className="mb-4 flex-row items-center gap-3">
               <View className="h-px flex-1 bg-neutral-3" />
-              <Text className="text-sm text-neutral-2">
-                Or start with one of these
+              <Text className="text-center text-sm text-neutral-2">
+                Or start with these from Portland
               </Text>
               <View className="h-px flex-1 bg-neutral-3" />
             </View>

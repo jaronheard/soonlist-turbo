@@ -90,7 +90,7 @@ export default function ShareSetupScreen() {
   // Animate between medium (preview) and large (edit) detents.
   useEffect(() => {
     navigation.setOptions({
-      sheetAllowedDetents: isEditing ? [1.0] : [0.5],
+      sheetAllowedDetents: isEditing ? [0.8] : [0.4, 0.8],
     });
   }, [isEditing, navigation]);
 
@@ -180,7 +180,7 @@ export default function ShareSetupScreen() {
         flex: 1,
         flexDirection: "column",
         backgroundColor: "white",
-        paddingTop: insets.top,
+        paddingTop: Platform.OS === "ios" ? 8 : insets.top,
       }}
     >
       {isEditing ? (

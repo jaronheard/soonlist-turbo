@@ -22,12 +22,14 @@ import { api } from "@soonlist/backend/convex/_generated/api";
 
 import { DefaultEmptyState } from "~/components/DefaultEmptyState";
 import { FollowedListsModal } from "~/components/FollowedListsModal";
-import LoadingSpinner from "~/components/LoadingSpinner";
+import { MatchAuthLoadingSurface } from "~/components/MatchAuthLoadingSurface";
 import { ReferralEmptyState } from "~/components/ReferralEmptyState";
 import UserEventsList from "~/components/UserEventsList";
+import { useStableFeedListBodyLoading } from "~/hooks/useStableFeedListBodyLoading";
 import { useStablePaginatedQuery } from "~/hooks/useStableQuery";
 import { useAppStore, useStableTimestamp } from "~/store";
 import { logError } from "~/utils/errorLogging";
+import { eventMatchesFeedSegment } from "~/utils/feedSegment";
 
 type Segment = "upcoming" | "past";
 
@@ -124,15 +126,13 @@ function FollowingFeedContent() {
       // Reset to the default segment so the onboarding confirmation count and
       // the subsequent feed view both reflect upcoming events, not whatever
       // segment the user had picked under their prior subscriptions.
+      // No markSegmentSwitchPending: unfollow-all clears followings, so the
+      // paginated feed query is skipped — not a segment refetch race.
       setSelectedSegment("upcoming");
     }
   }, [followedLists, hasFollowings, emptyStateMode]);
   const handleExitEmptyState = useCallback(() => {
     setEmptyStateMode("dismissed");
-  }, []);
-
-  const handleSegmentChange = useCallback((segment: Segment) => {
-    setSelectedSegment(segment);
   }, []);
 
   // Memoize query args
@@ -154,6 +154,20 @@ function FollowingFeedContent() {
     },
   );
 
+  const { listBodyLoading, markSegmentSwitchPending } =
+    useStableFeedListBodyLoading(status, {
+      enabled: hasFollowings,
+      extraLoading: followedLists === undefined,
+    });
+
+  const handleSegmentChange = useCallback(
+    (segment: Segment) => {
+      markSegmentSwitchPending();
+      setSelectedSegment(segment);
+    },
+    [markSegmentSwitchPending],
+  );
+
   // Memoize saved events query args
   const savedEventsQueryArgs = useMemo(() => {
     if (!user?.username) return "skip";
@@ -171,20 +185,17 @@ function FollowingFeedContent() {
     }
   }, [status, loadMore]);
 
-  const savedEventIds = new Set(
-    savedEventIdsQuery?.map((event) => event.id) ?? [],
+  const savedEventIds = useMemo(
+    () => new Set(savedEventIdsQuery?.map((event) => event.id) ?? []),
+    [savedEventIdsQuery],
   );
 
-  // Filter events client-side
   const enrichedEvents = useMemo(() => {
-    const currentTime = new Date(stableTimestamp).getTime();
+    const stableMs = new Date(stableTimestamp).getTime();
     return events
-      .filter((event) => {
-        const eventEndTime = new Date(event.endDateTime).getTime();
-        return selectedSegment === "upcoming"
-          ? eventEndTime >= currentTime
-          : eventEndTime < currentTime;
-      })
+      .filter((event) =>
+        eventMatchesFeedSegment(event.endDateTime, selectedSegment, stableMs),
+      )
       .map((event) => ({
         ...event,
         comments: [],
@@ -229,7 +240,7 @@ function FollowingFeedContent() {
           className="mb-1 text-base font-medium text-neutral-2"
           style={{ paddingLeft: 6 }}
         >
-          Events from lists I subscribe to
+          Events from Soonlists I subscribe to
         </Text>
         {followedListCount > 0 && (
           <TouchableOpacity
@@ -329,7 +340,7 @@ function FollowingFeedContent() {
         events={enrichedEvents}
         onEndReached={handleLoadMore}
         isFetchingNextPage={status === "LoadingMore"}
-        isLoadingFirstPage={followedLists === undefined}
+        listBodyLoading={listBodyLoading}
         showCreator="always"
         primaryAction="save"
         showSourceStickers
@@ -348,10 +359,7 @@ function FollowingFeed() {
   return (
     <>
       <AuthLoading>
-        <View className="flex-1 bg-interactive-3">
-          <View className="h-[100px]" />
-          <LoadingSpinner />
-        </View>
+        <MatchAuthLoadingSurface />
       </AuthLoading>
 
       <Unauthenticated>

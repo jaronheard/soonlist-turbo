@@ -1,5 +1,5 @@
 import React from "react";
-import { Share, View } from "react-native";
+import { View } from "react-native";
 import { Image as ExpoImage } from "expo-image";
 import { router } from "expo-router";
 import { useUser } from "@clerk/clerk-expo";
@@ -7,7 +7,7 @@ import Intercom from "@intercom/intercom-react-native";
 import { useConvexAuth } from "convex/react";
 import * as DropdownMenu from "zeego/dropdown-menu";
 
-import { LogOut, MessageSquare, ShareIcon, User } from "~/components/icons";
+import { LogOut, MessageSquare, User } from "~/components/icons";
 import { useSignOut } from "~/hooks/useSignOut";
 import { toast } from "~/utils/feedback";
 import { logError } from "../utils/errorLogging";
@@ -43,15 +43,6 @@ export function ProfileMenu() {
     } catch (error) {
       logError("Error presenting Intercom", error);
     }
-  };
-
-  const handleShareApp = async () => {
-    const url =
-      "https://apps.apple.com/us/app/soonlist-save-events-instantly/id6670222216";
-    await Share.share({
-      message: "Check out Soonlist on the App Store!",
-      url: url,
-    });
   };
 
   const profileImage = (
@@ -92,13 +83,6 @@ export function ProfileMenu() {
       </DropdownMenu.Trigger>
 
       <DropdownMenu.Content>
-        <DropdownMenu.Item key="share-app" onSelect={handleShareApp}>
-          <DropdownMenu.ItemIcon ios={{ name: "square.and.arrow.up" }}>
-            <ShareIcon />
-          </DropdownMenu.ItemIcon>
-          <DropdownMenu.ItemTitle>Share App</DropdownMenu.ItemTitle>
-        </DropdownMenu.Item>
-
         <DropdownMenu.Item key="profile" onSelect={handleEditProfile}>
           <DropdownMenu.ItemIcon ios={{ name: "person.circle" }}>
             <User />
