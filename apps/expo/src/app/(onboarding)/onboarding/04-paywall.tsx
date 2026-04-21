@@ -83,7 +83,9 @@ export default function CommunitySupportedScreen() {
                   <Text className="text-3xl">{emoji}</Text>
                 </View>
                 <View className="min-w-0 flex-1 pt-0.5">
-                  <Text className="text-lg font-semibold text-white">{title}</Text>
+                  <Text className="text-lg font-semibold text-white">
+                    {title}
+                  </Text>
                   <Text className="mt-1 text-base leading-snug text-white/70">
                     {description}
                   </Text>
