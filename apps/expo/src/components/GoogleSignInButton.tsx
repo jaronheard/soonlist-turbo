@@ -14,7 +14,7 @@ export const GoogleSignInButton: React.FC<GoogleSignInButtonProps> = ({
 }) => {
   return (
     <Pressable
-      className="rounded-full border border-gray-300 bg-white py-3 active:scale-[0.98] active:bg-neutral-100"
+      className="w-full rounded-full border border-gray-300 bg-white py-4 active:scale-[0.98] active:bg-neutral-100"
       onPress={() => {
         void hapticMedium();
         onPress();

@@ -11,7 +11,7 @@ interface EmailSignInButtonProps {
 export function EmailSignInButton({ onPress }: EmailSignInButtonProps) {
   return (
     <Pressable
-      className="rounded-full border border-[#DCE0E8] bg-[#DCE0E8] py-3 active:scale-[0.98] active:bg-[#CDD1D9]"
+      className="w-full rounded-full border border-[#DCE0E8] bg-[#DCE0E8] py-4 active:scale-[0.98] active:bg-[#CDD1D9]"
       onPress={() => {
         void hapticMedium();
         onPress();
