@@ -164,6 +164,8 @@ interface TimezoneSelectNativeProps {
   onValueChange: (value: string) => void;
   placeholder?: string;
   error?: string;
+  autoOpen?: boolean;
+  onClose?: () => void;
 }
 
 export function TimezoneSelectNative({
@@ -171,16 +173,19 @@ export function TimezoneSelectNative({
   onValueChange,
   placeholder = "Select a timezone",
   error,
+  autoOpen = false,
+  onClose,
 }: TimezoneSelectNativeProps) {
-  const [modalVisible, setModalVisible] = useState(false);
+  const [modalVisible, setModalVisible] = useState(autoOpen);
   const [searchQuery, setSearchQuery] = useState("");
   const [currentTimezone, setCurrentTimezone] = useState<string | null>(null);
   const flatListRef = useRef<FlatList>(null);
 
-  // Get current timezone when component mounts
   useEffect(() => {
     setCurrentTimezone(getCurrentTimezone());
   }, []);
+
+  const didAutoScrollRef = useRef(false);
 
   // Process timezones into a format that's easier to use with memoization
   const processedTimezones = useMemo((): TimeZoneItem[] => {
@@ -277,10 +282,28 @@ export function TimezoneSelectNative({
     return () => clearTimeout(timeoutId);
   }, [selectedIndex]);
 
+  // When autoOpen starts the modal already visible, run the same
+  // scroll-to-current-selection logic openModal normally performs.
+  useEffect(() => {
+    if (!autoOpen || didAutoScrollRef.current) return;
+    if (selectedIndex === -1) return;
+    didAutoScrollRef.current = true;
+    const timeoutId = setTimeout(() => {
+      flatListRef.current?.scrollToIndex({
+        index: selectedIndex,
+        animated: false,
+        viewOffset: 0,
+        viewPosition: 0,
+      });
+    }, 300);
+    return () => clearTimeout(timeoutId);
+  }, [autoOpen, selectedIndex]);
+
   const closeModal = useCallback(() => {
     setModalVisible(false);
     setSearchQuery("");
-  }, []);
+    onClose?.();
+  }, [onClose]);
 
   const selectTimezone = useCallback(
     (tz: string) => {

@@ -345,18 +345,31 @@ const InitialLayout = () => {
             headerStyle: { backgroundColor: "#F4F1FF" },
             headerTintColor: "#5A32FB",
             headerBackTitle: "Back",
+            headerShadowVisible: false,
           }}
         />
         <Stack.Screen
-          name="settings/calendar"
+          name="settings/profile-edit"
           options={{
-            title: "Calendar Settings",
+            title: "Edit Profile",
             headerShown: true,
             headerTransparent: false,
             headerBackground: undefined,
             headerStyle: { backgroundColor: "#F4F1FF" },
             headerTintColor: "#5A32FB",
-            headerBackTitle: "Back",
+            headerBackTitle: "Account",
+          }}
+        />
+        <Stack.Screen
+          name="settings/timezone"
+          options={{
+            title: "Default Timezone",
+            headerShown: true,
+            headerTransparent: false,
+            headerBackground: undefined,
+            headerStyle: { backgroundColor: "#F4F1FF" },
+            headerTintColor: "#5A32FB",
+            headerBackTitle: "Account",
           }}
         />
       </Stack.Protected>
