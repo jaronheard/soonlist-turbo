@@ -6,6 +6,7 @@ import type { Doc } from "@soonlist/backend/convex/_generated/dataModel";
 
 import type { UserForDisplay } from "~/types/user";
 import { List } from "~/components/icons";
+import { OverflowPill } from "~/components/OverflowPill";
 import { SavedByModal } from "~/components/SavedByModal";
 import { UserAvatar } from "~/components/UserAvatar";
 import { navigateToUser } from "~/utils/navigateToUser";
@@ -69,32 +70,6 @@ function ListChip({ name, slug }: { name?: string; slug?: string }) {
     );
   }
   return <View className="flex-row items-center gap-1">{content}</View>;
-}
-
-function OverflowPill({
-  count,
-  onPress,
-  className,
-}: {
-  count: number;
-  onPress?: () => void;
-  className?: string;
-}) {
-  if (count <= 0) return null;
-  const pillClass = `rounded-full bg-interactive-3 px-1.5 py-0.5${
-    className ? ` ${className}` : ""
-  }`;
-  const text = (
-    <Text className="text-xs font-medium text-interactive-1">+{count}</Text>
-  );
-  if (!onPress) {
-    return <View className={pillClass}>{text}</View>;
-  }
-  return (
-    <Pressable className={pillClass} onPress={onPress} hitSlop={HIT_SLOP}>
-      {text}
-    </Pressable>
-  );
 }
 
 export function EventAttributionRow({
