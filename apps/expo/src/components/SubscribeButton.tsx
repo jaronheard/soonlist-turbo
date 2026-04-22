@@ -38,9 +38,7 @@ export function SubscribeButton({
         (isSubscribed ? "Subscribed to list" : "Subscribe to list")
       }
       className={`flex-row items-center gap-1 rounded-full ${containerSize} ${
-        isSubscribed
-          ? "border border-interactive-1 bg-white"
-          : "bg-interactive-1"
+        isSubscribed ? "bg-interactive-2" : "bg-interactive-1"
       }`}
     >
       <Icon size={iconSize} color={iconColor} strokeWidth={2.5} />
