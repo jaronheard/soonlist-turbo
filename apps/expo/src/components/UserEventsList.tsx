@@ -47,6 +47,7 @@ import {
 } from "~/utils/dates";
 import { setEventCache } from "~/utils/eventCache";
 import { getEventEmoji } from "~/utils/eventEmoji";
+import { eventFollowsToSavers } from "~/utils/eventFollows";
 import { collapseSimilarEvents } from "~/utils/similarEvents";
 import { EventMenu } from "./EventMenu";
 import { EventStats } from "./EventStats";
@@ -244,10 +245,19 @@ export function UserEventListItem(props: UserEventListItemProps) {
 
   const isCurrentUser = currentUser?.id === eventUser.id;
 
+  const attributionSavers = eventFollowsToSavers(
+    event.eventFollows as EnrichedEventFollow[] | undefined,
+    { excludeUserId: eventUser.id },
+  );
+
+  const isSavedFromOthersEligible =
+    (isSaved && !isCurrentUser) ||
+    (isCurrentUser && attributionSavers.length > 0);
+
   const shouldShowCreator =
     showCreator === "always" ||
     (showCreator === "otherUsers" && !isCurrentUser) ||
-    (isSaved && !isCurrentUser && showCreator === "savedFromOthers");
+    (showCreator === "savedFromOthers" && isSavedFromOthersEligible);
 
   const isOwner = demoMode || isCurrentUser;
 
@@ -501,22 +511,7 @@ export function UserEventListItem(props: UserEventListItemProps) {
                 displayName: eventUser.displayName,
                 userImage: eventUser.userImage,
               }}
-              savers={
-                (event.eventFollows as EnrichedEventFollow[] | undefined)
-                  ?.filter(
-                    (
-                      f,
-                    ): f is EnrichedEventFollow & {
-                      user: NonNullable<EnrichedEventFollow["user"]>;
-                    } => f.user !== null,
-                  )
-                  .map((f) => ({
-                    id: f.user.id,
-                    username: f.user.username,
-                    displayName: f.user.displayName,
-                    userImage: f.user.userImage,
-                  })) ?? []
-              }
+              savers={attributionSavers}
               iconSize={iconSize}
               currentUserId={currentUser?.id}
               sourceListName={sourceListName}

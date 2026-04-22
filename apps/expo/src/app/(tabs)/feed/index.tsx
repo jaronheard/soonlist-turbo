@@ -150,7 +150,6 @@ function MyFeedContent() {
     const events = groupedEvents.map((group) => ({
       event: {
         ...group.event,
-        eventFollows: [],
         comments: [],
         eventToLists: [],
         lists: group.event.lists ?? [],
@@ -307,6 +306,7 @@ function MyFeedContent() {
       HeaderComponent={HeaderComponent}
       upcomingEventCount={upcomingCount}
       onSharePress={handlePillShare}
+      attributionVariant="people-only"
     />
   );
 }

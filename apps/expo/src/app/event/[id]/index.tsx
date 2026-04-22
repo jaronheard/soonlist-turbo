@@ -56,6 +56,7 @@ import {
 import { AF_EVENTS, trackAFEvent } from "~/utils/appsflyerEvents";
 import { formatEventDateRange } from "~/utils/dates";
 import { getEventCache } from "~/utils/eventCache";
+import { eventFollowsToSavers } from "~/utils/eventFollows";
 import { getPlanStatusFromUser } from "~/utils/plan";
 import { formatUrlForDisplay } from "../../../utils/links";
 
@@ -605,15 +606,7 @@ function EventDetail({ id }: { id: string }) {
                   displayName: event.user.displayName,
                   userImage: event.user.userImage,
                 }}
-                savers={event.eventFollows
-                  .map((f) => f.user)
-                  .filter((u): u is NonNullable<typeof u> => !!u)
-                  .map((u) => ({
-                    id: u.id,
-                    username: u.username,
-                    displayName: u.displayName,
-                    userImage: u.userImage,
-                  }))}
+                savers={eventFollowsToSavers(event.eventFollows)}
                 lists={event.lists}
                 currentUserId={currentUser?.id}
                 variant="compact"

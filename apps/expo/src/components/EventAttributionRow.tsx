@@ -10,7 +10,10 @@ import { SavedByModal } from "~/components/SavedByModal";
 import { UserAvatar } from "~/components/UserAvatar";
 import { navigateToUser } from "~/utils/navigateToUser";
 
-export type EventAttributionVariant = "list-primary" | "people-primary";
+export type EventAttributionVariant =
+  | "list-primary"
+  | "people-primary"
+  | "people-only";
 
 interface EventAttributionRowProps {
   creator: UserForDisplay;
@@ -105,6 +108,17 @@ export function EventAttributionRow({
   lists,
   variant = "people-primary",
 }: EventAttributionRowProps) {
+  if (variant === "people-only") {
+    return (
+      <PeopleOnlyRow
+        creator={creator}
+        savers={savers}
+        iconSize={iconSize}
+        currentUserId={currentUserId}
+      />
+    );
+  }
+
   if (variant === "list-primary" && sourceListSlug) {
     return (
       <ListPrimaryRow
@@ -134,6 +148,60 @@ export function EventAttributionRow({
       lists={lists}
       showListConnector={variant === "people-primary"}
     />
+  );
+}
+
+function PeopleOnlyRow({
+  creator,
+  savers,
+  iconSize,
+  currentUserId,
+}: {
+  creator: UserForDisplay;
+  savers: UserForDisplay[];
+  iconSize: number;
+  currentUserId?: string;
+}) {
+  const isOwnEvent = currentUserId === creator.id;
+  const avatarSize = iconSize * 0.9;
+
+  // Hide the viewer from their own savers row in either branch — they
+  // already know they have it.
+  const displayUsers = isOwnEvent
+    ? savers.filter((s) => s.id !== creator.id)
+    : combineUsers(creator, savers).filter((u) => u.id !== currentUserId);
+
+  if (displayUsers.length === 0) {
+    return null;
+  }
+
+  const maxInline = 2;
+  const inlineUsers = displayUsers.slice(0, maxInline);
+  const remainingUsersCount = displayUsers.length - inlineUsers.length;
+
+  return (
+    <View className="mx-auto mt-1 flex-row flex-wrap items-center justify-center gap-1">
+      {isOwnEvent ? (
+        <Text className="text-xs text-neutral-2">Saved by</Text>
+      ) : null}
+      {inlineUsers.map((user, index) => (
+        <Pressable
+          key={user.id}
+          onPress={() => navigateToUser(user, currentUserId)}
+          hitSlop={HIT_SLOP}
+          className="flex-row items-center gap-1"
+        >
+          <UserAvatar user={user} size={avatarSize} />
+          <Text className="text-xs text-neutral-2">
+            {user.displayName || user.username}
+            {index < inlineUsers.length - 1 || remainingUsersCount > 0
+              ? ","
+              : ""}
+          </Text>
+        </Pressable>
+      ))}
+      <OverflowPill count={remainingUsersCount} />
+    </View>
   );
 }
 
