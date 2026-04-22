@@ -399,9 +399,6 @@ catalogs:
     react-native-keyboard-controller:
       specifier: 1.20.7
       version: 1.20.7
-    react-native-modal:
-      specifier: 14.0.0-rc.1
-      version: 14.0.0-rc.1
     react-native-notifier:
       specifier: ^2.0.0
       version: 2.0.0
@@ -780,9 +777,6 @@ importers:
       react-native-keyboard-controller:
         specifier: 'catalog:'
         version: 1.20.7(react-native-reanimated@4.2.2(react-native-worklets@0.7.1(@babel/core@7.28.5)(react-native@0.83.2(@babel/core@7.28.5)(@types/react@19.2.14)(bufferutil@4.1.0)(react@19.2.0)(utf-8-validate@5.0.10))(react@19.2.0))(react-native@0.83.2(@babel/core@7.28.5)(@types/react@19.2.14)(bufferutil@4.1.0)(react@19.2.0)(utf-8-validate@5.0.10))(react@19.2.0))(react-native@0.83.2(@babel/core@7.28.5)(@types/react@19.2.14)(bufferutil@4.1.0)(react@19.2.0)(utf-8-validate@5.0.10))(react@19.2.0)
-      react-native-modal:
-        specifier: 'catalog:'
-        version: 14.0.0-rc.1(react-native@0.83.2(@babel/core@7.28.5)(@types/react@19.2.14)(bufferutil@4.1.0)(react@19.2.0)(utf-8-validate@5.0.10))(react@19.2.0)
       react-native-notifier:
         specifier: 'catalog:'
         version: 2.0.0(react-native-gesture-handler@2.30.0(react-native@0.83.2(@babel/core@7.28.5)(@types/react@19.2.14)(bufferutil@4.1.0)(react@19.2.0)(utf-8-validate@5.0.10))(react@19.2.0))(react-native@0.83.2(@babel/core@7.28.5)(@types/react@19.2.14)(bufferutil@4.1.0)(react@19.2.0)(utf-8-validate@5.0.10))(react@19.2.0)
@@ -9250,9 +9244,6 @@ packages:
   react-is@19.2.3:
     resolution: {integrity: sha512-qJNJfu81ByyabuG7hPFEbXqNcWSU3+eVus+KJs+0ncpGfMyYdvSmxiJxbWR65lYi1I+/0HBcliO029gc4F+PnA==}
 
-  react-native-animatable@1.4.0:
-    resolution: {integrity: sha512-DZwaDVWm2NBvBxf7I0wXKXLKb/TxDnkV53sWhCvei1pRyTX3MVFpkvdYBknNBqPrxYuAIlPxEp7gJOidIauUkw==}
-
   react-native-appsflyer@6.17.8:
     resolution: {integrity: sha512-mm/PfkxnHYwF/QGbs/NkGWyp9snESPVyztRsjjoo9yHuZUp/dxJNX9gCl3uvImZ2rP8suRAhDIjMUxhE7RRHkA==}
 
@@ -9303,12 +9294,6 @@ packages:
       react: 19.2.0
       react-native: '*'
       react-native-reanimated: '>=3.0.0'
-
-  react-native-modal@14.0.0-rc.1:
-    resolution: {integrity: sha512-v5pvGyx1FlmBzdHyPqBsYQyS2mIJhVmuXyNo5EarIzxicKhuoul6XasXMviGcXboEUT0dTYWs88/VendojPiVw==}
-    peerDependencies:
-      react: 19.2.0
-      react-native: '>=0.70.0'
 
   react-native-notifier@2.0.0:
     resolution: {integrity: sha512-CKaoldBM2Lz9FIWn1frUZ70R8n1jCwaUsO4hGfqbNYFUZLV4OYy/UeEicWvrLy3Ce8fEg7WyYWVd0q+crsFQlA==}
@@ -20277,10 +20262,6 @@ snapshots:
 
   react-is@19.2.3: {}
 
-  react-native-animatable@1.4.0:
-    dependencies:
-      prop-types: 15.8.1
-
   react-native-appsflyer@6.17.8: {}
 
   react-native-css-interop@0.2.1(react-native-reanimated@4.2.2(react-native-worklets@0.7.1(@babel/core@7.28.5)(react-native@0.83.2(@babel/core@7.28.5)(@types/react@19.2.14)(bufferutil@4.1.0)(react@19.2.0)(utf-8-validate@5.0.10))(react@19.2.0))(react-native@0.83.2(@babel/core@7.28.5)(@types/react@19.2.14)(bufferutil@4.1.0)(react@19.2.0)(utf-8-validate@5.0.10))(react@19.2.0))(react-native-safe-area-context@5.6.2(react-native@0.83.2(@babel/core@7.28.5)(@types/react@19.2.14)(bufferutil@4.1.0)(react@19.2.0)(utf-8-validate@5.0.10))(react@19.2.0))(react-native-svg@15.15.3(react-native@0.83.2(@babel/core@7.28.5)(@types/react@19.2.14)(bufferutil@4.1.0)(react@19.2.0)(utf-8-validate@5.0.10))(react@19.2.0))(react-native@0.83.2(@babel/core@7.28.5)(@types/react@19.2.14)(bufferutil@4.1.0)(react@19.2.0)(utf-8-validate@5.0.10))(react@19.2.0)(tailwindcss@3.4.19(yaml@2.8.2)):
@@ -20332,12 +20313,6 @@ snapshots:
       react-native: 0.83.2(@babel/core@7.28.5)(@types/react@19.2.14)(bufferutil@4.1.0)(react@19.2.0)(utf-8-validate@5.0.10)
       react-native-is-edge-to-edge: 1.2.1(react-native@0.83.2(@babel/core@7.28.5)(@types/react@19.2.14)(bufferutil@4.1.0)(react@19.2.0)(utf-8-validate@5.0.10))(react@19.2.0)
       react-native-reanimated: 4.2.2(react-native-worklets@0.7.1(@babel/core@7.28.5)(react-native@0.83.2(@babel/core@7.28.5)(@types/react@19.2.14)(bufferutil@4.1.0)(react@19.2.0)(utf-8-validate@5.0.10))(react@19.2.0))(react-native@0.83.2(@babel/core@7.28.5)(@types/react@19.2.14)(bufferutil@4.1.0)(react@19.2.0)(utf-8-validate@5.0.10))(react@19.2.0)
-
-  react-native-modal@14.0.0-rc.1(react-native@0.83.2(@babel/core@7.28.5)(@types/react@19.2.14)(bufferutil@4.1.0)(react@19.2.0)(utf-8-validate@5.0.10))(react@19.2.0):
-    dependencies:
-      react: 19.2.0
-      react-native: 0.83.2(@babel/core@7.28.5)(@types/react@19.2.14)(bufferutil@4.1.0)(react@19.2.0)(utf-8-validate@5.0.10)
-      react-native-animatable: 1.4.0
 
   react-native-notifier@2.0.0(react-native-gesture-handler@2.30.0(react-native@0.83.2(@babel/core@7.28.5)(@types/react@19.2.14)(bufferutil@4.1.0)(react@19.2.0)(utf-8-validate@5.0.10))(react@19.2.0))(react-native@0.83.2(@babel/core@7.28.5)(@types/react@19.2.14)(bufferutil@4.1.0)(react@19.2.0)(utf-8-validate@5.0.10))(react@19.2.0):
     dependencies:

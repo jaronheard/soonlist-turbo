@@ -123,7 +123,6 @@ catalog:
   "react-native-ios-context-menu": 3.2.0
   "react-native-ios-utilities": 5.2.0
   "react-native-keyboard-controller": 1.20.7
-  "react-native-modal": 14.0.0-rc.1
   "react-native-onesignal": ^5.2.8
   "react-native-purchases-ui": ^8.9.1
   "react-native-qrcode-svg": ^6.3.0
