@@ -17,10 +17,7 @@ import { navigateToUser } from "~/utils/navigateToUser";
 /** At this many people (4+), compact inline mode uses a collapsed avatar stack. */
 const MIN_PEOPLE_FOR_STACK = 4;
 
-/**
- * Avatars shown in the overlapping stack before the +N circle (3 faces + 1
- * count chip matches common iOS group rows).
- */
+/** Avatars shown in the overlapping stack before the +N circle. */
 const STACK_FACE_COUNT = 5;
 
 /** How far each subsequent avatar / +N chip overlaps the previous (px). */
@@ -132,7 +129,7 @@ export function AttributionGrid({
 
   const needsPeopleStack = isCompact && people.length >= MIN_PEOPLE_FOR_STACK;
   const stackOverflowCount = needsPeopleStack
-    ? people.length - STACK_FACE_COUNT
+    ? Math.max(0, people.length - STACK_FACE_COUNT)
     : 0;
 
   const avatarSize = isCompact ? 32 : 44;
