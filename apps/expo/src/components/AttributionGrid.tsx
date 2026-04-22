@@ -130,8 +130,7 @@ export function AttributionGrid({
     );
   }
 
-  const needsPeopleStack =
-    isCompact && people.length >= MIN_PEOPLE_FOR_STACK;
+  const needsPeopleStack = isCompact && people.length >= MIN_PEOPLE_FOR_STACK;
   const stackOverflowCount = needsPeopleStack
     ? people.length - STACK_FACE_COUNT
     : 0;
@@ -282,10 +281,7 @@ export function AttributionGrid({
           ) : null}
         </View>
         <View className="pl-1">
-          <ChevronDown
-            size={isCompact ? 20 : 22}
-            color={chevronColor}
-          />
+          <ChevronDown size={isCompact ? 20 : 22} color={chevronColor} />
         </View>
       </Pressable>,
     );
@@ -313,10 +309,7 @@ export function AttributionGrid({
           >
             Show less
           </Text>
-          <ChevronUp
-            size={isCompact ? 20 : 22}
-            color={chevronColor}
-          />
+          <ChevronUp size={isCompact ? 20 : 22} color={chevronColor} />
         </Pressable>,
       );
     } else {

@@ -22,11 +22,7 @@ export function OverflowPill({
     return <View className={pillClass}>{text}</View>;
   }
   return (
-    <Pressable
-      className={pillClass}
-      onPress={onPress}
-      hitSlop={HIT_SLOP}
-    >
+    <Pressable className={pillClass} onPress={onPress} hitSlop={HIT_SLOP}>
       {text}
     </Pressable>
   );
