@@ -18,6 +18,7 @@ import { PostHogProvider, usePostHog } from "posthog-react-native";
 import { convex } from "~/lib/convex";
 import { OneSignalProvider } from "~/providers/OneSignalProvider";
 import { RevenueCatProvider } from "~/providers/RevenueCatProvider";
+import { defaultSheetOptions } from "~/utils/modalOptions";
 
 import "../styles.css";
 
@@ -357,6 +358,14 @@ const InitialLayout = () => {
             headerStyle: { backgroundColor: "#F4F1FF" },
             headerTintColor: "#5A32FB",
             headerBackTitle: "Back",
+          }}
+        />
+        <Stack.Screen
+          name="(modals)/subscribed-lists"
+          options={{
+            ...defaultSheetOptions,
+            title: "Subscribed lists",
+            sheetAllowedDetents: [0.6, 1.0],
           }}
         />
       </Stack.Protected>

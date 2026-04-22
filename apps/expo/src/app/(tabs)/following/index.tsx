@@ -6,7 +6,7 @@ import React, {
   useState,
 } from "react";
 import { Share, Text, TouchableOpacity, View } from "react-native";
-import { Redirect } from "expo-router";
+import { Redirect, router } from "expo-router";
 import { SymbolView } from "expo-symbols";
 import { useUser } from "@clerk/clerk-expo";
 import {
@@ -19,7 +19,6 @@ import {
 import { api } from "@soonlist/backend/convex/_generated/api";
 
 import { DefaultEmptyState } from "~/components/DefaultEmptyState";
-import { FollowedListsModal } from "~/components/FollowedListsModal";
 import { MatchAuthLoadingSurface } from "~/components/MatchAuthLoadingSurface";
 import { ReferralEmptyState } from "~/components/ReferralEmptyState";
 import { UpcomingPastSegmentedControl } from "~/components/UpcomingPastSegmentedControl";
@@ -35,7 +34,6 @@ type Segment = "upcoming" | "past";
 function FollowingFeedContent() {
   const { user } = useUser();
   const [selectedSegment, setSelectedSegment] = useState<Segment>("upcoming");
-  const [isModalVisible, setIsModalVisible] = useState(false);
   const stableTimestamp = useStableTimestamp();
 
   const pendingFollowUsername = useAppStore(
@@ -205,7 +203,7 @@ function FollowingFeedContent() {
                   singleFollowedList.slug ?? undefined,
                 );
               } else {
-                setIsModalVisible(true);
+                router.push("/subscribed-lists");
               }
             }}
             activeOpacity={0.7}
@@ -268,25 +266,19 @@ function FollowingFeedContent() {
   }
 
   return (
-    <>
-      <FollowedListsModal
-        visible={isModalVisible}
-        onClose={() => setIsModalVisible(false)}
-      />
-      <UserEventsList
-        events={enrichedEvents}
-        onEndReached={handleLoadMore}
-        isFetchingNextPage={status === "LoadingMore"}
-        listBodyLoading={listBodyLoading}
-        showCreator="always"
-        primaryAction="save"
-        showSourceStickers
-        savedEventIds={savedEventIds}
-        source="following"
-        HeaderComponent={HeaderComponent}
-        attributionVariant="list-primary"
-      />
-    </>
+    <UserEventsList
+      events={enrichedEvents}
+      onEndReached={handleLoadMore}
+      isFetchingNextPage={status === "LoadingMore"}
+      listBodyLoading={listBodyLoading}
+      showCreator="always"
+      primaryAction="save"
+      showSourceStickers
+      savedEventIds={savedEventIds}
+      source="following"
+      HeaderComponent={HeaderComponent}
+      attributionVariant="list-primary"
+    />
   );
 }
 
