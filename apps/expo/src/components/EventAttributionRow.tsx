@@ -180,7 +180,7 @@ function PeopleOnlyRow({
   const remainingUsersCount = displayUsers.length - inlineUsers.length;
 
   return (
-    <View className="mx-auto mt-1 flex-row flex-wrap items-center justify-center gap-1">
+    <View className="mx-auto mt-1 flex-row flex-wrap items-center justify-center gap-2">
       {isOwnEvent ? (
         <Text className="text-xs text-neutral-2">Saved by</Text>
       ) : null}
@@ -258,12 +258,10 @@ function ListPrimaryRow({
         onPress={openModal}
         hitSlop={HIT_SLOP}
         accessibilityLabel="View everyone who saved this"
-        className="flex-row items-center"
+        className="flex-row items-center gap-2"
       >
-        {stackUsers.map((user, index) => (
-          <View key={user.id} style={{ marginLeft: index === 0 ? 0 : -6 }}>
-            <UserAvatar user={user} size={avatarSize} />
-          </View>
+        {stackUsers.map((user) => (
+          <UserAvatar key={user.id} user={user} size={avatarSize} />
         ))}
         <OverflowPill count={extraCount} className="ml-1" />
       </Pressable>
@@ -271,7 +269,7 @@ function ListPrimaryRow({
 
   return (
     <>
-      <View className="mx-auto mt-1 flex-row flex-wrap items-center justify-center gap-1">
+      <View className="mx-auto mt-1 flex-row flex-wrap items-center justify-center gap-2">
         {isOwnEvent ? (
           <>
             {ownBadge}
@@ -335,7 +333,7 @@ function PeoplePrimaryRow({
 
   return (
     <>
-      <View className="mx-auto mt-1 flex-row flex-wrap items-center justify-center gap-1">
+      <View className="mx-auto mt-1 flex-row flex-wrap items-center justify-center gap-2">
         {isOwnEvent ? (
           <Pressable
             onPress={() => navigateToUser(creator, currentUserId)}
