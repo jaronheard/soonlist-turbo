@@ -23,7 +23,6 @@ import type { AddToCalendarButtonPropsRestricted } from "@soonlist/cal/types";
 import { getTimezoneAbbreviation } from "@soonlist/cal";
 
 import type { EventAttributionVariant } from "~/components/EventAttributionRow";
-import type { UserForDisplay } from "~/types/user";
 import type { EventWithSimilarity } from "~/utils/similarEvents";
 import { EventAttributionRow } from "~/components/EventAttributionRow";
 import {
@@ -48,6 +47,7 @@ import {
 } from "~/utils/dates";
 import { setEventCache } from "~/utils/eventCache";
 import { getEventEmoji } from "~/utils/eventEmoji";
+import { eventFollowsToSavers } from "~/utils/eventFollows";
 import { collapseSimilarEvents } from "~/utils/similarEvents";
 import { EventMenu } from "./EventMenu";
 import { EventStats } from "./EventStats";
@@ -245,28 +245,19 @@ export function UserEventListItem(props: UserEventListItemProps) {
 
   const isCurrentUser = currentUser?.id === eventUser.id;
 
-  const attributionSavers: UserForDisplay[] =
-    (event.eventFollows as EnrichedEventFollow[] | undefined)
-      ?.filter(
-        (
-          f,
-        ): f is EnrichedEventFollow & {
-          user: NonNullable<EnrichedEventFollow["user"]>;
-        } => f.user !== null && f.userId !== eventUser.id,
-      )
-      .map((f) => ({
-        id: f.user.id,
-        username: f.user.username,
-        displayName: f.user.displayName,
-        userImage: f.user.userImage,
-      })) ?? [];
-  const hasOtherSavers = attributionSavers.length > 0;
+  const attributionSavers = eventFollowsToSavers(
+    event.eventFollows as EnrichedEventFollow[] | undefined,
+    { excludeUserId: eventUser.id },
+  );
+
+  const isSavedFromOthersEligible =
+    (isSaved && !isCurrentUser) ||
+    (isCurrentUser && attributionSavers.length > 0);
 
   const shouldShowCreator =
     showCreator === "always" ||
     (showCreator === "otherUsers" && !isCurrentUser) ||
-    (showCreator === "savedFromOthers" &&
-      ((isSaved && !isCurrentUser) || (isCurrentUser && hasOtherSavers)));
+    (showCreator === "savedFromOthers" && isSavedFromOthersEligible);
 
   const isOwner = demoMode || isCurrentUser;
 

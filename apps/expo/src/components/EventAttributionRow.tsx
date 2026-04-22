@@ -165,10 +165,8 @@ function PeopleOnlyRow({
   const isOwnEvent = currentUserId === creator.id;
   const avatarSize = iconSize * 0.9;
 
-  // Own event: render only the savers (other than the viewer), prefixed with
-  // "Saved by" so the meaning is clear without a list / "via" connector.
-  // Non-own event: render creator + other savers; the viewer is filtered
-  // out since this is their own feed — no need to show themselves.
+  // Hide the viewer from their own savers row in either branch — they
+  // already know they have it.
   const displayUsers = isOwnEvent
     ? savers.filter((s) => s.id !== creator.id)
     : combineUsers(creator, savers).filter((u) => u.id !== currentUserId);
