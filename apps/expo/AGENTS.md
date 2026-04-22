@@ -27,6 +27,19 @@ NativeWind (TailwindCSS for React Native).
 
 Expo Router provides typed file-based navigation.
 
+### Sheet-like modals
+
+Use routes + `Stack.Screen` `presentation: "formSheet"` for anything that is a
+"screen-ish" surface (list pickers, detail sheets, saved-by, etc.) rather than
+a `react-native` `<Modal>`. Put these screens under the `src/app/(modals)/`
+group and spread `defaultSheetOptions` from `~/utils/modalOptions` so every
+sheet looks the same (native header + grabber + rounded corners). Register
+each screen in `src/app/_layout.tsx` with `<Stack.Screen name="(modals)/..." />`.
+
+The one exception is alert-style overlay dialogs (confirmation prompts,
+username/code capture) — those stay on `react-native` `<Modal>` with a
+transparent, fade presentation.
+
 ## Development
 
 - Each developer needs a personal ngrok edge (see root README.md)
