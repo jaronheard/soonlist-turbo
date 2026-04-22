@@ -167,11 +167,11 @@ function PeopleOnlyRow({
 
   // Own event: render only the savers (other than the viewer), prefixed with
   // "Saved by" so the meaning is clear without a list / "via" connector.
-  // Non-own event: render creator + savers inline, matching people-primary
-  // minus the list chip and overflow.
+  // Non-own event: render creator + other savers; the viewer is filtered
+  // out since this is their own feed — no need to show themselves.
   const displayUsers = isOwnEvent
     ? savers.filter((s) => s.id !== creator.id)
-    : combineUsers(creator, savers);
+    : combineUsers(creator, savers).filter((u) => u.id !== currentUserId);
 
   if (displayUsers.length === 0) {
     return null;
@@ -234,12 +234,11 @@ function ListPrimaryRow({
   const openModal = () => setShowModal(true);
 
   const maxStack = 3;
-  // Own event: "You" is shown separately, so surface other savers only.
-  // Non-own: creator + savers, minus the viewer (they're looking at their
-  // own feed — no need to show themselves as a saver).
+  // Own-event: "You" is already shown, so the stack surfaces other savers
+  // only. Otherwise the stack combines creator + savers.
   const stackCandidates = isOwnEvent
     ? savers.filter((s) => s.id !== creator.id)
-    : allUsers.filter((u) => u.id !== currentUserId);
+    : allUsers;
   const stackUsers = stackCandidates.slice(0, maxStack);
   const extraCount = Math.max(stackCandidates.length - maxStack, 0);
 
