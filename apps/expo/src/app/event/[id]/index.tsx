@@ -597,7 +597,7 @@ function EventDetail({ id }: { id: string }) {
               Lives after the event content and source attribution so the
               reading order is: what it is → what it's about → where it
               came from → who has it. */}
-          {showDiscover && event.user && (
+          {event.user && (
             <View className="mb-4">
               <AttributionGrid
                 creator={{
