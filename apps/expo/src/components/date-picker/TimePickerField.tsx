@@ -6,8 +6,14 @@ import type {
   Path,
 } from "react-hook-form";
 import React, { useState } from "react";
-import { Platform, Text, TouchableOpacity, View } from "react-native";
-import Modal from "react-native-modal";
+import {
+  Modal,
+  Platform,
+  Text,
+  TouchableOpacity,
+  TouchableWithoutFeedback,
+  View,
+} from "react-native";
 import DateTimePicker from "@react-native-community/datetimepicker";
 import { Controller } from "react-hook-form";
 
@@ -55,11 +61,11 @@ export function TimePickerField<T extends FieldValues>({
     setIsPickerVisible(false);
   };
 
-  const handleModalHide = (onChange: FieldOnChange) => {
+  const commitAndHide = (onChange: FieldOnChange) => {
     if (Platform.OS === "ios") {
-      const formatted = formatTimeForStorage(tempTime);
-      onChange(formatted);
+      onChange(formatTimeForStorage(tempTime));
     }
+    hidePicker();
   };
 
   const onTimeChange = (
@@ -74,8 +80,7 @@ export function TimePickerField<T extends FieldValues>({
     setTempTime(currentTime);
 
     if (Platform.OS === "android") {
-      const formatted = formatTimeForStorage(currentTime);
-      onChange(formatted);
+      onChange(formatTimeForStorage(currentTime));
       hidePicker();
     }
   };
@@ -99,32 +104,43 @@ export function TimePickerField<T extends FieldValues>({
             </TouchableOpacity>
 
             <Modal
-              isVisible={isPickerVisible}
-              onBackdropPress={hidePicker}
-              onModalHide={() => handleModalHide(onChange as FieldOnChange)}
-              style={{ justifyContent: "flex-end", margin: 0 }}
-              animationIn="slideInUp"
-              animationOut="slideOutDown"
-              backdropTransitionOutTiming={0}
+              visible={isPickerVisible}
+              transparent
+              animationType="slide"
+              onRequestClose={() => commitAndHide(onChange as FieldOnChange)}
             >
-              <View className="rounded-t-lg bg-white p-4">
-                <DateTimePicker
-                  testID="timePickerModal"
-                  value={tempTime}
-                  mode="time"
-                  minuteInterval={minuteInterval}
-                  display={Platform.OS === "ios" ? "spinner" : "default"}
-                  themeVariant="light"
-                  onChange={(event, time) =>
-                    onTimeChange(onChange as FieldOnChange, event, time)
-                  }
-                  style={
-                    Platform.OS === "ios"
-                      ? { height: 200, alignSelf: "center" }
-                      : {}
-                  }
-                />
-              </View>
+              <TouchableWithoutFeedback
+                onPress={() => commitAndHide(onChange as FieldOnChange)}
+              >
+                <View
+                  style={{
+                    flex: 1,
+                    justifyContent: "flex-end",
+                    backgroundColor: "rgba(0,0,0,0.5)",
+                  }}
+                >
+                  <TouchableWithoutFeedback>
+                    <View className="rounded-t-lg bg-white p-4">
+                      <DateTimePicker
+                        testID="timePickerModal"
+                        value={tempTime}
+                        mode="time"
+                        minuteInterval={minuteInterval}
+                        display={Platform.OS === "ios" ? "spinner" : "default"}
+                        themeVariant="light"
+                        onChange={(event, time) =>
+                          onTimeChange(onChange as FieldOnChange, event, time)
+                        }
+                        style={
+                          Platform.OS === "ios"
+                            ? { height: 200, alignSelf: "center" }
+                            : {}
+                        }
+                      />
+                    </View>
+                  </TouchableWithoutFeedback>
+                </View>
+              </TouchableWithoutFeedback>
             </Modal>
           </>
         )}
