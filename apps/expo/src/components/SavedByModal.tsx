@@ -1,12 +1,13 @@
 import React from "react";
-import { Modal, ScrollView, Text, TouchableOpacity, View } from "react-native";
+import { Modal, ScrollView, TouchableOpacity, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import type { Doc } from "@soonlist/backend/convex/_generated/dataModel";
 
 import type { UserForDisplay } from "~/types/user";
-import { FromTheseSoonlists } from "~/components/FromTheseSoonlists";
+import { AttributionGrid } from "~/components/AttributionGrid";
 import { X } from "~/components/icons";
+import { SheetHeader } from "~/components/SheetHeader";
 
 interface SavedByModalProps {
   visible: boolean;
@@ -35,23 +36,20 @@ export function SavedByModal({
       onRequestClose={onClose}
     >
       <View className="flex-1 bg-white" style={{ paddingTop: insets.top }}>
-        {/* Header — matches the "From these Soonlists" teaching sentence,
-            paired with a tinted close chip that ties to the card tint
-            below. */}
-        <View className="flex-row items-center justify-between px-4 py-3">
-          <Text className="text-lg font-bold text-neutral-1">
-            From these Soonlists:
-          </Text>
-          <TouchableOpacity
-            onPress={onClose}
-            accessibilityRole="button"
-            accessibilityLabel="Close"
-            hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
-            className="h-8 w-8 items-center justify-center rounded-full bg-interactive-3"
-          >
-            <X size={16} color="#5A32FB" />
-          </TouchableOpacity>
-        </View>
+        <SheetHeader
+          title="From these Soonlists:"
+          trailing={
+            <TouchableOpacity
+              onPress={onClose}
+              accessibilityRole="button"
+              accessibilityLabel="Close"
+              hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+              className="h-8 w-8 items-center justify-center rounded-full bg-interactive-3"
+            >
+              <X size={16} color="#5A32FB" />
+            </TouchableOpacity>
+          }
+        />
 
         {/* Scrollable content */}
         <ScrollView
@@ -60,7 +58,7 @@ export function SavedByModal({
             paddingBottom: insets.bottom + 16,
           }}
         >
-          <FromTheseSoonlists
+          <AttributionGrid
             creator={creator}
             savers={savers}
             lists={lists}

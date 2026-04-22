@@ -1,17 +1,14 @@
-import React, { useCallback, useMemo } from "react";
-import {
-  ActivityIndicator,
-  Share,
-  Text,
-  TouchableOpacity,
-  View,
-} from "react-native";
+import React, { useCallback, useMemo, useState } from "react";
+import { ActivityIndicator, Platform, Share, Text, View } from "react-native";
 import { Stack, useLocalSearchParams, useRouter } from "expo-router";
 import { useConvexAuth, useMutation, useQuery } from "convex/react";
 
 import { api } from "@soonlist/backend/convex/_generated/api";
 
-import { List as ListIcon, ShareIcon } from "~/components/icons";
+import type { SoonlistHeroSegment } from "~/components/SoonlistHero";
+import { AttributionGrid } from "~/components/AttributionGrid";
+import { FloatingShareButton } from "~/components/FloatingShareButton";
+import { SoonlistHero } from "~/components/SoonlistHero";
 import { SubscribeButton } from "~/components/SubscribeButton";
 import UserEventsList from "~/components/UserEventsList";
 import { useStablePaginatedQuery } from "~/hooks/useStableQuery";
@@ -19,8 +16,11 @@ import {
   useLoadMoreHandler,
   useUpcomingEventsFilter,
 } from "~/hooks/useUpcomingFeed";
+import { useStableTimestamp } from "~/store";
+import Config from "~/utils/config";
 import { logError } from "~/utils/errorLogging";
 import { toast } from "~/utils/feedback";
+import { eventMatchesFeedSegment } from "~/utils/feedSegment";
 
 export default function ListDetailScreen() {
   const { slug } = useLocalSearchParams<{ slug: string }>();
@@ -28,25 +28,55 @@ export default function ListDetailScreen() {
   const router = useRouter();
   const { isAuthenticated } = useConvexAuth();
   const currentUser = useQuery(api.users.getCurrentUser);
+  const [selectedSegment, setSelectedSegment] =
+    useState<SoonlistHeroSegment>("upcoming");
+  const stableTimestamp = useStableTimestamp();
 
   const listResult = useQuery(
     api.lists.getBySlug,
     normalizedSlug ? { slug: normalizedSlug } : "skip",
   );
   const listData = listResult?.status === "ok" ? listResult.list : null;
+
+  const lastUpdatedAt = useQuery(
+    api.feeds.getPublicListFeedLastUpdated,
+    normalizedSlug ? { slug: normalizedSlug } : "skip",
+  );
+
+  const contributors = useQuery(
+    api.lists.getContributorsForList,
+    normalizedSlug ? { slug: normalizedSlug } : "skip",
+  );
+
+  const feedQueryArgs = useMemo(
+    () =>
+      normalizedSlug
+        ? { slug: normalizedSlug, filter: selectedSegment }
+        : "skip",
+    [normalizedSlug, selectedSegment],
+  );
+
   const {
     results: listEvents,
     status,
     loadMore,
-  } = useStablePaginatedQuery(
-    api.lists.getEventsForList,
-    normalizedSlug
-      ? { slug: normalizedSlug, filter: "upcoming" as const }
-      : "skip",
-    { initialNumItems: 50 },
+  } = useStablePaginatedQuery(api.lists.getEventsForList, feedQueryArgs, {
+    initialNumItems: 50,
+  });
+
+  const upcomingEventsFiltered = useUpcomingEventsFilter(
+    selectedSegment === "upcoming" ? listEvents : [],
   );
 
-  const upcomingEvents = useUpcomingEventsFilter(listEvents);
+  const displayEvents = useMemo(() => {
+    if (selectedSegment === "upcoming") {
+      return upcomingEventsFiltered;
+    }
+    const stableMs = new Date(stableTimestamp).getTime();
+    return listEvents.filter((e) =>
+      eventMatchesFeedSegment(e.endDateTime, "past", stableMs),
+    );
+  }, [selectedSegment, listEvents, upcomingEventsFiltered, stableTimestamp]);
 
   const followListMutation = useMutation(
     api.lists.followList,
@@ -113,11 +143,13 @@ export default function ListDetailScreen() {
 
   const handleShare = useCallback(async () => {
     if (!listData || !normalizedSlug) return;
+    const url = `${Config.apiBaseUrl}/list/${normalizedSlug}`;
     try {
-      await Share.share({
-        message: `Check out ${listData.name} on Soonlist`,
-        url: `https://soonlist.com/list/${normalizedSlug}`,
-      });
+      await Share.share(
+        Platform.OS === "ios"
+          ? { url }
+          : { message: `Check out ${listData.name} on Soonlist: ${url}` },
+      );
     } catch (error) {
       logError("Error sharing list", error);
     }
@@ -125,26 +157,41 @@ export default function ListDetailScreen() {
 
   const handleLoadMore = useLoadMoreHandler(status, loadMore);
 
-  const ListHeader = useCallback(
-    () => (
-      <View className="flex-row items-start gap-4 px-4 pb-2">
-        <View className="h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-interactive-2">
-          <ListIcon size={24} color="#5A32FB" />
-        </View>
-        <View className="min-w-0 flex-1 justify-center pt-0.5">
-          <Text className="text-lg font-bold text-neutral-1" numberOfLines={2}>
-            {listData?.name}
-          </Text>
-          {listData?.owner ? (
-            <Text className="mt-0.5 text-sm text-neutral-2" numberOfLines={1}>
-              by {listData.owner.displayName || listData.owner.username}
-            </Text>
-          ) : null}
-        </View>
-      </View>
-    ),
-    [listData?.name, listData?.owner],
-  );
+  const renderListHeader = useCallback(() => {
+    if (!listData) return null;
+
+    const ownerForDisplay = listData.owner
+      ? {
+          id: listData.owner.id,
+          username: listData.owner.username,
+          displayName: listData.owner.displayName,
+          userImage: listData.owner.userImage,
+        }
+      : null;
+
+    return (
+      <SoonlistHero
+        title={listData.name}
+        subtitle={
+          ownerForDisplay ? (
+            <AttributionGrid
+              creator={ownerForDisplay}
+              savers={contributors ?? []}
+              lists={[]}
+              currentUserId={currentUser?.id}
+              variant="compact"
+              background="white"
+              label="List contributors:"
+              creatorBadgeLabel="owner"
+            />
+          ) : null
+        }
+        lastUpdatedAt={lastUpdatedAt}
+        selectedSegment={selectedSegment}
+        onSegmentChange={setSelectedSegment}
+      />
+    );
+  }, [listData, lastUpdatedAt, selectedSegment, contributors, currentUser?.id]);
 
   if (
     !normalizedSlug ||
@@ -197,7 +244,7 @@ export default function ListDetailScreen() {
     return null;
   }
 
-  const events = upcomingEvents.map((event) => ({
+  const events = displayEvents.map((event) => ({
     event,
     similarEvents: [],
     similarityGroupId: event.id,
@@ -209,53 +256,34 @@ export default function ListDetailScreen() {
       <Stack.Screen
         options={{
           title: "List Details",
-          unstable_headerRightItems:
-            isOwnList || !listData
-              ? undefined
-              : () => [
-                  {
-                    type: "custom",
-                    element: (
-                      <SubscribeButton
-                        isSubscribed={isFollowing}
-                        onPress={handleToggleFollow}
-                      />
-                    ),
-                    hidesSharedBackground: true,
-                  },
-                ],
+          unstable_headerRightItems: isOwnList
+            ? undefined
+            : () => [
+                {
+                  type: "custom",
+                  element: (
+                    <SubscribeButton
+                      isSubscribed={isFollowing}
+                      onPress={handleToggleFollow}
+                    />
+                  ),
+                  hidesSharedBackground: true,
+                },
+              ],
         }}
       />
-      <UserEventsList
-        groupedEvents={events}
-        showCreator="always"
-        onEndReached={handleLoadMore}
-        isFetchingNextPage={status === "LoadingMore"}
-        HeaderComponent={ListHeader}
-      />
-
-      {/* Floating Share button (primary action), matches event detail */}
-      <View
-        className="absolute bottom-8 flex-row items-center justify-center gap-4 self-center"
-        style={{
-          shadowColor: "#5A32FB",
-          shadowOffset: { width: 0, height: 3 },
-          shadowOpacity: 0.3,
-          shadowRadius: 6,
-          elevation: 8,
-        }}
-      >
-        <TouchableOpacity
+      <View className="flex-1 bg-interactive-3">
+        <UserEventsList
+          groupedEvents={events}
+          showCreator="always"
+          onEndReached={handleLoadMore}
+          isFetchingNextPage={status === "LoadingMore"}
+          HeaderComponent={renderListHeader}
+        />
+        <FloatingShareButton
           onPress={() => void handleShare()}
           accessibilityLabel="Share list"
-          accessibilityRole="button"
-          activeOpacity={0.8}
-        >
-          <View className="flex-row items-center gap-4 rounded-full bg-interactive-1 px-8 py-5">
-            <ShareIcon size={28} color="#FFFFFF" />
-            <Text className="text-xl font-bold text-white">Share</Text>
-          </View>
-        </TouchableOpacity>
+        />
       </View>
     </>
   );

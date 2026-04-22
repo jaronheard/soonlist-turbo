@@ -31,8 +31,8 @@ import type { AddToCalendarButtonPropsRestricted } from "@soonlist/cal/types";
 import { api } from "@soonlist/backend/convex/_generated/api";
 import { getTimezoneAbbreviation } from "@soonlist/cal";
 
+import { AttributionGrid } from "~/components/AttributionGrid";
 import { EventMenu } from "~/components/EventMenu";
-import { FromTheseSoonlists } from "~/components/FromTheseSoonlists";
 import { HeaderLogo } from "~/components/HeaderLogo";
 import {
   CalendarPlus,
@@ -592,13 +592,13 @@ function EventDetail({ id }: { id: string }) {
             </>
           )}
 
-          {/* From these Soonlists — unified attribution of people + lists.
+          {/* Attribution grid — unified attribution of people + lists.
               Lives after the event content and source attribution so the
               reading order is: what it is → what it's about → where it
               came from → who has it. */}
           {showDiscover && event.user && (
             <View className="mb-4">
-              <FromTheseSoonlists
+              <AttributionGrid
                 creator={{
                   id: event.user.id,
                   username: event.user.username,

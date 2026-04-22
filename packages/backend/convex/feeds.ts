@@ -490,6 +490,39 @@ export const getPublicUserFeedLastUpdated = query({
   },
 });
 
+export const getPublicListFeedLastUpdated = query({
+  args: { slug: v.string() },
+  returns: v.union(v.number(), v.null()),
+  handler: async (ctx, { slug }) => {
+    const list = await ctx.db
+      .query("lists")
+      .withIndex("by_slug", (q) => q.eq("slug", slug))
+      .first();
+
+    if (!list) {
+      return null;
+    }
+
+    const viewerId = await getUserId(ctx);
+    const viewable = await getViewableListIds(
+      ctx,
+      [{ id: list.id, userId: list.userId, visibility: list.visibility }],
+      viewerId,
+    );
+    if (!viewable.has(list.id)) {
+      return null;
+    }
+
+    const feedId = `list_${list.id}`;
+    const [upcomingMax, pastMax] = await Promise.all([
+      sampleMaxAddedAt(ctx, feedId, false),
+      sampleMaxAddedAt(ctx, feedId, true),
+    ]);
+    const max = Math.max(upcomingMax, pastMax);
+    return max > 0 ? max : null;
+  },
+});
+
 // Internal mutation to update hasEndedFlags for a batch of userFeeds entries
 export const updateHasEndedFlagsBatch = internalMutation({
   args: {

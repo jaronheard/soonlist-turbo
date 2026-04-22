@@ -9,7 +9,7 @@ import { ChevronRight, List as ListIcon } from "~/components/icons";
 import { UserAvatar } from "~/components/UserAvatar";
 import { navigateToUser } from "~/utils/navigateToUser";
 
-interface FromTheseSoonlistsProps {
+interface AttributionGridProps {
   creator: UserForDisplay;
   savers: UserForDisplay[];
   lists: Doc<"lists">[];
@@ -21,11 +21,27 @@ interface FromTheseSoonlistsProps {
    * - "compact": tighter, borderless, tinted card for inline use.
    */
   variant?: "card" | "compact";
-  /** Whether to show the "From these Soonlists" section label. */
+  /** Whether to show the section label. */
   showLabel?: boolean;
+  /** Override the section label. Defaults to "From these Soonlists:". */
+  label?: string;
+  /**
+   * Override the pill label shown next to the creator row. Defaults to
+   * "captured" (event-detail semantics). List detail uses "owner".
+   */
+  creatorBadgeLabel?: string;
+  /**
+   * Card background tone.
+   * - "tint" (default): muted-brand wash — used on event detail + modals
+   *   where the card sits on the app's white canvas and needs to feel
+   *   attached to the item it describes.
+   * - "white": crisp white — used in list detail, where the card itself
+   *   sits on the tinted hero background and needs contrast the other way.
+   */
+  background?: "tint" | "white";
 }
 
-export function FromTheseSoonlists({
+export function AttributionGrid({
   creator,
   savers,
   lists,
@@ -33,7 +49,10 @@ export function FromTheseSoonlists({
   onNavigate,
   variant = "card",
   showLabel = true,
-}: FromTheseSoonlistsProps) {
+  label = "From these Soonlists:",
+  creatorBadgeLabel = "captured",
+  background = "tint",
+}: AttributionGridProps) {
   // People: creator first, then savers, deduped.
   const people: UserForDisplay[] = [creator];
   for (const saver of savers) {
@@ -68,6 +87,7 @@ export function FromTheseSoonlists({
     isCompact && people.length === 1 && visibleLists.length === 0;
 
   if (isSingleCreator) {
+    const prefix = creatorBadgeLabel === "owner" ? "Owned by" : "Captured by";
     return (
       <TouchableOpacity
         onPress={() => handleUserPress(creator)}
@@ -80,7 +100,7 @@ export function FromTheseSoonlists({
       >
         <UserAvatar user={creator} size={24} />
         <Text className="ml-2 text-sm text-neutral-2" numberOfLines={1}>
-          Captured by{" "}
+          {prefix}{" "}
           <Text className="font-semibold text-neutral-1">
             {creator.displayName || creator.username}
           </Text>
@@ -93,10 +113,6 @@ export function FromTheseSoonlists({
   const rowPaddingY = isCompact ? "py-2" : "py-2.5";
   const containerPadding = isCompact ? "px-3 pb-2 pt-2" : "px-4 pb-3 pt-3";
   const labelMargin = isCompact ? "mb-1" : "mb-2";
-  // Both variants share the same visual language: tinted card, no dividers
-  // between rows, muted-brand chevron. Rows are grouped by the tint + row
-  // padding, not by lines. The card variant is simply the compact design
-  // scaled up.
   const chevronColor = "#8F7AD6";
 
   const rows: React.ReactNode[] = [];
@@ -127,7 +143,7 @@ export function FromTheseSoonlists({
           {isCreator ? (
             <View className="ml-2 shrink-0 rounded-full bg-accent-yellow px-2 py-0.5">
               <Text className="text-[11px] font-semibold text-neutral-1">
-                captured
+                {creatorBadgeLabel}
               </Text>
             </View>
           ) : null}
@@ -190,10 +206,8 @@ export function FromTheseSoonlists({
 
   if (rows.length === 0) return null;
 
-  // Both variants share the same tinted, borderless card. The card variant
-  // is simply the compact design scaled up for use in the modal / +N more
-  // detail view.
-  const containerClass = `rounded-2xl bg-interactive-3/60 ${containerPadding}`;
+  const bgClass = background === "white" ? "bg-white" : "bg-interactive-3/60";
+  const containerClass = `rounded-2xl ${bgClass} ${containerPadding}`;
 
   return (
     <View className={containerClass}>
@@ -203,7 +217,7 @@ export function FromTheseSoonlists({
             isCompact ? "text-xs" : "text-sm"
           } text-neutral-2`}
         >
-          From these Soonlists:
+          {label}
         </Text>
       ) : null}
       {rows}

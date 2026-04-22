@@ -99,7 +99,7 @@ export const get = query({
     if (!event) return null;
 
     // Strip lists the viewer can't see so the event-detail attribution
-    // (FromTheseSoonlists / SavedByModal) doesn't leak private list
+    // (AttributionGrid / SavedByModal) doesn't leak private list
     // names or slugs to non-members.
     const identity = await ctx.auth.getUserIdentity();
     const viewerId = identity?.subject ?? null;

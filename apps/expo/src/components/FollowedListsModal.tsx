@@ -3,6 +3,7 @@ import {
   ActivityIndicator,
   FlatList,
   Modal,
+  Platform,
   Share,
   Text,
   TouchableOpacity,
@@ -15,8 +16,10 @@ import { useMutation, useQuery } from "convex/react";
 import type { Doc } from "@soonlist/backend/convex/_generated/dataModel";
 import { api } from "@soonlist/backend/convex/_generated/api";
 
-import { ChevronRight, List, ShareIcon } from "~/components/icons";
+import { List, ShareIcon } from "~/components/icons";
+import { SheetHeader } from "~/components/SheetHeader";
 import { SubscribeButton } from "~/components/SubscribeButton";
+import Config from "~/utils/config";
 import { logError } from "~/utils/errorLogging";
 import { toast } from "~/utils/feedback";
 
@@ -56,13 +59,14 @@ export function FollowedListsModal({
   const handleShareList = useCallback(
     async (listName: string, listSlug?: string) => {
       const shareUrl = listSlug
-        ? `https://soonlist.com/list/${listSlug}`
-        : "https://soonlist.com";
+        ? `${Config.apiBaseUrl}/list/${listSlug}`
+        : Config.apiBaseUrl;
       try {
-        await Share.share({
-          message: `Check out ${listName} on Soonlist`,
-          url: shareUrl,
-        });
+        await Share.share(
+          Platform.OS === "ios"
+            ? { url: shareUrl }
+            : { message: `Check out ${listName} on Soonlist: ${shareUrl}` },
+        );
       } catch (error) {
         logError("Error sharing list", error);
       }
@@ -88,17 +92,16 @@ export function FollowedListsModal({
       onRequestClose={onClose}
     >
       <View className="flex-1 bg-white" style={{ paddingTop: insets.top }}>
-        {/* Header */}
-        <View className="flex-row items-center justify-between border-b border-neutral-3 px-4 py-3">
-          <Text className="text-lg font-bold text-neutral-1">
-            Subscribed lists
-          </Text>
-          <TouchableOpacity onPress={onClose} activeOpacity={0.7}>
-            <Text className="text-base font-semibold text-interactive-1">
-              Done
-            </Text>
-          </TouchableOpacity>
-        </View>
+        <SheetHeader
+          title="Subscribed lists"
+          trailing={
+            <TouchableOpacity onPress={onClose} activeOpacity={0.7}>
+              <Text className="text-base font-semibold text-interactive-1">
+                Done
+              </Text>
+            </TouchableOpacity>
+          }
+        />
 
         {followedLists === undefined ? (
           <View className="flex-1 items-center justify-center">
@@ -116,26 +119,28 @@ export function FollowedListsModal({
             keyExtractor={(list) => list.id}
             contentContainerStyle={{
               paddingHorizontal: 16,
-              paddingTop: 16,
               paddingBottom: insets.bottom + 16,
             }}
-            ListHeaderComponent={
-              <Text className="mb-2 text-xs font-semibold uppercase tracking-wider text-neutral-2">
-                Lists
-              </Text>
-            }
-            renderItem={({ item: list }) => {
+            renderItem={({ item: list, index }) => {
+              const isFirst = index === 0;
+              const isLast = index === followedLists.length - 1;
               return (
-                <View className="flex-row items-center py-3">
+                <View
+                  className={`flex-row items-center bg-interactive-3/60 px-4 py-2.5 ${
+                    isFirst ? "rounded-t-2xl pt-3" : ""
+                  } ${isLast ? "rounded-b-2xl pb-3" : ""}`}
+                >
                   <TouchableOpacity
-                    className="flex-1 flex-row items-center"
+                    className="min-w-0 flex-1 flex-row items-center"
                     onPress={() => handleListPress(list)}
                     activeOpacity={0.7}
+                    accessibilityRole="button"
+                    accessibilityLabel={`Open list ${list.name}`}
                   >
-                    <View className="h-10 w-10 items-center justify-center rounded-xl bg-interactive-2">
+                    <View className="h-11 w-11 shrink-0 items-center justify-center rounded-full bg-interactive-3">
                       <List size={20} color="#5A32FB" />
                     </View>
-                    <View className="ml-3 flex-1">
+                    <View className="ml-3 min-w-0 flex-1">
                       <Text
                         className="text-base font-semibold text-neutral-1"
                         numberOfLines={1}
@@ -143,7 +148,6 @@ export function FollowedListsModal({
                         {list.name}
                       </Text>
                     </View>
-                    <ChevronRight size={16} color="#DCE0E8" />
                   </TouchableOpacity>
 
                   <TouchableOpacity
