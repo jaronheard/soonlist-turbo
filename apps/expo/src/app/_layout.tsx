@@ -396,7 +396,8 @@ function RootLayoutContent() {
   return (
     <View style={{ flex: 1 }}>
       <InitialLayout />
-      <StatusBar style="auto" />
+      {/* App is light-only (app.config userInterfaceStyle: light); force dark status bar content */}
+      <StatusBar style="dark" />
     </View>
   );
 }

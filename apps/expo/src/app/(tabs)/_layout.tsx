@@ -1,5 +1,6 @@
 import { NativeTabs } from "expo-router/unstable-native-tabs";
 
+import { SUPPORTS_LIQUID_GLASS } from "~/hooks/useLiquidGlass";
 import { useAppStore } from "~/store";
 
 // Export Expo Router's error boundary
@@ -16,7 +17,9 @@ export default function TabsLayout() {
   return (
     <NativeTabs
       tintColor="#5A32FB"
-      minimizeBehavior="onScrollDown"
+      {...(SUPPORTS_LIQUID_GLASS
+        ? { minimizeBehavior: "onScrollDown" as const }
+        : {})}
       blurEffect="systemChromeMaterialLight" /* interactive-1 */
     >
       <NativeTabs.Trigger name="feed">

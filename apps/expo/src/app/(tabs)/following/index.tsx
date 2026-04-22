@@ -5,12 +5,10 @@ import React, {
   useRef,
   useState,
 } from "react";
-import { Platform, Share, Text, TouchableOpacity, View } from "react-native";
+import { Share, Text, TouchableOpacity, View } from "react-native";
 import { Redirect } from "expo-router";
 import { SymbolView } from "expo-symbols";
 import { useUser } from "@clerk/clerk-expo";
-import { Host, Picker, Text as SwiftUIText } from "@expo/ui/swift-ui";
-import { pickerStyle, tag } from "@expo/ui/swift-ui/modifiers";
 import {
   Authenticated,
   AuthLoading,
@@ -24,6 +22,7 @@ import { DefaultEmptyState } from "~/components/DefaultEmptyState";
 import { FollowedListsModal } from "~/components/FollowedListsModal";
 import { MatchAuthLoadingSurface } from "~/components/MatchAuthLoadingSurface";
 import { ReferralEmptyState } from "~/components/ReferralEmptyState";
+import { UpcomingPastSegmentedControl } from "~/components/UpcomingPastSegmentedControl";
 import UserEventsList from "~/components/UserEventsList";
 import { useStableFeedListBodyLoading } from "~/hooks/useStableFeedListBodyLoading";
 import { useStablePaginatedQuery } from "~/hooks/useStableQuery";
@@ -32,51 +31,6 @@ import { logError } from "~/utils/errorLogging";
 import { eventMatchesFeedSegment } from "~/utils/feedSegment";
 
 type Segment = "upcoming" | "past";
-
-function SegmentedControlFallback({
-  selectedSegment,
-  onSegmentChange,
-}: {
-  selectedSegment: Segment;
-  onSegmentChange: (segment: Segment) => void;
-}) {
-  return (
-    <View className="flex-row rounded-lg bg-gray-100 p-1">
-      <TouchableOpacity
-        className={`items-center rounded-md px-4 py-2 ${
-          selectedSegment === "upcoming" ? "bg-white shadow-sm" : ""
-        }`}
-        onPress={() => onSegmentChange("upcoming")}
-      >
-        <Text
-          className={
-            selectedSegment === "upcoming"
-              ? "font-semibold text-gray-900"
-              : "text-gray-500"
-          }
-        >
-          Upcoming
-        </Text>
-      </TouchableOpacity>
-      <TouchableOpacity
-        className={`items-center rounded-md px-4 py-2 ${
-          selectedSegment === "past" ? "bg-white shadow-sm" : ""
-        }`}
-        onPress={() => onSegmentChange("past")}
-      >
-        <Text
-          className={
-            selectedSegment === "past"
-              ? "font-semibold text-gray-900"
-              : "text-gray-500"
-          }
-        >
-          Past
-        </Text>
-      </TouchableOpacity>
-    </View>
-  );
-}
 
 function FollowingFeedContent() {
   const { user } = useUser();
@@ -271,27 +225,10 @@ function FollowingFeedContent() {
           </TouchableOpacity>
         )}
         <View style={{ width: 260 }}>
-          {Platform.OS === "ios" ? (
-            <Host matchContents>
-              <Picker
-                selection={selectedSegment}
-                onSelectionChange={(value) => {
-                  handleSegmentChange(value as Segment);
-                }}
-                modifiers={[pickerStyle("segmented")]}
-              >
-                <SwiftUIText modifiers={[tag("upcoming")]}>
-                  Upcoming
-                </SwiftUIText>
-                <SwiftUIText modifiers={[tag("past")]}>Past</SwiftUIText>
-              </Picker>
-            </Host>
-          ) : (
-            <SegmentedControlFallback
-              selectedSegment={selectedSegment}
-              onSegmentChange={handleSegmentChange}
-            />
-          )}
+          <UpcomingPastSegmentedControl
+            selectedSegment={selectedSegment}
+            onSegmentChange={handleSegmentChange}
+          />
         </View>
       </View>
     );
