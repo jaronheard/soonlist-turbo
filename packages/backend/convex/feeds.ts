@@ -11,7 +11,7 @@ import {
   query,
 } from "./_generated/server";
 import { userFeedsAggregate } from "./aggregates";
-import { batchGetUsersByIds, getEventById } from "./model/events";
+import { getEventById } from "./model/events";
 import { getViewableListIds } from "./model/lists";
 
 // Helper function to get the current user ID from auth
@@ -251,70 +251,8 @@ async function queryGroupedFeed(
         (l) => !l.isSystemList && l.id !== sourceListId,
       ).length;
 
-      // Aggregate savers from direct follows and from anyone who captured a
-      // duplicate in the same similarity group. Private duplicates are
-      // excluded so their existence isn't leaked. The primary event's own
-      // creator is dropped since they're attributed separately in the UI.
-      const seenIds = new Set<string>([event.userId]);
-      const groupSavers: {
-        id: string;
-        username: string;
-        displayName: string;
-        userImage: string;
-      }[] = [];
-      for (const follow of event.eventFollows) {
-        if (seenIds.has(follow.userId) || !follow.user) continue;
-        seenIds.add(follow.userId);
-        groupSavers.push(follow.user);
-      }
-
-      const otherMembers = (
-        await ctx.db
-          .query("events")
-          .withIndex("by_similarity_group", (q) =>
-            q.eq("similarityGroupId", groupEntry.similarityGroupId),
-          )
-          .collect()
-      ).filter(
-        (m) => m.id !== groupEntry.primaryEventId && m.visibility === "public",
-      );
-
-      if (otherMembers.length > 0) {
-        const otherFollowLists = await Promise.all(
-          otherMembers.map((m) =>
-            ctx.db
-              .query("eventFollows")
-              .withIndex("by_event", (q) => q.eq("eventId", m.id))
-              .collect(),
-          ),
-        );
-        const newIds = new Set<string>();
-        for (const m of otherMembers) {
-          if (!seenIds.has(m.userId)) newIds.add(m.userId);
-        }
-        for (const follows of otherFollowLists) {
-          for (const f of follows) {
-            if (!seenIds.has(f.userId)) newIds.add(f.userId);
-          }
-        }
-        if (newIds.size > 0) {
-          const userMap = await batchGetUsersByIds(ctx, [...newIds]);
-          for (const id of newIds) {
-            const u = userMap.get(id);
-            if (!u) continue;
-            seenIds.add(id);
-            groupSavers.push({
-              id: u.id,
-              username: u.username,
-              displayName: u.displayName,
-              userImage: u.userImage,
-            });
-          }
-        }
-      }
-
       return {
-        event: { ...event, lists: viewerFilteredLists, groupSavers },
+        event: { ...event, lists: viewerFilteredLists },
         similarEventsCount: groupEntry.similarEventsCount,
         similarityGroupId: groupEntry.similarityGroupId,
         sourceListId: sourceListVisible ? sourceListId : undefined,

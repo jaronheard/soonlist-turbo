@@ -245,28 +245,22 @@ export function UserEventListItem(props: UserEventListItemProps) {
 
   const isCurrentUser = currentUser?.id === eventUser.id;
 
-  // Savers surfaced from the grouped-feed enrichment (direct follows + users
-  // who captured a duplicate in the same similarity group). Falls back to
-  // raw eventFollows for surfaces that don't populate groupSavers.
-  const groupSavers = (event as { groupSavers?: UserForDisplay[] }).groupSavers;
   const attributionSavers: UserForDisplay[] =
-    groupSavers ??
     (event.eventFollows as EnrichedEventFollow[] | undefined)
       ?.filter(
         (
           f,
         ): f is EnrichedEventFollow & {
           user: NonNullable<EnrichedEventFollow["user"]>;
-        } => f.user !== null,
+        } => f.user !== null && f.userId !== eventUser.id,
       )
       .map((f) => ({
         id: f.user.id,
         username: f.user.username,
         displayName: f.user.displayName,
         userImage: f.user.userImage,
-      })) ??
-    [];
-  const hasOtherSavers = attributionSavers.some((s) => s.id !== eventUser.id);
+      })) ?? [];
+  const hasOtherSavers = attributionSavers.length > 0;
 
   const shouldShowCreator =
     showCreator === "always" ||

@@ -53,7 +53,7 @@ function filterDuplicates<T extends { id: string }>(items: T[]): T[] {
 }
 
 // Helper to batch-fetch users by IDs (avoids N+1 queries)
-export async function batchGetUsersByIds(ctx: QueryCtx, userIds: string[]) {
+async function batchGetUsersByIds(ctx: QueryCtx, userIds: string[]) {
   const uniqueIds = [...new Set(userIds)];
   const users = await Promise.all(
     uniqueIds.map((id) =>
