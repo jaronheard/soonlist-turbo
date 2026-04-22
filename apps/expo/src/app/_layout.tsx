@@ -299,6 +299,17 @@ const InitialLayout = () => {
           }}
         />
         <Stack.Screen
+          name="(modals)/subscribed-lists"
+          options={{
+            presentation: "formSheet",
+            title: "Subscribed lists",
+            headerShown: true,
+            sheetAllowedDetents: [0.6, 1.0],
+            sheetGrabberVisible: true,
+            sheetCornerRadius: 24,
+          }}
+        />
+        <Stack.Screen
           name="event/[id]/edit"
           options={{
             presentation: "modal",
