@@ -234,11 +234,12 @@ function ListPrimaryRow({
   const openModal = () => setShowModal(true);
 
   const maxStack = 3;
-  // Own-event: "You" is already shown, so the stack surfaces other savers
-  // only. Otherwise the stack combines creator + savers.
+  // Own event: "You" is shown separately, so surface other savers only.
+  // Non-own: creator + savers, minus the viewer (they're looking at their
+  // own feed — no need to show themselves as a saver).
   const stackCandidates = isOwnEvent
     ? savers.filter((s) => s.id !== creator.id)
-    : allUsers;
+    : allUsers.filter((u) => u.id !== currentUserId);
   const stackUsers = stackCandidates.slice(0, maxStack);
   const extraCount = Math.max(stackCandidates.length - maxStack, 0);
 
