@@ -6,11 +6,14 @@ import { TimezoneSelectNative } from "~/components/TimezoneSelectNative";
 import { useAppStore } from "~/store";
 
 export default function TimezoneScreen() {
-  const { userTimezone, setUserTimezone } = useAppStore();
+  const userTimezone = useAppStore((s) => s.userTimezone);
+  const setUserTimezone = useAppStore((s) => s.setUserTimezone);
 
   const handleClose = React.useCallback(() => {
     if (router.canGoBack()) {
       router.back();
+    } else {
+      router.replace("/settings/account");
     }
   }, []);
 

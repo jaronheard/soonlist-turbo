@@ -135,11 +135,11 @@ export default function ProfileEditScreen() {
     try {
       await updateAdditionalInfo({
         userId: user.id,
-        displayName: form.displayName || undefined,
-        publicInsta: form.publicInsta || undefined,
-        publicWebsite: form.publicWebsite || undefined,
-        publicEmail: form.publicEmail || undefined,
-        publicPhone: form.publicPhone || undefined,
+        displayName: form.displayName,
+        publicInsta: form.publicInsta,
+        publicWebsite: form.publicWebsite,
+        publicEmail: form.publicEmail,
+        publicPhone: form.publicPhone,
       });
       void hapticSuccess();
       if (router.canGoBack()) {

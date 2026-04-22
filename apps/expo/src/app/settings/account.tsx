@@ -7,7 +7,6 @@ import {
   Platform,
   Pressable,
   ScrollView,
-  Share,
   Text,
   View,
 } from "react-native";
@@ -44,7 +43,6 @@ import {
   usePreferredCalendarApp,
   useSetPreferredCalendarApp,
 } from "~/store";
-import Config from "~/utils/config";
 import { hapticSuccess, toast } from "~/utils/feedback";
 import { logError } from "../../utils/errorLogging";
 import { getPlanStatusFromUser } from "../../utils/plan";
@@ -206,7 +204,8 @@ export default function AccountScreen() {
     api.users.getByUsername,
     user?.username ? { userName: user.username } : "skip",
   );
-  const { resetOnboarding: resetOnboardingStore, userTimezone } = useAppStore();
+  const resetOnboardingStore = useAppStore((s) => s.resetOnboarding);
+  const userTimezone = useAppStore((s) => s.userTimezone);
   const preferredCalendarApp = usePreferredCalendarApp();
   const setPreferredCalendarApp = useSetPreferredCalendarApp();
 
@@ -258,8 +257,16 @@ export default function AccountScreen() {
   );
 
   const handleShareMySoonlist = useCallback(() => {
+    if (!publicListEnabled) {
+      Alert.alert(
+        "Turn on Public list first",
+        "Your Soonlist needs to be public before you can share it.",
+        [{ text: "OK" }],
+      );
+      return;
+    }
     void requestShare();
-  }, [requestShare]);
+  }, [publicListEnabled, requestShare]);
 
   const handleOpenCalendar = useCallback(() => {
     if (Platform.OS === "ios") {
@@ -421,16 +428,6 @@ export default function AccountScreen() {
     );
   }, [signOut]);
 
-  const handleShareMySoonlistSystem = useCallback(async () => {
-    if (!user?.username) return;
-    try {
-      const url = `${Config.apiBaseUrl}/${user.username}`;
-      await Share.share(Platform.OS === "ios" ? { url } : { message: url });
-    } catch (error) {
-      logError("Error sharing Soonlist", error);
-    }
-  }, [user?.username]);
-
   if (!isAuthenticated) {
     return <Redirect href="/sign-in" />;
   }
@@ -519,11 +516,7 @@ export default function AccountScreen() {
               icon={ShareIcon}
               iconBg={TILE_COLORS.purple}
               label="Share your Soonlist"
-              onPress={
-                publicListEnabled
-                  ? handleShareMySoonlist
-                  : handleShareMySoonlistSystem
-              }
+              onPress={handleShareMySoonlist}
             />
           </SettingsGroup>
         ) : null}
