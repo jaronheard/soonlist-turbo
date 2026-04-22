@@ -36,7 +36,7 @@ import {
 import ImageUploadSpinner from "~/components/ImageUploadSpinner";
 import { InputTags } from "~/components/InputTags";
 import LoadingSpinner from "~/components/LoadingSpinner";
-import { PlatformSelectNative } from "~/components/PlatformSelectNative";
+import { PlatformSelect } from "~/components/PlatformSelect";
 import { TimezoneSelectNative } from "~/components/TimezoneSelectNative";
 import { DEFAULT_VISIBILITY } from "~/constants";
 import { hapticSuccess, toast } from "~/utils/feedback";
@@ -709,7 +709,7 @@ export default function EditEventScreen() {
                       <Text className="mb-2 text-base font-semibold">
                         Platform
                       </Text>
-                      <PlatformSelectNative
+                      <PlatformSelect
                         value={value}
                         onValueChange={onChange}
                         placeholder="Select platform"

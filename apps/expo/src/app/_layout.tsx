@@ -376,6 +376,14 @@ const InitialLayout = () => {
             sheetAllowedDetents: [0.4, 0.9],
           }}
         />
+        <Stack.Screen
+          name="(modals)/pickers/platform"
+          options={{
+            ...defaultSheetOptions,
+            title: "Select Platform",
+            sheetAllowedDetents: [0.4, 0.9],
+          }}
+        />
       </Stack.Protected>
     </Stack>
   );
