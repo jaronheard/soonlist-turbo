@@ -1,8 +1,10 @@
 import React, { useEffect, useRef } from "react";
 import { ActivityIndicator, Platform, Pressable, View } from "react-native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { PlusIcon } from "~/components/icons";
 import { useAddEventFlow } from "~/hooks/useAddEventFlow";
+import { SUPPORTS_LIQUID_GLASS } from "~/hooks/useLiquidGlass";
 import { useNetworkStatus } from "~/hooks/useNetworkStatus";
 import { useInFlightEventStore } from "~/store/useInFlightEventStore";
 
@@ -24,12 +26,16 @@ const CAPTURING_TIMEOUT_MS = 30_000;
  * Floating capture entry point rendered inside the tab screen layouts (feed
  * and following). Positioned relative to the tab content area.
  *
+ * Before iOS 26, bottom inset includes the safe area so the control clears the
+ * home indicator; on iOS 26 and later, positioning matches the original floating layout.
+ *
  * iOS-only — the app does not ship Android.
  */
 export function CaptureOverlayButton({
   bottomOffset = 24,
   rightOffset = 16,
 }: CaptureOverlayButtonProps = {}) {
+  const insets = useSafeAreaInsets();
   const isOnline = useNetworkStatus();
   const isCapturing = useInFlightEventStore((s) => s.isCapturing);
   const { triggerAddEventFlow } = useAddEventFlow();
@@ -66,7 +72,8 @@ export function CaptureOverlayButton({
       style={{
         position: "absolute",
         right: rightOffset,
-        bottom: bottomOffset,
+        bottom:
+          bottomOffset + (SUPPORTS_LIQUID_GLASS ? 0 : insets.bottom),
         zIndex: 100,
       }}
     >
