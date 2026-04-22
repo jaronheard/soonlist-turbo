@@ -11,11 +11,11 @@ import {
   Text,
   View,
 } from "react-native";
-import Intercom from "@intercom/intercom-react-native";
 import * as Application from "expo-application";
-import * as StoreReview from "expo-store-review";
 import { Redirect, router } from "expo-router";
+import * as StoreReview from "expo-store-review";
 import { useUser } from "@clerk/clerk-expo";
+import Intercom from "@intercom/intercom-react-native";
 import { useConvexAuth, useMutation, useQuery } from "convex/react";
 
 import { api } from "@soonlist/backend/convex/_generated/api";
@@ -35,10 +35,7 @@ import {
   Sparkles,
   Star,
 } from "~/components/icons";
-import {
-  SettingsGroup,
-  SettingsRow,
-} from "~/components/settings/SettingsList";
+import { SettingsGroup, SettingsRow } from "~/components/settings/SettingsList";
 import { useShareMyList } from "~/hooks/useShareMyList";
 import { useSignOut } from "~/hooks/useSignOut";
 import { useRevenueCat } from "~/providers/RevenueCatProvider";

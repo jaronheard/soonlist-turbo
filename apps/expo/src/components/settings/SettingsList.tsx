@@ -30,7 +30,11 @@ function isSettingsRowElement(
   return isValidElement(child) && child.type === SettingsRow;
 }
 
-export function SettingsGroup({ header, footer, children }: SettingsGroupProps) {
+export function SettingsGroup({
+  header,
+  footer,
+  children,
+}: SettingsGroupProps) {
   const rows = Children.toArray(children).filter(isValidElement);
   const lastIndex = rows.length - 1;
 
@@ -120,7 +124,12 @@ function GlyphTile({ icon: Icon, color }: GlyphTileProps) {
 
 export type RowAccessory =
   | { type: "chevron" }
-  | { type: "toggle"; value: boolean; onValueChange: (v: boolean) => void; disabled?: boolean }
+  | {
+      type: "toggle";
+      value: boolean;
+      onValueChange: (v: boolean) => void;
+      disabled?: boolean;
+    }
   | { type: "none" };
 
 interface SettingsRowProps {
