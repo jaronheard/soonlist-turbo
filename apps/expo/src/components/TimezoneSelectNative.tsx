@@ -164,6 +164,8 @@ interface TimezoneSelectNativeProps {
   onValueChange: (value: string) => void;
   placeholder?: string;
   error?: string;
+  autoOpen?: boolean;
+  onClose?: () => void;
 }
 
 export function TimezoneSelectNative({
@@ -171,13 +173,14 @@ export function TimezoneSelectNative({
   onValueChange,
   placeholder = "Select a timezone",
   error,
+  autoOpen = false,
+  onClose,
 }: TimezoneSelectNativeProps) {
-  const [modalVisible, setModalVisible] = useState(false);
+  const [modalVisible, setModalVisible] = useState(autoOpen);
   const [searchQuery, setSearchQuery] = useState("");
   const [currentTimezone, setCurrentTimezone] = useState<string | null>(null);
   const flatListRef = useRef<FlatList>(null);
 
-  // Get current timezone when component mounts
   useEffect(() => {
     setCurrentTimezone(getCurrentTimezone());
   }, []);
@@ -280,7 +283,8 @@ export function TimezoneSelectNative({
   const closeModal = useCallback(() => {
     setModalVisible(false);
     setSearchQuery("");
-  }, []);
+    onClose?.();
+  }, [onClose]);
 
   const selectTimezone = useCallback(
     (tz: string) => {

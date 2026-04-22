@@ -1,263 +1,373 @@
-import React, { useCallback, useEffect, useRef, useState } from "react";
+import React, { useCallback } from "react";
 import {
+  ActionSheetIOS,
   Alert,
   Image,
-  KeyboardAvoidingView,
   Linking,
   Platform,
+  Pressable,
   ScrollView,
-  Switch,
+  Share,
   Text,
-  TextInput,
-  TouchableOpacity,
   View,
 } from "react-native";
-import * as Clipboard from "expo-clipboard";
-import * as ImagePicker from "expo-image-picker";
+import Intercom from "@intercom/intercom-react-native";
+import * as Application from "expo-application";
+import * as StoreReview from "expo-store-review";
 import { Redirect, router } from "expo-router";
 import { useUser } from "@clerk/clerk-expo";
-import { zodResolver } from "@hookform/resolvers/zod";
 import { useConvexAuth, useMutation, useQuery } from "convex/react";
-import { Controller, useForm } from "react-hook-form";
-import { z } from "zod";
 
 import { api } from "@soonlist/backend/convex/_generated/api";
 
-import { Button } from "~/components/Button";
-import { Copy, ShareIcon } from "~/components/icons";
-import { TimezoneSelectNative } from "~/components/TimezoneSelectNative";
-import { UserProfileFlair } from "~/components/UserProfileFlair";
+import {
+  Bell,
+  Calendar as CalendarIcon,
+  Clock,
+  Eye,
+  HelpCircle,
+  Instagram,
+  Link as LinkIcon,
+  Mail,
+  PenSquare,
+  Phone,
+  ShareIcon,
+  Sparkles,
+  Star,
+} from "~/components/icons";
+import {
+  SettingsGroup,
+  SettingsRow,
+} from "~/components/settings/SettingsList";
 import { useShareMyList } from "~/hooks/useShareMyList";
 import { useSignOut } from "~/hooks/useSignOut";
 import { useRevenueCat } from "~/providers/RevenueCatProvider";
-import { useAppStore } from "~/store";
+import {
+  useAppStore,
+  usePreferredCalendarApp,
+  useSetPreferredCalendarApp,
+} from "~/store";
 import Config from "~/utils/config";
 import { hapticSuccess, toast } from "~/utils/feedback";
 import { logError } from "../../utils/errorLogging";
 import { getPlanStatusFromUser } from "../../utils/plan";
 
-// Simplified schema - only keeping what we still need for form validation
-const profileSchema = z.object({
-  username: z
-    .string()
-    .min(3, "Username must be at least 3 characters")
-    .max(30, "Username must be 30 characters or less"),
-  displayName: z
-    .string()
-    .max(50, "Display name must be 50 characters or less")
-    .optional(),
-});
+const PURPLE = "#5A32FB";
+const PURPLE_WASH = "#F4F1FF";
+const PAGE_BG = "#F2F2F7";
+const INK_0 = "#162135";
+const INK_2 = "#627496";
 
-type ProfileFormData = z.infer<typeof profileSchema>;
+const TILE_COLORS = {
+  purple: "#5A32FB",
+  instagram: "#E1306C",
+  blue: "#7ACEFC",
+  orange: "#FF9500",
+  green: "#34C759",
+  gray: "#8E8E93",
+  red: "#FF3B30",
+  yellow: "#FFCC00",
+};
 
-// Settings section component
-function SettingsSection({
-  title,
-  titleClassName,
-  children,
+function Hero({
+  avatarUrl,
+  displayName,
+  handle,
+  emoji,
+  onEdit,
 }: {
-  title: string;
-  titleClassName?: string;
-  children: React.ReactNode;
+  avatarUrl?: string;
+  displayName: string;
+  handle: string;
+  emoji: string | null;
+  onEdit: () => void;
 }) {
   return (
-    <View className="mt-8">
-      <Text className={`mb-3 text-lg font-semibold ${titleClassName ?? ""}`}>
-        {title}
+    <View
+      style={{
+        backgroundColor: PURPLE_WASH,
+        paddingTop: 4,
+        paddingBottom: 28,
+        paddingHorizontal: 20,
+        alignItems: "center",
+      }}
+    >
+      <View style={{ position: "relative" }}>
+        {avatarUrl ? (
+          <Image
+            source={{ uri: avatarUrl }}
+            style={{
+              width: 86,
+              height: 86,
+              borderRadius: 999,
+            }}
+          />
+        ) : (
+          <View
+            style={{
+              width: 86,
+              height: 86,
+              borderRadius: 999,
+              backgroundColor: "#D9CBB3",
+            }}
+          />
+        )}
+        {emoji ? (
+          <View
+            style={{
+              position: "absolute",
+              right: -4,
+              bottom: -4,
+              width: 30,
+              height: 30,
+              borderRadius: 999,
+              backgroundColor: PURPLE,
+              borderWidth: 3,
+              borderColor: PURPLE_WASH,
+              alignItems: "center",
+              justifyContent: "center",
+            }}
+          >
+            <Text style={{ fontSize: 14, lineHeight: 16 }}>{emoji}</Text>
+          </View>
+        ) : null}
+      </View>
+
+      <Text
+        style={{
+          fontFamily: "Kalam_700Bold",
+          fontSize: 28,
+          lineHeight: 36,
+          letterSpacing: -0.28,
+          color: INK_0,
+          textAlign: "center",
+          marginTop: 10,
+          includeFontPadding: false,
+        }}
+        numberOfLines={1}
+      >
+        {displayName}
       </Text>
-      {children}
+      <Text
+        style={{
+          fontSize: 14,
+          color: INK_2,
+          marginTop: -2,
+        }}
+      >
+        {handle}
+      </Text>
+
+      <Pressable
+        onPress={onEdit}
+        accessibilityRole="button"
+        accessibilityLabel="Edit profile"
+        style={({ pressed }) => ({
+          marginTop: 14,
+          borderRadius: 999,
+          backgroundColor: "#FFFFFF",
+          shadowColor: "#162135",
+          shadowOpacity: 0.06,
+          shadowRadius: 2,
+          shadowOffset: { width: 0, height: 1 },
+          opacity: pressed ? 0.7 : 1,
+        })}
+      >
+        <View
+          style={{
+            height: 34,
+            paddingHorizontal: 16,
+            flexDirection: "row",
+            alignItems: "center",
+          }}
+        >
+          <PenSquare size={14} color={PURPLE} strokeWidth={2} />
+          <Text
+            style={{
+              fontSize: 14,
+              fontWeight: "600",
+              color: PURPLE,
+              marginLeft: 6,
+            }}
+          >
+            Edit profile
+          </Text>
+        </View>
+      </Pressable>
     </View>
   );
 }
 
-// Settings option component
-function SettingsOption({
-  title,
-  subtitle,
-  onPress,
-}: {
-  title: string;
-  subtitle?: string;
-  onPress: () => void;
-}) {
-  return (
-    <TouchableOpacity
-      className="mb-2 flex-row items-center rounded-lg border border-neutral-200 p-4"
-      onPress={onPress}
-    >
-      <View className="flex-1">
-        <Text className="text-base font-semibold">{title}</Text>
-        {subtitle && (
-          <Text className="text-sm text-neutral-500">{subtitle}</Text>
-        )}
-      </View>
-    </TouchableOpacity>
-  );
-}
-
-export default function EditProfileScreen() {
+export default function AccountScreen() {
   const { isAuthenticated } = useConvexAuth();
   const { user } = useUser();
   const { customerInfo, showProPaywallIfNeeded } = useRevenueCat();
   const signOut = useSignOut();
   const { requestShare } = useShareMyList();
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const [profileImage, setProfileImage] = useState<string | null>(
-    user?.imageUrl ?? null,
-  );
 
-  const displayNameRef = useRef<TextInput>(null);
   const userData = useQuery(
     api.users.getByUsername,
     user?.username ? { userName: user.username } : "skip",
   );
-  const {
-    resetOnboarding: resetOnboardingStore,
-    userTimezone,
-    setUserTimezone,
-  } = useAppStore();
+  const { resetOnboarding: resetOnboardingStore, userTimezone } = useAppStore();
+  const preferredCalendarApp = usePreferredCalendarApp();
+  const setPreferredCalendarApp = useSetPreferredCalendarApp();
 
-  const {
-    control,
-    handleSubmit,
-    formState: { errors, isDirty, isValid },
-    reset,
-    watch,
-  } = useForm<ProfileFormData>({
-    resolver: zodResolver(profileSchema),
-    defaultValues: {
-      username: user?.username ?? "",
-      displayName: userData?.displayName ?? "",
-    },
-    mode: "onBlur",
-  });
-
-  const watchedDisplayName = watch("displayName");
-
-  useEffect(() => {
-    if (userData) {
-      reset({
-        username: user?.username ?? "",
-        displayName: userData.displayName ?? "",
-      });
-    }
-  }, [userData, user, reset]);
-
-  const updateProfile = useMutation(api.users.updateAdditionalInfo);
   const resetOnboardingMutation = useMutation(api.users.resetOnboarding);
   const updatePublicListSettings = useMutation(
     api.users.updatePublicListSettings,
   );
 
-  // Public list state - read directly from userData, Convex reactivity handles updates
   const showDiscover = user ? getPlanStatusFromUser(user).showDiscover : false;
   const publicListEnabled = userData?.publicListEnabled ?? false;
   const publicListName = userData?.publicListName ?? "";
-  // Local state only for TextInput (controlled component while typing)
-  const [publicListNameInput, setPublicListNameInput] = useState<string>("");
-  const [isUpdatingList, setIsUpdatingList] = useState(false);
+  const [isUpdatingList, setIsUpdatingList] = React.useState(false);
 
-  // Sync TextInput value from userData when it changes
-  useEffect(() => {
-    setPublicListNameInput(userData?.publicListName ?? "");
-  }, [userData?.publicListName]);
+  const displayName =
+    userData?.displayName || user?.username || user?.firstName || "Your name";
+  const handle = user?.username ? `@${user.username}` : "";
+  const emoji = userData?.emoji ?? null;
 
-  const onSubmit = useCallback(
-    async (data: ProfileFormData) => {
-      setIsSubmitting(true);
+  const handleOpenEdit = useCallback(() => {
+    router.navigate("/settings/profile-edit");
+  }, []);
+
+  const handleTogglePublicList = useCallback(
+    async (next: boolean) => {
+      if (!user?.id) return;
+      setIsUpdatingList(true);
       try {
-        if (data.username !== user?.username) {
-          await user?.update({ username: data.username });
-        }
-        if (user?.id) {
-          await updateProfile({
-            userId: user.id,
-            displayName: data.displayName,
-          });
-        }
+        const defaultName = `${userData?.displayName || user.username}'s events`;
+        await updatePublicListSettings({
+          userId: user.id,
+          publicListEnabled: next,
+          publicListName: next ? publicListName || defaultName : undefined,
+        });
         void hapticSuccess();
-        if (router.canGoBack()) {
-          router.back();
-        } else {
-          router.navigate("/feed");
-        }
       } catch (error) {
-        logError("Error updating profile", error);
-        toast.error("An unexpected error occurred");
+        logError("Error toggling public list", error);
+        toast.error("Failed to update public list settings");
       } finally {
-        setIsSubmitting(false);
+        setIsUpdatingList(false);
       }
     },
-    [user, updateProfile],
+    [
+      user?.id,
+      user?.username,
+      userData?.displayName,
+      publicListName,
+      updatePublicListSettings,
+    ],
   );
 
-  const pickImage = useCallback(async () => {
-    try {
-      const result = await ImagePicker.launchImageLibraryAsync({
-        mediaTypes: ImagePicker.MediaTypeOptions.Images,
-        allowsEditing: true,
-        aspect: [4, 4],
-        quality: 0.1,
-        base64: true,
-      });
+  const handleShareMySoonlist = useCallback(() => {
+    void requestShare();
+  }, [requestShare]);
 
-      if (result.canceled) {
-        return;
-      }
-
-      const asset = result.assets[0];
-      if (!asset) {
-        throw new Error("No image asset selected");
-      }
-
-      setProfileImage(asset.uri);
-      const base64 = asset.base64;
-      const mimeType = asset.mimeType;
-      if (!base64 || !mimeType) {
-        throw new Error("Image data is incomplete");
-      }
-
-      const image = `data:${mimeType};base64,${base64}`;
-
-      await user?.setProfileImage({
-        file: image,
-      });
-      void hapticSuccess();
-    } catch (error) {
-      logError("Error in pickImage", error);
-      toast.error("Failed to update image");
-      // Revert to the previous image if the update fails
-      setProfileImage(user?.imageUrl ?? null);
+  const handleOpenCalendar = useCallback(() => {
+    if (Platform.OS === "ios") {
+      ActionSheetIOS.showActionSheetWithOptions(
+        {
+          title: "Choose calendar app",
+          options: ["Cancel", "Apple Calendar", "Google Calendar"],
+          cancelButtonIndex: 0,
+          userInterfaceStyle: "light",
+        },
+        (buttonIndex) => {
+          if (buttonIndex === 1) {
+            setPreferredCalendarApp("apple");
+            void hapticSuccess();
+          } else if (buttonIndex === 2) {
+            setPreferredCalendarApp("google");
+            void hapticSuccess();
+          }
+        },
+      );
+    } else {
+      Alert.alert("Choose calendar app", undefined, [
+        { text: "Cancel", style: "cancel" },
+        {
+          text: "Apple Calendar",
+          onPress: () => setPreferredCalendarApp("apple"),
+        },
+        {
+          text: "Google Calendar",
+          onPress: () => setPreferredCalendarApp("google"),
+        },
+      ]);
     }
-  }, [user]);
+  }, [setPreferredCalendarApp]);
 
-  const handleDeleteAccount = useCallback(() => {
-    Alert.alert(
-      "Delete Account",
-      "This will permanently delete your account and all associated data. This action cannot be undone.",
-      [
-        {
-          text: "Cancel",
-          style: "cancel",
+  const handleOpenNotifications = useCallback(() => {
+    void Linking.openSettings();
+  }, []);
+
+  const handleOpenTimezone = useCallback(() => {
+    router.navigate("/settings/timezone");
+  }, []);
+
+  const handleHelp = useCallback(async () => {
+    try {
+      await Intercom.present();
+    } catch (error) {
+      logError("Error presenting Intercom", error);
+    }
+  }, []);
+
+  const handleRate = useCallback(async () => {
+    try {
+      if (await StoreReview.hasAction()) {
+        await StoreReview.requestReview();
+      }
+    } catch (error) {
+      logError("Error requesting review", error);
+    }
+  }, []);
+
+  const handleSubscriptionPress = useCallback(() => {
+    if (!user) return;
+    const hasUnlimited =
+      customerInfo?.entitlements.active.unlimited?.isActive ?? false;
+    const stripeSubscription =
+      customerInfo?.originalPurchaseDate &&
+      new Date(customerInfo.originalPurchaseDate) <= new Date(2025, 2, 7);
+
+    if (hasUnlimited && !stripeSubscription) {
+      void Linking.openURL("itms-apps://apps.apple.com/account/subscriptions");
+      return;
+    }
+    if (hasUnlimited && stripeSubscription) {
+      void Linking.openURL("https://www.soonlist.com/account/plans");
+      return;
+    }
+    void showProPaywallIfNeeded();
+  }, [user, customerInfo, showProPaywallIfNeeded]);
+
+  const subscriptionValue = (() => {
+    const hasUnlimited =
+      customerInfo?.entitlements.active.unlimited?.isActive ?? false;
+    return hasUnlimited ? "Pro" : "Free plan";
+  })();
+
+  const handleSignOut = useCallback(() => {
+    Alert.alert("Sign Out", "Are you sure you want to sign out?", [
+      { text: "Cancel", style: "cancel" },
+      {
+        text: "Sign Out",
+        style: "destructive",
+        onPress: () => {
+          void (async () => {
+            try {
+              await signOut();
+              void hapticSuccess();
+            } catch (error) {
+              logError("Error signing out", error);
+              toast.error("Failed to sign out");
+            }
+          })();
         },
-        {
-          text: "Delete Account",
-          style: "destructive",
-          onPress: () => {
-            void (async () => {
-              try {
-                await signOut({ shouldDeleteAccount: true });
-                void hapticSuccess();
-                // No manual navigation needed - Convex auth components will handle the transition
-              } catch (error) {
-                logError("Error deleting account", error);
-                toast.error("Failed to delete account");
-              }
-            })();
-          },
-        },
-      ],
-    );
+      },
+    ]);
   }, [signOut]);
 
   const handleRestartOnboarding = useCallback(() => {
@@ -265,10 +375,7 @@ export default function EditProfileScreen() {
       "Restart Onboarding",
       "This will reset your onboarding progress and sign you out. You'll need to go through the onboarding process again.",
       [
-        {
-          text: "Cancel",
-          style: "cancel",
-        },
+        { text: "Cancel", style: "cancel" },
         {
           text: "Restart",
           style: "destructive",
@@ -278,12 +385,8 @@ export default function EditProfileScreen() {
                 if (user?.id) {
                   await resetOnboardingMutation({ userId: user.id });
                 }
-                // Reset client-side onboarding state in Zustand store
                 resetOnboardingStore();
-
-                // Sign out the user to land on the welcome screen
                 await signOut();
-
                 void hapticSuccess();
               } catch (error) {
                 logError("Error restarting onboarding", error);
@@ -296,377 +399,233 @@ export default function EditProfileScreen() {
     );
   }, [resetOnboardingMutation, resetOnboardingStore, user?.id, signOut]);
 
-  const handleTogglePublicList = useCallback(async () => {
-    if (!user?.id) return;
+  const handleDeleteAccount = useCallback(() => {
+    Alert.alert(
+      "Delete Account",
+      "This will permanently delete your account and all associated data. This action cannot be undone.",
+      [
+        { text: "Cancel", style: "cancel" },
+        {
+          text: "Delete Account",
+          style: "destructive",
+          onPress: () => {
+            void (async () => {
+              try {
+                await signOut({ shouldDeleteAccount: true });
+                void hapticSuccess();
+              } catch (error) {
+                logError("Error deleting account", error);
+                toast.error("Failed to delete account");
+              }
+            })();
+          },
+        },
+      ],
+    );
+  }, [signOut]);
 
-    const newEnabled = !publicListEnabled;
-    setIsUpdatingList(true);
-
+  const handleShareMySoonlistSystem = useCallback(async () => {
+    if (!user?.username) return;
     try {
-      const defaultName = `${userData?.displayName || user.username}'s events`;
-      await updatePublicListSettings({
-        userId: user.id,
-        publicListEnabled: newEnabled,
-        publicListName: newEnabled ? publicListName || defaultName : undefined,
-      });
-      void hapticSuccess();
+      const url = `${Config.apiBaseUrl}/${user.username}`;
+      await Share.share(Platform.OS === "ios" ? { url } : { message: url });
     } catch (error) {
-      logError("Error toggling public list", error);
-      toast.error("Failed to update public list settings");
-    } finally {
-      setIsUpdatingList(false);
+      logError("Error sharing Soonlist", error);
     }
-  }, [
-    user?.id,
-    user?.username,
-    userData?.displayName,
-    publicListEnabled,
-    publicListName,
-    updatePublicListSettings,
-  ]);
-
-  const handleUpdateListName = useCallback(async () => {
-    if (!user?.id || !publicListEnabled) return;
-
-    setIsUpdatingList(true);
-    try {
-      await updatePublicListSettings({
-        userId: user.id,
-        publicListName: publicListNameInput.trim() || undefined,
-      });
-      void hapticSuccess();
-    } catch (error) {
-      logError("Error updating list name", error);
-      toast.error("Failed to update list name");
-    } finally {
-      setIsUpdatingList(false);
-    }
-  }, [
-    user?.id,
-    publicListEnabled,
-    publicListNameInput,
-    updatePublicListSettings,
-  ]);
-
-  const getPublicListUrl = useCallback(() => {
-    if (!user?.username) return "";
-    return `${Config.apiBaseUrl}/${user.username}`;
   }, [user?.username]);
 
-  const handleCopyLink = useCallback(async () => {
-    const url = getPublicListUrl();
-    if (!url) return;
-
-    try {
-      await Clipboard.setStringAsync(url);
-      void hapticSuccess();
-      toast.success("Link copied");
-    } catch {
-      toast.error("Failed to copy link");
-    }
-  }, [getPublicListUrl]);
-
-  // Redirect unauthenticated users to sign-in
   if (!isAuthenticated) {
     return <Redirect href="/sign-in" />;
   }
 
+  const version = Application.nativeApplicationVersion ?? "";
+
+  const maybeValue = (v: string | null | undefined) =>
+    v && v.trim().length > 0 ? v : undefined;
+
   return (
-    <KeyboardAvoidingView
-      behavior={Platform.OS === "ios" ? "padding" : "height"}
-      style={{ flex: 1 }}
-      keyboardVerticalOffset={Platform.OS === "ios" ? 100 : 0}
-    >
+    <View style={{ flex: 1, backgroundColor: PAGE_BG }}>
       <ScrollView
-        className="flex-1 bg-white"
-        contentContainerStyle={{ padding: 16, paddingBottom: 100 }}
-        keyboardShouldPersistTaps="handled"
+        style={{ flex: 1 }}
+        contentContainerStyle={{ paddingBottom: 40 }}
+        showsVerticalScrollIndicator={false}
       >
-        <View className="flex-col">
-          <UserProfileFlair
-            className="mx-auto h-24 w-24 items-center"
-            username={user?.username ?? ""}
-            size="2xl"
+        <Hero
+          avatarUrl={user?.imageUrl ?? undefined}
+          displayName={displayName}
+          handle={handle}
+          emoji={emoji}
+          onEdit={handleOpenEdit}
+        />
+
+        <View style={{ height: 14 }} />
+
+        <SettingsGroup
+          header="YOUR PUBLIC PROFILE"
+          footer="This is what people see when you share an event."
+        >
+          <SettingsRow
+            icon={PenSquare}
+            iconBg={TILE_COLORS.purple}
+            label="Display name"
+            value={maybeValue(userData?.displayName)}
+            onPress={handleOpenEdit}
+          />
+          <SettingsRow
+            icon={Instagram}
+            iconBg={TILE_COLORS.instagram}
+            label="Instagram"
+            value={maybeValue(userData?.publicInsta)}
+            onPress={handleOpenEdit}
+          />
+          <SettingsRow
+            icon={LinkIcon}
+            iconBg={TILE_COLORS.blue}
+            label="Website"
+            value={maybeValue(userData?.publicWebsite)}
+            onPress={handleOpenEdit}
+          />
+          <SettingsRow
+            icon={Mail}
+            iconBg={TILE_COLORS.orange}
+            label="Email"
+            value={maybeValue(userData?.publicEmail)}
+            onPress={handleOpenEdit}
+          />
+          <SettingsRow
+            icon={Phone}
+            iconBg={TILE_COLORS.green}
+            label="Phone"
+            value={maybeValue(userData?.publicPhone)}
+            onPress={handleOpenEdit}
+          />
+        </SettingsGroup>
+
+        {!showDiscover ? (
+          <SettingsGroup
+            header="SHARING"
+            footer="Share all your events with anyone via a public link."
           >
-            <TouchableOpacity
-              onPress={pickImage}
-              className="relative"
-              activeOpacity={0.7}
-              style={{
-                width: 96,
-                height: 96,
+            <SettingsRow
+              icon={Eye}
+              iconBg={TILE_COLORS.green}
+              label="Public list"
+              accessory={{
+                type: "toggle",
+                value: publicListEnabled,
+                onValueChange: (v) => void handleTogglePublicList(v),
+                disabled: isUpdatingList,
               }}
-              hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
-            >
-              <Image
-                source={{ uri: profileImage ?? user?.imageUrl }}
-                className="h-24 w-24 rounded-full object-cover object-center"
-              />
-            </TouchableOpacity>
-          </UserProfileFlair>
-
-          <SettingsSection title="Account Information">
-            <View className="flex-col gap-4">
-              <View>
-                <Text className="mb-2 text-base font-semibold">
-                  Display Name
-                </Text>
-                <Text className="mb-2 text-sm text-neutral-500">
-                  How you'll appear on events
-                </Text>
-                <Controller
-                  control={control}
-                  name="displayName"
-                  render={({ field: { onChange, onBlur, value } }) => (
-                    <TextInput
-                      ref={displayNameRef}
-                      className="rounded-md border border-neutral-300 px-3 py-2 text-base"
-                      placeholder="Enter display name"
-                      value={value}
-                      onChangeText={onChange}
-                      onBlur={onBlur}
-                      maxLength={50}
-                    />
-                  )}
-                />
-                {errors.displayName && (
-                  <Text className="mt-1 text-sm text-red-500">
-                    {errors.displayName.message}
-                  </Text>
-                )}
-              </View>
-
-              <View className="rounded-md bg-neutral-50 p-4">
-                <Text className="mb-2 text-sm font-medium text-neutral-700">
-                  Preview
-                </Text>
-                <Text className="text-sm text-neutral-500">
-                  On events, you'll appear as:{" "}
-                  <Text className="font-medium text-neutral-700">
-                    {watchedDisplayName?.trim() || user?.username || "Unknown"}
-                  </Text>
-                </Text>
-              </View>
-
-              {isDirty && (
-                <Button
-                  onPress={handleSubmit(onSubmit)}
-                  disabled={isSubmitting || !isValid}
-                  className="mt-4"
-                >
-                  {isSubmitting ? "Saving..." : "Save Profile"}
-                </Button>
-              )}
-            </View>
-          </SettingsSection>
-
-          {!showDiscover && (
-            <SettingsSection title="Share Your Events">
-              <View className="mb-4 rounded-lg border border-neutral-200 p-4">
-                <View className="mb-4 flex-row items-center justify-between">
-                  <View className="flex-1 pr-4">
-                    <Text className="mb-1 text-base font-semibold">
-                      Public List
-                    </Text>
-                    <Text className="text-sm text-neutral-500">
-                      Share all your events with anyone via a public link
-                    </Text>
-                  </View>
-                  <Switch
-                    value={publicListEnabled}
-                    onValueChange={handleTogglePublicList}
-                    disabled={isUpdatingList}
-                    accessibilityLabel="Public list enabled"
-                    accessibilityRole="switch"
-                    accessibilityState={{
-                      checked: publicListEnabled,
-                      disabled: isUpdatingList,
-                    }}
-                    testID="public-list-switch"
-                    accessibilityHint="Toggle to enable or disable sharing your events via a public link"
-                  />
-                </View>
-
-                {publicListEnabled && (
-                  <View className="mt-4 border-t border-neutral-100 pt-4">
-                    <Text className="mb-2 text-sm font-medium text-neutral-700">
-                      List Name
-                    </Text>
-                    <TextInput
-                      className="mb-4 rounded-lg border border-neutral-300 bg-white px-4 py-3 text-base"
-                      placeholder="Enter list name"
-                      value={publicListNameInput}
-                      onChangeText={setPublicListNameInput}
-                      onBlur={handleUpdateListName}
-                      onSubmitEditing={handleUpdateListName}
-                      returnKeyType="done"
-                      maxLength={50}
-                    />
-
-                    <Text className="mb-2 text-sm font-medium text-neutral-700">
-                      Your public link
-                    </Text>
-                    <View className="flex-row items-center gap-2">
-                      <View className="min-w-0 flex-1 rounded-lg border border-neutral-200 bg-neutral-50 px-4 py-3">
-                        <Text
-                          className="text-base text-neutral-700"
-                          numberOfLines={1}
-                        >
-                          {(getPublicListUrl() || "").replace("https://", "")}
-                        </Text>
-                      </View>
-                      <TouchableOpacity
-                        onPress={handleCopyLink}
-                        className="items-center justify-center rounded-lg border border-interactive-1 bg-interactive-1/5 p-3"
-                        activeOpacity={0.7}
-                        accessible={true}
-                        accessibilityRole="button"
-                        accessibilityLabel="Copy link"
-                        accessibilityHint="Copies your public list URL to the clipboard"
-                      >
-                        <Copy size={20} color="#5A32FB" />
-                      </TouchableOpacity>
-                      <TouchableOpacity
-                        onPress={() => requestShare()}
-                        className="items-center justify-center rounded-lg border border-interactive-1 bg-interactive-1/5 p-3"
-                        activeOpacity={0.7}
-                        accessible={true}
-                        accessibilityRole="button"
-                        accessibilityLabel="Share link"
-                        accessibilityHint="Opens share sheet to share your public list URL"
-                      >
-                        <ShareIcon size={20} color="#5A32FB" />
-                      </TouchableOpacity>
-                    </View>
-                  </View>
-                )}
-              </View>
-            </SettingsSection>
-          )}
-
-          <SettingsSection title="Preferences">
-            <View className="mt-4">
-              <Text className="mb-2 text-base font-medium">
-                Default Timezone
-              </Text>
-              <Text className="mb-2 text-sm text-neutral-500">
-                This timezone will be used for all new events you create.
-              </Text>
-              <TimezoneSelectNative
-                value={userTimezone}
-                onValueChange={setUserTimezone}
-                placeholder="Select a timezone"
-              />
-            </View>
-          </SettingsSection>
-
-          <SettingsSection title="App Settings">
-            <SettingsOption
-              title="Calendar Settings"
-              subtitle="Choose your preferred calendar app"
-              onPress={() => router.navigate("/settings/calendar")}
+              testID="public-list-switch"
             />
-          </SettingsSection>
-
-          <SettingsSection title="Subscription">
-            {(() => {
-              if (!user) return null;
-              const hasUnlimited =
-                customerInfo?.entitlements.active.unlimited?.isActive ?? false;
-
-              const stripeSubscription =
-                customerInfo?.originalPurchaseDate &&
-                new Date(customerInfo.originalPurchaseDate) <=
-                  new Date(2025, 2, 7);
-
-              if (hasUnlimited && !stripeSubscription) {
-                return (
-                  <TouchableOpacity
-                    onPress={() => {
-                      void Linking.openURL(
-                        "itms-apps://apps.apple.com/account/subscriptions",
-                      );
-                    }}
-                    className="mt-2 rounded-md bg-neutral-100 p-4"
-                  >
-                    <Text className="text-base">
-                      View subscription in Settings
-                    </Text>
-                  </TouchableOpacity>
-                );
+            <SettingsRow
+              icon={ShareIcon}
+              iconBg={TILE_COLORS.purple}
+              label="Share your Soonlist"
+              onPress={
+                publicListEnabled
+                  ? handleShareMySoonlist
+                  : handleShareMySoonlistSystem
               }
+            />
+          </SettingsGroup>
+        ) : null}
 
-              if (hasUnlimited && stripeSubscription) {
-                return (
-                  <TouchableOpacity
-                    onPress={() => {
-                      void Linking.openURL(
-                        "https://www.soonlist.com/account/plans",
-                      );
-                    }}
-                    className="mt-2 rounded-md bg-neutral-100 p-4"
-                  >
-                    <Text className="text-base">
-                      Manage subscription on web
-                    </Text>
-                  </TouchableOpacity>
-                );
-              }
+        <SettingsGroup header="PREFERENCES">
+          <SettingsRow
+            icon={Clock}
+            iconBg={TILE_COLORS.gray}
+            label="Default timezone"
+            value={userTimezone || "System default"}
+            onPress={handleOpenTimezone}
+          />
+          <SettingsRow
+            icon={CalendarIcon}
+            iconBg={TILE_COLORS.red}
+            label="Calendar"
+            value={
+              preferredCalendarApp === "google"
+                ? "Google Calendar"
+                : preferredCalendarApp === "apple"
+                  ? "Apple Calendar"
+                  : undefined
+            }
+            onPress={handleOpenCalendar}
+          />
+          <SettingsRow
+            icon={Bell}
+            iconBg={TILE_COLORS.orange}
+            label="Notifications"
+            onPress={handleOpenNotifications}
+          />
+        </SettingsGroup>
 
-              return (
-                <TouchableOpacity
-                  onPress={showProPaywallIfNeeded}
-                  className="mt-2 rounded-md bg-neutral-100 p-4"
-                >
-                  <Text className="text-base">Upgrade to Pro</Text>
-                </TouchableOpacity>
-              );
-            })()}
-          </SettingsSection>
+        <SettingsGroup header="SOONLIST">
+          <SettingsRow
+            icon={Sparkles}
+            iconBg={TILE_COLORS.purple}
+            label="Upgrade to Pro"
+            value={subscriptionValue}
+            onPress={handleSubscriptionPress}
+          />
+          <SettingsRow
+            icon={HelpCircle}
+            iconBg={TILE_COLORS.gray}
+            label="Help & feedback"
+            onPress={handleHelp}
+          />
+          <SettingsRow
+            icon={Star}
+            iconBg={TILE_COLORS.yellow}
+            label="Rate Soonlist"
+            onPress={handleRate}
+          />
+        </SettingsGroup>
 
-          {__DEV__ && (
-            <SettingsSection
-              title="Development Testing"
-              titleClassName="text-blue-600"
-            >
-              <TouchableOpacity
-                onPress={() => router.navigate("/settings/workflow-test")}
-                className="mt-2 rounded-md bg-blue-100 p-4"
-              >
-                <Text className="text-base text-blue-800">
-                  Workflow Failure Tests
-                </Text>
-                <Text className="text-sm text-blue-600">
-                  Test workflow failure notifications
-                </Text>
-              </TouchableOpacity>
-            </SettingsSection>
-          )}
+        {__DEV__ ? (
+          <SettingsGroup>
+            <SettingsRow
+              icon={PenSquare}
+              iconBg={TILE_COLORS.gray}
+              label="Workflow failure tests"
+              onPress={() => router.navigate("/settings/workflow-test")}
+            />
+          </SettingsGroup>
+        ) : null}
 
-          <SettingsSection title="Danger Zone" titleClassName="text-red-500">
-            <View className="gap-4">
-              <Button
-                onPress={handleRestartOnboarding}
-                variant="destructive"
-                className="bg-red-500"
-              >
-                Restart Onboarding
-              </Button>
-              <Button
-                onPress={handleDeleteAccount}
-                variant="destructive"
-                className="bg-red-500"
-              >
-                Delete Account
-              </Button>
-              <Text className="text-xs text-neutral-500">
-                This will permanently delete your account and all associated
-                data.
-              </Text>
-            </View>
-          </SettingsSection>
-        </View>
+        <SettingsGroup>
+          <SettingsRow
+            label="Sign out"
+            tint="purple"
+            accessory={{ type: "none" }}
+            onPress={handleSignOut}
+          />
+          <SettingsRow
+            label="Restart onboarding"
+            tint="ink-1"
+            accessory={{ type: "none" }}
+            onPress={handleRestartOnboarding}
+          />
+          <SettingsRow
+            label="Delete account"
+            tint="destructive"
+            accessory={{ type: "none" }}
+            onPress={handleDeleteAccount}
+          />
+        </SettingsGroup>
+
+        <Text
+          style={{
+            textAlign: "center",
+            fontSize: 13,
+            color: "rgba(60,60,67,0.5)",
+            paddingTop: 4,
+            paddingBottom: 32,
+          }}
+        >
+          {`Made with 💖 in Portland${version ? ` · v${version}` : ""}`}
+        </Text>
       </ScrollView>
-    </KeyboardAvoidingView>
+    </View>
   );
 }
