@@ -181,7 +181,17 @@ interface AppState {
   setMyListBadgeCount: (count: number) => void;
   communityBadgeCount: number;
   setCommunityBadgeCount: (count: number) => void;
+
+  // Picker return values for router-presented pickers. Ephemeral — the
+  // picker writes a slot, the opening screen reads it via usePickerResult
+  // and clears it. Excluded from persist below.
+  pickerResults: PickerResults;
+  setPickerResult: (key: PickerKey, value: string) => void;
+  clearPickerResult: (key: PickerKey) => void;
 }
+
+export type PickerKey = "platform" | "timezone";
+export type PickerResults = Partial<Record<PickerKey, string>>;
 
 export const useAppStore = create<AppState>()(
   persist(
@@ -533,14 +543,34 @@ export const useAppStore = create<AppState>()(
       setMyListBadgeCount: (count) => set({ myListBadgeCount: count }),
       communityBadgeCount: 0,
       setCommunityBadgeCount: (count) => set({ communityBadgeCount: count }),
+
+      // Picker return values (ephemeral; excluded from persist below)
+      pickerResults: {},
+      setPickerResult: (key, value) =>
+        set((state) => ({
+          pickerResults: { ...state.pickerResults, [key]: value },
+        })),
+      clearPickerResult: (key) =>
+        set((state) => {
+          if (state.pickerResults[key] === undefined) return state;
+          const next = { ...state.pickerResults };
+          delete next[key];
+          return { pickerResults: next };
+        }),
     }),
     {
       name: "app-storage",
       storage: createJSONStorage(() => AsyncStorage),
-      // Do not persist ephemeral flags like discoverAccessOverride
+      // Do not persist ephemeral flags like discoverAccessOverride or
+      // pickerResults (consumed within a single app session).
       partialize: (state) => {
-        // eslint-disable-next-line @typescript-eslint/no-unused-vars
-        const { discoverAccessOverride, ...rest } = state;
+        const {
+          // eslint-disable-next-line @typescript-eslint/no-unused-vars
+          discoverAccessOverride,
+          // eslint-disable-next-line @typescript-eslint/no-unused-vars
+          pickerResults,
+          ...rest
+        } = state;
         return rest;
       },
     },
@@ -640,3 +670,26 @@ export const usePendingFollowUsername = () =>
   useAppStore((state) => state.pendingFollowUsername);
 export const useSetPendingFollowUsername = () =>
   useAppStore((state) => state.setPendingFollowUsername);
+
+// Picker-result selectors. Router-presented pickers (e.g. /pickers/platform)
+// write to a named slot; the opening screen consumes it via
+// `usePickerResult(key, onResult)` which delivers the value once and clears
+// it, so reopening the same picker starts fresh.
+export const useSetPickerResult = () =>
+  useAppStore((state) => state.setPickerResult);
+
+export function usePickerResult(
+  key: PickerKey,
+  onResult: (value: string) => void,
+) {
+  const result = useAppStore((state) => state.pickerResults[key]);
+  const clear = useAppStore((state) => state.clearPickerResult);
+  const onResultRef = React.useRef(onResult);
+  onResultRef.current = onResult;
+  React.useEffect(() => {
+    if (result !== undefined) {
+      onResultRef.current(result);
+      clear(key);
+    }
+  }, [result, clear, key]);
+}
