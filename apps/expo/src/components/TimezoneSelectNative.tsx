@@ -185,6 +185,8 @@ export function TimezoneSelectNative({
     setCurrentTimezone(getCurrentTimezone());
   }, []);
 
+  const didAutoScrollRef = useRef(false);
+
   // Process timezones into a format that's easier to use with memoization
   const processedTimezones = useMemo((): TimeZoneItem[] => {
     const timezoneNames = getTimezoneNames();
@@ -279,6 +281,23 @@ export function TimezoneSelectNative({
     }, 100);
     return () => clearTimeout(timeoutId);
   }, [selectedIndex]);
+
+  // When autoOpen starts the modal already visible, run the same
+  // scroll-to-current-selection logic openModal normally performs.
+  useEffect(() => {
+    if (!autoOpen || didAutoScrollRef.current) return;
+    if (selectedIndex === -1) return;
+    didAutoScrollRef.current = true;
+    const timeoutId = setTimeout(() => {
+      flatListRef.current?.scrollToIndex({
+        index: selectedIndex,
+        animated: false,
+        viewOffset: 0,
+        viewPosition: 0,
+      });
+    }, 300);
+    return () => clearTimeout(timeoutId);
+  }, [autoOpen, selectedIndex]);
 
   const closeModal = useCallback(() => {
     setModalVisible(false);

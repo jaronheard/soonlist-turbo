@@ -35,6 +35,7 @@ import {
   Star,
 } from "~/components/icons";
 import { SettingsGroup, SettingsRow } from "~/components/settings/SettingsList";
+import { useCalendar } from "~/hooks/useCalendar";
 import { useShareMyList } from "~/hooks/useShareMyList";
 import { useSignOut } from "~/hooks/useSignOut";
 import { useRevenueCat } from "~/providers/RevenueCatProvider";
@@ -208,6 +209,7 @@ export default function AccountScreen() {
   const userTimezone = useAppStore((s) => s.userTimezone);
   const preferredCalendarApp = usePreferredCalendarApp();
   const setPreferredCalendarApp = useSetPreferredCalendarApp();
+  const { calendarApps } = useCalendar();
 
   const resetOnboardingMutation = useMutation(api.users.resetOnboarding);
   const updatePublicListSettings = useMutation(
@@ -269,11 +271,18 @@ export default function AccountScreen() {
   }, [publicListEnabled, requestShare]);
 
   const handleOpenCalendar = useCallback(() => {
+    const googleInstalled =
+      calendarApps.find((app) => app.id === "google")?.isInstalled === true;
+
+    const options = googleInstalled
+      ? ["Cancel", "Apple Calendar", "Google Calendar"]
+      : ["Cancel", "Apple Calendar"];
+
     if (Platform.OS === "ios") {
       ActionSheetIOS.showActionSheetWithOptions(
         {
           title: "Choose calendar app",
-          options: ["Cancel", "Apple Calendar", "Google Calendar"],
+          options,
           cancelButtonIndex: 0,
           userInterfaceStyle: "light",
         },
@@ -281,26 +290,29 @@ export default function AccountScreen() {
           if (buttonIndex === 1) {
             setPreferredCalendarApp("apple");
             void hapticSuccess();
-          } else if (buttonIndex === 2) {
+          } else if (buttonIndex === 2 && googleInstalled) {
             setPreferredCalendarApp("google");
             void hapticSuccess();
           }
         },
       );
     } else {
-      Alert.alert("Choose calendar app", undefined, [
+      const buttons: Parameters<typeof Alert.alert>[2] = [
         { text: "Cancel", style: "cancel" },
         {
           text: "Apple Calendar",
           onPress: () => setPreferredCalendarApp("apple"),
         },
-        {
+      ];
+      if (googleInstalled) {
+        buttons.push({
           text: "Google Calendar",
           onPress: () => setPreferredCalendarApp("google"),
-        },
-      ]);
+        });
+      }
+      Alert.alert("Choose calendar app", undefined, buttons);
     }
-  }, [setPreferredCalendarApp]);
+  }, [calendarApps, setPreferredCalendarApp]);
 
   const handleOpenNotifications = useCallback(() => {
     void Linking.openSettings();
