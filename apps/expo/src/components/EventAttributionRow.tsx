@@ -1,12 +1,9 @@
-import React, { useState } from "react";
+import React from "react";
 import { Pressable, Text, View } from "react-native";
 import { router } from "expo-router";
 
-import type { Doc } from "@soonlist/backend/convex/_generated/dataModel";
-
 import type { UserForDisplay } from "~/types/user";
 import { List } from "~/components/icons";
-import { SavedByModal } from "~/components/SavedByModal";
 import { UserAvatar } from "~/components/UserAvatar";
 import { navigateToUser } from "~/utils/navigateToUser";
 
@@ -16,6 +13,7 @@ export type EventAttributionVariant =
   | "people-only";
 
 interface EventAttributionRowProps {
+  eventId: string;
   creator: UserForDisplay;
   savers: UserForDisplay[];
   iconSize: number;
@@ -23,7 +21,6 @@ interface EventAttributionRowProps {
   sourceListName?: string;
   sourceListSlug?: string;
   additionalSourceCount?: number;
-  lists?: Doc<"lists">[];
   variant?: EventAttributionVariant;
 }
 
@@ -98,6 +95,7 @@ function OverflowPill({
 }
 
 export function EventAttributionRow({
+  eventId,
   creator,
   savers,
   iconSize,
@@ -105,7 +103,6 @@ export function EventAttributionRow({
   sourceListName,
   sourceListSlug,
   additionalSourceCount,
-  lists,
   variant = "people-primary",
 }: EventAttributionRowProps) {
   if (variant === "people-only") {
@@ -122,6 +119,7 @@ export function EventAttributionRow({
   if (variant === "list-primary" && sourceListSlug) {
     return (
       <ListPrimaryRow
+        eventId={eventId}
         creator={creator}
         savers={savers}
         iconSize={iconSize}
@@ -129,7 +127,6 @@ export function EventAttributionRow({
         sourceListName={sourceListName}
         sourceListSlug={sourceListSlug}
         additionalSourceCount={additionalSourceCount}
-        lists={lists}
       />
     );
   }
@@ -138,6 +135,7 @@ export function EventAttributionRow({
   // dropping the "via" connector since there's no list to attribute to.
   return (
     <PeoplePrimaryRow
+      eventId={eventId}
       creator={creator}
       savers={savers}
       iconSize={iconSize}
@@ -145,7 +143,6 @@ export function EventAttributionRow({
       sourceListName={sourceListName}
       sourceListSlug={sourceListSlug}
       additionalSourceCount={additionalSourceCount}
-      lists={lists}
       showListConnector={variant === "people-primary"}
     />
   );
@@ -206,6 +203,7 @@ function PeopleOnlyRow({
 }
 
 function ListPrimaryRow({
+  eventId,
   creator,
   savers,
   iconSize,
@@ -213,8 +211,8 @@ function ListPrimaryRow({
   sourceListName,
   sourceListSlug,
   additionalSourceCount,
-  lists,
 }: {
+  eventId: string;
   creator: UserForDisplay;
   savers: UserForDisplay[];
   iconSize: number;
@@ -222,14 +220,12 @@ function ListPrimaryRow({
   sourceListName?: string;
   sourceListSlug: string;
   additionalSourceCount?: number;
-  lists?: Doc<"lists">[];
 }) {
-  const [showModal, setShowModal] = useState(false);
   const isOwnEvent = currentUserId === creator.id;
   const allUsers = combineUsers(creator, savers);
   const remainingListsCount = additionalSourceCount ?? 0;
   const avatarSize = iconSize * 0.9;
-  const openModal = () => setShowModal(true);
+  const openModal = () => router.push(`/event/${eventId}/saved-by`);
 
   const maxStack = 3;
   // Own-event: "You" is already shown, so the stack surfaces other savers
@@ -268,36 +264,27 @@ function ListPrimaryRow({
     ) : null;
 
   return (
-    <>
-      <View className="mx-auto mt-1 flex-row flex-wrap items-center justify-center gap-2">
-        {isOwnEvent ? (
-          <>
-            {ownBadge}
-            <Text className="text-xs text-neutral-2">·</Text>
-          </>
-        ) : null}
-        <ListChip name={sourceListName} slug={sourceListSlug} />
-        <OverflowPill count={remainingListsCount} onPress={openModal} />
-        {stack ? (
-          <>
-            <Text className="text-xs text-neutral-2">·</Text>
-            {stack}
-          </>
-        ) : null}
-      </View>
-      <SavedByModal
-        visible={showModal}
-        onClose={() => setShowModal(false)}
-        creator={creator}
-        savers={savers}
-        lists={lists ?? []}
-        currentUserId={currentUserId}
-      />
-    </>
+    <View className="mx-auto mt-1 flex-row flex-wrap items-center justify-center gap-2">
+      {isOwnEvent ? (
+        <>
+          {ownBadge}
+          <Text className="text-xs text-neutral-2">·</Text>
+        </>
+      ) : null}
+      <ListChip name={sourceListName} slug={sourceListSlug} />
+      <OverflowPill count={remainingListsCount} onPress={openModal} />
+      {stack ? (
+        <>
+          <Text className="text-xs text-neutral-2">·</Text>
+          {stack}
+        </>
+      ) : null}
+    </View>
   );
 }
 
 function PeoplePrimaryRow({
+  eventId,
   creator,
   savers,
   iconSize,
@@ -305,9 +292,9 @@ function PeoplePrimaryRow({
   sourceListName,
   sourceListSlug,
   additionalSourceCount,
-  lists,
   showListConnector,
 }: {
+  eventId: string;
   creator: UserForDisplay;
   savers: UserForDisplay[];
   iconSize: number;
@@ -315,73 +302,61 @@ function PeoplePrimaryRow({
   sourceListName?: string;
   sourceListSlug?: string;
   additionalSourceCount?: number;
-  lists?: Doc<"lists">[];
   showListConnector: boolean;
 }) {
-  const [showModal, setShowModal] = useState(false);
   const isOwnEvent = currentUserId === creator.id;
   const allUsers = combineUsers(creator, savers);
   const displayUsers = allUsers.slice(0, 2);
   const remainingUsersCount = allUsers.length - displayUsers.length;
   const remainingListsCount = additionalSourceCount ?? 0;
   const avatarSize = iconSize * 0.9;
-  const openModal = () => setShowModal(true);
+  const openModal = () => router.push(`/event/${eventId}/saved-by`);
 
   const listConnector = isOwnEvent ? "· Shared to" : "via";
   const hasAnyListInfo =
     !!sourceListSlug || !!sourceListName || remainingListsCount > 0;
 
   return (
-    <>
-      <View className="mx-auto mt-1 flex-row flex-wrap items-center justify-center gap-2">
-        {isOwnEvent ? (
+    <View className="mx-auto mt-1 flex-row flex-wrap items-center justify-center gap-2">
+      {isOwnEvent ? (
+        <Pressable
+          onPress={() => navigateToUser(creator, currentUserId)}
+          hitSlop={HIT_SLOP}
+          className="flex-row items-center gap-1"
+        >
+          <UserAvatar user={creator} size={avatarSize} />
+          <Text className="text-xs text-neutral-2">You</Text>
+        </Pressable>
+      ) : (
+        displayUsers.map((user, index) => (
           <Pressable
-            onPress={() => navigateToUser(creator, currentUserId)}
+            key={user.id}
+            onPress={() => navigateToUser(user, currentUserId)}
             hitSlop={HIT_SLOP}
             className="flex-row items-center gap-1"
           >
-            <UserAvatar user={creator} size={avatarSize} />
-            <Text className="text-xs text-neutral-2">You</Text>
+            <UserAvatar user={user} size={avatarSize} />
+            <Text className="text-xs text-neutral-2">
+              {user.displayName || user.username}
+              {index < displayUsers.length - 1 || remainingUsersCount > 0
+                ? ","
+                : ""}
+            </Text>
           </Pressable>
-        ) : (
-          displayUsers.map((user, index) => (
-            <Pressable
-              key={user.id}
-              onPress={() => navigateToUser(user, currentUserId)}
-              hitSlop={HIT_SLOP}
-              className="flex-row items-center gap-1"
-            >
-              <UserAvatar user={user} size={avatarSize} />
-              <Text className="text-xs text-neutral-2">
-                {user.displayName || user.username}
-                {index < displayUsers.length - 1 || remainingUsersCount > 0
-                  ? ","
-                  : ""}
-              </Text>
-            </Pressable>
-          ))
-        )}
-        {!isOwnEvent && remainingUsersCount > 0 && (
-          <OverflowPill count={remainingUsersCount} onPress={openModal} />
-        )}
-        {hasAnyListInfo && (
-          <>
-            {showListConnector ? (
-              <Text className="text-xs text-neutral-2">{listConnector}</Text>
-            ) : null}
-            <ListChip name={sourceListName} slug={sourceListSlug} />
-            <OverflowPill count={remainingListsCount} onPress={openModal} />
-          </>
-        )}
-      </View>
-      <SavedByModal
-        visible={showModal}
-        onClose={() => setShowModal(false)}
-        creator={creator}
-        savers={savers}
-        lists={lists ?? []}
-        currentUserId={currentUserId}
-      />
-    </>
+        ))
+      )}
+      {!isOwnEvent && remainingUsersCount > 0 && (
+        <OverflowPill count={remainingUsersCount} onPress={openModal} />
+      )}
+      {hasAnyListInfo && (
+        <>
+          {showListConnector ? (
+            <Text className="text-xs text-neutral-2">{listConnector}</Text>
+          ) : null}
+          <ListChip name={sourceListName} slug={sourceListSlug} />
+          <OverflowPill count={remainingListsCount} onPress={openModal} />
+        </>
+      )}
+    </View>
   );
 }

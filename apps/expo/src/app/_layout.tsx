@@ -368,6 +368,14 @@ const InitialLayout = () => {
             sheetAllowedDetents: [0.6, 1.0],
           }}
         />
+        <Stack.Screen
+          name="(modals)/event/[id]/saved-by"
+          options={{
+            ...defaultSheetOptions,
+            title: "From these Soonlists",
+            sheetAllowedDetents: [0.4, 0.9],
+          }}
+        />
       </Stack.Protected>
     </Stack>
   );

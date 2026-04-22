@@ -1,6 +1,6 @@
 import type { FunctionReturnType } from "convex/server";
 import type { ViewStyle } from "react-native";
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useEffect, useMemo } from "react";
 import {
   ActivityIndicator,
   FlatList,
@@ -18,7 +18,6 @@ import { router } from "expo-router";
 import { useUser } from "@clerk/clerk-expo";
 
 import type { api } from "@soonlist/backend/convex/_generated/api";
-import type { Doc } from "@soonlist/backend/convex/_generated/dataModel";
 import type { AddToCalendarButtonPropsRestricted } from "@soonlist/cal/types";
 import { getTimezoneAbbreviation } from "@soonlist/cal";
 
@@ -33,7 +32,6 @@ import {
   PenSquare,
   ShareIcon,
 } from "~/components/icons";
-import { SavedByModal } from "~/components/SavedByModal";
 import { useAddEventFlow } from "~/hooks/useAddEventFlow";
 import { useEventActions } from "~/hooks/useEventActions";
 import { SHARE_PROMPT_THRESHOLD } from "~/hooks/useShareListPrompt";
@@ -178,8 +176,6 @@ export function UserEventListItem(props: UserEventListItemProps) {
 
   const { user: currentUser } = useUser();
   const eventUser = event.user;
-  const [showFallbackSavedByModal, setShowFallbackSavedByModal] =
-    useState(false);
 
   // Prefetch the full-size image for the detail screen so it loads instantly
   useEffect(() => {
@@ -505,6 +501,7 @@ export function UserEventListItem(props: UserEventListItemProps) {
           </View>
           {shouldShowCreator ? (
             <EventAttributionRow
+              eventId={id}
               creator={{
                 id: eventUser.id,
                 username: eventUser.username,
@@ -517,7 +514,6 @@ export function UserEventListItem(props: UserEventListItemProps) {
               sourceListName={sourceListName}
               sourceListSlug={sourceListSlug}
               additionalSourceCount={additionalSourceCount}
-              lists={(event as { lists?: Doc<"lists">[] }).lists}
               variant={attributionVariant}
             />
           ) : sourceListSlug ||
@@ -553,7 +549,7 @@ export function UserEventListItem(props: UserEventListItemProps) {
               )}
               {additionalSourceCount && additionalSourceCount > 0 ? (
                 <Pressable
-                  onPress={() => setShowFallbackSavedByModal(true)}
+                  onPress={() => router.push(`/event/${id}/saved-by`)}
                   hitSlop={{ top: 8, bottom: 8, left: 4, right: 4 }}
                 >
                   <View className="rounded-full bg-interactive-3 px-1.5 py-0.5">
@@ -565,19 +561,6 @@ export function UserEventListItem(props: UserEventListItemProps) {
               ) : null}
             </View>
           ) : null}
-          <SavedByModal
-            visible={showFallbackSavedByModal}
-            onClose={() => setShowFallbackSavedByModal(false)}
-            creator={{
-              id: eventUser.id,
-              username: eventUser.username,
-              displayName: eventUser.displayName,
-              userImage: eventUser.userImage,
-            }}
-            savers={[]}
-            lists={(event as { lists?: Doc<"lists">[] }).lists ?? []}
-            currentUserId={currentUser?.id}
-          />
           <View className="absolute left-0 right-0 top-0 z-20 flex flex-row items-center justify-center space-x-2">
             {isRecent && (
               <View
