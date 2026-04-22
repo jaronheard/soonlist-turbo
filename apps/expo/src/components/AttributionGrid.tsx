@@ -123,7 +123,7 @@ export function AttributionGrid({
       <TouchableOpacity
         key={`user-${user.id}`}
         onPress={() => handleUserPress(user)}
-        className={`flex-row items-center ${rowPaddingY}`}
+        className={`flex-row items-center overflow-visible ${rowPaddingY}`}
         activeOpacity={0.7}
         accessibilityRole="button"
         accessibilityLabel={`Open ${
