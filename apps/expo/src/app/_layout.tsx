@@ -384,6 +384,14 @@ const InitialLayout = () => {
             sheetAllowedDetents: [0.4, 0.9],
           }}
         />
+        <Stack.Screen
+          name="(modals)/pickers/timezone"
+          options={{
+            ...defaultSheetOptions,
+            title: "Select Timezone",
+            sheetAllowedDetents: [1.0],
+          }}
+        />
       </Stack.Protected>
     </Stack>
   );

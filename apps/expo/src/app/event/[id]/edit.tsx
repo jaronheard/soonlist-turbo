@@ -37,7 +37,7 @@ import ImageUploadSpinner from "~/components/ImageUploadSpinner";
 import { InputTags } from "~/components/InputTags";
 import LoadingSpinner from "~/components/LoadingSpinner";
 import { PlatformSelect } from "~/components/PlatformSelect";
-import { TimezoneSelectNative } from "~/components/TimezoneSelectNative";
+import { TimezoneSelect } from "~/components/TimezoneSelect";
 import { DEFAULT_VISIBILITY } from "~/constants";
 import { hapticSuccess, toast } from "~/utils/feedback";
 import { normalizeUrlForStorage } from "~/utils/links";
@@ -619,7 +619,7 @@ export default function EditEventScreen() {
                     <Text className="mb-2 text-base font-semibold">
                       Time Zone
                     </Text>
-                    <TimezoneSelectNative
+                    <TimezoneSelect
                       value={displayValue}
                       onValueChange={(newValue) => {
                         onChange(newValue);

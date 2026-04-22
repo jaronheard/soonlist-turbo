@@ -25,7 +25,7 @@ import { api } from "@soonlist/backend/convex/_generated/api";
 
 import { Button } from "~/components/Button";
 import { Copy, ShareIcon } from "~/components/icons";
-import { TimezoneSelectNative } from "~/components/TimezoneSelectNative";
+import { TimezoneSelect } from "~/components/TimezoneSelect";
 import { UserProfileFlair } from "~/components/UserProfileFlair";
 import { useShareMyList } from "~/hooks/useShareMyList";
 import { useSignOut } from "~/hooks/useSignOut";
@@ -552,7 +552,7 @@ export default function EditProfileScreen() {
               <Text className="mb-2 text-sm text-neutral-500">
                 This timezone will be used for all new events you create.
               </Text>
-              <TimezoneSelectNative
+              <TimezoneSelect
                 value={userTimezone}
                 onValueChange={setUserTimezone}
                 placeholder="Select a timezone"
