@@ -60,7 +60,9 @@ export default function SavedByScreen() {
   return (
     <View className="flex-1 bg-white">
       <Stack.Screen options={{ title: "From these Soonlists" }} />
-      <ScrollView contentContainerStyle={{ paddingHorizontal: 16, paddingVertical: 16 }}>
+      <ScrollView
+        contentContainerStyle={{ paddingHorizontal: 16, paddingVertical: 16 }}
+      >
         <AttributionGrid
           creator={{
             id: eventUser.id,

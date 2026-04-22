@@ -144,7 +144,7 @@ export default function TimezonePickerScreen() {
   const setPickerResult = useSetPickerResult();
   const [searchQuery, setSearchQuery] = useState("");
   const [currentTimezone, setCurrentTimezone] = useState<string | null>(null);
-  const flatListRef = useRef<FlatList>(null);
+  const flatListRef = useRef<FlatList<TimeZoneItem>>(null);
 
   useEffect(() => {
     setCurrentTimezone(getCurrentTimezone());
@@ -199,9 +199,13 @@ export default function TimezonePickerScreen() {
   }, [filteredTimezones, value]);
 
   // Scroll to the currently-selected row on first mount so the user sees
-  // where they are in the list, not the top.
+  // where they are in the list, not the top. Gated by a ref so filtering or
+  // timezone-detection updates don't keep re-scrolling the list.
+  const didInitialScrollRef = useRef(false);
   useEffect(() => {
+    if (didInitialScrollRef.current) return;
     if (selectedIndex === -1) return;
+    didInitialScrollRef.current = true;
     const timeoutId = setTimeout(() => {
       flatListRef.current?.scrollToIndex({
         index: selectedIndex,
@@ -210,9 +214,7 @@ export default function TimezonePickerScreen() {
       });
     }, 100);
     return () => clearTimeout(timeoutId);
-    // Intentionally only on mount
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [selectedIndex]);
 
   const handleScrollToIndexFailed = (info: {
     index: number;
@@ -248,7 +250,7 @@ export default function TimezonePickerScreen() {
         }}
       />
       {filteredTimezones.length > 0 ? (
-        <FlatList
+        <FlatList<TimeZoneItem>
           ref={flatListRef}
           data={filteredTimezones}
           keyExtractor={(item) => item.value}
