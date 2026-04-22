@@ -17,13 +17,23 @@ interface UserProfileFlairProps {
   size?: Size;
 }
 
-const sizeClasses: Record<Size, string> = {
-  xs: "text-xs top-0 -right-2 min-w-[1.25rem]",
-  sm: "text-sm top-0 -right-2 min-w-[1.5rem]",
-  md: "text-base top-0 -right-2 min-w-[1.75rem]",
-  lg: "text-lg top-0 -right-2 min-w-[2rem]",
-  xl: "text-xl top-0 -right-2 min-w-[2.25rem]",
-  "2xl": "text-2xl top-0 -right-2 min-w-[2.5rem]",
+const flairContainerClasses: Record<Size, string> = {
+  xs: "top-0 -right-1.5 min-w-[0.9375rem]",
+  sm: "top-0 -right-2 min-w-[1.5rem]",
+  md: "top-0 -right-2 min-w-[1.75rem]",
+  lg: "top-0 -right-2 min-w-[2rem]",
+  xl: "top-0 -right-2 min-w-[2.25rem]",
+  "2xl": "top-0 -right-2 min-w-[2.5rem]",
+};
+
+/** `xs` is list / attribution avatars; compact flair vs `text-sm`+ sizes. */
+const flairEmojiTextClasses: Record<Size, string> = {
+  xs: "text-[0.5625rem] leading-none",
+  sm: "text-sm leading-none",
+  md: "text-base leading-none",
+  lg: "text-lg leading-none",
+  xl: "text-xl leading-none",
+  "2xl": "text-2xl leading-none",
 };
 
 function UserEmoji({
@@ -47,11 +57,16 @@ function UserEmoji({
     <View
       className={cn(
         "absolute z-10 overflow-visible",
-        sizeClasses[size],
+        flairContainerClasses[size],
         flairClassName,
       )}
     >
-      <Text className="flex items-center justify-center text-interactive-1">
+      <Text
+        className={cn(
+          "flex items-center justify-center text-interactive-1",
+          flairEmojiTextClasses[size],
+        )}
+      >
         {userEmoji}
       </Text>
     </View>
