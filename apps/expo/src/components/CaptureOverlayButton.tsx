@@ -72,8 +72,7 @@ export function CaptureOverlayButton({
       style={{
         position: "absolute",
         right: rightOffset,
-        bottom:
-          bottomOffset + (SUPPORTS_LIQUID_GLASS ? 0 : insets.bottom),
+        bottom: bottomOffset + (SUPPORTS_LIQUID_GLASS ? 0 : insets.bottom),
         zIndex: 100,
       }}
     >

@@ -1,8 +1,8 @@
 import React from "react";
 import { Pressable, Text, View } from "react-native";
 
-import { UpcomingPastSegmentedControl } from "~/components/UpcomingPastSegmentedControl";
 import type { UpcomingPastSegment } from "~/components/UpcomingPastSegmentedControl";
+import { UpcomingPastSegmentedControl } from "~/components/UpcomingPastSegmentedControl";
 
 export type SoonlistHeroSegment = UpcomingPastSegment;
 
