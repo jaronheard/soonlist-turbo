@@ -68,7 +68,9 @@ function UserEmoji({
           flairEmojiTextClasses[size],
         )}
         maxFontSizeMultiplier={
-          size === "xs" || size === "sm" || size === "lg" ? 1.25 : undefined
+          size === "xs" || size === "sm" || size === "md" || size === "lg"
+            ? 1.25
+            : undefined
         }
         style={{ includeFontPadding: false }}
       >
