@@ -3,7 +3,6 @@ import { Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
 import { cn } from "~/utils/cn";
-
 import { ProgressBar } from "./ProgressBar";
 
 interface QuestionContainerProps {

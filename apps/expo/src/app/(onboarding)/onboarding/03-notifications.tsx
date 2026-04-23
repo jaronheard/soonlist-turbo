@@ -99,7 +99,9 @@ export default function NotificationsScreen() {
               className="mt-2 py-3"
               hitSlop={12}
             >
-              <Text className="text-center text-base text-white/60">Not now</Text>
+              <Text className="text-center text-base text-white/60">
+                Not now
+              </Text>
             </Pressable>
           )}
         </View>
