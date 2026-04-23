@@ -11,8 +11,11 @@ import { logError } from "~/utils/errorLogging";
 import { hapticLight, toast } from "~/utils/feedback";
 
 export default function NotificationsScreen() {
-  const { registerForPushNotifications, hasNotificationPermission } =
-    useOneSignal();
+  const {
+    registerForPushNotifications,
+    hasNotificationPermission,
+    isPermissionResolved,
+  } = useOneSignal();
   const { saveStep } = useOnboarding();
   const pendingFollowUsername = usePendingFollowUsername();
   const [isLoading, setIsLoading] = useState(false);
@@ -92,7 +95,7 @@ export default function NotificationsScreen() {
                   : "Enable notifications"}
             </Text>
           </Pressable>
-          {!hasNotificationPermission && (
+          {isPermissionResolved && !hasNotificationPermission && (
             <Pressable
               onPress={handleNotNow}
               disabled={isLoading}

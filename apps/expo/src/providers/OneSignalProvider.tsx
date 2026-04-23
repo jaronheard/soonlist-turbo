@@ -18,6 +18,7 @@ import { logError, logMessage } from "~/utils/errorLogging";
 
 interface OneSignalContextType {
   hasNotificationPermission: boolean;
+  isPermissionResolved: boolean;
   registerForPushNotifications: () => Promise<boolean>;
   checkPermissionStatus: () => Promise<boolean>;
 }
@@ -121,6 +122,7 @@ export function OneSignalProvider({ children }: OneSignalProviderProps) {
   const { userId } = useAuth();
   const [hasNotificationPermission, setHasNotificationPermission] =
     useState(false);
+  const [isPermissionResolved, setIsPermissionResolved] = useState(false);
   const posthog = usePostHog();
 
   // Initialize OneSignal
@@ -156,6 +158,9 @@ export function OneSignalProvider({ children }: OneSignalProviderProps) {
       })
       .catch((error) => {
         logError("Error checking notification permission", error);
+      })
+      .finally(() => {
+        setIsPermissionResolved(true);
       });
 
     // Set up notification handlers
@@ -261,9 +266,11 @@ export function OneSignalProvider({ children }: OneSignalProviderProps) {
         permission === OSNotificationPermission.Ephemeral;
 
       setHasNotificationPermission(isPermissionGranted);
+      setIsPermissionResolved(true);
       return isPermissionGranted;
     } catch (error) {
       logError("Error checking notification permission", error);
+      setIsPermissionResolved(true);
       return false;
     }
   };
@@ -286,6 +293,7 @@ export function OneSignalProvider({ children }: OneSignalProviderProps) {
   // Provide context values
   const contextValue: OneSignalContextType = {
     hasNotificationPermission,
+    isPermissionResolved,
     registerForPushNotifications,
     checkPermissionStatus,
   };
