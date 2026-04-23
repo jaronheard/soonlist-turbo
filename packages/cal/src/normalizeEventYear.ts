@@ -1,8 +1,5 @@
 import { Temporal } from "@js-temporal/polyfill";
 
-// Pick the year for an event's MM-DD deterministically rather than trusting
-// the model, which doesn't reliably enforce a date-window constraint in the
-// prompt. See migrations/fix2027Dates.ts for the bug this replaces.
 
 const DATE_REGEX = /^(\d{4})-(\d{2})-(\d{2})$/;
 const MAX_YEAR_OFFSET = 4;
@@ -28,9 +25,6 @@ function parseYMD(value: string): { year: number; month: number; day: number } {
   };
 }
 
-// Earliest valid PlainDate for month/day at or after startYear (and notBefore,
-// if given). Scans forward so Feb 29 advances to the next leap year instead of
-// clamping to Feb 28.
 function findDate(
   startYear: number,
   month: number,
@@ -71,8 +65,6 @@ export function normalizeEventYear(
       )
     : findDate(today.year, start.month, start.day, today);
 
-  // Floor the explicit end year at startDate.year so an inconsistent model
-  // output (e.g. start 2030, end 2020) can't push the scan past its window.
   const endStartYear = input.hasExplicitYear
     ? Math.max(end.year, startDate.year)
     : startDate.year;

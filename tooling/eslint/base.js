@@ -4,9 +4,6 @@ import eslint from "@eslint/js";
 import importPlugin from "eslint-plugin-import";
 import tseslint from "typescript-eslint";
 
-/**
- * All packages that leverage t3-env should use this rule
- */
 export const restrictEnvAccess = tseslint.config({
   files: ["**/*.js", "**/*.ts", "**/*.tsx"],
   rules: {
@@ -33,7 +30,6 @@ export const restrictEnvAccess = tseslint.config({
 
 export default tseslint.config(
   {
-    // Globally ignored files
     ignores: ["**/*.config.js"],
   },
   {
@@ -62,17 +58,13 @@ export default tseslint.config(
       ],
       "@typescript-eslint/no-floating-promises": "error",
       "@typescript-eslint/no-unnecessary-condition": [
-        // "error",
         "warn",
         {
           allowConstantLoopConditions: true,
         },
       ],
-      // "@typescript-eslint/no-non-null-assertion": "error",
       "import/consistent-type-specifier-style": ["error", "prefer-top-level"],
-      // my preference
       "@typescript-eslint/prefer-nullish-coalescing": "off",
-      // migration
       "@typescript-eslint/no-unsafe-call": "warn",
       "@typescript-eslint/no-unsafe-member-access": "warn",
       "@typescript-eslint/require-await": "warn",

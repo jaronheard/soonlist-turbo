@@ -123,7 +123,7 @@ export const Tag: React.FC<TagProps> = ({
         type="button"
         variant="ghost"
         onClick={(e) => {
-          e.stopPropagation(); // Prevent event from bubbling up to the tag span
+          e.stopPropagation();
           onRemoveTag(tagObj.id);
         }}
         className={cn("h-full px-3 py-1 hover:bg-transparent")}

@@ -139,7 +139,6 @@ export type AddToCalendarButtonPropsRestricted =
     listStyle?: "overlay" | "modal";
   };
 
-// INTERFACES AND TYPES
 export interface ATCBActionEventConfig {
   proKey?: string;
   name?: string;
@@ -170,7 +169,6 @@ export interface ATCBActionEventConfig {
   created?: string;
   updated?: string;
   subscribe?: boolean;
-  // mind that the following is limited as this interface only applies to the atcb_action function!
   options?: (
     | "Apple"
     | "Google"

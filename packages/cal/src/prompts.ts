@@ -3,12 +3,10 @@ import soft from "timezone-soft";
 import { z } from "zod";
 import { zodToJsonSchema } from "zod-to-json-schema";
 
-// parse the response text into array of events. response format is:
 interface Response {
-  events: Event[]; // An array of events.
+  events: Event[];
 }
 
-// URL helpers (kept minimal and framework-agnostic)
 function normalizeUrlForStorage(input: string): string {
   const trimmed = input.trim();
   if (!trimmed) return trimmed;
@@ -19,7 +17,6 @@ function normalizeUrlForStorage(input: string): string {
   return `https://${trimmed}`;
 }
 
-// Platform types for event sources
 export const PLATFORMS = [
   "instagram",
   "tiktok",
@@ -30,7 +27,6 @@ export const PLATFORMS = [
 export const PlatformSchema = z.enum(PLATFORMS);
 export type Platform = z.infer<typeof PlatformSchema>;
 
-// New simplified metadata schema focusing on social media attribution
 export const EventMetadataSchema = z.object({
   platform: PlatformSchema.default("unknown").describe(
     "The platform where this event was sourced from (e.g., instagram, tiktok, facebook, twitter, or unknown)",
@@ -53,9 +49,6 @@ export const EventMetadataSchema = z.object({
 });
 export type EventMetadata = z.infer<typeof EventMetadataSchema>;
 
-// Legacy schemas kept for backward compatibility
-// These are deprecated and should not be used for new events
-// ============================================================
 
 export const AGE_RESTRICTIONS = ["all-ages", "18+", "21+", "unknown"] as const;
 export const AgeRestrictionSchema = z.enum(AGE_RESTRICTIONS);
@@ -133,7 +126,6 @@ export const ACCESSIBILITY_TYPES_OPTIONS = [
   { value: "wheelchairAccessible", label: "Wheelchair Accessible" },
 ];
 
-// Legacy metadata schema - kept for backward compatibility with old events
 export const EventMetadataSchemaLegacy = z.object({
   accessibility: z.array(AccessibilityTypeSchema).optional(),
   accessibilityNotes: z.string().optional(),
@@ -217,7 +209,7 @@ export const extractJsonFromResponse = (response: string) => {
     return JSON.parse(jsonString) as Response;
   } catch (error) {
     console.error("An error occurred while parsing the JSON response:", error);
-    return undefined; // or handle the error in a way that is appropriate for your application
+    return undefined;
   }
 };
 
@@ -296,11 +288,6 @@ export const systemMessage = (schema?: string) =>
       : ``
   }`;
 
-/**
- * Generates the main event extraction prompt text.
- * @param date - Current date in YYYY-MM-DD format (e.g., "2026-01-20")
- * @param timezone - IANA timezone identifier (e.g., "America/Los_Angeles")
- */
 export const getText = (date: string, timezone: string) => `# CONTEXT
 The current date is ${date}, and the default timezone is ${timezone} unless specified otherwise.
 

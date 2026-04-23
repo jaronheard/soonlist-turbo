@@ -8,7 +8,6 @@ import { Button } from "./button";
 import { Input } from "./input";
 
 type OverrideInputProps = Omit<InputProps, "onChange">;
-// initial source: https://github.com/JaleelB/shadcn-tag-input
 type InputTagsProps = OverrideInputProps & {
   value: string[];
   onChange: Dispatch<SetStateAction<string[]>>;

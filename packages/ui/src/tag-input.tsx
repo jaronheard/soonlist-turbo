@@ -161,7 +161,6 @@ const TagInput = forwardRef<HTMLInputElement, TagInputProps>((props) => {
         return;
       }
 
-      // Validate maxLength
       if (maxLength && newTagText.length > maxLength) {
         toast({
           title: "Tag is too long",

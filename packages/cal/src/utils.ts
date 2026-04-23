@@ -84,7 +84,6 @@ export function getDateTimeInfo(
   timezone: string,
   userTimezone?: string,
 ): DateInfo | null {
-  // timezone cannot be "unknown"
   const timezonePattern = /^((?!unknown).)*$/;
   if (!timezonePattern.test(timezone)) {
     console.error("Invalid timezone, assuming America/Los_Angeles.");
@@ -98,7 +97,6 @@ export function getDateTimeInfo(
     userTimezone = "America/Los_Angeles";
   }
 
-  // check is timestring is valid (HH:MM:SS)
   const timePattern = /^([01]?[0-9]|2[0-3]):[0-5][0-9](:[0-5][0-9])?$/;
   if (!timePattern.test(timeString)) {
     console.log("Possibly invalid time format. Adding seconds...");
@@ -141,24 +139,20 @@ export function getDateTimeInfo(
 }
 
 export function getDateInfo(dateString: string): DateInfo | null {
-  // Validate input
   const datePattern = /^\d{4}-\d{2}-\d{2}$/;
   if (!datePattern.test(dateString)) {
     console.error("Invalid date format. Use YYYY-MM-DD.");
     return null;
   }
 
-  // Create a Date object
   const date = new Date(dateString);
 
-  // Check if date is valid
   if (isNaN(date.getTime())) {
     console.error("Invalid date.");
     return null;
   }
 
-  // Get month, day, and year
-  const month = date.getMonth() + 1; // Months are zero-based
+  const month = date.getMonth() + 1;
   const day = date.getDate();
   const year = date.getFullYear();
   const hour = date.getHours();
@@ -179,30 +173,25 @@ export function getDateInfo(dateString: string): DateInfo | null {
   return { month, monthName, day, year, dayOfWeek, hour, minute };
 }
 export function getDateInfoUTC(dateString: string): DateInfo | null {
-  // Validate input
   const datePattern = /^\d{4}-\d{2}-\d{2}$/;
   if (!datePattern.test(dateString)) {
     console.error("Invalid date format. Use YYYY-MM-DD.");
     return null;
   }
 
-  // Create a Date object in UTC
   const date = new Date(`${dateString}T00:00:00Z`);
 
-  // Check if date is valid
   if (isNaN(date.getTime())) {
     console.error("Invalid date.");
     return null;
   }
 
-  // Get month, day, and year
-  const month = date.getUTCMonth() + 1; // Months are zero-based
+  const month = date.getUTCMonth() + 1;
   const day = date.getUTCDate();
   const year = date.getUTCFullYear();
   const hour = date.getUTCHours();
   const minute = date.getUTCMinutes();
 
-  // Get day of the week
   const dayOfWeek = daysOfWeek[date.getUTCDay()];
   if (!dayOfWeek) {
     console.error("Invalid dayOfWeek / date format. Use YYYY-MM-DD.");
@@ -228,34 +217,29 @@ export function endsNextDayBeforeMorning(
   const isNextDay =
     (startDateInfo.month === endDateInfo.month &&
       startDateInfo.day === endDateInfo.day - 1) ||
-    (startDateInfo.month !== endDateInfo.month && endDateInfo.day === 1); //TODO: this is a hack
+    (startDateInfo.month !== endDateInfo.month && endDateInfo.day === 1);
   const isBeforeMorning = endDateInfo.hour < 6;
   return isNextDay && isBeforeMorning;
 }
 
 export function timeIsTomorrow(now: Date, startTime: Date): boolean {
-  // Normalize the current date to midnight
   const normalizedNow = new Date(
     now.getFullYear(),
     now.getMonth(),
     now.getDate(),
   );
 
-  // Normalize the startTime to midnight
   const normalizedStartTime = new Date(
     startTime.getFullYear(),
     startTime.getMonth(),
     startTime.getDate(),
   );
 
-  // Calculate the difference in time
   const timeDifference =
     normalizedStartTime.getTime() - normalizedNow.getTime();
 
-  // Convert the time difference to days
   const dayDifference = timeDifference / (1000 * 60 * 60 * 24);
 
-  // Check if the difference is exactly 1 day
   return dayDifference === 1;
 }
 
@@ -301,7 +285,7 @@ export function timeFormat(time?: string) {
   }
   const ampm = hours >= 12 ? "PM" : "AM";
   hours = hours % 12;
-  hours = hours === 0 ? 12 : hours; // Convert 0 to 12 for 12 AM
+  hours = hours === 0 ? 12 : hours;
   return `${hours}:${minutes.toString().padStart(2, "0")} ${ampm}`;
 }
 
@@ -310,7 +294,7 @@ export function timeFormatDateInfo(dateInfo: DateInfo) {
   const minutes = dateInfo.minute;
   const ampm = hours >= 12 ? "PM" : "AM";
   hours = hours % 12;
-  hours = hours === 0 ? 12 : hours; // Convert 0 to 12 for 12 AM
+  hours = hours === 0 ? 12 : hours;
   return `${hours}:${minutes.toString().padStart(2, "0")}${ampm}`;
 }
 
@@ -355,10 +339,6 @@ export function formatRelativeTime(dateInfo: DateInfo): string {
   return ``;
 }
 
-/**
- * Get timezone abbreviation (e.g., "PST", "EST", "EDT") for a given timezone.
- * Uses Intl.DateTimeFormat with timeZoneName: 'short' to get the abbreviation.
- */
 export function getTimezoneAbbreviation(timezone: string): string {
   if (!timezone || timezone === "unknown" || timezone.trim() === "") {
     return "";
@@ -381,23 +361,14 @@ export function getTimezoneAbbreviation(timezone: string): string {
   }
 }
 
-/**
- * Get DateInfo in the event's original timezone (not converted to user timezone).
- * This is useful for displaying the original event time alongside the converted time.
- */
 export function getDateTimeInfoInTimezone(
   dateString: string,
   timeString: string,
   timezone: string,
 ): DateInfo | null {
-  // Call getDateTimeInfo with the same timezone for both parameters to keep it in original timezone
   return getDateTimeInfo(dateString, timeString, timezone, timezone);
 }
 
-/**
- * Format time range with optional event timezone display.
- * Returns an object with userTime and optional eventTime for flexible rendering.
- */
 export function formatCompactTimeRangeWithEventTimezone(
   start: DateInfo,
   end: DateInfo,
@@ -427,7 +398,6 @@ export function formatCompactTimeRangeWithEventTimezone(
     timeRange = `${startHour}${startMinute}${startPeriod}–${endHour}${endMinute}${endPeriod}`;
   }
 
-  // If event timezone info is provided, return both
   if (eventTimezoneStart && timezoneAbbreviation) {
     const eventStartHour = formatHour(eventTimezoneStart.hour);
     const eventStartMinute = formatMinute(eventTimezoneStart.minute);

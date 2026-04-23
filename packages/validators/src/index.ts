@@ -66,7 +66,6 @@ export const AddToCalendarButtonPropsSchema = z.object({
   updated: z.string().optional(),
   identifier: z.string().optional(),
   subscribe: z.union([z.string(), z.boolean()]).optional(),
-  // one of string or array of strings
   options: z
     .union([
       z.string(),
