@@ -5,7 +5,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { useUser } from "@clerk/nextjs";
 import { atcb_action } from "add-to-calendar-button-react";
-import { Copy, Earth, EyeOff, Instagram, MapPin } from "lucide-react";
+import { Copy, EyeOff, Instagram, MapPin } from "lucide-react";
 
 import type { DateInfo, EventMetadata, SimilarityDetails } from "@soonlist/cal";
 import type {
@@ -382,133 +382,6 @@ function EventDetailsCard({
               )}
             </>
           )}
-        </div>
-      </div>
-    </div>
-  );
-}
-
-function EventDetails({
-  id,
-  name,
-  startDate,
-  startTime,
-  endDate,
-  endTime,
-  timezone,
-  location,
-  description,
-  preview,
-  EventActionButtons,
-  happeningNow,
-  visibility, // Add this prop
-}: {
-  id: string;
-  name: string;
-  startTime: string;
-  startDate: string;
-  endTime: string;
-  endDate: string;
-  timezone: string;
-  description?: string;
-  location?: string;
-  EventActionButtons?: React.ReactNode;
-  preview?: boolean;
-  variant?: "minimal";
-  happeningNow?: boolean;
-  visibility: "public" | "private"; // Add this to the props type
-}) {
-  const { timezone: userTimezone } = useContext(TimezoneContext);
-  const [isClient, setIsClient] = useState(false);
-
-  useEffect(() => {
-    setIsClient(true);
-  }, []);
-
-  if (!startDate || !endDate) {
-    console.error("startDate or endDate is missing");
-    return null;
-  }
-
-  if (!timezone) {
-    console.error("timezone is missing");
-    return null;
-  }
-
-  const startDateInfo = startTime
-    ? getDateTimeInfo(startDate, startTime, timezone, userTimezone.toString())
-    : getDateInfoUTC(startDate);
-  const endDateInfo = endTime
-    ? getDateTimeInfo(endDate, endTime, timezone, userTimezone.toString())
-    : getDateInfoUTC(endDate);
-
-  // Get event timezone DateInfo for displaying original time
-  const eventTimezoneStartDateInfo = startTime
-    ? getDateTimeInfo(startDate, startTime, timezone, timezone)
-    : null;
-  const eventTimezoneEndDateInfo = endTime
-    ? getDateTimeInfo(endDate, endTime, timezone, timezone)
-    : null;
-
-  if (!startDateInfo || !endDateInfo) {
-    console.error("startDateInfo or endDateInfo is missing");
-    return null;
-  }
-
-  if (!description) {
-    description = "";
-  }
-
-  return (
-    <div className="relative">
-      <div className="mb-2 flex items-center">
-        {visibility === "private" ? (
-          <EyeOff className="mr-2 size-4 text-neutral-2" />
-        ) : (
-          <Earth className="mr-2 size-4 text-neutral-2" />
-        )}
-        <DateAndTimeDisplay
-          endDateInfo={endDateInfo}
-          endTime={endTime}
-          isClient={isClient}
-          startDateInfo={startDateInfo}
-          startTime={startTime}
-          happeningNow={happeningNow}
-          variant="compact"
-          eventTimezone={timezone}
-          userTimezone={userTimezone.toString()}
-          eventTimezoneStartDateInfo={eventTimezoneStartDateInfo || undefined}
-          eventTimezoneEndDateInfo={eventTimezoneEndDateInfo || undefined}
-        />
-      </div>
-      <div className="">
-        <Link
-          href={preview ? "" : `/event/${id}`}
-          className={
-            "line-clamp-2 pb-1 text-lg font-bold leading-tight text-neutral-1"
-          }
-        >
-          {name}
-        </Link>
-        <div className="text-xs">
-          {location && (
-            <Link
-              href={getGoogleMapsUrl(location)}
-              className="line-clamp-1 break-all text-neutral-2"
-            >
-              <MapPin className="mr-0.5 inline size-4" />
-              <span className="inline">{location}</span>
-            </Link>
-          )}
-        </div>
-
-        {/* TODO: 
-        <div className="pt-2">
-          <EventDescription description={description} truncate />
-        </div>
-        */}
-        <div className="absolute bottom-2 right-2 z-10">
-          {EventActionButtons}
         </div>
       </div>
     </div>
@@ -1117,46 +990,6 @@ export function EventListItem(props: EventListItemProps) {
         />
       </div>
     </li>
-  );
-}
-
-function EventPreview(
-  props: EventListItemProps & { event: AddToCalendarCardProps },
-) {
-  const { id, event } = props;
-
-  return (
-    <div
-      className={cn(
-        "relative grid max-w-xl overflow-hidden rounded-xl bg-white p-7 shadow-sm after:pointer-events-none after:absolute after:left-0 after:top-0 after:size-full after:rounded-xl after:border after:border-neutral-3 after:shadow-sm",
-      )}
-    >
-      <div className="absolute -right-24 -top-20 size-44 overflow-hidden rounded-full bg-interactive-3"></div>
-      <div className="absolute right-0 top-0 p-3">
-        <EventDateDisplaySimple
-          startDate={event.startDate}
-          startTime={event.startTime}
-          endDate={event.endDate}
-          endTime={event.endTime}
-          timezone={event.timeZone || "America/Los_Angeles"}
-        />
-      </div>
-      <div className="flex w-full items-start gap-7">
-        <EventDetails
-          preview
-          id={id}
-          name={event.name!}
-          startDate={event.startDate!}
-          endDate={event.endDate!}
-          startTime={event.startTime!}
-          endTime={event.endTime!}
-          timezone={event.timeZone || "America/Los_Angeles"}
-          location={event.location}
-          description={event.description}
-          visibility={"public"}
-        />
-      </div>
-    </div>
   );
 }
 
