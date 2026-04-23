@@ -1,0 +1,67 @@
+diff --git a/ios/RNSScreenStackHeaderConfig.h b/ios/RNSScreenStackHeaderConfig.h
+index d5ea95f556a55ad2bd68626fc0f653c2d9bc24d4..5937586bd123d6896e17fb898c589a3d3a7fc4d5 100644
+--- a/ios/RNSScreenStackHeaderConfig.h
++++ b/ios/RNSScreenStackHeaderConfig.h
+@@ -47,6 +47,7 @@ NS_ASSUME_NONNULL_BEGIN
+ @property (nonatomic, retain) UIColor *backgroundColor;
+ @property (nonatomic, retain) UIColor *color;
+ @property (nonatomic) BOOL largeTitle;
++@property (nonatomic) BOOL largeTitleInline;
+ @property (nonatomic, retain) NSString *largeTitleFontFamily;
+ @property (nonatomic, retain) NSNumber *largeTitleFontSize;
+ @property (nonatomic, retain) NSString *largeTitleFontWeight;
+diff --git a/ios/RNSScreenStackHeaderConfig.mm b/ios/RNSScreenStackHeaderConfig.mm
+index 3270127a09a05af656566009ee6c4437590bb435..86617647ad4fc7706bd6cacea451608f83f53343 100644
+--- a/ios/RNSScreenStackHeaderConfig.mm
++++ b/ios/RNSScreenStackHeaderConfig.mm
+@@ -591,8 +591,20 @@ RNS_IGNORE_SUPER_CALL_END
+   if (config.largeTitle) {
+     navctr.navigationBar.prefersLargeTitles = YES;
+   }
+-  navitem.largeTitleDisplayMode =
+-      config.largeTitle ? UINavigationItemLargeTitleDisplayModeAlways : UINavigationItemLargeTitleDisplayModeNever;
++  if (config.largeTitle) {
++#if RNS_IPHONE_OS_VERSION_AVAILABLE(26_0)
++    if (@available(iOS 26.0, *)) {
++      navitem.largeTitleDisplayMode =
++          config.largeTitleInline ? UINavigationItemLargeTitleDisplayModeInlineLarge : UINavigationItemLargeTitleDisplayModeAlways;
++    } else {
++      navitem.largeTitleDisplayMode = UINavigationItemLargeTitleDisplayModeAlways;
++    }
++#else
++    navitem.largeTitleDisplayMode = UINavigationItemLargeTitleDisplayModeAlways;
++#endif
++  } else {
++    navitem.largeTitleDisplayMode = UINavigationItemLargeTitleDisplayModeNever;
++  }
+ #endif
+ 
+   UINavigationBarAppearance *appearance = [self buildAppearance:vc withConfig:config];
+@@ -1127,6 +1139,7 @@ static RCTResizeMode resizeModeFromCppEquiv(react::ImageResizeMode resizeMode)
+   _hideShadow = newScreenProps.hideShadow;
+ 
+   _largeTitle = newScreenProps.largeTitle;
++  _largeTitleInline = newScreenProps.largeTitleInline;
+   if (newScreenProps.largeTitleFontFamily != oldScreenProps.largeTitleFontFamily) {
+     _largeTitleFontFamily = RCTNSStringFromStringNilIfEmpty(newScreenProps.largeTitleFontFamily);
+   }
+@@ -1286,6 +1299,7 @@ RCT_EXPORT_VIEW_PROPERTY(blurEffect, RNSBlurEffectStyle)
+ RCT_EXPORT_VIEW_PROPERTY(color, UIColor)
+ RCT_EXPORT_VIEW_PROPERTY(direction, UISemanticContentAttribute)
+ RCT_EXPORT_VIEW_PROPERTY(largeTitle, BOOL)
++RCT_EXPORT_VIEW_PROPERTY(largeTitleInline, BOOL)
+ RCT_EXPORT_VIEW_PROPERTY(largeTitleFontFamily, NSString)
+ RCT_EXPORT_VIEW_PROPERTY(largeTitleFontSize, NSNumber)
+ RCT_EXPORT_VIEW_PROPERTY(largeTitleFontWeight, NSString)
+diff --git a/src/fabric/ScreenStackHeaderConfigNativeComponent.ts b/src/fabric/ScreenStackHeaderConfigNativeComponent.ts
+index fcbb2683cb438fe433edc7b3261041c75776d479..21ff24ec23b2ee8f7dac217a438564eb3595f948 100644
+--- a/src/fabric/ScreenStackHeaderConfigNativeComponent.ts
++++ b/src/fabric/ScreenStackHeaderConfigNativeComponent.ts
+@@ -53,6 +53,7 @@ export interface NativeProps extends ViewProps {
+   hidden?: boolean;
+   hideShadow?: boolean;
+   largeTitle?: boolean;
++  largeTitleInline?: boolean;
+   largeTitleFontFamily?: string;
+   largeTitleFontSize?: CT.Int32;
+   largeTitleFontWeight?: string;

@@ -1,0 +1,95 @@
+diff --git a/lib/module/views/useHeaderConfigProps.js b/lib/module/views/useHeaderConfigProps.js
+index 492390b5fad0e48d8f25f11179935754f8402f75..1e4887b144d669790e505680cf8fbe94b244196b 100644
+--- a/lib/module/views/useHeaderConfigProps.js
++++ b/lib/module/views/useHeaderConfigProps.js
+@@ -125,6 +125,7 @@ export function useHeaderConfigProps({
+   headerLargeStyle,
+   headerLargeTitle: headerLargeTitleDeprecated,
+   headerLargeTitleEnabled = headerLargeTitleDeprecated,
++  headerLargeTitleInline,
+   headerLargeTitleShadowVisible,
+   headerLargeTitleStyle,
+   headerBackground,
+@@ -330,6 +331,7 @@ export function useHeaderConfigProps({
+     hideBackButton: headerBackVisible === false,
+     hideShadow: headerShadowVisible === false || headerBackground != null || headerTransparent && headerShadowVisible !== true,
+     largeTitle: headerLargeTitleEnabled,
++    largeTitleInline: headerLargeTitleInline,
+     largeTitleBackgroundColor,
+     largeTitleColor,
+     largeTitleFontFamily,
+diff --git a/lib/typescript/src/types.d.ts b/lib/typescript/src/types.d.ts
+index 5bbdb198f6392171e42c57ceb7153395477d8c2f..44b8cf5ccf8b34831e97740d95d48eeb5c8f4e51 100644
+--- a/lib/typescript/src/types.d.ts
++++ b/lib/typescript/src/types.d.ts
+@@ -205,6 +205,16 @@ export type NativeStackNavigationOptions = {
+      * @deprecated Use `headerLargeTitleEnabled` instead.
+      */
+     headerLargeTitle?: boolean;
++    /**
++     * Whether to display large titles inline in the navigation bar on iOS 26+.
++     *
++     * This keeps the large title anchored in the toolbar instead of reserving extra space below it.
++     *
++     * Only supported on iOS.
++     *
++     * @platform ios
++     */
++    headerLargeTitleInline?: boolean;
+     /**
+      * Whether drop shadow of header is visible when a large title is shown.
+      *
+diff --git a/lib/typescript/src/views/useHeaderConfigProps.d.ts b/lib/typescript/src/views/useHeaderConfigProps.d.ts
+index 44e9bdd3be5ef4819c3438e5bbf47c0ceac01013..f43a959df4170c3958277b2c2193df8a1b34e8c3 100644
+--- a/lib/typescript/src/views/useHeaderConfigProps.d.ts
++++ b/lib/typescript/src/views/useHeaderConfigProps.d.ts
+@@ -10,6 +10,6 @@ type Props = NativeStackNavigationOptions & {
+     } | undefined;
+     route: Route<string>;
+ };
+-export declare function useHeaderConfigProps({ headerBackIcon, headerBackImageSource, headerBackButtonDisplayMode, headerBackButtonMenuEnabled, headerBackTitle, headerBackTitleStyle, headerBackVisible, headerShadowVisible, headerLargeStyle, headerLargeTitle: headerLargeTitleDeprecated, headerLargeTitleEnabled, headerLargeTitleShadowVisible, headerLargeTitleStyle, headerBackground, headerLeft, headerRight, headerShown, headerStyle, headerBlurEffect, headerTintColor, headerTitle, headerTitleAlign, headerTitleStyle, headerTransparent, headerSearchBarOptions, headerTopInsetEnabled, headerBack, route, title, unstable_headerLeftItems: headerLeftItems, unstable_headerRightItems: headerRightItems, }: Props): ScreenStackHeaderConfigProps;
++export declare function useHeaderConfigProps({ headerBackIcon, headerBackImageSource, headerBackButtonDisplayMode, headerBackButtonMenuEnabled, headerBackTitle, headerBackTitleStyle, headerBackVisible, headerShadowVisible, headerLargeStyle, headerLargeTitle: headerLargeTitleDeprecated, headerLargeTitleEnabled, headerLargeTitleInline, headerLargeTitleShadowVisible, headerLargeTitleStyle, headerBackground, headerLeft, headerRight, headerShown, headerStyle, headerBlurEffect, headerTintColor, headerTitle, headerTitleAlign, headerTitleStyle, headerTransparent, headerSearchBarOptions, headerTopInsetEnabled, headerBack, route, title, unstable_headerLeftItems: headerLeftItems, unstable_headerRightItems: headerRightItems, }: Props): ScreenStackHeaderConfigProps;
+ export {};
+ //# sourceMappingURL=useHeaderConfigProps.d.ts.map
+\ No newline at end of file
+diff --git a/src/types.tsx b/src/types.tsx
+index f01dbddb99c046a50ff6385d02ef55c22502f40d..27702afa2d913c9d30aff80d6ed79bad6a0fbbe0 100644
+--- a/src/types.tsx
++++ b/src/types.tsx
+@@ -249,6 +249,16 @@ export type NativeStackNavigationOptions = {
+    * @deprecated Use `headerLargeTitleEnabled` instead.
+    */
+   headerLargeTitle?: boolean;
++  /**
++   * Whether to display large titles inline in the navigation bar on iOS 26+.
++   *
++   * This keeps the large title anchored in the toolbar instead of reserving extra space below it.
++   *
++   * Only supported on iOS.
++   *
++   * @platform ios
++   */
++  headerLargeTitleInline?: boolean;
+   /**
+    * Whether drop shadow of header is visible when a large title is shown.
+    *
+diff --git a/src/views/useHeaderConfigProps.tsx b/src/views/useHeaderConfigProps.tsx
+index 14a00939c903b735314ea2cc934ed1918f4f87de..bd2f045a2ffc19c47fea55fdb7325177a5fd46a1 100644
+--- a/src/views/useHeaderConfigProps.tsx
++++ b/src/views/useHeaderConfigProps.tsx
+@@ -176,6 +176,7 @@ export function useHeaderConfigProps({
+   headerLargeStyle,
+   headerLargeTitle: headerLargeTitleDeprecated,
+   headerLargeTitleEnabled = headerLargeTitleDeprecated,
++  headerLargeTitleInline,
+   headerLargeTitleShadowVisible,
+   headerLargeTitleStyle,
+   headerBackground,
+@@ -483,6 +484,7 @@ export function useHeaderConfigProps({
+       headerBackground != null ||
+       (headerTransparent && headerShadowVisible !== true),
+     largeTitle: headerLargeTitleEnabled,
++    largeTitleInline: headerLargeTitleInline,
+     largeTitleBackgroundColor,
+     largeTitleColor,
+     largeTitleFontFamily,
