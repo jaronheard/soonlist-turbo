@@ -1,0 +1,102 @@
+diff --git a/ios/RNSScreenStackHeaderConfig.h b/ios/RNSScreenStackHeaderConfig.h
+index d5ea95f556a55ad2bd68626fc0f653c2d9bc24d4..82566776b4324817e545f22186c62f13a3efcd1b 100644
+--- a/ios/RNSScreenStackHeaderConfig.h
++++ b/ios/RNSScreenStackHeaderConfig.h
+@@ -52,6 +52,7 @@ NS_ASSUME_NONNULL_BEGIN
+ @property (nonatomic, retain) NSString *largeTitleFontWeight;
+ @property (nonatomic, retain) UIColor *largeTitleBackgroundColor;
+ @property (nonatomic) BOOL largeTitleHideShadow;
++@property (nonatomic) BOOL largeTitleInline;
+ @property (nonatomic, retain) UIColor *largeTitleColor;
+ @property (nonatomic) BOOL hideBackButton;
+ @property (nonatomic) BOOL disableBackButtonMenu;
+diff --git a/ios/RNSScreenStackHeaderConfig.mm b/ios/RNSScreenStackHeaderConfig.mm
+index 3270127a09a05af656566009ee6c4437590bb435..f9e932db9c75badae545096a31c53d7ab1358d17 100644
+--- a/ios/RNSScreenStackHeaderConfig.mm
++++ b/ios/RNSScreenStackHeaderConfig.mm
+@@ -591,8 +591,9 @@ RNS_IGNORE_SUPER_CALL_END
+   if (config.largeTitle) {
+     navctr.navigationBar.prefersLargeTitles = YES;
+   }
+-  navitem.largeTitleDisplayMode =
+-      config.largeTitle ? UINavigationItemLargeTitleDisplayModeAlways : UINavigationItemLargeTitleDisplayModeNever;
++  navitem.largeTitleDisplayMode = config.largeTitle
++      ? (config.largeTitleInline ? UINavigationItemLargeTitleDisplayModeNever : UINavigationItemLargeTitleDisplayModeAlways)
++      : UINavigationItemLargeTitleDisplayModeNever;
+ #endif
+ 
+   UINavigationBarAppearance *appearance = [self buildAppearance:vc withConfig:config];
+@@ -1133,6 +1134,7 @@ static RCTResizeMode resizeModeFromCppEquiv(react::ImageResizeMode resizeMode)
+   _largeTitleFontWeight = RCTNSStringFromStringNilIfEmpty(newScreenProps.largeTitleFontWeight);
+   _largeTitleFontSize = [self getFontSizePropValue:newScreenProps.largeTitleFontSize];
+   _largeTitleHideShadow = newScreenProps.largeTitleHideShadow;
++  _largeTitleInline = newScreenProps.largeTitleInline;
+   _largeTitleBackgroundColor = RCTUIColorFromSharedColor(newScreenProps.largeTitleBackgroundColor);
+ 
+   _backTitle = RCTNSStringFromStringNilIfEmpty(newScreenProps.backTitle);
+@@ -1292,6 +1294,7 @@ RCT_EXPORT_VIEW_PROPERTY(largeTitleFontWeight, NSString)
+ RCT_EXPORT_VIEW_PROPERTY(largeTitleColor, UIColor)
+ RCT_EXPORT_VIEW_PROPERTY(largeTitleBackgroundColor, UIColor)
+ RCT_EXPORT_VIEW_PROPERTY(largeTitleHideShadow, BOOL)
++RCT_EXPORT_VIEW_PROPERTY(largeTitleInline, BOOL)
+ RCT_EXPORT_VIEW_PROPERTY(hideBackButton, BOOL)
+ RCT_EXPORT_VIEW_PROPERTY(hideShadow, BOOL)
+ RCT_EXPORT_VIEW_PROPERTY(backButtonInCustomView, BOOL)
+diff --git a/lib/typescript/fabric/ScreenStackHeaderConfigNativeComponent.d.ts b/lib/typescript/fabric/ScreenStackHeaderConfigNativeComponent.d.ts
+index 1e40b7044765ef44a4a3c7dd6243b3f2dbcdf496..3e8dc2cd46ae17a3a38338b2091ae3d0e3e105bf 100644
+--- a/lib/typescript/fabric/ScreenStackHeaderConfigNativeComponent.d.ts
++++ b/lib/typescript/fabric/ScreenStackHeaderConfigNativeComponent.d.ts
+@@ -29,6 +29,7 @@ export interface NativeProps extends ViewProps {
+     largeTitleFontWeight?: string;
+     largeTitleBackgroundColor?: ColorValue;
+     largeTitleHideShadow?: boolean;
++    largeTitleInline?: boolean;
+     largeTitleColor?: ColorValue;
+     translucent?: boolean;
+     title?: string;
+diff --git a/lib/typescript/types.d.ts b/lib/typescript/types.d.ts
+index b197c162f00fd78159e4ee715b7740da87ecdf1f..1c3194d7c0913ef240fa56c71672ccdb166b72b5 100644
+--- a/lib/typescript/types.d.ts
++++ b/lib/typescript/types.d.ts
+@@ -683,6 +683,12 @@ export interface ScreenStackHeaderConfigProps extends ViewProps {
+      * Boolean that allows for disabling drop shadow under navigation header when the edge of any scrollable content reaches the matching edge of the navigation bar.
+      */
+     largeTitleHideShadow?: boolean;
++    /**
++     * Boolean indicating whether large title should be displayed inline.
++     *
++     * @platform ios
++     */
++    largeTitleInline?: boolean;
+     /**
+      * Callback which is executed when screen header is attached
+      */
+diff --git a/src/fabric/ScreenStackHeaderConfigNativeComponent.ts b/src/fabric/ScreenStackHeaderConfigNativeComponent.ts
+index fcbb2683cb438fe433edc7b3261041c75776d479..591c0bac5670251cb65e2a09d96899c1f04194f1 100644
+--- a/src/fabric/ScreenStackHeaderConfigNativeComponent.ts
++++ b/src/fabric/ScreenStackHeaderConfigNativeComponent.ts
+@@ -58,6 +58,7 @@ export interface NativeProps extends ViewProps {
+   largeTitleFontWeight?: string;
+   largeTitleBackgroundColor?: ColorValue;
+   largeTitleHideShadow?: boolean;
++  largeTitleInline?: boolean;
+   largeTitleColor?: ColorValue;
+   translucent?: boolean;
+   title?: string;
+diff --git a/src/types.tsx b/src/types.tsx
+index a657c0f69f806e488697334680997507baa36078..ff9c4b0ea454878c87fa436a17193d47d1710f26 100644
+--- a/src/types.tsx
++++ b/src/types.tsx
+@@ -786,6 +786,12 @@ export interface ScreenStackHeaderConfigProps extends ViewProps {
+    * Boolean that allows for disabling drop shadow under navigation header when the edge of any scrollable content reaches the matching edge of the navigation bar.
+    */
+   largeTitleHideShadow?: boolean;
++  /**
++   * Boolean indicating whether large title should be displayed inline.
++   *
++   * @platform ios
++   */
++  largeTitleInline?: boolean;
+   /**
+    * Callback which is executed when screen header is attached
+    */

@@ -1,0 +1,78 @@
+diff --git a/lib/module/views/useHeaderConfigProps.js b/lib/module/views/useHeaderConfigProps.js
+index 492390b5fad0e48d8f25f11179935754f8402f75..96a4ad0444adffe2b811448bde41bc652e5ee354 100644
+--- a/lib/module/views/useHeaderConfigProps.js
++++ b/lib/module/views/useHeaderConfigProps.js
+@@ -126,6 +126,7 @@ export function useHeaderConfigProps({
+   headerLargeTitle: headerLargeTitleDeprecated,
+   headerLargeTitleEnabled = headerLargeTitleDeprecated,
+   headerLargeTitleShadowVisible,
++  headerLargeTitleInline,
+   headerLargeTitleStyle,
+   headerBackground,
+   headerLeft,
+@@ -336,6 +337,7 @@ export function useHeaderConfigProps({
+     largeTitleFontSize,
+     largeTitleFontWeight,
+     largeTitleHideShadow: headerLargeTitleShadowVisible === false,
++    largeTitleInline: Platform.OS === 'ios' && headerLargeTitleInline === true,
+     title: titleText,
+     titleColor,
+     titleFontFamily,
+diff --git a/lib/typescript/src/types.d.ts b/lib/typescript/src/types.d.ts
+index 5bbdb198f6392171e42c57ceb7153395477d8c2f..2097812a60430dd3273332259361a8518a065098 100644
+--- a/lib/typescript/src/types.d.ts
++++ b/lib/typescript/src/types.d.ts
+@@ -213,6 +213,14 @@ export type NativeStackNavigationOptions = {
+      * @platform ios
+      */
+     headerLargeTitleShadowVisible?: boolean;
++    /**
++     * Whether the large title should be shown inline instead of expanded.
++     *
++     * Only supported on iOS.
++     *
++     * @platform ios
++     */
++    headerLargeTitleInline?: boolean;
+     /**
+      * Style object for large title in header. Supported properties:
+      * - fontFamily
+diff --git a/src/types.tsx b/src/types.tsx
+index f01dbddb99c046a50ff6385d02ef55c22502f40d..0fae08f6fba74a63153b1ad40471bd901feca4b9 100644
+--- a/src/types.tsx
++++ b/src/types.tsx
+@@ -257,6 +257,14 @@ export type NativeStackNavigationOptions = {
+    * @platform ios
+    */
+   headerLargeTitleShadowVisible?: boolean;
++  /**
++   * Whether the large title should be shown inline instead of expanded.
++   *
++   * Only supported on iOS.
++   *
++   * @platform ios
++   */
++  headerLargeTitleInline?: boolean;
+   /**
+    * Style object for large title in header. Supported properties:
+    * - fontFamily
+diff --git a/src/views/useHeaderConfigProps.tsx b/src/views/useHeaderConfigProps.tsx
+index 14a00939c903b735314ea2cc934ed1918f4f87de..d9524792c1230ddceb0b1e6d64a5d43e2ad7b8ab 100644
+--- a/src/views/useHeaderConfigProps.tsx
++++ b/src/views/useHeaderConfigProps.tsx
+@@ -177,6 +177,7 @@ export function useHeaderConfigProps({
+   headerLargeTitle: headerLargeTitleDeprecated,
+   headerLargeTitleEnabled = headerLargeTitleDeprecated,
+   headerLargeTitleShadowVisible,
++  headerLargeTitleInline,
+   headerLargeTitleStyle,
+   headerBackground,
+   headerLeft,
+@@ -489,6 +490,7 @@ export function useHeaderConfigProps({
+     largeTitleFontSize,
+     largeTitleFontWeight,
+     largeTitleHideShadow: headerLargeTitleShadowVisible === false,
++    largeTitleInline: Platform.OS === 'ios' && headerLargeTitleInline === true,
+     title: titleText,
+     titleColor,
+     titleFontFamily,
