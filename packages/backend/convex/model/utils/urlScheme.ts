@@ -1,4 +1,3 @@
-
 export function getUrlScheme() {
   const ENV = process.env.CONVEX_ENV || process.env.NODE_ENV || "production";
   const isDev = ENV === "development";

@@ -2,7 +2,6 @@ import { v } from "convex/values";
 
 import { internalMutation, internalQuery } from "../_generated/server";
 
-
 function fixYear(dateStr: string): string {
   return dateStr.replace(/2027/g, "2026");
 }

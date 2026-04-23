@@ -133,7 +133,6 @@ export const eventFromTextThenCreate = mutation({
   },
 });
 
-
 export const extractEventFromBase64Image = internalAction({
   args: {
     base64Image: v.string(),
@@ -314,7 +313,6 @@ export const validateFirstEvent = internalAction({
     return firstEvent;
   },
 });
-
 
 export const processSingleImage = internalAction({
   args: {

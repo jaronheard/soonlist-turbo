@@ -96,7 +96,6 @@ export async function generateText({
   }
 }
 
-
 export async function processEventFromBase64Image(
   ctx: ActionCtx,
   input: {

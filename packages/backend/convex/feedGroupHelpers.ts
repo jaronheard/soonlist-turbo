@@ -141,7 +141,6 @@ export async function syncGroupedFeedEntriesForEventInternal(
   }
 }
 
-
 export const upsertGroupedFeedEntry = internalMutation({
   args: {
     feedId: v.string(),

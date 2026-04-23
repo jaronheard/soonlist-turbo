@@ -8,14 +8,12 @@ import {
 } from "../_generated/server";
 import { userFeedsAggregate } from "../aggregates";
 
-
 const YEAR_2027_START_MS = new Date("2027-01-01T00:00:00.000Z").getTime();
 const YEAR_2028_START_MS = new Date("2028-01-01T00:00:00.000Z").getTime();
 
 function isIn2027(timestamp: number): boolean {
   return timestamp >= YEAR_2027_START_MS && timestamp < YEAR_2028_START_MS;
 }
-
 
 export const migrateFeedsBatch = internalMutation({
   args: {
@@ -148,7 +146,6 @@ export const migrateGroupsBatch = internalMutation({
   },
 });
 
-
 export const dryRunFeedsBatch = internalQuery({
   args: {
     cursor: v.union(v.string(), v.null()),
@@ -264,7 +261,6 @@ export const dryRunGroupsBatch = internalQuery({
     };
   },
 });
-
 
 const BATCH_SIZE = 2048;
 

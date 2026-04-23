@@ -368,8 +368,6 @@ export const toggleVisibility = mutation({
   },
 });
 
-
-
 function extractRolesFromObject(obj: unknown): string[] {
   if (!obj || typeof obj !== "object") {
     return [];
@@ -408,7 +406,6 @@ function isUserAdmin(identity: Record<string, unknown> | null): boolean {
     return false;
   }
 }
-
 
 export const insertEvent = internalMutation({
   args: {

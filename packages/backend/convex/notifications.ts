@@ -387,7 +387,6 @@ export const getTrialExpirationUsersQuery = internalQuery({
   },
 });
 
-
 export const push = internalAction({
   args: {
     eventId: v.string(),

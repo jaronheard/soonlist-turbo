@@ -1,4 +1,3 @@
-
 import { TableAggregate } from "@convex-dev/aggregate";
 
 import type { DataModel } from "./_generated/dataModel";
