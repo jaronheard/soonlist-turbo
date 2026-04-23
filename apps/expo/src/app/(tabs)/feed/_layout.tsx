@@ -14,6 +14,7 @@ export default function FeedLayout() {
       <Stack
         screenOptions={{
           headerLargeTitle: true,
+          headerLargeTitleInline: true,
           headerLargeTitleStyle: { color: "#5A32FB" },
           headerTintColor: "#5A32FB",
           headerShadowVisible: false,
