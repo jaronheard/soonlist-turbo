@@ -137,7 +137,6 @@ function CapturerAvatar({
         shadowOpacity: 0.06,
         shadowRadius: 0,
         shadowOffset: { width: 0, height: 1 },
-        elevation: 1,
       }}
     >
       <UserAvatar user={user} size={inner} />
