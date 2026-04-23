@@ -51,42 +51,32 @@ export function useImagePasteHandler(
     null,
   );
 
-  // Synchronous ref lock to prevent duplicate event creation on rapid paste
   const isProcessingRef = useRef(false);
 
   const createEventBatch = useMutation(api.ai.createEventBatch);
   const addBatchId = useBatchStore((state) => state.addBatchId);
 
-  // Helper function to check if paste event should be handled
   const shouldHandlePasteEventInternal = useCallback(
     (event: ClipboardEvent): boolean => {
-      // Don't handle if not enabled
       if (!enabled) return false;
 
-      // Don't handle if user is not authenticated
       if (!currentUser) return false;
 
-      // Don't handle if currently processing (state check only - ref lock handled separately)
       if (isProcessing) return false;
 
-      // Use utility function for event filtering
       return shouldHandlePasteEvent(event);
     },
     [enabled, currentUser, isProcessing],
   );
 
-  // Main paste handler function
   const handlePaste = useCallback(
     async (event: ClipboardEvent) => {
       try {
-        // Check if we should handle this paste event
         if (!shouldHandlePasteEventInternal(event)) return;
 
-        // Atomic lock check and set - prevents race conditions on rapid paste
         if (isProcessingRef.current) return;
         isProcessingRef.current = true;
 
-        // Extract files from clipboard
         const clipboardData = event.clipboardData;
         if (!clipboardData) {
           isProcessingRef.current = false;
@@ -104,7 +94,6 @@ export function useImagePasteHandler(
           return;
         }
 
-        // Validate image count
         const validation = validateImageCount(images.length);
         if (!validation.valid) {
           setError(validation.error ?? "Invalid image count");
@@ -113,11 +102,9 @@ export function useImagePasteHandler(
           return;
         }
 
-        // Separate valid and invalid images
         const validImages = images.filter((img) => isValidImageFile(img));
         const invalidImages = images.filter((img) => !isValidImageFile(img));
 
-        // Show toast for unsupported formats
         if (invalidImages.length > 0) {
           toast.error(
             `${invalidImages.length} ${invalidImages.length === 1 ? "file has" : "files have"} unsupported format${invalidImages.length === 1 ? "" : "s"}`,
@@ -127,14 +114,12 @@ export function useImagePasteHandler(
           );
         }
 
-        // If no valid images, stop processing
         if (validImages.length === 0) {
           setError("No valid images to process");
           isProcessingRef.current = false;
           return;
         }
 
-        // Validate valid image count
         const finalValidation = validateImageCount(validImages.length);
         if (!finalValidation.valid) {
           toast.error(finalValidation.error ?? "Invalid image count", {
@@ -146,13 +131,11 @@ export function useImagePasteHandler(
           return;
         }
 
-        // Prevent default paste behavior for images
         event.preventDefault();
 
         setIsProcessing(true);
         setError(null);
 
-        // Convert valid images to base64 and create batch
         const batchId = generateBatchId();
         const batchImages = await Promise.all(
           validImages.map(async (image) => {
@@ -164,12 +147,10 @@ export function useImagePasteHandler(
           }),
         );
 
-        // Store the last processed image (for backward compatibility)
         if (batchImages.length > 0 && batchImages[0]) {
           setLastProcessedImage(batchImages[0].base64Image);
         }
 
-        // Create batch of events from images
         const result = await createEventBatch({
           batchId,
           images: batchImages,
@@ -184,11 +165,8 @@ export function useImagePasteHandler(
         if (result.batchId) {
           addBatchId(result.batchId);
 
-          // For multi-image batches, we don't get a single workflowId
-          // The backend processes them asynchronously
           onSuccess?.(result.batchId);
 
-          // Navigate based on page context
           const pageContext = getPageContext(pathname);
           const navigationPath = getNavigationPath(
             pageContext,
@@ -204,7 +182,6 @@ export function useImagePasteHandler(
         onError?.(err instanceof Error ? err : new Error(errorMessage));
         console.error("Error processing pasted images:", err);
       } finally {
-        // Always clear both the ref lock and state, even on errors
         isProcessingRef.current = false;
         setIsProcessing(false);
       }
@@ -222,7 +199,6 @@ export function useImagePasteHandler(
     ],
   );
 
-  // Set up global paste event listener
   useEffect(() => {
     if (!enabled) return;
 
@@ -237,7 +213,6 @@ export function useImagePasteHandler(
     };
   }, [enabled, handlePaste]);
 
-  // Clear error after some time
   useEffect(() => {
     if (error) {
       const timer = setTimeout(() => setError(null), 5000);

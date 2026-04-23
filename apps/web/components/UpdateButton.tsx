@@ -25,7 +25,6 @@ interface UpdateButtonProps {
   lists: Record<string, string>[];
 }
 
-// Transform AddToCalendarButtonType to Convex event format
 function transformEventData(event: AddToCalendarButtonType) {
   return {
     name: event.name || "",
@@ -44,7 +43,6 @@ function transformEventData(event: AddToCalendarButtonType) {
   };
 }
 
-// Transform lists array format
 function transformLists(lists: Record<string, string>[]) {
   return lists.map((list) => {
     const value = Object.values(list)[0];
@@ -71,7 +69,6 @@ export function UpdateButton(props: UpdateButtonProps) {
         lists: transformLists(props.lists),
       });
       toast.success("Event updated.");
-      // Clear context state
       setCroppedImagesUrls({});
       setOrganizeData({
         notes: "",
@@ -103,7 +100,6 @@ export function UpdateButton(props: UpdateButtonProps) {
         )}
       </SignedIn>
       <SignedOut>
-        {/* TODO: Does this show up anywhere? */}
         <SignInButton>
           <Button>Sign in to update</Button>
         </SignInButton>

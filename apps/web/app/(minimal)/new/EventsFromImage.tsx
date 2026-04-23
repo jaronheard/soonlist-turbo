@@ -12,7 +12,6 @@ import { useWorkflowStore } from "~/hooks/useWorkflowStore";
 import { DEFAULT_VISIBILITY } from "~/lib/constants";
 import { optimizeImageToBase64 } from "~/lib/imageOptimization";
 
-// Maximum base64 size to prevent journal overflow (900KB to be safe with 1MB limit)
 const MAX_BASE64_SIZE = 900 * 1024;
 
 export function EventsFromImage({
@@ -34,7 +33,6 @@ export function EventsFromImage({
   );
 
   const handleCreateEvent = useCallback(async () => {
-    // Prevent duplicate processing
     if (hasStartedRef.current) {
       console.log("Event processing already started, skipping duplicate call");
       return;
@@ -53,12 +51,10 @@ export function EventsFromImage({
       const imageUrl = buildDefaultUrl(filePath);
       let base64Image: string;
 
-      // Optimize the image using jsquash/webp which works in Safari
       try {
         base64Image = await optimizeImageToBase64(imageUrl, 640, 0.5);
       } catch (optimizeError) {
         console.error("Failed to optimize image:", optimizeError);
-        // If optimization fails, try to at least convert the image without resizing
         try {
           const { imageUrlToBase64 } = await import("~/lib/imageOptimization");
           base64Image = await imageUrlToBase64(imageUrl);
@@ -70,7 +66,6 @@ export function EventsFromImage({
         }
       }
 
-      // Validate base64 size
       const base64SizeBytes = base64Image.length;
       if (base64SizeBytes > MAX_BASE64_SIZE) {
         throw new Error(
@@ -94,7 +89,6 @@ export function EventsFromImage({
 
       if (result.workflowId) {
         addWorkflowId(result.workflowId);
-        // Navigate directly to upcoming page without toast
         router.push(`/${currentUser.username || currentUser.id}/upcoming`);
       }
     } catch (err) {
@@ -103,7 +97,6 @@ export function EventsFromImage({
       toast.error(
         err instanceof Error ? err.message : "Failed to upload image",
       );
-      // Reset the ref on error so user can retry
       hasStartedRef.current = false;
     } finally {
       setIsProcessing(false);
@@ -117,7 +110,6 @@ export function EventsFromImage({
     router,
   ]);
 
-  // Automatically process the image when component mounts
   useEffect(() => {
     if (!isProcessing && !error && !hasStartedRef.current) {
       void handleCreateEvent();

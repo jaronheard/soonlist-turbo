@@ -15,28 +15,18 @@ import { getUnauthenticatedConvex } from "~/lib/convex-server";
 import { extractFilePath } from "~/lib/utils";
 
 export const runtime = "nodejs";
-// Short TTL balances crawler-burst amortization against privacy: a list
-// flipped to private can't keep serving a cached rich preview for longer
-// than this window. On-demand revalidation via a Convex trigger would be
-// the rigorous fix (zero exposure) if/when it's worth the plumbing.
 export const revalidate = 300;
 
 export const alt = "Shared list on Soonlist";
 export const size = { width: 1200, height: 630 };
 export const contentType = "image/png";
 
-// Brand tokens (apps/web/styles/globals.css CSS vars) rendered as hex because
-// satori can't resolve CSS custom properties.
-const BRAND_INTERACTIVE = "#5A32FB"; // --interactive-1
-const ACCENT_YELLOW = "#FEEA9F"; // --accent-1
-const NEUTRAL_1 = "#34435F"; // --neutral-1
+const BRAND_INTERACTIVE = "#5A32FB";
+const ACCENT_YELLOW = "#FEEA9F";
+const NEUTRAL_1 = "#34435F";
 
 const BYTESCALE_ACCOUNT_ID = "12a1yek";
 
-// @vercel/og (satori) only understands TTF/OTF/WOFF — *not* WOFF2. Spoofing an
-// older User-Agent makes Google Fonts return plain .ttf URLs in the CSS. The
-// CSS also contains multiple @font-face blocks (devanagari, latin-ext, latin,
-// …); we target the `/* latin */` marker so we always fetch Latin glyphs.
 async function loadFont(
   family: string,
   weight: number,
@@ -69,12 +59,6 @@ async function loadFont(
   }
 }
 
-// Satori can't decode WebP, which is what Bytescale (upcdn.io) returns by
-// default. Route through Bytescale's `/image/` processor with `f=jpg` so OG
-// crawlers receive a JPEG. Only applies when the source is a Bytescale URL
-// *on our account* — we don't want to rewrite arbitrary external URLs, nor
-// cross-account upcdn.io URLs, into bogus `/{BYTESCALE_ACCOUNT_ID}/image/…`
-// paths that would 404.
 function transformImage(url: string): string {
   let parsed: URL;
   try {
@@ -158,10 +142,6 @@ export default async function OgImage({ params }: Props) {
       : null,
   ].filter((f): f is NonNullable<typeof f> => f !== null);
 
-  // Layout variants per count so 1- and 2-event lists stay centered and
-  // symmetric; only the 3-event variant fans out. The 3-card layout picks
-  // translateX (±150) so outer cards peek out past the middle card's 224px
-  // width; tilts fan outward so the stack reads as a scattered hand.
   const cardLayoutsByCount: Record<
     1 | 2 | 3,
     {
@@ -356,9 +336,6 @@ export default async function OgImage({ params }: Props) {
 }
 
 async function fetchOgData(slug: string) {
-  // Unauthenticated on purpose: keeps the route cacheable under ISR and
-  // matches the query's crawler-facing semantics (private lists always
-  // resolve to `status: "private"` without a viewer).
   const convex = getUnauthenticatedConvex();
   return convex.query(api.lists.getOgData, { slug });
 }

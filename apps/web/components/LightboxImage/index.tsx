@@ -55,9 +55,7 @@ export default function LightboxImage({
           priority={priority}
           sizes={sizes}
         />
-        {/* Gradient fade-out overlay */}
         <div className="pointer-events-none absolute inset-x-0 bottom-0 h-1/3 bg-gradient-to-b from-transparent to-interactive-3"></div>
-        {/* Magnifying glass icon */}
         <div className="absolute bottom-2 right-2 rounded-full bg-interactive-2 p-2">
           <ZoomIn className="h-6 w-6 text-interactive-1" />
         </div>

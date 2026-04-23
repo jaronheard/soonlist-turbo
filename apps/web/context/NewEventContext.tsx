@@ -8,7 +8,6 @@ import type { AddToCalendarCardProps } from "~/components/AddToCalendarCard";
 import type { organizeFormSchema } from "~/components/YourDetails";
 import { DEFAULT_VISIBILITY } from "~/lib/constants";
 
-// Define the type of the context state
 interface NewEventContextState {
   organizeData: z.infer<typeof organizeFormSchema>;
   setOrganizeData: (data: z.infer<typeof organizeFormSchema>) => void;
@@ -16,7 +15,6 @@ interface NewEventContextState {
   setEventData: (data?: AddToCalendarCardProps) => void;
 }
 
-// Create a context with empty objects and dummy functions
 const NewEventContext = createContext<NewEventContextState>({
   organizeData: {
     notes: "",

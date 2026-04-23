@@ -58,19 +58,14 @@ export const bytescaleWidgetOptions = {
   maxFileCount: 20,
   maxFileSizeBytes: 10485760, // 10MB limit before processing
   onPreUpload: async (file: File) => {
-    // Only process image files
     if (!file.type.startsWith("image/")) {
       return { transformedFile: file };
     }
 
     try {
-      // Use the same optimization settings as event creation
-      // This prevents re-downloading and re-optimizing later
-      // Width: 640px, Quality: 0.5, Format: WebP
       const { optimizeFileToBase64 } = await import("~/lib/imageOptimization");
       const base64 = await optimizeFileToBase64(file, 640, 0.5);
 
-      // Convert base64 back to blob for upload
       const binaryString = atob(base64);
       const bytes = new Uint8Array(binaryString.length);
       for (let i = 0; i < binaryString.length; i++) {
@@ -78,7 +73,6 @@ export const bytescaleWidgetOptions = {
       }
       const optimizedBlob = new Blob([bytes], { type: "image/webp" });
 
-      // Create a new File object from the optimized blob
       const optimizedFile = new File(
         [optimizedBlob],
         file.name.replace(/\.[^/.]+$/, ".webp"),
@@ -95,7 +89,6 @@ export const bytescaleWidgetOptions = {
       return { transformedFile: optimizedFile };
     } catch (error) {
       console.error("Failed to optimize image:", error);
-      // If optimization fails, upload the original file
       return { transformedFile: file };
     }
   },
@@ -140,7 +133,6 @@ const buildCroppedUrl = (
     console.error("buildAllCropUrls was called with invalid options:", opts);
     return "";
   }
-  // Convert crop percentages to pixels
   const pxCrop = {
     x: Math.round(naturalWidth * (crop.x / 100)),
     y: Math.round(naturalHeight * (crop.y / 100)),
@@ -148,29 +140,23 @@ const buildCroppedUrl = (
     height: Math.round(naturalHeight * (crop.height / 100)),
   };
 
-  // Calculate current aspect ratio
   const currentAspect = pxCrop.width / pxCrop.height;
 
-  // Adjust dimensions to match the target aspect ratio
   if (currentAspect < targetAspect) {
-    // If the crop is too tall for the width, adjust height down
     const newHeight = pxCrop.width / targetAspect;
-    pxCrop.y += (pxCrop.height - newHeight) / 2; // Keep it centered vertically
+    pxCrop.y += (pxCrop.height - newHeight) / 2;
     pxCrop.height = newHeight;
   } else if (currentAspect > targetAspect) {
-    // If the crop is too wide for the height, adjust width down
     const newWidth = pxCrop.height * targetAspect;
-    pxCrop.x += (pxCrop.width - newWidth) / 2; // Keep it centered horizontally
+    pxCrop.x += (pxCrop.width - newWidth) / 2;
     pxCrop.width = newWidth;
   }
 
-  // Make sure to round the values after adjustments
   pxCrop.x = Math.round(pxCrop.x);
   pxCrop.y = Math.round(pxCrop.y);
   pxCrop.width = Math.round(pxCrop.width);
   pxCrop.height = Math.round(pxCrop.height);
 
-  // Construct the URL for the Image Cropping API
   const croppedImageUrl = Bytescale.UrlBuilder.url({
     accountId: "12a1yek",
     filePath: filePath, // Ensure filePath is defined and contains the path to the image
@@ -216,7 +202,6 @@ const buildAllCropUrls = (
       original: naturalWidth / naturalHeight,
     };
 
-    // Get the cropped image URL for the API
     for (const [key, aspect] of Object.entries(
       aspectRatioWithOriginalAndCropped,
     )) {
@@ -279,14 +264,12 @@ export function ImageUpload({
     naturalHeight && naturalWidth && naturalHeight > 0 && naturalWidth > 0;
   const [imageLoaded, setImageLoaded] = useState(false);
 
-  // if initialImageUrl changes from "" to something else, set imageUrl to initialImageUrl
   useEffect(() => {
     if (initialImageUrl && initialImageUrl !== "") {
       setImageUrl(initialImageUrl);
     }
   }, [initialImageUrl, setImageUrl]);
 
-  // if filePath isn't set, updated it when filePathFromSearchParam changes
   useEffect(() => {
     if (!filePath && filePathFromSearchParam) {
       setFilePath(filePathFromSearchParam);
@@ -294,26 +277,21 @@ export function ImageUpload({
   }, [filePathFromSearchParam, filePath, setFilePath]);
 
   useEffect(() => {
-    // Reset the imageLoaded state whenever imageUrl changes
     setImageLoaded(false);
 
     const imageElement = fullImageRef.current;
 
     if (imageElement && imageUrl) {
       const handleLoad = () => {
-        // Set imageLoaded to true when the image is loaded
         setImageLoaded(true);
       };
 
-      // Add event listener to the image element
       imageElement.addEventListener("load", handleLoad);
 
-      // Check if image is already loaded (cached images)
       if (imageElement.complete && imageElement.naturalWidth) {
         setImageLoaded(true);
       }
 
-      // Clean up
       return () => {
         imageElement.removeEventListener("load", handleLoad);
       };
@@ -436,7 +414,6 @@ export function ImageUpload({
           options={bytescaleWidgetOptions}
           onComplete={(files) => {
             if (files.length > 0) {
-              // push the file path to the search params
               const filePath = files[0]!.filePath;
               const fileUrl = files[0]!.fileUrl;
               setFilePath(filePath);

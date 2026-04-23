@@ -4,6 +4,5 @@
  */
 
 export function getDefaultLists(_userId: string) {
-  // Return empty array for now - lists functionality will be implemented in Convex
   return [];
 }

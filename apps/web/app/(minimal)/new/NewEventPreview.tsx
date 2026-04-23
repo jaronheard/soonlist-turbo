@@ -29,17 +29,6 @@ export function NewEventPreview(initialProps: AddToCalendarCardProps) {
     setEventData(event);
   }, [event, setEventData]);
 
-  // if (mode === Mode.Edit) {
-  //   return (
-  //     <div className="mx-auto pb-4 sm:w-[30rem] md:w-[36rem]">
-  //       <AddToCalendarCard
-  //         {...event}
-  //         onUpdate={setEvent}
-  //         hideFloatingActionButtons
-  //       />
-  //     </div>
-  //   );
-  // }
   return (
     <div className="mx-auto sm:w-[30rem] md:w-[36rem]">
       {mode === Mode.Edit && (

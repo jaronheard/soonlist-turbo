@@ -1,4 +1,3 @@
-// copied this script and it isn't typed, so we have to disable a bunch of rules
 /* eslint-disable @typescript-eslint/no-unnecessary-condition */
 /* eslint-disable @typescript-eslint/no-unused-expressions */
 /* eslint-disable @typescript-eslint/ban-ts-comment */
@@ -14,8 +13,6 @@ import { env } from "~/env";
 
 export const APP_ID = env.NEXT_PUBLIC_INTERCOM_APP_ID;
 
-// Loads Intercom with the snippet
-// This must be run before boot, it initializes window.Intercom
 
 export const load = () => {
   (function () {
@@ -53,7 +50,6 @@ export const load = () => {
   })();
 };
 
-// Initializes Intercom
 export const boot = (options: Intercom_.IntercomSettings) => {
   window &&
     window.Intercom &&

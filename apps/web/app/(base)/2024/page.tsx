@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import Image from "next/image";
-import Link from "next/link"; // Import Link from Next.js
+import Link from "next/link";
 
 import { currentUser } from "@clerk/nextjs/server";
 
@@ -12,7 +12,6 @@ import Section from "./_components/section";
 import WeeklyDistribution from "./_components/weeklyDistribution";
 import dataFor2024 from "./dataFor2024";
 
-// Add these interfaces at the top of the file, after imports
 interface TopEvent {
   id: string;
   event_name: string;

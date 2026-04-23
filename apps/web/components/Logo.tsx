@@ -1,4 +1,3 @@
-// use the lucide calendar icon for now
 export function Logo({
   className,
   variant = "hidePreview",

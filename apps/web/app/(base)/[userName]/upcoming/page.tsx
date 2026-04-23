@@ -29,7 +29,6 @@ const transformConvexUser = (user: Doc<"users">): User => {
   };
 };
 
-// Transform Convex events to EventWithUser format
 function transformConvexEvents(
   events:
     | FunctionReturnType<typeof api.feeds.getMyFeed>["page"]
@@ -52,7 +51,6 @@ function transformConvexEvents(
       createdAt: new Date(event._creationTime),
       // eslint-disable-next-line @typescript-eslint/no-non-null-assertion -- user is guaranteed after filter
       user: transformConvexUser(event.user!),
-      // Preserve follow state so save/unsave UI reflects current user state.
       eventFollows: event.eventFollows,
       comments: [],
       eventToLists: [],
@@ -63,16 +61,12 @@ export default function Page({ params }: Props) {
   const { userName } = use(params);
   const currentUser = useQuery(api.users.getCurrentUser);
   const self = currentUser?.username === userName;
-  // Look up the user first so we can skip the feed query for invalid
-  // usernames — getPublicUserFeed throws "User not found" otherwise.
   const targetUser = useQuery(
     api.users.getByUsername,
     self ? "skip" : { userName },
   );
   const stableNow = useStableTimestamp();
 
-  // Self: full personal feed (created + followed + from followed lists).
-  // Other users: their public feed (same union, public events only).
   const myFeedQuery = usePaginatedQuery(
     api.feeds.getMyFeed,
     self ? { filter: "upcoming" as const } : "skip",
@@ -94,14 +88,11 @@ export default function Page({ params }: Props) {
     status === "LoadingFirstPage" || (!self && targetUser === undefined);
   const events = convexEvents ? transformConvexEvents(convexEvents) : [];
 
-  // Client-side safety filter: hide events that have ended
-  // This prevents showing ended events if the cron job hasn't run recently
   const stableNowDate = new Date(stableNow);
   const filteredEvents = events.filter((event) => {
     return new Date(event.endDateTime) >= stableNowDate;
   });
 
-  // Events are already filtered by the query, just separate current vs future
   const currentEvents = filteredEvents.filter((item) => {
     const startDate = new Date(item.startDateTime);
     const endDate = new Date(item.endDateTime);

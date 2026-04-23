@@ -44,21 +44,17 @@ const transformConvexUser = (user: Doc<"users">): User => {
 export default function EventPageClient({ eventId }: { eventId: string }) {
   const event = useQuery(api.events.get, { eventId });
 
-  // Scroll to top when navigating to this page
   useEffect(() => {
     window.scrollTo(0, 0);
   }, [eventId]);
 
   const deepLink = createDeepLink(`event/${eventId}`);
 
-  // Loading state - useQuery returns undefined while loading
   if (event === undefined) {
     return (
       <div className="flex flex-col gap-6">
         <OpenInAppBanner deepLink={deepLink} />
-        {/* Event image skeleton */}
         <Skeleton className="aspect-[9/16] w-full max-w-md rounded-2xl" />
-        {/* Event details skeleton */}
         <div className="flex flex-col gap-4">
           <Skeleton className="h-8 w-3/4" />
           <Skeleton className="h-6 w-1/2" />

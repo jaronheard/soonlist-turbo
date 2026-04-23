@@ -25,19 +25,12 @@ interface UseBatchUploadStateReturn {
   getActiveBatch: () => BatchUploadState | null;
 }
 
-/**
- * Hook for managing batch upload state
- * Tracks multiple batches and their progress
- */
 export function useBatchUploadState(): UseBatchUploadStateReturn {
   const [batches, setBatches] = useState<Map<string, BatchUploadState>>(
     new Map(),
   );
   const [activeBatchId, setActiveBatchId] = useState<string | null>(null);
 
-  /**
-   * Create a new batch
-   */
   const createBatch = useCallback((batchId: string, images: BatchImage[]) => {
     const batchState = createBatchState(batchId, images);
     setBatches((prev) => {
@@ -48,9 +41,6 @@ export function useBatchUploadState(): UseBatchUploadStateReturn {
     setActiveBatchId(batchId);
   }, []);
 
-  /**
-   * Update the overall status of a batch
-   */
   const updateBatchStatus = useCallback(
     (batchId: string, status: BatchUploadState["status"]) => {
       setBatches((prev) => {
@@ -65,9 +55,6 @@ export function useBatchUploadState(): UseBatchUploadStateReturn {
     [],
   );
 
-  /**
-   * Update the status of an individual image in a batch
-   */
   const updateImageStatus = useCallback(
     (
       batchId: string,
@@ -99,9 +86,6 @@ export function useBatchUploadState(): UseBatchUploadStateReturn {
     [],
   );
 
-  /**
-   * Increment processed count and track success/error
-   */
   const incrementProcessed = useCallback(
     (batchId: string, success: boolean) => {
       setBatches((prev) => {
@@ -121,9 +105,6 @@ export function useBatchUploadState(): UseBatchUploadStateReturn {
     [],
   );
 
-  /**
-   * Mark a batch as complete
-   */
   const completeBatch = useCallback((batchId: string) => {
     setBatches((prev) => {
       const batch = prev.get(batchId);
@@ -138,13 +119,9 @@ export function useBatchUploadState(): UseBatchUploadStateReturn {
       return next;
     });
 
-    // Clear active batch if this was the active one
     setActiveBatchId((current) => (current === batchId ? null : current));
   }, []);
 
-  /**
-   * Remove a batch from state
-   */
   const clearBatch = useCallback((batchId: string) => {
     setBatches((prev) => {
       const next = new Map(prev);
@@ -152,13 +129,9 @@ export function useBatchUploadState(): UseBatchUploadStateReturn {
       return next;
     });
 
-    // Clear active batch if this was the active one
     setActiveBatchId((current) => (current === batchId ? null : current));
   }, []);
 
-  /**
-   * Get the currently active batch
-   */
   const getActiveBatch = useCallback((): BatchUploadState | null => {
     if (!activeBatchId) return null;
     return batches.get(activeBatchId) ?? null;

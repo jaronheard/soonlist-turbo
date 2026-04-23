@@ -12,12 +12,10 @@ export default function PostHogPageView(): null {
   const searchParams = useSearchParams();
   const posthog = usePostHog();
 
-  // Get current user from Convex
   const currentUser = useQuery(api.users.getCurrentUser);
   const isSignedIn = !!currentUser;
   const userId = currentUser?.id;
 
-  // Track pageviews
   useEffect(() => {
     if (process.env.NODE_ENV == "development") {
       return;
@@ -37,17 +35,13 @@ export default function PostHogPageView(): null {
     if (process.env.NODE_ENV == "development") {
       return;
     }
-    // Check the sign in status and user info,
-    // and identify the user if they aren't already
     if (isSignedIn && userId && currentUser && !posthog._isIdentified()) {
-      // Identify the user
       posthog.identify(userId, {
         email: currentUser.email,
         username: currentUser.username,
       });
     }
 
-    // 👉 Reset the user if they sign out
     if (!isSignedIn && posthog._isIdentified()) {
       posthog.reset();
     }

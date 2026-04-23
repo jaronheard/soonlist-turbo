@@ -14,7 +14,6 @@ export function AppStoreDownload({ className = "" }: AppStoreDownloadProps) {
   return (
     <div className={`block ${className}`}>
       <div className="flex flex-col items-center justify-center gap-4">
-        {/* Desktop-only QR code above badge */}
         <div className="hidden flex-col items-center justify-center md:flex">
           <div className="rounded-lg border border-neutral-3 bg-white p-3 shadow-sm">
             <Image
@@ -28,7 +27,6 @@ export function AppStoreDownload({ className = "" }: AppStoreDownloadProps) {
           <p className="mt-2 text-sm text-gray-500">Scan to download or</p>
         </div>
 
-        {/* App Store Badge */}
         <a
           href={appStoreUrl}
           className="group block"
@@ -45,9 +43,7 @@ export function AppStoreDownload({ className = "" }: AppStoreDownloadProps) {
           </div>
         </a>
 
-        {/* App Store Social Proof */}
         <div className="flex flex-col items-center justify-center gap-4">
-          {/* Rating with improved copy and layout */}
           <div className="flex items-center gap-2 transition-opacity duration-200 group-hover:opacity-90">
             <span className="text-lg font-medium text-gray-700">
               Rated 4.9 / 5
@@ -66,7 +62,6 @@ export function AppStoreDownload({ className = "" }: AppStoreDownloadProps) {
             </div>
           </div>
 
-          {/* Free trial copy with subdued styling */}
           <p className="text-sm text-gray-500 transition-opacity duration-200 group-hover:opacity-90">
             Try for free. No one turned away for lack of funds.
           </p>

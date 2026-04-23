@@ -82,7 +82,6 @@ function ProgressStagesWrapper({
           </h1>
         </div>
         {children}
-        {/* Footer should be included in children */}
       </div>
     </>
   );
@@ -114,7 +113,6 @@ export function ProgressStages({
   useEffect(() => {
     if (!showUpload && !isShortcut) {
       setIsShortcut(true);
-      // Skip directly to Preview when we have a filePath
       if (filePath) {
         setStatus(Status.Preview);
       }
@@ -139,7 +137,6 @@ export function ProgressStages({
     : undefined;
 
   const removeImage = croppedImagesUrls.deleted;
-  // use images from context or initial props
   const images = removeImage
     ? []
     : imagesFromContext ||
@@ -342,15 +339,12 @@ function AddEvent() {
   const currentUser = useQuery(api.users.getCurrentUser);
   const { addWorkflowId } = useWorkflowStore();
 
-  // State variables
   const [input, setInput] = useState("");
   const [isProcessing, setIsProcessing] = useState(false);
   const { uploadOption, setUploadOption } = useNewEventProgressContext();
 
-  // Context variables
   const { timezone } = useContext(TimezoneContext);
 
-  // Mutations
   const createEventFromText = useMutation(api.ai.eventFromTextThenCreate);
   const createEventFromUrl = useMutation(api.ai.eventFromUrlThenCreate);
 

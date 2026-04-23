@@ -22,12 +22,11 @@ interface SaveButtonProps {
   event?: EventData;
   type?: "button" | "icon";
   className?: string;
-  userId?: string; // Current user's ID
-  eventUserId?: string; // Event owner's ID
-  isSaved?: boolean; // Whether current user has saved this event
+  userId?: string;
+  eventUserId?: string;
+  isSaved?: boolean;
 }
 
-// iOS detection function
 function isIOS(): boolean {
   if (typeof window === "undefined") return false;
 
@@ -52,7 +51,6 @@ export function SaveButton({
     setIsIOSDevice(isIOS());
   }, []);
 
-  // Determine if current user owns this event
   const isOwner = userId && eventUserId && userId === eventUserId;
 
   const appStoreUrl =
@@ -62,27 +60,19 @@ export function SaveButton({
     if (!isIOSDevice) return;
 
     try {
-      // Create deep link to the event
       const deepLink = createDeepLink(`event/${eventId}`);
 
-      // Check if we're in development
       const isDev = process.env.NODE_ENV !== "production";
 
-      // Use window.location instead of window.open to avoid popup blockers
-      // Try the deep link first, then fallback to App Store
       window.location.href = deepLink;
 
-      // In development, don't redirect to App Store since we're using dev build
       if (!isDev) {
-        // Set a fallback timer in case the deep link doesn't work
         setTimeout(() => {
-          // Only redirect to App Store if we're still on the same page
           if (!document.hidden) {
             window.location.href = appStoreUrl;
           }
         }, 2000);
       } else {
-        // In development, just show a helpful message
         setTimeout(() => {
           if (!document.hidden) {
             toast(
@@ -96,10 +86,8 @@ export function SaveButton({
       const isDev = process.env.NODE_ENV !== "production";
 
       if (!isDev) {
-        // Fallback to App Store in production
         window.location.href = appStoreUrl;
       } else {
-        // In development, show helpful message
         toast(
           "Failed to open development app. Make sure it's installed and the deep link scheme is configured correctly.",
         );
@@ -123,7 +111,6 @@ export function SaveButton({
           url: `https://${env.NEXT_PUBLIC_VERCEL_PROJECT_PRODUCTION_URL}/event/${eventId}`,
         });
       } catch {
-        // User cancelled or error occurred, fallback to clipboard
         await handleClipboardShare();
       }
     } else {
@@ -145,11 +132,6 @@ export function SaveButton({
     }
   };
 
-  // Determine button behavior based on ownership, save state, and platform
-  // Logic:
-  // 1. If user owns event OR already saved → always show Share
-  // 2. If iOS and not owned and not saved → show Save (deep link)
-  // 3. Otherwise → show Share
   const shouldShowShare = isOwner || isSaved || !isIOSDevice;
 
   const handleClick = shouldShowShare ? handleShareClick : handleSaveClick;

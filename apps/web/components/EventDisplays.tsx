@@ -36,12 +36,10 @@ import { SaveButton } from "./SaveButton";
 import { ShareButton } from "./ShareButton";
 import { UserAvatarMini } from "./UserAvatarMini";
 
-// Helper to get platform URL for mentions
 function getPlatformUrl(
   platform: string | undefined,
   username: string,
 ): string | null {
-  // Check if username is already a full URL
   const trimmedUsername = username.trim();
   if (
     trimmedUsername.startsWith("http://") ||
@@ -49,7 +47,7 @@ function getPlatformUrl(
   ) {
     try {
       new URL(trimmedUsername);
-      return trimmedUsername; // Return as-is if it's a valid URL
+      return trimmedUsername;
     } catch {
       // Invalid URL, continue with platform logic
     }
@@ -57,7 +55,6 @@ function getPlatformUrl(
 
   const cleanUsername = trimmedUsername.replace(/^@/, "");
 
-  // Only return URLs for explicitly supported platforms
   switch (platform?.toLowerCase()) {
     case "tiktok":
       return `https://tiktok.com/@${cleanUsername}`;
@@ -68,7 +65,7 @@ function getPlatformUrl(
     case "instagram":
       return `https://instagram.com/${cleanUsername}`;
     default:
-      return null; // Return null for unsupported platforms
+      return null;
   }
 }
 
@@ -175,7 +172,7 @@ export function EventMetadataDisplay({
 }
 
 interface EventListItemProps {
-  list?: List; // this is the list that this is a part of
+  list?: List;
   variant?: "card" | "minimal";
   user?: User;
   eventFollows: EventFollow[];
@@ -192,8 +189,8 @@ interface EventListItemProps {
   }[];
   filePath?: string;
   happeningNow?: boolean;
-  lists?: List[]; // this is all lists that this event is a part of
-  index?: number; // used to alternate image rotation like the Expo app
+  lists?: List[];
+  index?: number;
 }
 
 interface EventPageProps {
@@ -221,7 +218,6 @@ function EventDateDisplaySimple({
   startDate,
   startTime,
   endDate,
-  // endTime,
   timezone,
 }: {
   startDate?: string;
@@ -244,12 +240,6 @@ function EventDateDisplaySimple({
   const startDateInfo = startTime
     ? getDateTimeInfo(startDate, startTime, timezone, userTimezone.toString())
     : getDateInfoUTC(startDate);
-  // const endDateInfo = endTime
-  //   ? getDateTimeInfo(endDate, endTime, timezone, userTimezone.toString())
-  //   : getDateInfoUTC(endDate);
-  // const showMultiDay = showMultipleDays(startDateInfo, endDateInfo);
-  // const showNightIcon =
-  //   endsNextDayBeforeMorning(startDateInfo, endDateInfo) && !showMultiDay;
 
   return (
     <div className="flex flex-col items-center justify-center gap-3">
@@ -317,7 +307,6 @@ function EventDetailsCard({
     ? getDateTimeInfo(endDate, endTime, timezone, userTimezone.toString())
     : getDateInfoUTC(endDate);
 
-  // Get event timezone DateInfo for displaying original time
   const eventTimezoneStartDateInfo: DateInfo | null = startTime
     ? getDateTimeInfo(startDate, startTime, timezone, timezone)
     : null;
@@ -416,7 +405,7 @@ function EventDetails({
   preview?: boolean;
   variant?: "minimal";
   happeningNow?: boolean;
-  visibility: "public" | "private"; // Add this to the props type
+  visibility: "public" | "private";
 }) {
   const { timezone: userTimezone } = useContext(TimezoneContext);
   const [isClient, setIsClient] = useState(false);
@@ -442,7 +431,6 @@ function EventDetails({
     ? getDateTimeInfo(endDate, endTime, timezone, userTimezone.toString())
     : getDateInfoUTC(endDate);
 
-  // Get event timezone DateInfo for displaying original time
   const eventTimezoneStartDateInfo = startTime
     ? getDateTimeInfo(startDate, startTime, timezone, timezone)
     : null;
@@ -502,11 +490,6 @@ function EventDetails({
           )}
         </div>
 
-        {/* TODO: 
-        <div className="pt-2">
-          <EventDescription description={description} truncate />
-        </div>
-        */}
         <div className="absolute bottom-2 right-2 z-10">
           {EventActionButtons}
         </div>
@@ -540,29 +523,6 @@ function HappeningSoonBadge({ startDateInfo }: { startDateInfo: DateInfo }) {
   );
 }
 
-// TODO: Remove this
-// function EventDescription({
-//   description,
-//   truncate,
-// }: {
-//   description: string;
-//   singleEvent?: boolean;
-//   truncate?: boolean;
-// }) {
-//   return (
-//     <div
-//       className={cn("text-lg leading-7 text-neutral-1", {
-//         "line-clamp-3": truncate,
-//       })}
-//     >
-//       <span
-//         dangerouslySetInnerHTML={{
-//           __html: translateToHtml(description),
-//         }}
-//       ></span>
-//     </div>
-//   );
-// }
 
 function EventActionButtons({
   user,
@@ -605,7 +565,6 @@ function EventActionButtons({
         {!isOwner && (
           <FollowEventButton eventId={id} following={isFollowing} type="icon" />
         )}
-        {/* <FollowEventDropdownButton eventId={id} following={isFollowing} /> */}
         {isOwner && (
           <>
             <EditButton type="icon" userId={user.id} id={id} />
@@ -665,7 +624,6 @@ function EventActionButtons({
   );
 }
 
-// Removed duplicated mini user info in favor of `UserAvatarMini`
 
 export function EventListItem(props: EventListItemProps) {
   const { user: clerkUser } = useUser();
@@ -682,7 +640,6 @@ export function EventListItem(props: EventListItemProps) {
     (filePath ? buildDefaultUrl(props.filePath || "") : undefined);
 
   if (!props.variant || props.variant === "minimal") {
-    // Derive date/time info and status badges similar to the Expo card
     const startDateInfo = event.startTime
       ? getDateTimeInfo(
           event.startDate || "",
@@ -712,8 +669,7 @@ export function EventListItem(props: EventListItemProps) {
       return createdAtTs > threeHoursAgo;
     })();
 
-    // Visual constants to mimic Expo design
-    const thumbWidth = 94; // px (85% of original 110px)
+    const thumbWidth = 94;
     const thumbHeight = Math.round((thumbWidth * 16) / 9);
     const imageRotation =
       props.index !== undefined
@@ -725,8 +681,8 @@ export function EventListItem(props: EventListItemProps) {
           : "-10deg";
 
     const baseBorderColor = "#E9E3FF";
-    const happeningBorderColor = "#FEEA9F"; // accent-yellow
-    const recentGlowColor = "#E0D9FF"; // light purple
+    const happeningBorderColor = "#FEEA9F";
+    const recentGlowColor = "#E0D9FF";
     const cardBorderColor = isRecent
       ? recentGlowColor
       : isHappeningNow
@@ -761,7 +717,6 @@ export function EventListItem(props: EventListItemProps) {
       const startPeriod = start.hour < 12 ? "AM" : "PM";
       const endPeriod = end.hour < 12 ? "AM" : "PM";
 
-      // Normalize timezones for comparison
       const normalizeTimezone = (tz?: string): string => {
         const val = tz?.trim().toLowerCase();
         return !val || val === "unknown" ? "" : val;
@@ -770,12 +725,11 @@ export function EventListItem(props: EventListItemProps) {
       const normalizedEventTz = normalizeTimezone(event.timeZone);
       const normalizedUserTz = normalizeTimezone(userTimezone);
 
-      // Get timezone abbreviation if timezones differ
       const shouldShowTimezone =
         normalizedEventTz &&
         normalizedUserTz &&
         normalizedEventTz !== normalizedUserTz &&
-        event.startTime; // Only show for timed events
+        event.startTime;
 
       const timeStr = `${startHour}:${startMin}${startPeriod} - ${endHour}:${endMin}${endPeriod}`;
 
@@ -789,7 +743,6 @@ export function EventListItem(props: EventListItemProps) {
           event.timeZone || "",
         );
         if (timezoneAbbreviation) {
-          // Get event timezone DateInfo
           const eventStartDateInfo = getDateTimeInfo(
             event.startDate || "",
             event.startTime || "",
@@ -840,7 +793,6 @@ export function EventListItem(props: EventListItemProps) {
 
     const relativeLabel = (() => {
       if (!relativeTime) return "";
-      // Don't show "in the past" when happeningNow prop is explicitly true
       if (props.happeningNow) return "Happening now";
       return relativeTime;
     })();
@@ -858,7 +810,6 @@ export function EventListItem(props: EventListItemProps) {
 
     return (
       <li className="relative">
-        {/* Angled thumbnail on the right - wrapped in Link */}
         <Link
           href={`/event/${id}`}
           className="absolute -right-2 top-1/2 z-10"
@@ -910,7 +861,6 @@ export function EventListItem(props: EventListItemProps) {
           </div>
         </Link>
 
-        {/* Content card with dynamic border and right padding for image */}
         <div
           className="my-1 mt-4 rounded-[20px] bg-white p-3"
           style={{
@@ -921,7 +871,6 @@ export function EventListItem(props: EventListItemProps) {
             boxShadow: `0 2px ${cardShadowRadius + 2}px rgba(90,50,251,0.12)`,
           }}
         >
-          {/* Tappable content area */}
           <Link href={`/event/${id}`} className="block">
             <div className="mb-1 flex w-full items-center justify-between">
               <div className="flex items-center gap-1">
@@ -954,9 +903,7 @@ export function EventListItem(props: EventListItemProps) {
             )}
           </Link>
 
-          {/* Actions row - NOT wrapped in Link */}
           <div className="-mb-2.5 flex items-center gap-3">
-            {/* Save/Share pill */}
             <SaveButton
               eventId={id}
               event={event}
@@ -990,7 +937,6 @@ export function EventListItem(props: EventListItemProps) {
           </div>
         </div>
 
-        {/* Creator row */}
         {user && !isSelf && (props.showOtherCurators || !props.hideCurator) && (
           <div className="mx-1 mt-2 flex items-center justify-center gap-2">
             <UserAvatarMini
@@ -1001,7 +947,6 @@ export function EventListItem(props: EventListItemProps) {
           </div>
         )}
 
-        {/* Top badges */}
         <div className="pointer-events-none absolute left-0 right-0 top-0 z-20 flex items-center justify-center gap-2">
           {isRecent && (
             <div
@@ -1036,14 +981,12 @@ export function EventListItem(props: EventListItemProps) {
     );
   }
 
-  // if (props.variant === "card")
   return (
     <li
       className={cn(
         "relative h-full overflow-hidden rounded-xl bg-white shadow-sm after:pointer-events-none after:absolute after:left-0 after:top-0 after:size-full after:rounded-xl after:border after:border-neutral-3 after:shadow-sm",
       )}
     >
-      {/* Tappable main content area */}
       <Link href={`/event/${id}`} className="block">
         {image && (
           <div className="relative h-44 w-full grow">
@@ -1092,7 +1035,6 @@ export function EventListItem(props: EventListItemProps) {
         <div className="p-3"></div>
       </Link>
 
-      {/* User avatar - positioned but not tappable for main link */}
       <div className="absolute bottom-2 left-2 z-10 flex gap-2">
         {user && (
           <UserAvatarMini
@@ -1103,7 +1045,6 @@ export function EventListItem(props: EventListItemProps) {
         )}
       </div>
 
-      {/* Action buttons - separate from main tappable area */}
       <div className="absolute bottom-2 right-2 z-20">
         <EventActionButtons
           user={user}
@@ -1185,7 +1126,6 @@ function DateAndTimeDisplay({
   eventTimezoneStartDateInfo?: DateInfo;
   eventTimezoneEndDateInfo?: DateInfo;
 }) {
-  // Normalize timezones for comparison
   const normalizeTimezone = (tz?: string): string => {
     const val = tz?.trim().toLowerCase();
     return !val || val === "unknown" ? "" : val;
@@ -1194,12 +1134,11 @@ function DateAndTimeDisplay({
   const normalizedEventTz = normalizeTimezone(eventTimezone);
   const normalizedUserTz = normalizeTimezone(userTimezone);
 
-  // Get timezone abbreviation if timezones differ
   const shouldShowTimezone =
     normalizedEventTz &&
     normalizedUserTz &&
     normalizedEventTz !== normalizedUserTz &&
-    startTime; // Only show for timed events
+    startTime;
 
   const resolveTZAbbr = (tz?: string): string | undefined => {
     try {
@@ -1325,7 +1264,6 @@ export function EventPage(props: EventPageProps) {
     ? getDateTimeInfo(endDate, endTime, timezone, userTimezone.toString())
     : getDateInfoUTC(endDate);
 
-  // Get event timezone DateInfo for displaying original time
   const eventTimezoneStartDateInfo = startTime
     ? getDateTimeInfo(startDate, startTime, timezone, timezone)
     : null;
@@ -1333,7 +1271,6 @@ export function EventPage(props: EventPageProps) {
     ? getDateTimeInfo(endDate, endTime, timezone, timezone)
     : null;
 
-  // Normalize timezones for comparison
   const normalizeTimezone = (tz?: string): string => {
     const val = tz?.trim().toLowerCase();
     return !val || val === "unknown" ? "" : val;
@@ -1342,12 +1279,11 @@ export function EventPage(props: EventPageProps) {
   const normalizedEventTz = normalizeTimezone(timezone);
   const normalizedUserTz = normalizeTimezone(userTimezone.toString());
 
-  // Get timezone abbreviation if timezones differ
   const shouldShowTimezone =
     normalizedEventTz &&
     normalizedUserTz &&
     normalizedEventTz !== normalizedUserTz &&
-    startTime; // Only show for timed events
+    startTime;
 
   const resolveTZAbbr = (tz?: string): string | undefined => {
     try {

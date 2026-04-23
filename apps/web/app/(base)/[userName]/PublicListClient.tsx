@@ -40,7 +40,6 @@ const transformConvexUser = (user: Doc<"users">): User => {
   };
 };
 
-// Transform Convex events to EventWithUser format (for feed events)
 function transformConvexEventsAsPublic(
   events:
     | FunctionReturnType<typeof api.feeds.getPublicUserFeed>["page"]
@@ -85,11 +84,8 @@ export default function PublicListClient({ params }: Props) {
   const isOwner = currentUser?.username === userName;
   const isPublicListEnabled = publicListData?.user.publicListEnabled;
 
-  // Use the new getPublicUserFeed when publicListEnabled is true
-  // This shows the user's full feed (created + followed events) instead of just created events
   const shouldUseFeed = isPublicListEnabled;
 
-  // Query for user's public feed (includes followed events) when public list is enabled
   const publicUserFeedQuery = usePaginatedQuery(
     api.feeds.getPublicUserFeed,
     shouldUseFeed
@@ -105,22 +101,17 @@ export default function PublicListClient({ params }: Props) {
     api.users.updatePublicListSettings,
   );
 
-  // Use the public user feed query results
   const isLoading =
     publicUserFeedQuery.status === "LoadingFirstPage" ||
     publicListData === undefined;
 
-  // Transform events using the feed transformer (since we're now using feed data)
   const events = transformConvexEventsAsPublic(publicUserFeedQuery.results);
 
-  // Client-side safety filter: hide events that have ended
-  // This prevents showing ended events if the cron job hasn't run recently
   const stableNowDate = new Date(stableNow);
   const filteredEvents = events.filter((event) => {
     return new Date(event.endDateTime) >= stableNowDate;
   });
 
-  // Events are already filtered by the query, just separate current vs future
   const currentEvents = filteredEvents.filter((item) => {
     const startDate = new Date(item.startDateTime);
     const endDate = new Date(item.endDateTime);
@@ -154,7 +145,6 @@ export default function PublicListClient({ params }: Props) {
         console.error("Error sharing:", error);
       }
     } else {
-      // Fallback for browsers that do not support the Share API
       void navigator.clipboard.writeText(url);
       toast("List URL copied to clipboard!");
     }
@@ -175,12 +165,10 @@ export default function PublicListClient({ params }: Props) {
     }
   };
 
-  // Show full page spinner until all data is loaded
   if (currentUser === undefined || publicListData === undefined) {
     return <FullPageLoadingSpinner />;
   }
 
-  // If user is the owner and public list is not enabled, show setup
   if (isOwner && !isPublicListEnabled) {
     return (
       <div className="mx-auto max-w-2xl">
@@ -231,7 +219,6 @@ export default function PublicListClient({ params }: Props) {
     );
   }
 
-  // If user is not the owner and public list is not enabled, show not found
   if (!isOwner && !isPublicListEnabled) {
     return (
       <div className="mx-auto max-w-2xl">
@@ -251,10 +238,6 @@ export default function PublicListClient({ params }: Props) {
     );
   }
 
-  // Show public list (either as owner or visitor)
-  // AppsFlyer OneLink URL with deep link parameters for follow intent
-  // When users download the app via this link, they'll be redirected to follow this user
-  // Note: deep_link_value and deep_link_sub1 are passed to the app via AppsFlyer SDK
   const getAppUrl = `https://soonlist.onelink.me/QM97?pid=soonlist_web&c=public_list_follow&deep_link_value=follow&deep_link_sub1=${encodeURIComponent(userName)}`;
 
   return (
@@ -354,7 +337,6 @@ export default function PublicListClient({ params }: Props) {
         </div>
       )}
 
-      {/* App Store CTA for visitors with deep link to follow this user */}
       {!isOwner && (
         <div className="mb-6 flex flex-col items-center justify-between gap-4 rounded-xl bg-interactive-3 px-6 py-4 sm:flex-row">
           <span className="text-lg font-bold text-interactive-1">

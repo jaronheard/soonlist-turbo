@@ -11,28 +11,21 @@ interface OpenInAppBannerProps {
   label?: string;
 }
 
-// Detect if we're in an in-app browser (Instagram, Facebook, TikTok, etc.)
 function isInAppBrowser(): boolean {
   if (typeof window === "undefined") return false;
 
   const ua = navigator.userAgent || navigator.vendor;
 
-  // Instagram webview
   if (ua.includes("Instagram")) return true;
 
-  // Facebook webview
   if (ua.includes("FBAN") || ua.includes("FBAV")) return true;
 
-  // TikTok webview
   if (ua.includes("TikTok") || ua.includes("BytedanceWebview")) return true;
 
-  // Twitter/X webview
   if (ua.includes("Twitter")) return true;
 
-  // LinkedIn webview
   if (ua.includes("LinkedInApp")) return true;
 
-  // Generic webview detection for iOS
   if (
     ua.includes("iPhone") &&
     !ua.includes("Safari") &&
@@ -44,7 +37,6 @@ function isInAppBrowser(): boolean {
   return false;
 }
 
-// Detect if we're on iOS
 function isIOS(): boolean {
   if (typeof window === "undefined") return false;
 
@@ -57,7 +49,6 @@ export function OpenInAppBanner({ deepLink, label }: OpenInAppBannerProps) {
   const [dismissed, setDismissed] = useState(false);
 
   useEffect(() => {
-    // Only show banner for in-app browsers on iOS
     const shouldShow = isInAppBrowser() && isIOS();
     setShowBanner(shouldShow);
   }, []);
@@ -72,20 +63,15 @@ export function OpenInAppBanner({ deepLink, label }: OpenInAppBannerProps) {
   const handleOpenInApp = () => {
     const isDev = process.env.NODE_ENV !== "production";
 
-    // Try to open via deep link first
     window.location.href = deepLink;
 
-    // In development, don't redirect to App Store since we're using dev build
     if (!isDev) {
-      // Fallback to App Store after a delay if the app isn't installed
-      // Only redirect if page is still visible (app didn't open)
       setTimeout(() => {
         if (!document.hidden) {
           window.location.href = appStoreUrl;
         }
       }, 2000);
     } else {
-      // In development, show a helpful message if app doesn't open
       setTimeout(() => {
         if (!document.hidden) {
           toast(

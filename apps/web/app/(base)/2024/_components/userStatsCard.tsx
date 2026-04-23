@@ -1,4 +1,3 @@
-//  userStatsCard.tsx;
 
 import Image from "next/image";
 
@@ -21,23 +20,6 @@ export interface UserStatsCardProps {
   user_index?: number;
 }
 
-// example data
-// {
-//     user_id: "user_2ZFNoiajf80Q4ZiTQj8hAgatRCt",
-//     username: "jaronheard",
-//     emoji: "💖",
-//     created_at: "2023-11-04 01:58:14",
-//     total_events_captured: "252",
-//     unique_event_types: "22",
-//     favorite_type: "concert",
-//     favorite_category: "music",
-//     events_followed: "28",
-//     first_event_id: "clrbwg21u0001f48lm6x2zsoq",
-//     first_event_name: "Dig A Hole Zines Fundraising PARTY",
-//     first_event_image:
-//       "https://upcdn.io/12a1yek/image/uploads/2024/01/13/4ktjNP7rKz-file.jpeg?crop-x=0&crop-y=87&crop-w=1350&crop-h=1350",
-//     first_event_date: "2024-01-13 06:00:00",
-//   },
 
 const Stat = ({
   label,
@@ -70,7 +52,6 @@ const Stat = ({
       }}
     >
       <p className="text-[10px] font-bold uppercase leading-none">{label}</p>
-      {/* if value is a url, render an image     */}
       {value.includes("http") ? (
         <div className="relative mt-2 h-36 w-36 flex-shrink-0 overflow-hidden rounded-md border-4 border-yellow-300">
           <Image
@@ -127,7 +108,6 @@ const UserStatsCard: React.FC<UserStatsCardProps> = ({
         <Stat
           label="Fave Type"
           value={favorite_type}
-          //   value="performance"
           top="350"
           left="300"
           color="blue"

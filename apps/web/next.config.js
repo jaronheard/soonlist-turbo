@@ -2,19 +2,13 @@ import { fileURLToPath } from "url";
 import { withSentryConfig } from "@sentry/nextjs";
 import createJiti from "jiti";
 
-// Import env files to validate at build time. Use jiti so we can load .ts files in here.
 createJiti(fileURLToPath(import.meta.url))("./env");
 
-/** @type {import('next').NextConfig} */
 const nextConfig = {
-  /** T3 defaults */
   reactStrictMode: true,
-  /** Enables hot reloading for local packages without a build step */
   transpilePackages: ["@soonlist/cal", "@soonlist/ui", "@soonlist/validators"],
-  /** We already do linting and typechecking as separate tasks in CI */
   eslint: { ignoreDuringBuilds: true },
   typescript: { ignoreBuildErrors: true },
-  /** custom configuration */
   productionBrowserSourceMaps: true,
   logging: {
     fetches: {
@@ -80,7 +74,6 @@ const nextConfig = {
         destination: "https://testflight.apple.com/join/AjmerTKm",
         permanent: false,
       },
-      // Redirects for deleted routes
       {
         source: "/:userName/events",
         destination: "/",
@@ -128,7 +121,6 @@ const nextConfig = {
       },
     ];
   },
-  // This is required to support PostHog trailing slash API requests
   skipTrailingSlashRedirect: true,
   async headers() {
     const headers = [];
@@ -147,35 +139,22 @@ const nextConfig = {
   },
 };
 
-// Injected content via Sentry wizard below
 const nextConfigWithSentry =
   process.env.NODE_ENV === "production"
     ? withSentryConfig(nextConfig, {
-        // For all available options, see:
-        // https://github.com/getsentry/sentry-webpack-plugin#options
         authToken: process.env.SENTRY_AUTH_TOKEN,
 
-        // Suppresses source map uploading logs during build
         silent: !process.env.CI,
         org: "soonlist",
         project: "soonlist",
         tunnelRoute: "/monitoring",
-        // For all available options, see:
-        // https://docs.sentry.io/platforms/javascript/guides/nextjs/manual-setup/
 
-        // Upload a larger set of source maps for prettier stack traces (increases build time)
         widenClientFileUpload: true,
 
-        // Hides source maps from generated client bundles
         hideSourceMaps: true,
 
-        // Automatically tree-shake Sentry logger statements to reduce bundle size
         disableLogger: true,
 
-        // Enables automatic instrumentation of Vercel Cron Monitors.
-        // See the following for more information:
-        // https://docs.sentry.io/product/crons/
-        // https://vercel.com/docs/cron-jobs
         automaticVercelMonitors: true,
       })
     : nextConfig;

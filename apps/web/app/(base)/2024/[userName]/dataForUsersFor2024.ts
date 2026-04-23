@@ -1,4 +1,3 @@
-// First define the interface for a single user's data
 export interface UserData2024 {
   user_id: string;
   username: string;
@@ -16,7 +15,6 @@ export interface UserData2024 {
   user_index?: number;
 }
 
-// Define the shape of the final data structure using Record type
 type UsersData2024 = Record<string, UserData2024>;
 
 const dataForUsersFor2024Array = [

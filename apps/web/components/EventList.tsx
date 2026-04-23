@@ -82,7 +82,6 @@ export function EventList({
   currentEvents: EventWithUser[];
   futureEvents: EventWithUser[];
   pastEvents: EventWithUser[];
-  // variant is either "future-minimal" or "card" or undefined
   variant?: "future-minimal" | "card";
   showOtherCurators?: boolean;
   hideCurator?: boolean;

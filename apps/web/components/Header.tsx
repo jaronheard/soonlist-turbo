@@ -474,18 +474,6 @@ export function MobileNav() {
             </div>
           </SignedIn>
           <SignedOut>
-            {/* <Separator className="my-3" /> */}
-            {/* <SignUpButton>
-              <Button
-                className="w-full"
-                onClick={() => {
-                  setOpen(false);
-                }}
-              >
-                Sign Up
-              </Button>
-            </SignUpButton>
-            <div className="my-3"></div> */}
             <SignInButton>
               <Button
                 variant={"secondary"}
@@ -594,24 +582,3 @@ function MobileLink({
   );
 }
 
-// function MobileButton({
-//   onOpenChange,
-//   className,
-//   children,
-//   onClick,
-//   ...props
-// }: MobileLinkProps & { onClick: () => void }) {
-//   return (
-//     <Button
-//       onClick={() => {
-//         onClick();
-//         onOpenChange?.(false);
-//       }}
-//       variant={"ghost"}
-//       className={cn(className, "text-lg font-medium text-neutral-1")}
-//       {...props}
-//     >
-//       {children}
-//     </Button>
-//   );
-// }

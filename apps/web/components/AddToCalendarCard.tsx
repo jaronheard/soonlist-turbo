@@ -57,7 +57,6 @@ export function AddToCalendarCard({
   const { organizeData } = useNewEventContext();
   const { notes, visibility, lists } = organizeData;
 
-  // TODO: only use croppedImagesUrls if query param is set and same image
   const hasFilePath = croppedImagesUrls.filePath;
   const matchesFilePath = true;
   const hasAllAspectRatios =
@@ -78,10 +77,8 @@ export function AddToCalendarCard({
     : undefined;
 
   const removeImage = croppedImagesUrls.deleted;
-  // use images from context or initial props
   const images = removeImage ? [] : imagesFromContext || initialProps.images;
 
-  // state
   const [name, setName] = useState(initialProps.name);
   const [location, setLocation] = useState(initialProps.location);
   const [description, setDescription] = useState(initialProps.description);

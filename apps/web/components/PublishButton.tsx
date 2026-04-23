@@ -21,7 +21,6 @@ interface PublishButtonProps {
   loading?: boolean;
 }
 
-// Transform AddToCalendarButtonType to Convex event format
 function transformEventData(event: AddToCalendarButtonType) {
   return {
     name: event.name || "",

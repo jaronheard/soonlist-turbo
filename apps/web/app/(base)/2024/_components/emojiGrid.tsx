@@ -7,7 +7,6 @@ interface EmojiGridProps {
 }
 
 const EmojiGrid: React.FC<EmojiGridProps> = ({ emojis }) => {
-  // Add this CSS in your global styles or a CSS module
   const styles = `
 @keyframes grow {
   0% {
@@ -39,7 +38,7 @@ const EmojiGrid: React.FC<EmojiGridProps> = ({ emojis }) => {
 
     const intervalId = setInterval(() => {
       setGrowingEmojiIndex(getRandomIndex());
-    }, 300); // Reduced frequency for better performance
+    }, 300);
 
     return () => clearInterval(intervalId);
   }, [emojis, getRandomIndex]);
@@ -60,7 +59,6 @@ const EmojiGrid: React.FC<EmojiGridProps> = ({ emojis }) => {
   );
 };
 
-// Function to generate a random index for the growing emoji
 export function getRandomGrowingEmojiIndex(emojis: string[]): number {
   if (!Array.isArray(emojis) || emojis.length === 0) {
     return -1;

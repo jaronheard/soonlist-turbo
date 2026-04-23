@@ -1,29 +1,14 @@
-/**
- * Utility functions for batch image processing
- */
 
-/**
- * Maximum number of images allowed in a single batch
- */
 export const MAX_BATCH_SIZE = 20;
 
-/**
- * Generates a unique batch ID for tracking batch operations
- */
 export function generateBatchId(): string {
   return `batch_${Date.now()}_${Math.random().toString(36).substring(2, 11)}`;
 }
 
-/**
- * Generates a unique temporary ID for tracking individual images within a batch
- */
 export function generateTempId(): string {
   return `temp_${Date.now()}_${Math.random().toString(36).substring(2, 11)}`;
 }
 
-/**
- * Validates that the image count is within acceptable limits
- */
 export function validateImageCount(count: number): {
   valid: boolean;
   error?: string;
@@ -45,10 +30,6 @@ export function validateImageCount(count: number): {
   return { valid: true };
 }
 
-/**
- * Splits an array of items into chunks of specified size
- * Useful for processing images in smaller batches if needed
- */
 export function chunkArray<T>(array: T[], chunkSize: number): T[][] {
   const chunks: T[][] = [];
   for (let i = 0; i < array.length; i += chunkSize) {
@@ -57,9 +38,6 @@ export function chunkArray<T>(array: T[], chunkSize: number): T[][] {
   return chunks;
 }
 
-/**
- * Type for an image in a batch with its metadata
- */
 export interface BatchImage {
   tempId: string;
   base64Image: string;
@@ -68,9 +46,6 @@ export interface BatchImage {
   error?: string;
 }
 
-/**
- * Type for batch upload state
- */
 export interface BatchUploadState {
   batchId: string;
   images: BatchImage[];
@@ -83,9 +58,6 @@ export interface BatchUploadState {
   completedAt?: number;
 }
 
-/**
- * Creates initial batch state
- */
 export function createBatchState(
   batchId: string,
   images: BatchImage[],

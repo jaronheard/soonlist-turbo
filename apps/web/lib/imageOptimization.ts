@@ -1,15 +1,11 @@
 import resize from "@jsquash/resize";
 import { encode } from "@jsquash/webp";
 
-// Constants for default values
 const DEFAULT_THUMBNAIL_WIDTH = 640;
 const DEFAULT_THUMBNAIL_QUALITY = 0.5;
 const DEFAULT_DISPLAY_WIDTH = 1284;
 const DEFAULT_DISPLAY_QUALITY = 0.8;
 
-/**
- * Converts ArrayBuffer to base64 string.
- */
 function arrayBufferToBase64(buffer: ArrayBuffer): string {
   const bytes = new Uint8Array(buffer);
   const binaryString = bytes.reduce(
@@ -19,9 +15,6 @@ function arrayBufferToBase64(buffer: ArrayBuffer): string {
   return btoa(binaryString);
 }
 
-/**
- * Validates image optimization parameters.
- */
 function validateParameters(maxWidth: number, quality: number): void {
   if (maxWidth <= 0) {
     throw new Error("maxWidth must be a positive number");
@@ -45,7 +38,6 @@ async function getImageData(source: string | File): Promise<ImageData> {
     source instanceof File ? URL.createObjectURL(source) : source;
 
   try {
-    // Only set crossOrigin for external URLs
     if (typeof source === "string" && !source.startsWith("blob:")) {
       img.crossOrigin = "anonymous";
     }
@@ -56,7 +48,6 @@ async function getImageData(source: string | File): Promise<ImageData> {
       img.src = objectUrl;
     });
 
-    // Create minimal canvas just for ImageData extraction
     const canvas = document.createElement("canvas");
     canvas.width = img.width;
     canvas.height = img.height;
@@ -69,16 +60,12 @@ async function getImageData(source: string | File): Promise<ImageData> {
     ctx.drawImage(img, 0, 0);
     return ctx.getImageData(0, 0, img.width, img.height);
   } finally {
-    // Always revoke object URLs
     if (source instanceof File) {
       URL.revokeObjectURL(objectUrl);
     }
   }
 }
 
-/**
- * Optimizes image using jsquash and returns base64 string.
- */
 async function optimizeToBase64Internal(
   source: string | File,
   maxWidth: number,
@@ -89,7 +76,6 @@ async function optimizeToBase64Internal(
   const imageData = await getImageData(source);
   const { width: originalWidth, height: originalHeight } = imageData;
 
-  // Calculate new dimensions while maintaining aspect ratio
   const shouldResize = originalWidth > maxWidth;
   const resizedData = shouldResize
     ? await resize(imageData, {
@@ -98,7 +84,6 @@ async function optimizeToBase64Internal(
       })
     : imageData;
 
-  // Encode to WebP using jsquash
   const webpBuffer = await encode(resizedData, {
     quality: quality * 100,
   });
@@ -181,7 +166,6 @@ export async function optimizeImageForDisplay(
   const imageData = await getImageData(file);
   const { width: originalWidth, height: originalHeight } = imageData;
 
-  // Resize if needed
   const shouldResize = originalWidth > maxWidth;
   const resizedData = shouldResize
     ? await resize(imageData, {
@@ -190,7 +174,6 @@ export async function optimizeImageForDisplay(
       })
     : imageData;
 
-  // Encode to WebP using jsquash
   const webpBuffer = await encode(resizedData, {
     quality: quality * 100,
   });

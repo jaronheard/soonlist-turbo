@@ -6,18 +6,6 @@ import { env } from "~/env";
 
 export const dynamic = "force-dynamic";
 
-/**
- * Clerk Webhook Handler
- *
- * This route receives webhooks from Clerk and forwards them to Convex.
- * The Convex backend handles all user creation/update/deletion logic.
- *
- * Flow:
- * 1. Clerk sends webhook (user.created, user.updated, user.deleted)
- * 2. This route verifies the webhook signature
- * 3. Forwards the verified payload to Convex /clerk-webhook endpoint
- * 4. Returns Convex's response status
- */
 
 async function forwardToConvex(
   body: string,
@@ -27,7 +15,6 @@ async function forwardToConvex(
     "svix-signature": string;
   },
 ): Promise<{ ok: boolean; status: number; message: string }> {
-  // Use custom HTTP endpoint URL for production, otherwise use standard domain replacement
   const convexUrl =
     env.NEXT_PUBLIC_CONVEX_SITE_URL_PROD ||
     env.NEXT_PUBLIC_CONVEX_URL.replace(/\.convex\.cloud$/, ".convex.site");
@@ -77,24 +64,20 @@ async function forwardToConvex(
 export async function POST(req: Request) {
   const WEBHOOK_SECRET = env.CLERK_WEBHOOK_SECRET;
 
-  // Get the headers
   const headerPayload = await headers();
   const svix_id = headerPayload.get("svix-id");
   const svix_timestamp = headerPayload.get("svix-timestamp");
   const svix_signature = headerPayload.get("svix-signature");
 
-  // If there are no headers, error out
   if (!svix_id || !svix_timestamp || !svix_signature) {
     return new Response("Error occurred -- no svix headers", {
       status: 400,
     });
   }
 
-  // Get the body
   const payload = (await req.json()) as Record<string, unknown>;
   const body = JSON.stringify(payload);
 
-  // Verify the webhook signature
   const wh = new Webhook(WEBHOOK_SECRET);
   let evt: WebhookEvent;
 
@@ -111,7 +94,6 @@ export async function POST(req: Request) {
     });
   }
 
-  // Validate event has required data
   if (!evt.data.id) {
     console.error("No user ID found in webhook data");
     return new Response("No user ID found in webhook data", {
@@ -119,7 +101,6 @@ export async function POST(req: Request) {
     });
   }
 
-  // Forward to Convex and return its response
   const result = await forwardToConvex(body, {
     "svix-id": svix_id,
     "svix-timestamp": svix_timestamp,

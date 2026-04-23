@@ -21,7 +21,6 @@ export function EventsError({
           <div>Error adding event automatically 🥲</div>
         </AccordionTrigger>
         <AccordionContent>
-          {/* display raw text in code style */}
           <div className="rounded-md bg-gray-100 p-4">
             <p className="text-sm text-gray-700">
               <span className="font-semibold">Raw text:</span> {rawText}

@@ -53,7 +53,6 @@ export function YourDetails({
     value: list.id,
   }));
 
-  // 1. Define your form.
   const form = useForm<z.infer<typeof organizeFormSchema>>({
     resolver: zodResolver(organizeFormSchema),
     defaultValues: {
@@ -63,14 +62,12 @@ export function YourDetails({
     },
   });
 
-  const { setOrganizeData } = useNewEventContext(); // Use the context
+  const { setOrganizeData } = useNewEventContext();
 
-  // set initial form state in context
   React.useEffect(() => {
     setOrganizeData(form.getValues());
   }, [form, setOrganizeData]);
 
-  // Watch for changes in the form
   React.useEffect(() => {
     const subscription = form.watch((value, { name }) => {
       if (name) {

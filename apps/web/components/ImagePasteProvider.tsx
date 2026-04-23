@@ -17,7 +17,6 @@ export function ImagePasteProvider({ children }: ImagePasteProviderProps) {
   const pathname = usePathname();
   const currentUser = useQuery(api.users.getCurrentUser);
 
-  // Only enable the paste handler on target pages and when user is authenticated
   const shouldEnable = isTargetPage(pathname) && !!currentUser;
 
   useImagePasteHandler({

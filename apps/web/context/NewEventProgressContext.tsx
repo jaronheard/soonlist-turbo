@@ -6,7 +6,6 @@ import React, { createContext, useContext, useState } from "react";
 import { useRouter } from "next/navigation";
 import { z } from "zod";
 
-// Define the type of the context state
 export enum Mode {
   Edit = "edit",
   View = "view",
@@ -27,7 +26,6 @@ export enum UploadOptions {
 
 export const UploadOptionsSchema = z.nativeEnum(UploadOptions);
 
-// Create a context with empty objects and dummy functions
 export const NewEventProgressContext = createContext({
   isShortcut: false,
   setIsShortcut: (isShortcut: boolean) =>
@@ -48,7 +46,6 @@ export const NewEventProgressContext = createContext({
 export const useNewEventProgressContext = () =>
   useContext(NewEventProgressContext);
 
-// Provider component
 export const NewEventProgressProvider = ({
   children,
 }: {
@@ -84,7 +81,6 @@ export const NewEventProgressProvider = ({
   }
 
   function goToStatus(newStatus: Status) {
-    // clear query params if status is upload
     if (newStatus === Status.Upload) {
       router.push("/new", { scroll: false });
     }

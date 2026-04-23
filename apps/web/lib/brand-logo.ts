@@ -1,6 +1,3 @@
-// Shared SVG path data for the Soonlist logo, consumed by the Logo component
-// and by @vercel/og ImageResponse routes (which can't import React components).
-// Keep the component and the OG routes in sync by importing from here.
 
 export const SOONLIST_MARK_VIEWBOX = "0 0 28 38";
 
@@ -12,8 +9,6 @@ export const SOONLIST_MARK_GLYPH_PATH =
 
 export const SOONLIST_WORDMARK_VIEWBOX = "0 0 159 43";
 
-// The 8 paths that draw the "Soonlist" wordmark (yellow underline + glyphs).
-// Matches components/Logo.tsx `variant="hidePreview"` minus the preview pill.
 export const SOONLIST_WORDMARK_PATHS: { d: string; fill: string }[] = [
   {
     d: "M0.795248 36.9946L3.9826 13.3419C4.28813 11.0747 6.19049 9.36212 8.47728 9.29572L153.503 5.08465C156.696 4.99194 159.038 8.05866 158.108 11.1145L154.319 23.5715C153.774 25.365 152.209 26.6588 150.345 26.8576L5.92112 42.2643C2.90783 42.5858 0.390542 39.9979 0.795248 36.9946Z",

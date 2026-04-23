@@ -31,8 +31,6 @@ export default async function Page(props: {
   const mostRecentComment = event.comments
     .filter((comment) => comment.content)
     .pop()?.content;
-  // TODO: Implement event lists when list functionality is added to Convex
-  // const eventLists = [];
   return (
     <div className="flex flex-col items-center">
       {event.event ? (

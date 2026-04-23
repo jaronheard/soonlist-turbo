@@ -26,15 +26,11 @@ export default async function Page(props: Props) {
     unauthorizedUrl: "/",
   });
 
-  // TODO: Implement list queries in Convex backend
-  // For now, using empty array until lists module is migrated
   const lists = getDefaultLists(userId);
   const timezone = searchParams.timezone || DEFAULT_TIMEZONE;
   const autoProcess = searchParams.autoProcess === "true";
 
-  // image only
   if (searchParams.filePath && !searchParams.rawText) {
-    // If autoProcess is true, render EventsFromImage directly without ProgressStages wrapper
     if (autoProcess) {
       return (
         <EventsFromImage timezone={timezone} filePath={searchParams.filePath} />
@@ -54,8 +50,6 @@ export default async function Page(props: Props) {
     );
   }
 
-  // If we have text or URL params, just show the upload form
-  // The actual processing now happens in the form submission handlers
 
   return <ProgressStages showUpload={true} />;
 }

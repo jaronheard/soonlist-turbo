@@ -9,10 +9,6 @@ export const env = createEnv({
       .enum(["development", "production", "test"])
       .default("development"),
   },
-  /**
-   * Specify your server-side environment variables schema here.
-   * This way you can ensure the app isn't built with invalid env vars.
-   */
   server: {
     CLERK_SECRET_KEY_DEV: z.string(),
     CLERK_SECRET_KEY_PROD: z.string(),
@@ -33,10 +29,6 @@ export const env = createEnv({
     ONE_SIGNAL_REST_API_KEY_PROD: z.string(),
   },
 
-  /**
-   * Specify your client-side environment variables schema here.
-   * For them to be exposed to the client, prefix them with `NEXT_PUBLIC_`.
-   */
   client: {
     NEXT_PUBLIC_CLERK_SIGN_IN_FALLBACK_REDIRECT_URL: z.string(),
     NEXT_PUBLIC_CLERK_SIGN_UP_FALLBACK_REDIRECT_URL: z.string(),
@@ -51,9 +43,6 @@ export const env = createEnv({
     NEXT_PUBLIC_VERCEL_ENV: z.enum(["development", "preview", "production"]),
     NEXT_PUBLIC_VERCEL_PROJECT_PRODUCTION_URL: z.string(),
   },
-  /**
-   * Destructure all variables from `process.env` to make sure they aren't tree-shaken away.
-   */
   experimental__runtimeEnv: {
     NODE_ENV: process.env.NODE_ENV,
     NEXT_PUBLIC_CLERK_SIGN_IN_FALLBACK_REDIRECT_URL:

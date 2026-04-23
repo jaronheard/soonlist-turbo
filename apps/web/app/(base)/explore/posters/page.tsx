@@ -25,7 +25,6 @@ interface PosterEvent {
   startDateTime: Date;
 }
 
-// Extract first image from event
 function getFirstImage(
   event: AddToCalendarButtonPropsRestricted,
 ): string | null {
@@ -36,7 +35,6 @@ function getFirstImage(
   return null;
 }
 
-// Transform Convex events to poster format
 function transformToPosterEvents(
   events: FunctionReturnType<typeof api.feeds.getDiscoverFeed>["page"],
 ): PosterEvent[] {
@@ -75,7 +73,6 @@ export default function PostersPage() {
   const isLoading = status === "LoadingFirstPage";
   const posterEvents = results ? transformToPosterEvents(results) : [];
 
-  // Client-side filter: only show events that haven't ended
   const visibleEvents = posterEvents.filter(
     (event) => event.endDateTime >= stableNow,
   );
@@ -130,11 +127,9 @@ export default function PostersPage() {
                     className="object-cover object-top transition-transform duration-300 group-hover:scale-105"
                     sizes="(max-width: 640px) 100vw, 50vw"
                   />
-                  {/* Gradient overlay for text readability */}
                   <div className="absolute inset-x-0 bottom-0 h-1/3 bg-gradient-to-t from-black/70 to-transparent" />
                 </div>
               </Link>
-              {/* User info and date overlay */}
               <div className="absolute bottom-0 left-0 right-0 p-3">
                 <div className="flex items-center justify-between gap-2">
                   <Link

@@ -24,7 +24,6 @@ const transformConvexUser = (user: Doc<"users">): User => {
   };
 };
 
-// Transform Convex events to EventWithUser format
 function transformConvexEvents(
   events: FunctionReturnType<typeof api.feeds.getDiscoverFeed>["page"],
 ): EventWithUser[] {
@@ -61,17 +60,12 @@ export default function Page() {
   const isLoading = status === "LoadingFirstPage";
   const events = results ? transformConvexEvents(results) : [];
 
-  // Client-side safety filter: hide events that have ended
-  // This prevents showing ended events if the cron job hasn't run recently
-  // Also separate current vs future events in a single pass
   const currentEvents: typeof events = [];
   const futureEvents: typeof events = [];
 
   for (const event of events) {
-    // Skip ended events
     if (event.endDateTime < stableNow) continue;
 
-    // Categorize as current or future
     if (event.startDateTime < stableNow && event.endDateTime > stableNow) {
       currentEvents.push(event);
     } else if (event.startDateTime >= stableNow) {

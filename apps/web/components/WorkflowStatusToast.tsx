@@ -27,11 +27,8 @@ export function WorkflowStatusToast({ workflowId }: WorkflowStatusToastProps) {
   useEffect(() => {
     if (!status) return;
 
-    // Only show toast if status has changed
     if (lastStatusRef.current === status.status) return;
 
-    // If this is the first render and the workflow is already finished,
-    // just remove it without showing a toast (it was likely shown before)
     if (
       lastStatusRef.current === null &&
       (status.status === "completed" ||
@@ -45,12 +42,10 @@ export function WorkflowStatusToast({ workflowId }: WorkflowStatusToastProps) {
 
     lastStatusRef.current = status.status;
 
-    // Dismiss previous toast if exists
     if (toastIdRef.current) {
       toast.dismiss(toastIdRef.current);
     }
 
-    // Clear any existing timeout
     if (timeoutRef.current) {
       clearTimeout(timeoutRef.current);
       timeoutRef.current = null;
@@ -74,7 +69,6 @@ export function WorkflowStatusToast({ workflowId }: WorkflowStatusToastProps) {
             },
             duration: 10000,
           });
-          // Cleanup after toast duration expires
           timeoutRef.current = setTimeout(
             () => removeWorkflowId(workflowId),
             10000,
@@ -90,7 +84,6 @@ export function WorkflowStatusToast({ workflowId }: WorkflowStatusToastProps) {
             duration: 5000,
           },
         );
-        // Cleanup after showing error
         timeoutRef.current = setTimeout(
           () => removeWorkflowId(workflowId),
           5000,
@@ -109,7 +102,6 @@ export function WorkflowStatusToast({ workflowId }: WorkflowStatusToastProps) {
     }
   }, [status, router, workflowId, removeWorkflowId]);
 
-  // Cleanup on unmount
   useEffect(() => {
     return () => {
       if (toastIdRef.current) {

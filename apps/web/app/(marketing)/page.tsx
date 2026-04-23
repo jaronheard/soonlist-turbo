@@ -15,25 +15,6 @@ const testimonials = [
     },
     eventsSaved: 180,
   },
-  // {
-  //   body: "Screenshotting a story and turning it into a calendar event in seconds feels like getting away with something!",
-  //   author: {
-  //     name: "Jaron Heard",
-  //     handle: "jaronheard",
-  //     imageUrl:
-  //       "https://img.clerk.com/eyJ0eXBlIjoicHJveHkiLCJzcmMiOiJodHRwczovL2ltYWdlcy5jbGVyay5kZXYvdXBsb2FkZWQvaW1nXzJaRmFCY2VkQ2RrZ1VUM3BUWFJmU2tLM3B2eCJ9",
-  //   },
-  // },
-  // // More testimonials...
-  // {
-  //   body: "As an organizer of dance parties and environmental justice activist, I've been dreaming of making event lists this easy for years!",
-  //   author: {
-  //     name: "Sarah Baker",
-  //     handle: "boogiebuffet",
-  //     imageUrl:
-  //       "https://upcdn.io/12a1yek/raw/uploads/Soonlist/sarah_profile.webp",
-  //   },
-  // },
   {
     body: "I'm stoked that Soonlist helps me save and share music events, especially those in non-conventional venues.",
     author: {
@@ -44,15 +25,6 @@ const testimonials = [
     },
     eventsSaved: 450,
   },
-  // {
-  //   body: "I am so appreciative of a platform that allows me to connect with others and share events that is not based in social media.",
-  //   author: {
-  //     name: "Gina Roberti",
-  //     handle: "ginabobina",
-  //     imageUrl:
-  //       "https://upcdn.io/12a1yek/raw/uploads/Soonlist/gina_google_profile.webp",
-  //   },
-  // },
   {
     body: "I'm a freak for my calendar, and Soonlist is the perfect way to keep it fresh and full of events that inspire me.",
     author: {
@@ -65,29 +37,6 @@ const testimonials = [
   },
 ];
 
-// const features = [
-//   {
-//     title: "Smart Capture",
-//     description:
-//       "Save events from any source – screenshots, flyers, texts, and more",
-//     icon: Zap,
-//   },
-//   {
-//     title: "Auto Organize",
-//     description: "Your saved events, automatically organized in one place",
-//     icon: Calendar,
-//   },
-//   {
-//     title: "Easy Sharing",
-//     description: "Discover and share events with like-minded enthusiasts",
-//     icon: Share2,
-//   },
-//   {
-//     title: "Reminders",
-//     description: "Gentle nudges to help you follow through on your intentions",
-//     icon: Bell,
-//   },
-// ];
 
 const faqs = [
   {
@@ -161,7 +110,6 @@ function HeroSection() {
   return (
     <Section className="pb-8 pt-16">
       <div className="relative isolate">
-        {/* Background image removed for a cleaner header */}
         <div className="mx-auto text-center">
           <h1 className="font-heading text-5xl font-bold leading-tight tracking-tighterish text-gray-700 md:text-7xl md:leading-tight">
             Turn screenshots into{" "}
@@ -204,7 +152,6 @@ function HeroSection() {
             />
           </div>
         </div>
-        {/* Supporting copy under the grid */}
         <div className="mx-auto max-w-2xl">
           <p className="mt-8 text-lg leading-7 text-gray-600 md:text-xl">
             You see events everywhere: Instagram Stories, group chats, flyers
@@ -258,32 +205,6 @@ function ConnectWithWhatMatters() {
   );
 }
 
-// function FeaturesHighlight() {
-//   return (
-//     <Section>
-//       <SectionTitle
-//         subtitle="Features"
-//         title="Everything you need to organize your possibilities"
-//       />
-//       <div className="mt-12 grid gap-8 md:grid-cols-2 lg:grid-cols-4">
-//         {features.map((feature) => (
-//           <div key={feature.title} className="flex flex-col items-center">
-//             <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-interactive-1">
-//               <feature.icon className="h-6 w-6 text-white" aria-hidden="true" />
-//             </div>
-//             <h2 className="text-2xl font-bold leading-9 tracking-wide text-gray-900">
-//               {feature.title}
-//             </h2>
-//             <div className="py-2"></div>
-//             <p className="mt-2 text-lg leading-7 text-gray-500">
-//               {feature.description}
-//             </p>
-//           </div>
-//         ))}
-//       </div>
-//     </Section>
-//   );
-// }
 
 function TestimonialsSection() {
   return (
@@ -374,7 +295,6 @@ export default function Page() {
       <div className="-mt-48">
         <ConnectWithWhatMatters />
       </div>
-      {/* <FeaturesHighlight /> */}
       <TestimonialsSection />
       <FAQSection />
     </div>

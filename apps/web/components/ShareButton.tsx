@@ -16,7 +16,6 @@ export interface ShareButtonProps {
 }
 
 export function ShareButton(props: ShareButtonProps) {
-  // TODO: Add support for all day events
   const isAllDay = props.event.startTime && props.event.endTime ? false : true;
   const shareText = isAllDay
     ? `(${props.event.startDate}, ${props.event.location}) ${props.event.description}`
@@ -35,7 +34,6 @@ export function ShareButton(props: ShareButtonProps) {
         console.error("Error sharing:", error);
       }
     } else {
-      // Fallback for browsers that do not support the Share API
       void navigator.clipboard.writeText(
         `https://${env.NEXT_PUBLIC_VERCEL_PROJECT_PRODUCTION_URL}/event/${props.id}`,
       );

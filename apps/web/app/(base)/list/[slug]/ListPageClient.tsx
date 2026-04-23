@@ -77,7 +77,6 @@ export default function ListPageClient({ slug }: { slug: string }) {
       try {
         await navigator.share({ title, url: shareUrl });
       } catch (error) {
-        // User likely cancelled the share sheet; surfacing nothing is fine.
         console.error("Error sharing list", error);
       }
     } else {
@@ -95,7 +94,6 @@ export default function ListPageClient({ slug }: { slug: string }) {
     return <FullPageLoadingSpinner />;
   }
 
-  // Server already routed notFound/private — but guard in case of client re-fetch drift.
   if (listResult.status !== "ok") {
     return null;
   }

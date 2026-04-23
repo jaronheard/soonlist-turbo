@@ -58,7 +58,6 @@ export default function EventCard(props: {
 
   return (
     <div className="w-full max-w-2xl">
-      {/* User Curator Caption - Positioned outside the card */}
       <div className="mb-3 flex w-full items-center justify-between">
         <div className="flex items-center gap-3">
           <div className="relative">
@@ -90,7 +89,6 @@ export default function EventCard(props: {
         </div>
       </div>
 
-      {/* Event Card - Self-contained with just event details */}
       <Card className="overflow-hidden border border-interactive-3 bg-white p-6 shadow-md">
         <div className="space-y-6">
           {eventImage && (
@@ -110,9 +108,7 @@ export default function EventCard(props: {
               {eventTitle || eventName}
             </h2>
 
-            {/* Enhanced Date & Location Section */}
             <div className="flex flex-col gap-4">
-              {/* Date & Time */}
               {eventDate && onAddToCalendar && (
                 <button
                   onClick={onAddToCalendar}
@@ -134,7 +130,6 @@ export default function EventCard(props: {
                 </button>
               )}
 
-              {/* Location */}
               {eventLocation.trim() && getGoogleMapsUrl(eventLocation) && (
                 <a
                   href={getGoogleMapsUrl(eventLocation)}
@@ -154,7 +149,6 @@ export default function EventCard(props: {
 
             <p className="text-neutral-1">{eventDescription}</p>
 
-            {/* Metadata Section */}
             {eventMetadata && (
               <EventMetadataDisplay eventMetadata={eventMetadata} />
             )}

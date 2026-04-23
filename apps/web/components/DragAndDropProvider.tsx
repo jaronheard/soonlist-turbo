@@ -18,7 +18,6 @@ export function DragAndDropProvider({ children }: DragAndDropProviderProps) {
   const pathname = usePathname();
   const currentUser = useQuery(api.users.getCurrentUser);
 
-  // Only enable the drag and drop handler on target pages and when user is authenticated
   const shouldEnable = isTargetPage(pathname) && !!currentUser;
 
   const { isDragging, imageCount, hasValidationError } = useDragAndDropHandler({
@@ -33,7 +32,6 @@ export function DragAndDropProvider({ children }: DragAndDropProviderProps) {
   return (
     <>
       {children}
-      {/* Drag overlay - shown when dragging files over the page */}
       {isDragging && (
         <div
           className={`pointer-events-none fixed inset-0 z-50 flex items-center justify-center transition-all duration-200 ${

@@ -27,7 +27,6 @@ interface Props {
   params: Promise<{ userName: string }>;
 }
 
-// Add type guard function
 function isValidUserData(data: unknown): data is UserStatsCardProps {
   if (!data || typeof data !== "object") return false;
 
@@ -39,13 +38,11 @@ function isValidUserData(data: unknown): data is UserStatsCardProps {
   );
 }
 
-// Example usage:
 const Page = async (props: Props) => {
   const params = await props.params;
   const user = await currentUser();
   const userName = params.userName;
 
-  // Early return for invalid usernames
   if (!(userName in dataForUsersFor2024)) {
     return (
       <div className="flex flex-col items-center justify-center">
@@ -63,7 +60,6 @@ const Page = async (props: Props) => {
     );
   }
 
-  // Get user data and validate it
   const userData = dataForUsersFor2024[userName];
   if (!isValidUserData(userData)) {
     return (
@@ -97,7 +93,6 @@ const Page = async (props: Props) => {
         </span>
       </h1>
 
-      {/* Case 1: Not logged in */}
       {!user && (
         <div className="flex flex-col items-center justify-center">
           <p className="mb-2 mt-4 max-w-[280px] px-4 text-center text-xl leading-tight text-gray-700 sm:my-6 sm:max-w-none sm:px-0 md:text-2xl">
@@ -113,7 +108,6 @@ const Page = async (props: Props) => {
         </div>
       )}
 
-      {/* Case 2: Logged in, viewing own stats */}
       {user?.username === userName && (
         <div className="flex flex-col items-center justify-center">
           <p className="mb-2 mt-4 max-w-[280px] px-4 text-center text-xl leading-tight text-gray-700 sm:my-6 sm:max-w-none sm:px-0 md:text-2xl">
@@ -135,7 +129,6 @@ const Page = async (props: Props) => {
         </div>
       )}
 
-      {/* Case 3: Logged in, viewing someone else's stats */}
       {user && user.username !== userName && (
         <div className="flex flex-col items-center justify-center">
           <p className="mb-2 mt-4 max-w-[280px] px-4 text-center text-xl leading-tight text-gray-700 sm:my-6 sm:max-w-none sm:px-0 md:text-2xl">

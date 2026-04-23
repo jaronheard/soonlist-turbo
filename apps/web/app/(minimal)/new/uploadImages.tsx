@@ -33,10 +33,8 @@ export const UploadImageForProcessingDropzone = () => {
     setIsProcessing(true);
 
     try {
-      // Process image directly from file (matching Expo app approach)
       const base64Image = await optimizeFileToBase64(file, 640, 0.5);
 
-      // Start the workflow
       const result = await createEventFromImage({
         base64Image,
         timezone,
@@ -49,7 +47,6 @@ export const UploadImageForProcessingDropzone = () => {
 
       if (result.workflowId) {
         addWorkflowId(result.workflowId);
-        // Navigate directly to upcoming page
         router.push(`/${currentUser.username || currentUser.id}/upcoming`);
       }
     } catch (error) {
@@ -129,10 +126,8 @@ export const UploadImageForProcessingButton = () => {
     setIsProcessing(true);
 
     try {
-      // Process image directly from file (matching Expo app approach)
       const base64Image = await optimizeFileToBase64(file, 640, 0.5);
 
-      // Start the workflow
       const result = await createEventFromImage({
         base64Image,
         timezone,
@@ -145,7 +140,6 @@ export const UploadImageForProcessingButton = () => {
 
       if (result.workflowId) {
         addWorkflowId(result.workflowId);
-        // Navigate directly to upcoming page
         router.push(`/${currentUser.username || currentUser.id}/upcoming`);
       }
     } catch (error) {

@@ -36,7 +36,6 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     const eventData = event.event as AddToCalendarButtonPropsRestricted;
     const eventImage = eventData.images?.[0];
 
-    // Generate Open Graph metadata with Smart App Banner for iOS
     return {
       title: `${eventData.name} | Soonlist`,
       description:
@@ -66,7 +65,6 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
           eventData.description || `Join ${eventData.name} on Soonlist`,
         images: eventImage ? [eventImage] : undefined,
       },
-      // iOS Smart App Banner - prompts users to open in the Soonlist app
       other: {
         "apple-itunes-app": `app-id=6670222216, app-argument=https://www.soonlist.com/event/${eventId}`,
       },

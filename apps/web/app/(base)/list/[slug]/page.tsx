@@ -43,9 +43,6 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
         title: "Private list · Soonlist",
         description: `This list by ${ownerLabel} is private.`,
         robots: { index: false, follow: false },
-        // Explicitly point to the branded default so Next doesn't auto-wire
-        // the dynamic opengraph-image route (which would still render the
-        // branded default for private lists, but this skips the extra hop).
         openGraph: {
           images: [{ url: "/api/og", width: 1200, height: 630 }],
         },
@@ -65,10 +62,6 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
         : autoDescription;
     const title = `${list.name} · Soonlist`;
 
-    // Next's file-based `opengraph-image.tsx` convention auto-wires the image
-    // URL (with its static `alt`) into og:image + twitter:image, so we don't
-    // set them manually here. We do upgrade `twitter:card` to
-    // `summary_large_image` since the dynamic route produces a 1200×630 card.
     return {
       title,
       description,

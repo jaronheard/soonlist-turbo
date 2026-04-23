@@ -17,7 +17,6 @@ interface CroppedImageContextType {
   setCroppedImagesUrls: (urls: CroppedImagesUrls) => void;
 }
 
-// Create context with a default value
 const defaultValue: CroppedImageContextType = {
   croppedImagesUrls: {},
   setCroppedImagesUrls: () => {
@@ -28,7 +27,6 @@ const defaultValue: CroppedImageContextType = {
 const CroppedImageContext =
   createContext<CroppedImageContextType>(defaultValue);
 
-// Create a provider component
 export const CroppedImageProvider = ({ children }: { children: ReactNode }) => {
   const [croppedImagesUrls, setCroppedImagesUrls] = useState<CroppedImagesUrls>(
     {},
@@ -43,5 +41,4 @@ export const CroppedImageProvider = ({ children }: { children: ReactNode }) => {
   );
 };
 
-// Hook to use the context
 export const useCroppedImageContext = () => useContext(CroppedImageContext);

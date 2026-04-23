@@ -36,8 +36,8 @@ interface UseDragAndDropHandlerReturn {
   isProcessing: boolean;
   error: string | null;
   lastProcessedImage: string | null;
-  imageCount: number; // Number of images being dragged
-  hasValidationError: boolean; // True if dragging too many images
+  imageCount: number;
+  hasValidationError: boolean;
 }
 
 export function useDragAndDropHandler(
@@ -58,16 +58,13 @@ export function useDragAndDropHandler(
   const [imageCount, setImageCount] = useState(0);
   const [hasValidationError, setHasValidationError] = useState(false);
 
-  // Counter to track drag enter/leave for nested elements
   const dragCounterRef = useRef(0);
 
-  // Synchronous ref lock to prevent duplicate event creation
   const isProcessingRef = useRef(false);
 
   const createEventBatch = useMutation(api.ai.createEventBatch);
   const addBatchId = useBatchStore((state) => state.addBatchId);
 
-  // Handle drag enter
   const handleDragEnter = useCallback(
     (event: DragEvent) => {
       if (!enabled || !currentUser) return;
@@ -77,11 +74,9 @@ export function useDragAndDropHandler(
 
       dragCounterRef.current += 1;
 
-      // Only set dragging state if we have files
       if (event.dataTransfer && hasFiles(event.dataTransfer)) {
         if (dragCounterRef.current === 1) {
           setIsDragging(true);
-          // Try to get the count of files being dragged
           const items = event.dataTransfer.items;
           if (items) {
             let count = 0;
@@ -92,7 +87,6 @@ export function useDragAndDropHandler(
             }
             setImageCount(count);
 
-            // Validate file count immediately
             if (count > MAX_BATCH_SIZE) {
               setHasValidationError(true);
             } else {
@@ -105,7 +99,6 @@ export function useDragAndDropHandler(
     [enabled, currentUser],
   );
 
-  // Handle drag over
   const handleDragOver = useCallback(
     (event: DragEvent) => {
       if (!enabled || !currentUser) return;
@@ -113,7 +106,6 @@ export function useDragAndDropHandler(
       event.preventDefault();
       event.stopPropagation();
 
-      // Set dropEffect to indicate this is a valid drop zone
       if (event.dataTransfer && hasFiles(event.dataTransfer)) {
         event.dataTransfer.dropEffect = "copy";
       }
@@ -121,7 +113,6 @@ export function useDragAndDropHandler(
     [enabled, currentUser],
   );
 
-  // Handle drag leave
   const handleDragLeave = useCallback(
     (event: DragEvent) => {
       if (!enabled || !currentUser) return;
@@ -140,7 +131,6 @@ export function useDragAndDropHandler(
     [enabled, currentUser],
   );
 
-  // Handle drop
   const handleDrop = useCallback(
     async (event: DragEvent) => {
       if (!enabled || !currentUser) return;
@@ -148,18 +138,15 @@ export function useDragAndDropHandler(
       event.preventDefault();
       event.stopPropagation();
 
-      // Reset drag state
       dragCounterRef.current = 0;
       setIsDragging(false);
       setImageCount(0);
 
-      // Atomic lock check-and-set - use only ref for lock
       if (isProcessingRef.current) return;
       isProcessingRef.current = true;
       setIsProcessing(true);
 
       try {
-        // Extract files from drop
         const dataTransfer = event.dataTransfer;
         if (!dataTransfer) {
           isProcessingRef.current = false;
@@ -174,7 +161,6 @@ export function useDragAndDropHandler(
           return;
         }
 
-        // Validate image count
         const validation = validateImageCount(images.length);
         if (!validation.valid) {
           toast.error(validation.error ?? "Invalid image count", {
@@ -187,11 +173,9 @@ export function useDragAndDropHandler(
           return;
         }
 
-        // Separate valid and invalid images
         const validImages = images.filter((img) => isValidImageFile(img));
         const invalidImages = images.filter((img) => !isValidImageFile(img));
 
-        // Show toast for unsupported formats
         if (invalidImages.length > 0) {
           toast.error(
             `${invalidImages.length} ${invalidImages.length === 1 ? "file has" : "files have"} unsupported format${invalidImages.length === 1 ? "" : "s"}`,
@@ -201,7 +185,6 @@ export function useDragAndDropHandler(
           );
         }
 
-        // If no valid images, stop processing
         if (validImages.length === 0) {
           setError("No valid images to process");
           isProcessingRef.current = false;
@@ -209,7 +192,6 @@ export function useDragAndDropHandler(
           return;
         }
 
-        // Validate valid image count
         const finalValidation = validateImageCount(validImages.length);
         if (!finalValidation.valid) {
           toast.error(finalValidation.error ?? "Invalid image count", {
@@ -224,7 +206,6 @@ export function useDragAndDropHandler(
 
         setError(null);
 
-        // Convert valid images to base64 and create batch
         const batchId = generateBatchId();
         const batchImages = await Promise.all(
           validImages.map(async (image) => {
@@ -236,12 +217,10 @@ export function useDragAndDropHandler(
           }),
         );
 
-        // Store the last processed image (for backward compatibility)
         if (batchImages.length > 0 && batchImages[0]) {
           setLastProcessedImage(batchImages[0].base64Image);
         }
 
-        // Create batch of events from images
         const result = await createEventBatch({
           batchId,
           images: batchImages,
@@ -256,11 +235,8 @@ export function useDragAndDropHandler(
         if (result.batchId) {
           addBatchId(result.batchId);
 
-          // For multi-image batches, we don't get a single workflowId
-          // The backend processes them asynchronously
           onSuccess?.(result.batchId);
 
-          // Navigate based on page context
           const pageContext = getPageContext(pathname);
           const navigationPath = getNavigationPath(
             pageContext,
@@ -276,7 +252,6 @@ export function useDragAndDropHandler(
         onError?.(err instanceof Error ? err : new Error(errorMessage));
         console.error("Error processing dropped images:", err);
       } finally {
-        // Always clear both the ref lock and state
         isProcessingRef.current = false;
         setIsProcessing(false);
       }
@@ -294,7 +269,6 @@ export function useDragAndDropHandler(
     ],
   );
 
-  // Set up global drag and drop event listeners
   useEffect(() => {
     if (!enabled) return;
 
@@ -336,7 +310,6 @@ export function useDragAndDropHandler(
     };
   }, [enabled, handleDragEnter, handleDragOver, handleDragLeave, handleDrop]);
 
-  // Clear error after some time
   useEffect(() => {
     if (error) {
       const timer = setTimeout(() => setError(null), 5000);

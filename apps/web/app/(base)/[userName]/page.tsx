@@ -13,10 +13,8 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { userName } = await params;
 
   try {
-    // Get an authenticated Convex client for server-side fetching
     const convex = await getAuthenticatedConvex();
 
-    // Fetch the public list data
     const publicListData = await convex.query(api.users.getPublicList, {
       username: userName,
     });
