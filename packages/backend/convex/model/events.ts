@@ -1416,11 +1416,16 @@ export async function addEventToList(
     // paginate efficiently by the userFeeds visibility/hasEnded index.
     await addEventToListFeedInline(ctx, eventId, listId);
 
-    // Add event to followers' feeds
-    await ctx.runMutation(internal.feedHelpers.addEventToListFollowersFeeds, {
-      eventId,
-      listId,
-    });
+    // Schedule follower feed fan-out in a separate transaction to avoid
+    // hitting transaction limits when there are many followers.
+    await ctx.scheduler.runAfter(
+      0,
+      internal.feedHelpers.addEventToListFollowersFeeds,
+      {
+        eventId,
+        listId,
+      },
+    );
   }
 }
 
@@ -1485,8 +1490,10 @@ export async function removeEventFromList(
     // followers, mirroring the symmetric write in addEventToList.
     await removeEventFromListFeedInline(ctx, eventId, listId);
 
-    // Remove event from followers' feeds
-    await ctx.runMutation(
+    // Schedule follower feed fan-out in a separate transaction to avoid
+    // hitting transaction limits when there are many followers.
+    await ctx.scheduler.runAfter(
+      0,
       internal.feedHelpers.removeEventFromListFollowersFeeds,
       {
         eventId,
