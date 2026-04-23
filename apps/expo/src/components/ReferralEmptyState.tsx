@@ -180,7 +180,6 @@ export function ReferralEmptyState({
     );
   }
 
-
   const displayName =
     targetUser.displayName && targetUser.displayName.length > 0
       ? targetUser.displayName

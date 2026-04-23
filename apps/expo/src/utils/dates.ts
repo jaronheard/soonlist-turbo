@@ -474,7 +474,6 @@ export function formatEventDateRangeCompact(
   return { date: formattedDate, time: formattedTime };
 }
 
-
 export function parseTimeString(timeString?: string): Date {
   const date = new Date();
   date.setHours(0, 0, 0, 0);

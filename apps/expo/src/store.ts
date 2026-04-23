@@ -21,7 +21,6 @@ function createStableTimestamp(): string {
   return stableTime.toISOString();
 }
 
-
 interface CommonEventInputState {
   input: string;
   imagePreview: string | null;
@@ -114,7 +113,6 @@ interface AppState {
   markPaywallShown: () => void;
   resetEventViews: () => void;
 
-
   discoverAccessOverride: boolean;
   setDiscoverAccessOverride: (enabled: boolean) => void;
 
@@ -144,7 +142,6 @@ export const useAppStore = create<AppState>()(
 
       preferredCalendarApp: null,
       setPreferredCalendarApp: (app) => set({ preferredCalendarApp: app }),
-
 
       discoverAccessOverride: false,
       setDiscoverAccessOverride: (enabled) =>
@@ -499,7 +496,6 @@ export const useRefreshStableTimestamp = () =>
 
 export const useRefreshTimestampOnFocus = () => {
   const refreshTimestamp = useRefreshStableTimestamp();
-
 
   return refreshTimestamp;
 };

@@ -9,7 +9,6 @@ import { api } from "@soonlist/backend/convex/_generated/api";
 import { DISCOVER_CODE_KEY } from "~/constants";
 import { useAppStore } from "~/store";
 
-
 interface CodeEntryModalProps {
   isVisible: boolean;
   onClose: () => void;

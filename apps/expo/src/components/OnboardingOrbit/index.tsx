@@ -10,7 +10,6 @@ import Animated, {
 } from "react-native-reanimated";
 import { Image } from "expo-image";
 
-
 const CARD_RATIO = 9 / 16;
 
 const CONFIG = {

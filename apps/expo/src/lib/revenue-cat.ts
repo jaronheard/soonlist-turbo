@@ -16,10 +16,7 @@ const config: RevenueCatConfig = {
       process.env.EXPO_PUBLIC_APP_ENV === "development"
         ? "appl_IZAYFSAmdJzydibrbUAgIqoKwMH"
         : "appl_EBIBnBkxycdwGemEotOpxJltoqp", // Prod key - replace with actual prod key
-    android:
-      process.env.EXPO_PUBLIC_APP_ENV === "development"
-        ? ""
-        : "", // Prod key - replace with actual prod key
+    android: process.env.EXPO_PUBLIC_APP_ENV === "development" ? "" : "", // Prod key - replace with actual prod key
   },
 };
 

@@ -123,7 +123,6 @@ export function WorkflowStatus({ workflowId }: WorkflowStatusProps) {
 export function WorkflowStatusContainer() {
   const { workflowIds } = useAppStore();
 
-
   return (
     <View className="absolute bottom-4 right-4 z-50">
       {workflowIds

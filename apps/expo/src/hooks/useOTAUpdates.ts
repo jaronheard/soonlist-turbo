@@ -29,7 +29,6 @@ export function useOTAUpdates() {
   const timeout = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
   const { isUpdatePending } = Updates.useUpdates();
 
-
   const setCheckTimeout = useCallback(() => {
     // eslint-disable-next-line @typescript-eslint/no-misused-promises
     timeout.current = setTimeout(async () => {

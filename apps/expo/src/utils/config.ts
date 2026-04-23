@@ -1,7 +1,6 @@
 import Constants from "expo-constants";
 import * as Updates from "expo-updates";
 
-
 interface Config {
   env: "development" | "production";
   apiBaseUrl: string;

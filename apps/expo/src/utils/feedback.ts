@@ -1,7 +1,6 @@
 import * as Haptics from "expo-haptics";
 import * as Burnt from "burnt";
 
-
 export const hapticSuccess = () =>
   Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
 

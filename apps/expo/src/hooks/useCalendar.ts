@@ -99,7 +99,6 @@ export function useCalendar() {
         }
       }
 
-
       const calendarEvent = event.event as AddToCalendarButtonPropsRestricted;
 
       const baseUrlForDesc = Config.apiBaseUrl;

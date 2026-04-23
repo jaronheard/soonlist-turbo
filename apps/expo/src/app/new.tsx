@@ -15,7 +15,6 @@ import { useAppStore } from "~/store";
 import { toast } from "~/utils/feedback";
 import { logError } from "../utils/errorLogging";
 
-
 const OFFSET_VALUE = 32;
 
 export default function NewShareScreen() {
