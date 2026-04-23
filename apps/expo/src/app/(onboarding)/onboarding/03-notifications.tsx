@@ -1,6 +1,5 @@
 import React, { useState } from "react";
 import { Pressable, Text, View } from "react-native";
-import { router } from "expo-router";
 
 import { Bell } from "~/components/icons";
 import { QuestionContainer } from "~/components/QuestionContainer";
@@ -28,7 +27,11 @@ export default function NotificationsScreen() {
     void hapticLight();
 
     if (hasNotificationPermission) {
-      router.navigate("/(onboarding)/onboarding/04-paywall");
+      saveStep(
+        "notifications",
+        { notificationsEnabled: true },
+        "/(onboarding)/onboarding/04-paywall",
+      );
       return;
     }
 
