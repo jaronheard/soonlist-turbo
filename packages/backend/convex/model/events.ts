@@ -1259,6 +1259,16 @@ export async function followEvent(
         userId,
         eventId,
       });
+
+      // If the follower isn't the creator, also add the event to the
+      // follower's personal list. This surfaces the saved event to the
+      // follower's subscribers in their My Scene feed, matching how
+      // created events are surfaced via createEvent. Creators already
+      // have their own events in their personal list.
+      if (event.userId !== userId) {
+        const personalList = await getOrCreatePersonalList(ctx, userId);
+        await addEventToList(ctx, eventId, personalList.id, userId);
+      }
     }
   }
 
@@ -1294,6 +1304,12 @@ export async function unfollowEvent(
       if (isCreator) {
         return await getEventById(ctx, eventId);
       }
+
+      // Mirror of followEvent: remove from the unfollower's personal
+      // list so it stops reaching their subscribers. No-op if the event
+      // isn't linked to the personal list.
+      const personalList = await getOrCreatePersonalList(ctx, userId);
+      await removeEventFromList(ctx, eventId, personalList.id, userId);
 
       const listFollows = await ctx.db
         .query("listFollows")

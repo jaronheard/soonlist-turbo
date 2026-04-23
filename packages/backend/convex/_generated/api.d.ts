@@ -28,6 +28,7 @@ import type * as migrations_backfillSourceListId from "../migrations/backfillSou
 import type * as migrations_backfillUserFeedVisibility from "../migrations/backfillUserFeedVisibility.js";
 import type * as migrations_fix2027Dates from "../migrations/fix2027Dates.js";
 import type * as migrations_fix2027FeedDates from "../migrations/fix2027FeedDates.js";
+import type * as migrations_followEventToPersonalList from "../migrations/followEventToPersonalList.js";
 import type * as migrations_initializeAggregates from "../migrations/initializeAggregates.js";
 import type * as migrations_initializeUserFeedsAggregate from "../migrations/initializeUserFeedsAggregate.js";
 import type * as migrations_personalListMigration from "../migrations/personalListMigration.js";
@@ -81,6 +82,7 @@ declare const fullApi: ApiFromModules<{
   "migrations/backfillUserFeedVisibility": typeof migrations_backfillUserFeedVisibility;
   "migrations/fix2027Dates": typeof migrations_fix2027Dates;
   "migrations/fix2027FeedDates": typeof migrations_fix2027FeedDates;
+  "migrations/followEventToPersonalList": typeof migrations_followEventToPersonalList;
   "migrations/initializeAggregates": typeof migrations_initializeAggregates;
   "migrations/initializeUserFeedsAggregate": typeof migrations_initializeUserFeedsAggregate;
   "migrations/personalListMigration": typeof migrations_personalListMigration;
