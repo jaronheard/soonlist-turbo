@@ -137,6 +137,7 @@ function CapturerAvatar({
         shadowOpacity: 0.06,
         shadowRadius: 0,
         shadowOffset: { width: 0, height: 1 },
+        elevation: 1,
       }}
     >
       <UserAvatar user={user} size={inner} />
@@ -495,7 +496,8 @@ function MySceneRow({
   const listIconSize = Math.round(iconSize * 0.8125); // 13px at fontScale=1
   const openModal = () => setShowModal(true);
 
-  // Capturer first, then savers in order, dedup'd.
+  // Capturer first, then savers in order, dedup'd. Per the handoff the Scene
+  // row shows no "+N" for extra savers — tapping the stack opens the modal.
   const stackUsers = combineUsers(creator, savers).slice(0, 3);
   const remainingListsCount = additionalSourceCount ?? 0;
 
@@ -597,10 +599,15 @@ function PeoplePrimaryRow({
           <OverflowPill count={remainingUsersCount} onPress={openModal} />
         )}
         {hasAnyListInfo && (
-          <ListChipLegacy name={sourceListName} slug={sourceListSlug} />
-        )}
-        {remainingListsCount > 0 && (
-          <OverflowPill count={remainingListsCount} onPress={openModal} />
+          <>
+            <Text className="text-xs text-neutral-2">
+              {isOwnEvent ? "· Shared to" : "via"}
+            </Text>
+            <ListChipLegacy name={sourceListName} slug={sourceListSlug} />
+            {remainingListsCount > 0 && (
+              <OverflowPill count={remainingListsCount} onPress={openModal} />
+            )}
+          </>
         )}
       </View>
       <SavedByModal
