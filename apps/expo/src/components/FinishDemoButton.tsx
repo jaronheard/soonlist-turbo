@@ -25,7 +25,6 @@ export function FinishDemoButton({
 
     try {
       await completeOnboarding();
-      // Navigate to feed after paywall is handled
       router.navigate("/feed");
     } catch (error) {
       logError("Failed to complete onboarding", error);

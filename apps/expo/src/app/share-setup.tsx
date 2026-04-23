@@ -68,7 +68,6 @@ export default function ShareSetupScreen() {
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  // Seed draft state once when currentUser resolves.
   const seededRef = useRef(false);
   useEffect(() => {
     if (seededRef.current || !currentUser) return;
@@ -87,7 +86,6 @@ export default function ShareSetupScreen() {
     setAvatar(currentUser.userImage ?? null);
   }, [currentUser, user?.firstName]);
 
-  // Animate between medium (preview) and large (edit) detents.
   useEffect(() => {
     navigation.setOptions({
       sheetAllowedDetents: isEditing ? [0.8] : [0.4, 0.8],
@@ -146,7 +144,6 @@ export default function ShareSetupScreen() {
     }
   }, [userId, listName, displayName, links, completeSetup, username]);
 
-  // Preview the user's first few upcoming events as tilted image tiles.
   const { results: previewGroups } = useStablePaginatedQuery(
     api.feeds.getMyFeedGrouped,
     { filter: "upcoming" },

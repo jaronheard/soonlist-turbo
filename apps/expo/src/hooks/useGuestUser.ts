@@ -14,7 +14,6 @@ export const useGuestUser = () => {
         let existingGuestId = await AsyncStorage.getItem(GUEST_USER_KEY);
 
         if (!existingGuestId) {
-          // Generate a new guest ID
           existingGuestId = `guest_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
           await AsyncStorage.setItem(GUEST_USER_KEY, existingGuestId);
         }

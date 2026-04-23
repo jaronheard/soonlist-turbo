@@ -1,4 +1,3 @@
-// apps/expo/src/components/Toast/Toast.tsx
 import React, { useCallback, useEffect, useRef } from "react";
 import {
   AccessibilityInfo,
@@ -57,16 +56,11 @@ export function Toast({ toast, onDismiss }: ToastProps) {
     });
   }, [onDismiss, translateY, opacity]);
 
-  // Keep ref updated so long-lived effects always call the latest runDismiss.
   useEffect(() => {
     runDismissRef.current = runDismiss;
   }, [runDismiss]);
 
-  // Animate in on mount / toast change; reset on toast.id change.
   useEffect(() => {
-    // Capture pathname-at-toast-mount via the latest ref so this effect
-    // doesn't need pathname as a dep (and therefore doesn't re-run on
-    // navigation, which would race with the route-change-dismiss effect).
     pathnameAtMountRef.current = pathnameLatestRef.current;
     // eslint-disable-next-line react-compiler/react-compiler -- reanimated SharedValue mutation; runs on UI thread.
     translateY.value = withTiming(0, {
@@ -75,10 +69,8 @@ export function Toast({ toast, onDismiss }: ToastProps) {
     });
     opacity.value = withTiming(1, { duration: 180 });
 
-    // Announce to VoiceOver
     AccessibilityInfo.announceForAccessibility(toast.message);
 
-    // Auto-dismiss timer
     if (timerRef.current) clearTimeout(timerRef.current);
     timerRef.current = setTimeout(() => {
       runDismissRef.current();
@@ -89,14 +81,12 @@ export function Toast({ toast, onDismiss }: ToastProps) {
     };
   }, [toast.id, toast.message, duration, translateY, opacity]);
 
-  // Dismiss on route change
   useEffect(() => {
     if (pathname !== pathnameAtMountRef.current) {
       runDismissRef.current();
     }
   }, [pathname]);
 
-  // Dismiss on app backgrounding
   useEffect(() => {
     const sub = AppState.addEventListener("change", (state) => {
       if (state !== "active") {
@@ -195,7 +185,6 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.12,
     shadowRadius: 30,
     elevation: 6,
-    // No overflow: "hidden" here so iOS shadow renders.
     backgroundColor: "rgba(242, 242, 247, 0.92)",
   },
   clipHost: {

@@ -120,7 +120,6 @@ export default function EditEventScreen() {
 
   useEffect(() => {
     if (eventQuery) {
-      // Use the properly typed event data
       const eventData = eventQuery.event as {
         name?: string;
         description?: string;
@@ -138,7 +137,6 @@ export default function EditEventScreen() {
             platform?: string;
             mentions?: string[];
             sourceUrls?: string[];
-            // Legacy fields for backward compatibility
             type?: string;
             category?: string;
             priceType?: string;
@@ -346,7 +344,6 @@ export default function EditEventScreen() {
           }
         }
 
-        // Only include eventMetadata if it has actual values
         const hasEventMetadata =
           (data.platform && data.platform !== "unknown") ||
           (data.mentions && data.mentions.length > 0) ||

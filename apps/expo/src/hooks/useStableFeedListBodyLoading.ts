@@ -1,6 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 
-/** Convex paginated query status (live, not stabilized results). */
 export type StablePaginatedStatus =
   | "LoadingFirstPage"
   | "CanLoadMore"
@@ -15,17 +14,6 @@ function isFirstPageReady(status: StablePaginatedStatus): boolean {
   );
 }
 
-/**
- * Shared list-body loading flag for My Soonlist / My Scene: spinner below the
- * header in {@link UserEventsList}, without replacing the whole screen.
- *
- * - Initial load: `LoadingFirstPage` before any page is ready.
- * - Segment switch: user-driven refetch while `LoadingFirstPage` — including
- *   if the user switches before the first page resolves (pending ref covers that).
- *
- * @param extraLoading — e.g. followed-lists query still undefined (My Scene).
- * @param enabled — false resets refs (e.g. no followings); still allow `extraLoading`.
- */
 export function useStableFeedListBodyLoading(
   status: StablePaginatedStatus,
   options: {

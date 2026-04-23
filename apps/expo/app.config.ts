@@ -1,53 +1,44 @@
 import type { ConfigContext, ExpoConfig } from "expo/config";
 
-// Environment configuration
 const IS_DEV = process.env.APP_VARIANT === "development";
 const IS_PREVIEW = process.env.APP_VARIANT === "preview";
 
-// Throw error if preview environment is detected
 if (IS_PREVIEW) {
   throw new Error(
     "Preview environment is not fully configured. Please use development or production environment.",
   );
 }
 
-// Get unique identifier based on environment
 const getUniqueIdentifier = () => {
   if (IS_DEV) return "com.soonlist.app.dev";
   return "com.soonlist.app";
 };
 
-// Get app name based on environment
 const getAppName = () => {
   if (IS_DEV) return "Soonlist (Dev)";
   return "Soonlist";
 };
 
-// Get scheme based on environment
 const getScheme = () => {
   if (IS_DEV) return "soonlist.dev";
   return "soonlist";
 };
 
-// Get app group based on environment
 const getAppGroup = () => {
   if (IS_DEV) return "group.com.soonlist.dev";
   return "group.com.soonlist";
 };
 
-// Get schemes for current environment only
 const getSchemes = () => {
   if (IS_DEV) return ["soonlist.dev"];
   return ["soonlist"];
 };
 
-// Get OneSignal mode based on environment
 const getOneSignalMode = () => {
   if (IS_DEV) return "development";
   return "production";
 };
 
-// Get OneSignal App ID based on environment
 const getOneSignalAppId = (): string => {
   if (IS_DEV) return process.env.EXPO_PUBLIC_ONE_SIGNAL_APP_ID_DEV! || "";
   return process.env.EXPO_PUBLIC_ONE_SIGNAL_APP_ID_PROD! || "";
@@ -160,7 +151,6 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
       UIBackgroundModes: ["fetch"],
       NSLocationWhenInUseUsageDescription:
         "Soonlist uses your location for notifications and locating events.",
-      // AppsFlyer SKAN & AdAttributionKit postback copies
       NSAdvertisingAttributionReportEndpoint:
         "https://appsflyer-skadnetwork.com/",
       AdAttributionKitPostbackCopyURL: "https://appsflyer-skadnetwork.com/",
@@ -202,7 +192,6 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
     typedRoutes: true,
     reactCompiler: true,
   },
-  // plugins: ["expo-router"],
   extra: {
     eas: {
       projectId: "a8acc202-ed8c-48ed-9e5a-2570f510fe8a",

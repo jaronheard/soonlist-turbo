@@ -6,14 +6,10 @@ import { useRouter } from "expo-router";
 
 import { logDebug, logError } from "~/utils/errorLogging";
 
-/**
- * Hook to set up and handle home screen quick actions (3D Touch/Haptic Touch on iOS, long-press on Android)
- */
 export function useQuickActions() {
   const router = useRouter();
 
   useEffect(() => {
-    // Set up quick actions when the app launches
     const setupQuickActions = async () => {
       try {
         await QuickActions.setItems([
@@ -35,7 +31,6 @@ export function useQuickActions() {
 
     void setupQuickActions();
 
-    // Listen for quick action events
     const subscription = QuickActions.addListener((action) => {
       logDebug("Quick action triggered", { actionId: action.id });
 
@@ -45,7 +40,6 @@ export function useQuickActions() {
         return;
       }
 
-      // Handle external URLs (mailto and app store)
       if (href.startsWith("mailto:") || href.startsWith("http")) {
         Linking.openURL(href).catch((error) => {
           // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment

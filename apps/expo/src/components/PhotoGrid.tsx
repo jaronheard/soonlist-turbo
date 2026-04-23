@@ -27,7 +27,6 @@ interface PhotoGridProps {
   containerClassName?: string;
 }
 
-// Helper function to compare image URIs
 function compareImageUris(
   uri1: string | ImageSource | undefined | null,
   uri2: string | ImageSource | undefined | null,
@@ -53,7 +52,6 @@ function compareImageUris(
   return false;
 }
 
-// Memoize the grid item component
 const GridItem = React.memo(
   ({
     item,
@@ -166,7 +164,6 @@ export const PhotoGrid = React.memo(
       void Linking.openSettings();
     };
 
-    // Only show the plus button if we have media permission
     const gridData = useMemo(
       () =>
         hasMediaPermission
@@ -175,7 +172,6 @@ export const PhotoGrid = React.memo(
       [hasMediaPermission, recentPhotos],
     );
 
-    // Memoize the getItemLayout function
     const getItemLayout = useMemo(
       () =>
         (

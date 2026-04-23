@@ -123,9 +123,6 @@ export function WorkflowStatus({ workflowId }: WorkflowStatusProps) {
 export function WorkflowStatusContainer() {
   const { workflowIds } = useAppStore();
 
-  // if (workflowIds.length === 0) {
-  //   return null;
-  // }
 
   return (
     <View className="absolute bottom-4 right-4 z-50">

@@ -22,7 +22,6 @@ interface DatePickerFieldProps<T extends FieldValues> {
   className?: string;
 }
 
-// Define a specific type for the onChange function we expect from the Controller
 type FieldOnChange = (value: string) => void;
 
 export function DatePickerField<T extends FieldValues>({
@@ -52,7 +51,6 @@ export function DatePickerField<T extends FieldValues>({
     setIsPickerVisible(false);
   };
 
-  // Use the specific FieldOnChange type
   const handleModalHide = (onChange: FieldOnChange) => {
     if (Platform.OS === "ios") {
       const formatted = formatDateForStorage(tempDate);
@@ -60,7 +58,6 @@ export function DatePickerField<T extends FieldValues>({
     }
   };
 
-  // Use the specific FieldOnChange type
   const onDateChange = (
     onChange: FieldOnChange,
     _: unknown,

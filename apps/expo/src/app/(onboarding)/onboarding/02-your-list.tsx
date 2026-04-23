@@ -29,7 +29,6 @@ function makeDemoEvent(
 ): EventWithSimilarity {
   const startDateTime = `${startDate}T${startTime}:00`;
   const endDateTime = `${startDate}T${endTime}:00`;
-  // Demo events use mock data that doesn't fully match Convex branded types
   // eslint-disable-next-line @typescript-eslint/consistent-type-assertions
   return {
     event: {
@@ -77,7 +76,6 @@ function makeDemoEvent(
   } as unknown as EventWithSimilarity;
 }
 
-// Generate demo dates relative to today so the onboarding preview never goes stale.
 function addDays(date: Date, days: number): string {
   const next = new Date(date);
   next.setDate(next.getDate() + days);
@@ -149,7 +147,6 @@ export default function YourListScreen() {
             borderColor: "#FFFFFF",
           }}
         >
-          {/* Share hint */}
           <View className="flex-row items-center justify-between bg-interactive-2 px-4 py-2">
             <Text className="text-sm font-semibold text-interactive-1">
               soonlist.com/you
@@ -174,7 +171,6 @@ export default function YourListScreen() {
 
         <View className="h-4" />
 
-        {/* Referral follow note */}
         {pendingFollowUsername && (
           <Text className="mb-2 text-center text-sm font-medium text-white/80">
             You'll follow @{pendingFollowUsername}'s events after sign-up

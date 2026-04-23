@@ -1,4 +1,3 @@
-// Learn more: https://docs.expo.dev/guides/monorepos/
 const { getDefaultConfig } = require("expo/metro-config");
 const { FileStore } = require("metro-cache");
 const { withNativeWind } = require("nativewind/metro");
@@ -39,10 +38,8 @@ function withMonorepoPaths(config) {
   const workspaceRoot = path.resolve(projectRoot, "../..");
   require("@expo/env").load(workspaceRoot, { force: true });
 
-  // #1 - Watch all files in the monorepo
   config.watchFolders = [workspaceRoot];
 
-  // #2 - Resolve modules within the project's `node_modules` first, then all monorepo modules
   config.resolver.nodeModulesPaths = [
     path.resolve(projectRoot, "node_modules"),
     path.resolve(workspaceRoot, "node_modules"),

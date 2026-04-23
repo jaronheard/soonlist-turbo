@@ -6,7 +6,6 @@ import type { AddToCalendarButtonProps } from "@soonlist/cal/types";
 
 type Event = NonNullable<FunctionReturnType<typeof api.events.get>>;
 
-// Cosine Similarity Functions
 function textToVector(text: string): Map<string, number> {
   const wordMap = new Map<string, number>();
   const words = text.toLowerCase().match(/\w+/g) || [];
@@ -44,7 +43,6 @@ function cosineSimilarity(
   );
 }
 
-// Event Similarity Check Function
 function isEventSimilar(
   event1: Event,
   event2: Event,
@@ -77,7 +75,6 @@ function isEventSimilar(
     ),
   );
 
-  // Text and Location Similarity
   const nameSimilarity = cosineSimilarity(
     textToVector(event1Data.name || ""),
     textToVector(event2Data.name || ""),
@@ -114,19 +111,17 @@ export type SimilarEvents = {
   event: Event;
   similarityDetails: SimilarityDetails;
 }[];
-// Structure to store similarity info
 export interface EventWithSimilarity {
   event: Event;
   similarEvents: SimilarEvents;
 }
 
 function collapseSimilarEvents(events: Event[], currentUserId?: string) {
-  // Define thresholds
-  const startTimeThreshold = 60; // 60 minutes for start time
-  const endTimeThreshold = 60; // 60 minutes for end time
-  const nameThreshold = 0.1; // 10% similarity for name
-  const descriptionThreshold = 0.1; // 10% similarity for description
-  const locationThreshold = 0.1; // 10% similarity for location
+  const startTimeThreshold = 60;
+  const endTimeThreshold = 60;
+  const nameThreshold = 0.1;
+  const descriptionThreshold = 0.1;
+  const locationThreshold = 0.1;
 
   const eventsWithSimilarity: EventWithSimilarity[] = [];
 
@@ -135,7 +130,6 @@ function collapseSimilarEvents(events: Event[], currentUserId?: string) {
 
     events.forEach((otherEvent, otherIndex) => {
       if (index !== otherIndex) {
-        // Avoid comparing an event with itself
         const similarityDetails = isEventSimilar(
           event,
           otherEvent,
@@ -159,13 +153,11 @@ function collapseSimilarEvents(events: Event[], currentUserId?: string) {
 
   const uniqueEventsWithSimilarity: EventWithSimilarity[] = [];
 
-  // Create a Set to track events that have already been considered
   const seenEvents = new Set();
 
   eventsWithSimilarity.forEach((item) => {
     const { event: currentEvent, similarEvents } = item;
     if (seenEvents.has(currentEvent.id)) {
-      // Skip this event if it has already been seen
       return;
     }
 
@@ -183,7 +175,6 @@ function collapseSimilarEvents(events: Event[], currentUserId?: string) {
     similarEvents.forEach(({ event: similarEvent }) => {
       const similarEventCreationDate = new Date(similarEvent.created_at);
       if (similarEventsHasCurrentUserId) {
-        // only set as earlies if it matches the current user
         if (similarEvent.userId === currentUserId) {
           if (similarEventCreationDate < earliestCreationDate) {
             earliestEvent = similarEvent;
@@ -197,11 +188,9 @@ function collapseSimilarEvents(events: Event[], currentUserId?: string) {
         }
       }
 
-      // Mark this similar event as seen
       seenEvents.add(similarEvent.id);
     });
 
-    // Add the earliest event to the filtered list
     uniqueEventsWithSimilarity.push({ event: earliestEvent, similarEvents });
   });
 

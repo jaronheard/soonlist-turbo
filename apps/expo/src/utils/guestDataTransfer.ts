@@ -16,20 +16,15 @@ export const transferGuestData = async ({
   transferGuestOnboardingData,
 }: TransferGuestDataParams): Promise<void> => {
   try {
-    // Check for guest user ID early to avoid unnecessary work
     const guestUserId = await AsyncStorage.getItem(GUEST_USER_KEY);
     if (!guestUserId) {
       logMessage("No guest data to transfer");
-      return; // No guest data to transfer
+      return;
     }
 
     logMessage("Starting guest data transfer", { guestUserId, userId });
 
-    // Step 1: Transfer RevenueCat subscription
-    // RevenueCat will automatically associate the anonymous user's purchases
-    // with the new authenticated user when we log in with the userId
     try {
-      // Get the current anonymous user's customer info before logging in
       const anonymousCustomerInfo = await Purchases.getCustomerInfo();
       const hasActiveSubscription =
         anonymousCustomerInfo.activeSubscriptions.length > 0;
@@ -43,19 +38,15 @@ export const transferGuestData = async ({
         });
       }
 
-      // Log in with the authenticated user ID
-      // This will transfer the anonymous user's purchases
       await Purchases.logIn(userId);
       logMessage("RevenueCat identity transferred", { userId });
     } catch (revenueCatError) {
-      // Log the error but continue with other transfers
       logError("Failed to transfer RevenueCat identity", revenueCatError, {
         guestUserId,
         userId,
       });
     }
 
-    // Step 2: Transfer guest onboarding data
     try {
       const result = await transferGuestOnboardingData({ guestUserId });
 
@@ -78,8 +69,6 @@ export const transferGuestData = async ({
       });
     }
 
-    // Step 3: Clear guest data from AsyncStorage
-    // We can safely clear it now since the backend will handle retries if needed
     try {
       await AsyncStorage.removeItem(GUEST_USER_KEY);
       logMessage("Guest data cleared from AsyncStorage");
@@ -90,7 +79,6 @@ export const transferGuestData = async ({
       // Continue since backend data transfer was successful
     }
 
-    // Step 4: Log successful transfer completion
     logMessage("Guest data transfer completed successfully", {
       guestUserId,
       userId,

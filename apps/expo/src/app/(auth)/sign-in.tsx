@@ -28,15 +28,12 @@ export default function AuthScreen() {
     return <Redirect href="/onboarding" />;
   }
 
-  // If user hasn't seen onboarding, redirect them there
   if (!hasSeenOnboarding) {
     return <Redirect href="/(onboarding)/onboarding" />;
   }
 
-  // Show sign-in screen with status banners if coming from paywall
   const showBanner = fromPaywall === "true";
 
-  // Create the banner component
   const showFollowBanner = !!pendingFollowUsername;
   const banner =
     showBanner || showFollowBanner ? (
@@ -64,5 +61,4 @@ export default function AuthScreen() {
   return <SignInWithOAuth banner={banner} />;
 }
 
-// Export Expo Router's error boundary
 export { ErrorBoundary } from "expo-router";

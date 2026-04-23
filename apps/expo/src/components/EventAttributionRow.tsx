@@ -30,19 +30,14 @@ interface EventAttributionRowProps {
 }
 
 const HIT_SLOP = { top: 8, bottom: 8, left: 4, right: 4 } as const;
-// Wider right side for the "+N" chip at the end of the row; the row has
-// 12px horizontal padding so this stays inside the card.
 const OVERFLOW_HIT_SLOP = { top: 8, bottom: 8, left: 6, right: 12 } as const;
 
-// Handoff spec values that don't map to existing Tailwind tokens.
 const ROW_HEIGHT = 28;
 const ROW_FONT_SIZE = 12.5;
 const AVATAR_OVERLAP = -6;
 
-// Hex forms of design tokens for imperative color props (SVG icon color,
-// shadowColor) that don't accept className.
-const INTERACTIVE_1_HEX = "#5A32FB"; // --interactive-1
-const NEUTRAL_0_HEX = "#162135"; // --neutral-0
+const INTERACTIVE_1_HEX = "#5A32FB";
+const NEUTRAL_0_HEX = "#162135";
 
 function displayName(user: UserForDisplay) {
   return user.displayName || user.username;
@@ -185,8 +180,6 @@ function AvatarStack({
   );
 }
 
-// Names render inside a single shrinking Text so ellipsis kicks in before the
-// row overflows. The "+N" stays pinned outside the truncating Text.
 function NameList({
   users,
   extraCount,
@@ -376,13 +369,12 @@ function MySoonlistRow({
 }) {
   const [showModal, setShowModal] = useState(false);
   const isOwnEvent = currentUserId === creator.id;
-  const avatarSize = Math.round(iconSize * 1.25); // 20px at fontScale=1
+  const avatarSize = Math.round(iconSize * 1.25);
   const otherSavers = savers.filter(
     (s) => s.id !== creator.id && s.id !== currentUserId,
   );
   const openModal = () => setShowModal(true);
 
-  // Viewer captured alone: handoff says collapse the row entirely.
   if (isOwnEvent && otherSavers.length === 0) {
     return null;
   }
@@ -491,12 +483,10 @@ function MySceneRow({
   lists?: Doc<"lists">[];
 }) {
   const [showModal, setShowModal] = useState(false);
-  const avatarSize = Math.round(iconSize * 1.25); // 20px at fontScale=1
-  const listIconSize = Math.round(iconSize * 0.8125); // 13px at fontScale=1
+  const avatarSize = Math.round(iconSize * 1.25);
+  const listIconSize = Math.round(iconSize * 0.8125);
   const openModal = () => setShowModal(true);
 
-  // Capturer first, then savers in order, dedup'd. Per the handoff the Scene
-  // row shows no "+N" for extra savers — tapping the stack opens the modal.
   const stackUsers = combineUsers(creator, savers).slice(0, 3);
   const remainingListsCount = additionalSourceCount ?? 0;
 
@@ -531,8 +521,6 @@ function MySceneRow({
   );
 }
 
-// Discover tab and List detail page. Not covered by the attribution-row
-// redesign; kept unchanged so those screens render as before.
 function PeoplePrimaryRow({
   creator,
   savers,

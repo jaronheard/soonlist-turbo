@@ -37,11 +37,9 @@ export function useMediaPermissions() {
   useEffect(() => {
     let subscription: MediaLibrary.Subscription | undefined;
 
-    // Subscribe only when the query is successful and indicates permissions are granted.
     if (isSuccess && data.isGranted) {
       subscription = MediaLibrary.addListener(({ hasIncrementalChanges }) => {
         if (hasIncrementalChanges) {
-          // Invalidate the query to refetch permissions when changes occur
           void queryClient.invalidateQueries({
             queryKey: mediaPermissionsQueryKey,
           });

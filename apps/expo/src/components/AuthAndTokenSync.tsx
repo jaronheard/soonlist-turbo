@@ -44,23 +44,18 @@ export default function AuthAndTokenSync() {
   const username = user?.username;
   const email = user?.primaryEmailAddress?.emailAddress;
 
-  // Sync external services based on Convex auth state
   useEffect(() => {
-    // Skip if Convex auth is still loading
     if (isLoading) return;
 
     if (isAuthenticated && userId && username) {
-      // User is authenticated in Convex
       Sentry.setUser({ id: userId, username, email });
       posthog.identify(userId, { username, email: email ?? "" });
     } else if (!isAuthenticated) {
-      // User is not authenticated in Convex
       Sentry.setUser(null);
       posthog.reset();
     }
   }, [isAuthenticated, isLoading, userId, username, email, posthog]);
 
-  // Sync RevenueCat based on Convex auth state
   useEffect(() => {
     if (isInitialized && isAuthenticated && userId) {
       login(userId).catch((error) => {
@@ -69,7 +64,6 @@ export default function AuthAndTokenSync() {
     }
   }, [isInitialized, isAuthenticated, userId, login]);
 
-  // Clear share token on sign-out
   useEffect(() => {
     if (!isAuthenticated) {
       const accessGroup = getAccessGroup();
@@ -81,7 +75,6 @@ export default function AuthAndTokenSync() {
     }
   }, [isAuthenticated]);
 
-  // Create share token on first authenticated load and persist keychain values
   useEffect(() => {
     const run = async () => {
       if (didCreateRef.current && lastCreatedForUserRef.current === userId)

@@ -1,4 +1,3 @@
-// apps/expo/src/components/Toast/ToastProvider.tsx
 import React, {
   createContext,
   useCallback,
@@ -20,8 +19,8 @@ export interface ToastAction {
 export interface ToastOptions {
   message: string;
   action?: ToastAction;
-  duration?: number; // ms, default 4000
-  variant?: ToastVariant; // default "success"
+  duration?: number;
+  variant?: ToastVariant;
 }
 
 export interface ActiveToast extends ToastOptions {

@@ -31,7 +31,6 @@ export function useOnboarding() {
     api.guestOnboarding.saveGuestOnboardingData,
   );
 
-  // Query to get current onboarding data (for invalidation purposes)
   const onboardingData = useQuery(
     api.users.getOnboardingData,
     user?.id ? { userId: user.id } : "skip",
@@ -40,7 +39,6 @@ export function useOnboarding() {
   const completeOnboarding = useCallback(async () => {
     const completedAt = new Date().toISOString();
 
-    // For guest users, just mark onboarding as seen
     if (!user?.id) {
       setHasSeenOnboarding(true);
       posthog.capture("onboarding_completed", {
@@ -51,11 +49,9 @@ export function useOnboarding() {
       return;
     }
 
-    // For authenticated users, save to database
     setHasCompletedOnboarding(true);
 
     try {
-      // Use Convex mutation to set completion timestamp
       await setOnboardingCompletedAtMutation({
         userId: user.id,
         completedAt,
@@ -67,7 +63,6 @@ export function useOnboarding() {
       });
     } catch (error) {
       logError("Failed to complete onboarding", error);
-      // Revert optimistic update on error
       setHasCompletedOnboarding(false);
       throw error;
     }
@@ -86,33 +81,27 @@ export function useOnboarding() {
       data: Pick<OnboardingData, T>,
       nextStep?: string,
     ) => {
-      // Update store immediately for optimistic UI
       setOnboardingData(data);
       setCurrentOnboardingStep(step);
 
-      // Navigate immediately if nextStep is provided
       if (nextStep) {
         void router.navigate(nextStep as Href);
       }
 
-      // Handle saving in the background
       void (async () => {
         try {
           if (user?.id) {
-            // Save to Convex database for authenticated users
             await saveOnboardingDataMutation({
               userId: user.id,
               ...data,
             });
           } else if (guestUserId) {
-            // Save to guest onboarding data for guest users
             await saveGuestOnboardingDataMutation({
               guestUserId,
               data,
             });
           }
 
-          // Track in PostHog
           posthog.capture("onboarding_step_completed", {
             step,
             userId: user?.id || guestUserId,

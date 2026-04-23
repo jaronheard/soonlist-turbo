@@ -26,7 +26,6 @@ export default function RedirectScreen() {
           toast.error("Error redirecting to URL", "Please try again later");
         }
 
-        // Always navigate back or to home, regardless of success or error
         if (router.canGoBack()) {
           router.back();
         } else {

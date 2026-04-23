@@ -62,13 +62,11 @@ export default function SignUpScreen() {
     setIsSubmitting(true);
 
     const MAX_RETRIES = 5;
-    const BASE_DELAY = 1000; // 1 second base delay
+    const BASE_DELAY = 1000;
     let retryCount = 0;
 
-    // Retry function with exponential backoff
     const attemptSignupWithRetry = async (): Promise<void> => {
       try {
-        // Generate username synchronously using convex.query()
         const username = await convex.query(api.users.generateUsername, {
           guestUserId,
           firstName: data.firstName,
@@ -78,7 +76,6 @@ export default function SignUpScreen() {
           maxRetries: MAX_RETRIES,
         });
 
-        // Try to create user with the generated username
         await signUp.create({
           ...data,
           username,
@@ -93,7 +90,6 @@ export default function SignUpScreen() {
           message?: string;
         };
 
-        // Check if this is a username conflict error
         let isUsernameConflict = false;
         let errorMessage = "";
 
@@ -114,23 +110,19 @@ export default function SignUpScreen() {
             errorMessage.toLowerCase().includes("taken");
         }
 
-        // If it's a username conflict and we haven't exceeded max retries, retry
         if (isUsernameConflict && retryCount < MAX_RETRIES) {
-          // Exponential backoff delay
           const delay = BASE_DELAY * Math.pow(2, retryCount);
           await new Promise((resolve) => setTimeout(resolve, delay));
 
           retryCount++;
-          return attemptSignupWithRetry(); // Recursive retry
+          return attemptSignupWithRetry();
         }
 
-        // If it's not a username conflict or we've exceeded max retries, show error
         if (retryCount >= MAX_RETRIES) {
           setGeneralError(
             "Unable to create a unique username after multiple attempts. Please try again later.",
           );
         } else {
-          // Handle other types of errors
           const isNetworkError = handleClerkError("signup", err, {
             email: data.emailAddress,
             retryCount,
@@ -153,7 +145,6 @@ export default function SignUpScreen() {
       }
     };
 
-    // Start the retry process
     try {
       await attemptSignupWithRetry();
     } catch (err: unknown) {

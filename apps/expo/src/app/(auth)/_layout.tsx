@@ -12,14 +12,11 @@ import { api } from "@soonlist/backend/convex/_generated/api";
 
 import { ResetAuthButton } from "~/components/auth/ResetAuthButton";
 
-// Export Expo Router's error boundary
 export { ErrorBoundary } from "expo-router";
 
 export default function AuthLayout() {
   const { isAuthenticated } = useConvexAuth();
 
-  // Fetch user data only when authenticated.
-  // Pass "skip" to useQuery to prevent it from running if not authenticated.
   const user = useQuery(
     api.users.getCurrentUser,
     isAuthenticated ? {} : "skip",
@@ -33,7 +30,6 @@ export default function AuthLayout() {
         </View>
       </AuthLoading>
       <Unauthenticated>
-        {/* Stack for unauthenticated users */}
         <View className="flex-1">
           <Stack screenOptions={{ headerShown: false }}>
             <Stack.Screen name="sign-in" />
@@ -48,16 +44,11 @@ export default function AuthLayout() {
       </Unauthenticated>
 
       <Authenticated>
-        {/* This content is rendered only when isAuthenticated (from useConvexAuth) is true */}
-        {/* Now we handle the state of the 'user' query */}
         {user === undefined ? (
-          // user query is loading (or was skipped and now isAuthenticated is true, so it's re-fetching)
           <View className="flex-1 items-center justify-center">
             <ActivityIndicator size="large" />
           </View>
         ) : (
-          // Authenticated users always go to feed
-          // They should never see onboarding even if onboardingCompletedAt is not set
           <Redirect href="/(tabs)/feed" />
         )}
       </Authenticated>

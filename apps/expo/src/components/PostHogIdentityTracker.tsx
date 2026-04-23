@@ -13,7 +13,6 @@ export function PostHogIdentityTracker() {
 
   useEffect(() => {
     if (userId) {
-      // Track user in PostHog
       if (posthog) {
         const properties: Record<string, string> = {};
         if (username) properties.username = username;
@@ -21,7 +20,6 @@ export function PostHogIdentityTracker() {
         posthog.identify(userId, properties);
       }
 
-      // Track user in Sentry
       const sentryUser: { id: string; username?: string; email?: string } = {
         id: userId,
       };
@@ -29,7 +27,6 @@ export function PostHogIdentityTracker() {
       if (email) sentryUser.email = email;
       Sentry.setUser(sentryUser);
     } else {
-      // Clear user tracking when signed out
       if (posthog) {
         posthog.reset();
       }

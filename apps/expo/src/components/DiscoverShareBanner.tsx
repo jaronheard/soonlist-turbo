@@ -19,7 +19,6 @@ const DiscoverShareBanner: React.FC = () => {
 Use code DISCOVER to join the Portland-only, invite-only Discover list with events from me and 50+ others.`;
 
     try {
-      // Track invite initiated
       posthog.capture("invite_friend_initiated", {
         source: "discover_banner",
         action: "bring_a_friend",
@@ -31,7 +30,6 @@ Use code DISCOVER to join the Portland-only, invite-only Discover list with even
         title: "Soonlist — Discover events",
       });
 
-      // Track invite completed if user didn't dismiss
       if (result.action === Share.sharedAction) {
         posthog.capture("invite_friend_completed", {
           source: "discover_banner",

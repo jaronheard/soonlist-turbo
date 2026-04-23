@@ -10,17 +10,9 @@ import Animated, {
 } from "react-native-reanimated";
 import { Image } from "expo-image";
 
-// ---------------------------------------------------------------------------
-// OnboardingOrbit — Cast C3 (locked in from baby-soonlist-mobile animation lab)
-//
-// A soft tilted disc orbit of 12 event-screenshot cards. Ambient, slow, no
-// entrance animation — already spinning when the screen mounts. Designed to
-// sit above an onboarding CTA as a calm "your list is ready" moment.
-// ---------------------------------------------------------------------------
 
-const CARD_RATIO = 9 / 16; // width / height — portrait screenshot
+const CARD_RATIO = 9 / 16;
 
-// Orbit config (from animation lab variant "29 · Cast C3")
 const CONFIG = {
   cardCount: 12,
   tiltRatio: 0.62, // radiusY / radiusX — rounder ellipse (closer to circle)
@@ -32,9 +24,6 @@ const CONFIG = {
   leanDeg: 5, // ±tangent lean per card
 };
 
-// Images are ordered by orbit slot. Order matters — it's the Cast C3 shuffle.
-// require() is the standard RN pattern for static image assets; each call
-// returns an asset-module id (number).
 /* eslint-disable @typescript-eslint/no-require-imports, @typescript-eslint/no-unsafe-assignment */
 const IMAGES: number[] = [
   require("./images/01.jpg"),
@@ -53,9 +42,7 @@ const IMAGES: number[] = [
 /* eslint-enable @typescript-eslint/no-require-imports, @typescript-eslint/no-unsafe-assignment */
 
 interface Props {
-  /** Container width in px. Card sizes + radius scale from this. */
   width: number;
-  /** Container height in px. Typically width × 4/3 for a 3:4 stage. */
   height: number;
 }
 
@@ -133,12 +120,9 @@ function OrbitCard({
     const x = Math.cos(angle) * radiusX;
     const y = Math.sin(angle) * radiusY;
 
-    // Depth: sin(angle) = +1 → bottom of ellipse = near viewer
-    //        sin(angle) = -1 → top of ellipse    = far from viewer
-    const depth = (Math.sin(angle) + 1) / 2; // 0 far .. 1 near
+    const depth = (Math.sin(angle) + 1) / 2;
     const scale = CONFIG.scaleMin + depth * (CONFIG.scaleMax - CONFIG.scaleMin);
 
-    // Subtle tangent lean — ±5° sway as cards orbit
     const leanDeg = Math.cos(angle) * CONFIG.leanDeg;
 
     return {
@@ -153,9 +137,6 @@ function OrbitCard({
   });
 
   return (
-    // Outer view: shadow + transforms. Must NOT clip (iOS shadows break on
-    // overflow:hidden), so the rounded-corner clipping happens on the inner
-    // view.
     <Animated.View
       style={[
         {

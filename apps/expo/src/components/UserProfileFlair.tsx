@@ -18,7 +18,6 @@ interface UserProfileFlairProps {
 }
 
 const flairContainerClasses: Record<Size, string> = {
-  /* xs–lg: rim placement so emoji isn’t sheared at the circle edge */
   xs: "-top-1 -right-2.5 min-w-[1rem]",
   sm: "-top-1 -right-2.5 min-w-[1.5rem]",
   md: "-top-1 -right-2.5 min-w-[1.75rem]",
@@ -29,7 +28,6 @@ const flairContainerClasses: Record<Size, string> = {
 
 const flairEmojiTextClasses: Record<Size, string> = {
   xs: "text-[0.625rem] leading-[1.25]",
-  /* leading-none clips emoji; py-px gives color-glyph breathing room */
   sm: "text-sm leading-[1.25] py-px",
   md: "text-base leading-[1.25] py-px",
   lg: "text-lg leading-[1.25] py-px",

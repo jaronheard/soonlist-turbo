@@ -1,4 +1,3 @@
-// This file exports all icon components
 import type { LucideIcon } from "./types";
 
 export type { LucideIcon };

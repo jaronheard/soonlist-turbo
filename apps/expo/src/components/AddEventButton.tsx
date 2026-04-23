@@ -19,16 +19,9 @@ import { useInFlightEventStore } from "~/store/useInFlightEventStore";
 
 interface AddEventButtonProps {
   showChevron?: boolean;
-  /** Additional bottom offset to account for tab bar */
   bottomOffset?: number;
 }
 
-/**
- * AddEventButton
- * ---------------
- * Opens the native photo picker (up to 10 images) and creates events for each selected photo in parallel.
- * All features are free — no subscription gating.
- */
 export default function AddEventButton({
   showChevron = true,
   bottomOffset = 100,
@@ -41,9 +34,6 @@ export default function AddEventButton({
 
   const handlePress = triggerAddEventFlow;
 
-  /**
-   * Small bounce for the chevron hint
-   */
   const translateY = useSharedValue(0);
   useEffect(() => {
     translateY.value = withRepeat(
@@ -64,12 +54,8 @@ export default function AddEventButton({
     zIndex: 10,
   }));
 
-  /**
-   * UI
-   */
   return (
     <>
-      {/* Background gradients - no blur for perf on scrolling content */}
       <View className="absolute bottom-0 left-0 right-0" pointerEvents="none">
         <View className="absolute bottom-0 h-40 w-full">
           <LinearGradient
@@ -95,7 +81,6 @@ export default function AddEventButton({
         </View>
       </View>
 
-      {/* Main action button or offline indicator */}
       <TouchableOpacity
         onPress={handlePress}
         disabled={!isOnline || isCapturing}
@@ -103,7 +88,6 @@ export default function AddEventButton({
         style={{ bottom: bottomOffset + insets.bottom }}
       >
         {!isOnline ? (
-          // Offline indicator - replaces button when offline
           <View className="relative">
             <View
               className="relative flex-row items-center justify-center gap-2 rounded-full bg-neutral-2 p-3"
@@ -124,7 +108,6 @@ export default function AddEventButton({
               <PlusIcon size={44} color="#FFF" strokeWidth={2} />
             </GlassButton>
 
-            {/* Spinner Overlay */}
             {isCapturing && (
               <View className="absolute -left-[3.5px] -top-[3.5px] h-[77px] w-[77px] items-center justify-center">
                 <CircularSpinner size={77} strokeWidth={3} color="#5A32FB" />
@@ -134,7 +117,6 @@ export default function AddEventButton({
         )}
       </TouchableOpacity>
 
-      {/* Bouncing chevron */}
       {showChevron && (
         <Animated.View style={animatedStyle}>
           <ChevronDown size={64} color="#5A32FB" strokeWidth={4} />

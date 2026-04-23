@@ -12,46 +12,16 @@ export interface RecentPhoto {
   uri: string;
 }
 
-// Helper function to create a stable timestamp (rounded to 15-minute intervals)
 function createStableTimestamp(): string {
   const now = new Date();
   const minutes = now.getMinutes();
   const roundedMinutes = Math.floor(minutes / 15) * 15;
   const stableTime = new Date(now);
-  stableTime.setMinutes(roundedMinutes, 0, 0); // Set seconds and milliseconds to 0
+  stableTime.setMinutes(roundedMinutes, 0, 0);
   return stableTime.toISOString();
 }
 
-/**
- * Stable Timestamp System
- *
- * This system provides a timestamp that updates every 15 minutes, designed for use
- * in paginated queries that filter by time (e.g., upcoming vs past events).
- *
- * Benefits:
- * - Prevents InvalidCursor errors during pagination by keeping the filter stable
- * - Maintains optimistic updates since Convex queries remain reactive
- * - Automatically updates every 15 minutes to keep data relatively fresh
- * - Can be manually refreshed when switching screens or on user action
- *
- * Usage:
- * ```tsx
- * const stableTimestamp = useStableTimestamp();
- * const refreshTimestamp = useRefreshStableTimestamp();
- *
- * // Use in queries
- * const queryArgs = {
- *   filter: "upcoming",
- * };
- *
- * // Manually refresh when needed (e.g., on screen focus)
- * useEffect(() => {
- *   refreshTimestamp();
- * }, []);
- * ```
- */
 
-// Common event input state shared between add and new routes
 interface CommonEventInputState {
   input: string;
   imagePreview: string | null;
@@ -62,13 +32,11 @@ interface CommonEventInputState {
   uploadedImageUrl: string | null;
 }
 
-// State specific to the /add route
 interface AddEventInputState extends CommonEventInputState {
   isOptionSelected: boolean;
   activeInput: "camera" | "upload" | "url" | "describe" | null;
 }
 
-// State specific to the /new route (share extension)
 type NewEventInputState = CommonEventInputState;
 
 interface AppState {
@@ -79,28 +47,22 @@ interface AppState {
     params: { text?: string; imageUri?: string } | null,
   ) => void;
 
-  // Calendar preferences
   preferredCalendarApp: CalendarApp | null;
   setPreferredCalendarApp: (app: CalendarApp | null) => void;
 
-  // Stable timestamp for query filtering
   stableTimestamp: string;
   lastTimestampUpdate: number;
   refreshStableTimestamp: () => void;
   getStableTimestamp: () => string;
 
-  // Timezone-related state
   userTimezone: string;
   hasShownTimezoneAlert: boolean;
   setUserTimezone: (timezone: string) => void;
   setHasShownTimezoneAlert: (hasShown: boolean) => void;
 
-  // Event input state for /add route
   addEventState: AddEventInputState;
-  // Event input state for /new route (share extension)
   newEventState: NewEventInputState;
 
-  // Event input actions
   setInput: (input: string, route: "add" | "new") => void;
   setImagePreview: (preview: string | null, route: "add" | "new") => void;
   setLinkPreview: (preview: string | null, route: "add" | "new") => void;
@@ -114,7 +76,6 @@ interface AppState {
   resetAddEventState: () => void;
   resetNewEventState: () => void;
 
-  // Add-specific actions
   setIsOptionSelected: (isSelected: boolean) => void;
   setActiveInput: (
     input: "camera" | "upload" | "url" | "describe" | null,
@@ -127,30 +88,25 @@ interface AppState {
   resetStore: () => void;
   resetForLogout: () => void;
 
-  // Media-related state & actions
   recentPhotos: RecentPhoto[];
   hasMediaPermission: boolean;
   hasFullPhotoAccess: boolean;
   setRecentPhotos: (photos: RecentPhoto[]) => void;
   setHasMediaPermission: (hasPermission: boolean) => void;
 
-  // User priority
   userPriority: string | null;
   setUserPriority: (priority: string) => void;
 
-  // Onboarding state
   onboardingData: Partial<OnboardingData>;
   setOnboardingData: (data: Partial<OnboardingData>) => void;
   currentOnboardingStep: OnboardingStep | null;
   setCurrentOnboardingStep: (step: OnboardingStep | null) => void;
 
-  // Workflow state
   workflowIds: string[];
   addWorkflowId: (workflowId: string) => void;
   removeWorkflowId: (workflowId: string) => void;
   clearAllWorkflowIds: () => void;
 
-  // Event view tracking for paywall
   totalEventViews: number;
   lastPaywallShownAtView: number;
   incrementEventView: () => void;
@@ -158,25 +114,19 @@ interface AppState {
   markPaywallShown: () => void;
   resetEventViews: () => void;
 
-  // Ephemeral discover flag to bridge UI until Clerk metadata updates
 
-  // Discover access override for immediate UI update
   discoverAccessOverride: boolean;
   setDiscoverAccessOverride: (enabled: boolean) => void;
 
-  // Rating prompt state
   hasShownRatingPrompt: boolean;
   markRatingPromptShown: () => void;
 
-  // Share list prompt state (3-event gate, one-shot bottom sheet)
   hasSeenShareListPrompt: boolean;
   setShareListPromptSeen: () => void;
 
-  // Pending follow from deep link (used when user is not authenticated yet)
   pendingFollowUsername: string | null;
   setPendingFollowUsername: (username: string | null) => void;
 
-  // Tab badge counts
   myListBadgeCount: number;
   setMyListBadgeCount: (count: number) => void;
   communityBadgeCount: number;
@@ -192,13 +142,10 @@ export const useAppStore = create<AppState>()(
       userTimezone: getUserTimeZone(),
       hasShownTimezoneAlert: false,
 
-      // Calendar preferences
       preferredCalendarApp: null,
       setPreferredCalendarApp: (app) => set({ preferredCalendarApp: app }),
 
-      // No ephemeral discover flag; UI listens to Clerk user metadata
 
-      // Discover override default state
       discoverAccessOverride: false,
       setDiscoverAccessOverride: (enabled) =>
         set((s) => ({ ...s, discoverAccessOverride: enabled })),
@@ -209,7 +156,6 @@ export const useAppStore = create<AppState>()(
       setHasShownTimezoneAlert: (hasShown) =>
         set({ hasShownTimezoneAlert: hasShown }),
 
-      // Initialize event input state for both routes
       addEventState: {
         input: "",
         imagePreview: null,
@@ -231,7 +177,6 @@ export const useAppStore = create<AppState>()(
         uploadedImageUrl: null,
       },
 
-      // Event input actions
       setInput: (input, route) =>
         set((state) => ({
           [route === "add" ? "addEventState" : "newEventState"]: {
@@ -282,7 +227,6 @@ export const useAppStore = create<AppState>()(
           },
         })),
 
-      // Reset functions
       resetIntentParams: () => set({ intentParams: null }),
       resetOnboarding: () =>
         set({
@@ -318,7 +262,6 @@ export const useAppStore = create<AppState>()(
           },
         }),
 
-      // Add-specific actions
       setIsOptionSelected: (isSelected) =>
         set((state) => ({
           addEventState: {
@@ -334,26 +277,21 @@ export const useAppStore = create<AppState>()(
           },
         })),
 
-      // Media-related state
       recentPhotos: [],
       hasMediaPermission: false,
       hasFullPhotoAccess: false,
 
-      // Media-related actions
       setRecentPhotos: (photos) => set({ recentPhotos: photos }),
       setHasMediaPermission: (hasPermission) =>
         set({ hasMediaPermission: hasPermission }),
 
-      // User priority
       setUserPriority: (priority) => set({ userPriority: priority }),
 
-      // Onboarding state
       hasCompletedOnboarding: false,
       hasSeenOnboarding: false,
       onboardingData: {},
       currentOnboardingStep: null,
 
-      // Onboarding actions
       setHasCompletedOnboarding: (status) =>
         set({ hasCompletedOnboarding: status }),
       setHasSeenOnboarding: (seen) => set({ hasSeenOnboarding: seen }),
@@ -363,13 +301,11 @@ export const useAppStore = create<AppState>()(
         })),
       setCurrentOnboardingStep: (step) => set({ currentOnboardingStep: step }),
 
-      // Global reset
       resetStore: () =>
         set({
           filter: "upcoming",
           intentParams: null,
           preferredCalendarApp: null,
-          // Ensure discover override never persists across global reset
           discoverAccessOverride: false,
           addEventState: {
             input: "",
@@ -413,13 +349,11 @@ export const useAppStore = create<AppState>()(
           communityBadgeCount: 0,
         }),
 
-      // Reset for logout - preserves onboarding state
       resetForLogout: () =>
         set((state) => ({
           filter: "upcoming",
           intentParams: null,
           preferredCalendarApp: null,
-          // Ensure discover override never persists across logout
           discoverAccessOverride: false,
           addEventState: {
             input: "",
@@ -449,7 +383,6 @@ export const useAppStore = create<AppState>()(
           hasShownTimezoneAlert: false,
           stableTimestamp: createStableTimestamp(),
           lastTimestampUpdate: Date.now(),
-          // Preserve onboarding state for logout
           hasCompletedOnboarding: false,
           hasSeenOnboarding: state.hasSeenOnboarding, // Keep this value
           onboardingData: {},
@@ -459,13 +392,11 @@ export const useAppStore = create<AppState>()(
           lastPaywallShownAtView: 0,
           hasShownRatingPrompt: false,
           hasSeenShareListPrompt: false,
-          // Keep pendingFollowUsername in case user is re-authenticating
           pendingFollowUsername: state.pendingFollowUsername,
           myListBadgeCount: 0,
           communityBadgeCount: 0,
         })),
 
-      // Stable timestamp for query filtering
       stableTimestamp: createStableTimestamp(),
       lastTimestampUpdate: Date.now(),
       refreshStableTimestamp: () =>
@@ -478,7 +409,6 @@ export const useAppStore = create<AppState>()(
         return state.stableTimestamp;
       },
 
-      // Workflow state
       workflowIds: [],
       addWorkflowId: (workflowId) =>
         set((state) => ({
@@ -490,7 +420,6 @@ export const useAppStore = create<AppState>()(
         })),
       clearAllWorkflowIds: () => set({ workflowIds: [] }),
 
-      // Event view tracking for paywall
       totalEventViews: 0,
       lastPaywallShownAtView: 0,
       incrementEventView: () =>
@@ -499,7 +428,6 @@ export const useAppStore = create<AppState>()(
         })),
       shouldShowViewPaywall: () => {
         const state = get();
-        // Show paywall every 20 views after the last shown
         return (
           state.totalEventViews > 0 &&
           state.totalEventViews >= state.lastPaywallShownAtView + 20
@@ -515,20 +443,16 @@ export const useAppStore = create<AppState>()(
           lastPaywallShownAtView: 0,
         }),
 
-      // Rating prompt state
       hasShownRatingPrompt: false,
       markRatingPromptShown: () => set({ hasShownRatingPrompt: true }),
 
-      // Share list prompt state
       hasSeenShareListPrompt: false,
       setShareListPromptSeen: () => set({ hasSeenShareListPrompt: true }),
 
-      // Pending follow from deep link
       pendingFollowUsername: null,
       setPendingFollowUsername: (username) =>
         set({ pendingFollowUsername: username }),
 
-      // Tab badge counts
       myListBadgeCount: 0,
       setMyListBadgeCount: (count) => set({ myListBadgeCount: count }),
       communityBadgeCount: 0,
@@ -537,7 +461,6 @@ export const useAppStore = create<AppState>()(
     {
       name: "app-storage",
       storage: createJSONStorage(() => AsyncStorage),
-      // Do not persist ephemeral flags like discoverAccessOverride
       partialize: (state) => {
         // eslint-disable-next-line @typescript-eslint/no-unused-vars
         const { discoverAccessOverride, ...rest } = state;
@@ -547,13 +470,11 @@ export const useAppStore = create<AppState>()(
   ),
 );
 
-// Selector hooks for commonly used state
 export const useRecentPhotos = () => useAppStore((state) => state.recentPhotos);
 export const useHasMediaPermission = () =>
   useAppStore((state) => state.hasMediaPermission);
 export const useUserTimezone = () => useAppStore((state) => state.userTimezone);
 
-// Stable timestamp selectors
 export const useStableTimestamp = () => {
   const { stableTimestamp, lastTimestampUpdate, refreshStableTimestamp } =
     useAppStore((state) => ({
@@ -564,7 +485,7 @@ export const useStableTimestamp = () => {
 
   React.useEffect(() => {
     const now = Date.now();
-    const fifteenMinutes = 15 * 60 * 1000; // 15 minutes
+    const fifteenMinutes = 15 * 60 * 1000;
 
     if (now - lastTimestampUpdate > fifteenMinutes) {
       refreshStableTimestamp();
@@ -576,35 +497,13 @@ export const useStableTimestamp = () => {
 export const useRefreshStableTimestamp = () =>
   useAppStore((state) => state.refreshStableTimestamp);
 
-/**
- * Hook to refresh the stable timestamp when a screen comes into focus.
- * Useful for ensuring fresh data when users navigate between screens.
- *
- * @example
- * ```tsx
- * function MyScreen() {
- *   useRefreshTimestampOnFocus();
- *   // ... rest of component
- * }
- * ```
- */
 export const useRefreshTimestampOnFocus = () => {
   const refreshTimestamp = useRefreshStableTimestamp();
 
-  // You can uncomment this if you want to use react-navigation's focus events
-  // const isFocused = useIsFocused();
-  //
-  // React.useEffect(() => {
-  //   if (isFocused) {
-  //     refreshTimestamp();
-  //   }
-  // }, [isFocused, refreshTimestamp]);
 
   return refreshTimestamp;
 };
 
-// Auto-generated selectors for actions (following Zustand best practices)
-// These provide stable references to actions without using getState()
 export const useSetHasSeenOnboarding = () =>
   useAppStore((state) => state.setHasSeenOnboarding);
 
@@ -617,25 +516,21 @@ export const useShouldShowViewPaywall = () =>
 export const useMarkPaywallShown = () =>
   useAppStore((state) => state.markPaywallShown);
 
-// Rating prompt selectors
 export const useHasShownRatingPrompt = () =>
   useAppStore((state) => state.hasShownRatingPrompt);
 export const useMarkRatingPromptShown = () =>
   useAppStore((state) => state.markRatingPromptShown);
 
-// Share list prompt selectors
 export const useHasSeenShareListPrompt = () =>
   useAppStore((state) => state.hasSeenShareListPrompt);
 export const useSetShareListPromptSeen = () =>
   useAppStore((state) => state.setShareListPromptSeen);
 
-// Calendar preference selectors
 export const usePreferredCalendarApp = () =>
   useAppStore((state) => state.preferredCalendarApp);
 export const useSetPreferredCalendarApp = () =>
   useAppStore((state) => state.setPreferredCalendarApp);
 
-// Pending follow selectors (for deferred deep link follow intent)
 export const usePendingFollowUsername = () =>
   useAppStore((state) => state.pendingFollowUsername);
 export const useSetPendingFollowUsername = () =>

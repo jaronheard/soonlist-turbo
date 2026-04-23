@@ -56,7 +56,6 @@ export function getEventEmoji(event: Event): EmojiConfig {
 
   if (!eventMetadata) return DEFAULT_EMOJI;
 
-  // Try to match by type first, then by category
   return (
     TYPE_EMOJI[eventMetadata.type ?? ""] ??
     CATEGORY_EMOJI[eventMetadata.category ?? ""] ??

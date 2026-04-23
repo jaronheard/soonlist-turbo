@@ -7,9 +7,7 @@ import { hapticLight } from "~/utils/feedback";
 interface SubscribeButtonProps {
   isSubscribed: boolean;
   onPress: () => void;
-  /** "md" = header pill; "sm" = row pill (tighter, smaller text). Defaults to "md". */
   size?: "sm" | "md";
-  /** Override the default a11y label. */
   accessibilityLabel?: string;
 }
 

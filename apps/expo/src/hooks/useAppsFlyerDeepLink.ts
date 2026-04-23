@@ -19,16 +19,6 @@ interface ConversionData {
   data: DeepLinkData;
 }
 
-/**
- * Hook to handle AppsFlyer deep links (both direct and deferred)
- *
- * Direct deep links: When user clicks a link and app is already installed
- * Deferred deep links: When user clicks a link, installs the app, then opens it
- *
- * For follow intents, we expect:
- * - deep_link_value: "follow"
- * - deep_link_sub1: username to follow
- */
 export function useAppsFlyerDeepLink() {
   const router = useRouter();
   const { isAuthenticated } = useConvexAuth();
@@ -38,7 +28,6 @@ export function useAppsFlyerDeepLink() {
   const hasProcessedDeepLink = useRef(false);
 
   useEffect(() => {
-    // Handle deferred deep links (new installs)
     // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment -- appsFlyer is typed as any in library
     const onInstallConversionDataCanceller = appsFlyer.onInstallConversionData(
       (result: ConversionData) => {
@@ -53,7 +42,6 @@ export function useAppsFlyerDeepLink() {
           return;
         }
 
-        // Check for follow intent
         if (data.deep_link_value === "follow" && data.deep_link_sub1) {
           const usernameToFollow = data.deep_link_sub1;
           logDebug("AppsFlyer: Follow intent detected", { usernameToFollow });
@@ -61,10 +49,8 @@ export function useAppsFlyerDeepLink() {
           hasProcessedDeepLink.current = true;
 
           if (isAuthenticated) {
-            // User is already authenticated, navigate directly to profile
             router.push(`/${usernameToFollow}`);
           } else {
-            // User needs to authenticate first, store the pending follow
             setPendingFollowUsername(usernameToFollow);
             logDebug("AppsFlyer: Stored pending follow for after auth", {
               usernameToFollow,
@@ -74,7 +60,6 @@ export function useAppsFlyerDeepLink() {
       },
     );
 
-    // Handle direct deep links (app already installed)
     // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment -- appsFlyer is typed as any in library
     const onDeepLinkCanceller = appsFlyer.onDeepLink(
       (result: UnifiedDeepLinkData) => {
@@ -94,7 +79,6 @@ export function useAppsFlyerDeepLink() {
           return;
         }
 
-        // Check for follow intent
         if (data.deep_link_value === "follow" && data.deep_link_sub1) {
           const usernameToFollow = data.deep_link_sub1;
           logDebug("AppsFlyer: Direct deep link follow intent", {
@@ -102,17 +86,14 @@ export function useAppsFlyerDeepLink() {
           });
 
           if (isAuthenticated) {
-            // User is authenticated, navigate directly to profile
             router.push(`/${usernameToFollow}`);
           } else {
-            // User needs to authenticate first, store the pending follow
             setPendingFollowUsername(usernameToFollow);
           }
         }
       },
     );
 
-    // Cleanup listeners
     return () => {
       if (onInstallConversionDataCanceller) {
         onInstallConversionDataCanceller();

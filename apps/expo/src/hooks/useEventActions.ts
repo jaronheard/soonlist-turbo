@@ -51,7 +51,6 @@ export function useEventActions({
   ).withOptimisticUpdate((localStore, args) => {
     const { id } = args;
 
-    // Update the saved event IDs query if loaded
     if (user?.username) {
       const currentSavedIds = localStore.getQuery(
         api.events.getSavedIdsForUser,
@@ -61,7 +60,6 @@ export function useEventActions({
       );
 
       if (currentSavedIds !== undefined) {
-        // Remove the event from saved IDs
         const updatedSavedIds = currentSavedIds.filter(
           (savedEvent) => savedEvent.id !== id,
         );
@@ -79,7 +77,6 @@ export function useEventActions({
   ).withOptimisticUpdate((localStore, args) => {
     const { id } = args;
 
-    // Update the saved event IDs query if loaded
     if (user?.username) {
       const currentSavedIds = localStore.getQuery(
         api.events.getSavedIdsForUser,
@@ -89,7 +86,6 @@ export function useEventActions({
       );
 
       if (currentSavedIds !== undefined) {
-        // Add the event to saved IDs
         const updatedSavedIds = [...currentSavedIds, { id }];
         localStore.setQuery(
           api.events.getSavedIdsForUser,
@@ -100,15 +96,12 @@ export function useEventActions({
     }
   });
 
-  // Use optimistic updates for visibility toggle
   const toggleVisibilityMutation = useMutation(
     api.events.toggleVisibility,
   ).withOptimisticUpdate((localStore, args) => {
     const { id, visibility } = args;
 
-    // Update user events queries if they're loaded and the user owns the event
     if (user?.username && event?.user?.username === user.username) {
-      // Update paginated events for user (used in feed)
       optimisticallyUpdateValueInPaginatedQuery(
         localStore,
         api.events.getEventsForUserPaginated,
@@ -163,7 +156,6 @@ export function useEventActions({
     const eventData = event.event as AddToCalendarButtonPropsRestricted;
 
     try {
-      // Track share initiated
       posthog.capture("share_event_initiated", {
         event_id: event.id,
         event_title: eventData.name ?? "Unknown",
@@ -177,7 +169,6 @@ export function useEventActions({
         url: `${Config.apiBaseUrl}/event/${event.id}`,
       });
 
-      // Track share completed if user didn't dismiss
       if (result.action === Share.sharedAction) {
         posthog.capture("share_event_completed", {
           event_id: event.id,
@@ -307,7 +298,6 @@ export function useEventActions({
   };
 }
 
-// Simplified hook for save/follow actions that doesn't require the full event object
 export function useEventSaveActions(
   eventId: string,
   initialIsSaved: boolean,
@@ -318,13 +308,10 @@ export function useEventSaveActions(
   const posthog = usePostHog();
   const toast = useToast();
 
-  // Local state owns the UI. Seeded from prop. Updated synchronously on toggle.
   const [isSaved, setIsSaved] = useState(initialIsSaved);
   const [isPending, setIsPending] = useState(false);
   const pendingRef = useRef(false);
 
-  // If the parent prop changes (e.g., query refetch) and no mutation is in flight,
-  // sync the local state to match.
   useEffect(() => {
     if (!pendingRef.current) {
       setIsSaved(initialIsSaved);
@@ -418,7 +405,6 @@ export function useEventSaveActions(
       await followEventMutation({ id: eventId });
       posthog.capture("event_saved", { event_id: eventId, source });
     } catch (error) {
-      // Revert local state on error
       setIsSaved(false);
       posthog.capture("event_save_failed", {
         event_id: eventId,
@@ -450,7 +436,6 @@ export function useEventSaveActions(
       await unfollowEventMutation({ id: eventId });
       posthog.capture("event_unsaved", { event_id: eventId, source });
     } catch (error) {
-      // Revert local state on error
       setIsSaved(true);
       toast.show({
         message: "Couldn't unsave event",
@@ -481,11 +466,9 @@ export function useEventSaveActions(
     }
 
     if (isSaved) {
-      // Unsave: silent (no toast, no haptic per spec).
       setIsSaved(false);
       void runUnsave();
     } else {
-      // Save: instant UI flip, light haptic, success toast with Share action.
       setIsSaved(true);
       void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
       toast.show({

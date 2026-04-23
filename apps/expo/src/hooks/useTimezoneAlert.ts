@@ -11,7 +11,6 @@ export function useTimezoneAlert() {
     useAppStore();
   const prevUserTimezoneRef = useRef(userTimezone);
 
-  // Reset alert state when user timezone changes
   useEffect(() => {
     if (prevUserTimezoneRef.current !== userTimezone) {
       setHasShownTimezoneAlert(false);
@@ -49,10 +48,8 @@ export function useTimezoneAlert() {
       }
     };
 
-    // Check on mount and when app comes to foreground
     checkTimezone();
 
-    // Re-check timezone when app becomes active
     const subscription = AppState.addEventListener(
       "change",
       (nextAppState: AppStateStatus) => {

@@ -7,11 +7,6 @@ import { useInFlightEventStore } from "~/store/useInFlightEventStore";
 
 export const SHARE_PROMPT_THRESHOLD = 3;
 
-/**
- * Gates proactive Soonlist share prompts on upcoming-event count.
- * Returns state rather than firing directly, so the feed screen can mount
- * its own UI on top of the one-shot signal.
- */
 export function useShareListPrompt(upcomingEventCount: number) {
   const hasSeen = useHasSeenShareListPrompt();
   const markSeen = useSetShareListPromptSeen();

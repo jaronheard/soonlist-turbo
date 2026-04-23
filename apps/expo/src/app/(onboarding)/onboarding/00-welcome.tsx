@@ -46,8 +46,6 @@ function ReferrerEventRow({
 function ReferralWelcome({ username }: { username: string }) {
   const userData = useQuery(api.users.getByUsername, { userName: username });
 
-  // Only query the feed after we've confirmed the user exists — otherwise
-  // getPublicUserFeed throws for unknown usernames and breaks this screen.
   const feedData = useQuery(
     api.feeds.getPublicUserFeed,
     userData
@@ -59,8 +57,6 @@ function ReferralWelcome({ username }: { username: string }) {
       : "skip",
   );
 
-  // If the referral username doesn't resolve to a user, fall back to the
-  // organic welcome screen so the onboarding flow still works.
   if (userData === null) {
     return <OrganicWelcome />;
   }
@@ -75,7 +71,6 @@ function ReferralWelcome({ username }: { username: string }) {
       className="flex-1 justify-center"
       layout={Layout.duration(400)}
     >
-      {/* Referrer identity */}
       <View className="mb-4 items-center">
         {avatarUrl ? (
           <ExpoImage
@@ -96,7 +91,6 @@ function ReferralWelcome({ username }: { username: string }) {
         </Text>
       </View>
 
-      {/* Upcoming events card */}
       {events.length > 0 && (
         <View className="mx-2 overflow-hidden rounded-2xl bg-white">
           {events.slice(0, 3).map((event, index) => {
@@ -149,10 +143,8 @@ export default function WelcomeScreen() {
 
   const handleSignIn = () => {
     void hapticLight();
-    // Mark as seen onboarding so they skip it after sign-in
     setHasSeenOnboarding(true);
 
-    // Navigate to sign-in screen
     router.navigate("/sign-in");
   };
 
@@ -194,7 +186,6 @@ export default function WelcomeScreen() {
             className="relative mt-4 w-full shrink-0"
             layout={Layout.duration(400)}
           >
-            {/* Get Started Button */}
             <Pressable
               onPress={handleGetStarted}
               className="mb-3 rounded-full bg-interactive-1 py-4 active:scale-[0.98] active:bg-interactive-1/90"
@@ -204,7 +195,6 @@ export default function WelcomeScreen() {
               </Text>
             </Pressable>
 
-            {/* Simple sign in link */}
             <Pressable onPress={handleSignIn} className="py-3">
               <Text className="text-center text-sm text-gray-600">
                 Already have an account?{" "}

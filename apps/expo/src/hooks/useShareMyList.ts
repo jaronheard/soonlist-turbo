@@ -10,15 +10,9 @@ import Config from "~/utils/config";
 import { logError } from "~/utils/errorLogging";
 
 interface RequestShareOptions {
-  /** Upcoming event count to display in the share-setup preview subtitle. */
   eventCount?: number;
 }
 
-/**
- * Kicks off a share of the user's personal Soonlist. On the first share
- * attempt (hasSharedListBefore false/undefined), routes to the share-setup
- * modal. Returning users skip setup and get the native share sheet.
- */
 export function useShareMyList() {
   const { user } = useUser();
   const currentUser = useQuery(api.users.getCurrentUser);

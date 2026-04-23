@@ -14,11 +14,11 @@ const config: RevenueCatConfig = {
   apiKey: {
     ios:
       process.env.EXPO_PUBLIC_APP_ENV === "development"
-        ? "appl_IZAYFSAmdJzydibrbUAgIqoKwMH" // Dev key
+        ? "appl_IZAYFSAmdJzydibrbUAgIqoKwMH"
         : "appl_EBIBnBkxycdwGemEotOpxJltoqp", // Prod key - replace with actual prod key
     android:
       process.env.EXPO_PUBLIC_APP_ENV === "development"
-        ? "" // Dev key
+        ? ""
         : "", // Prod key - replace with actual prod key
   },
 };

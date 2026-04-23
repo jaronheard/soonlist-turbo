@@ -21,7 +21,6 @@ export function HeaderLogo() {
 
   const handlePress = () => {
     if (pathname === "/feed") {
-      // Quick playful wiggle
       rotation.value = withSequence(
         withTiming(-10, { duration: 50 }),
         withTiming(10, { duration: 50 }),

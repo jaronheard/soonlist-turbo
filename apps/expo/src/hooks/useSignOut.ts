@@ -26,34 +26,27 @@ export const useSignOut = () => {
   return async (options?: SignOutOptions) => {
     if (!userId) return;
 
-    // Step 1 (optional): Delete account data on backend. This needs auth.
     if (options?.shouldDeleteAccount) {
       try {
         await deleteAccount({ userId });
       } catch (error) {
-        // Log the error but continue with sign out
         logError("Failed to delete account during sign out", error);
       }
     }
 
-    // Step 2: Sign out from Clerk. This revokes the token.
     try {
       await signOut();
     } catch (error) {
-      // If already signed out, continue with cleanup
       if (
         error instanceof Error &&
         error.message?.includes("You are signed out")
       ) {
         // User is already signed out, continue with cleanup
       } else {
-        // Re-throw other errors
         throw error;
       }
     }
 
-    // Step 3: Clean up local data and third-party sessions.
-    // These should not require auth and can run concurrently.
     const logoutResults = await Promise.allSettled([
       Intercom.logout(),
       revenueCatLogout(),
@@ -67,7 +60,6 @@ export const useSignOut = () => {
           | Error
           | { message?: string; code?: string };
 
-        // Ignore expected errors
         if (
           (error instanceof Error &&
             (error.message?.includes("You are signed out") ||
@@ -77,7 +69,6 @@ export const useSignOut = () => {
             "code" in error &&
             error.code === "signed_out")
         ) {
-          // These are expected when logging out - don't log as errors
           return;
         }
 
@@ -85,8 +76,6 @@ export const useSignOut = () => {
       }
     });
 
-    // Step 4: Reset local app state AFTER successful sign out.
-    // Use full reset for account deletion, partial reset for regular logout
     if (options?.shouldDeleteAccount) {
       resetStore();
     } else {

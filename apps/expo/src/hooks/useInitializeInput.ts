@@ -34,11 +34,9 @@ export function useInitializeInput(
         setImagePreview(uri, route);
         setInput(uri.split("/").pop() || "", route);
       } else if (typeof uri === "number") {
-        // Handle ImageRequireSource (local image require)
         setImagePreview(String(uri), route);
         setInput(`local_image_${uri}`, route);
       } else if (uri.uri) {
-        // Handle RemoteImageSource
         setImagePreview(uri.uri, route);
         setInput(uri.uri.split("/").pop() || "", route);
       }
@@ -69,7 +67,6 @@ export function useInitializeInput(
   );
 
   useEffect(() => {
-    // Reset initialized state when key changes
     setInitialized(false);
   }, [key]);
 

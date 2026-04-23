@@ -60,25 +60,20 @@ export function NavigationMenu({ active }: NavigationMenuProps) {
   const { user } = useUser();
   const discoverAccessOverride = useAppStore((s) => s.discoverAccessOverride);
 
-  // Check if user is following anyone
   const followingUsers = useQuery(api.users.getFollowingUsers);
   const hasFollowings = (followingUsers?.length ?? 0) > 0;
 
-  // Derive showDiscover explicitly so changes to discoverAccessOverride or user metadata trigger recompute
   const showDiscover =
     discoverAccessOverride ||
     (user ? getPlanStatusFromUser(user).showDiscover : false);
 
   const { routes, currentRoute } = useMemo(() => {
-    // Filter routes based on feature access and following status
     let filteredRoutes = [...baseRoutes];
 
-    // Hide Following tab if user isn't following anyone
     if (!hasFollowings) {
       filteredRoutes = filteredRoutes.filter((r) => r.path !== "/following");
     }
 
-    // Hide Discover tab based on plan status
     if (!showDiscover) {
       filteredRoutes = filteredRoutes.filter((r) => r.path !== "/discover");
     }

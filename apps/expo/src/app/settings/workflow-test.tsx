@@ -29,7 +29,6 @@ export default function WorkflowTestScreen() {
   const [testResults, setTestResults] = useState<TestResult[]>([]);
   const [runningTests, setRunningTests] = useState<Set<string>>(new Set());
 
-  // Mutations for testing
   const testAIFailure = useMutation(
     api.workflows.testFailures.testAIExtractionFailure,
   );
@@ -43,7 +42,6 @@ export default function WorkflowTestScreen() {
     api.workflows.testFailures.testNotificationSystemDirectly,
   );
 
-  // Mutations for testing URL workflows
   const testUrlFetchFailure = useMutation(
     api.workflows.testFailures.simulateUrlFetchFailure,
   );
@@ -95,7 +93,6 @@ export default function WorkflowTestScreen() {
           `${testName} started - Workflow ID: ${result.workflowId.slice(0, 8)}...`,
         );
 
-        // Mark as completed after a short delay (workflows should fail quickly)
         setTimeout(() => {
           setTestResults((prev) =>
             prev.map((tr) =>
@@ -137,7 +134,6 @@ export default function WorkflowTestScreen() {
       testValidationFailure({ userId, username }),
     );
 
-  // URL workflow test functions
   const testUrlFetch = () =>
     runTest("URL Fetch Failure", () =>
       testUrlFetchFailure({ userId, username }),
@@ -252,7 +248,6 @@ export default function WorkflowTestScreen() {
 
       <ScrollView className="flex-1 bg-gray-50">
         <View className="p-4">
-          {/* Header */}
           <View className="mb-6 rounded-lg bg-white p-4 shadow-sm">
             <Text className="mb-2 text-lg font-semibold text-gray-900">
               Workflow Failure Notification Tests
@@ -266,7 +261,6 @@ export default function WorkflowTestScreen() {
             </Text>
           </View>
 
-          {/* Test Buttons */}
           <View className="mb-6 space-y-3">
             <Button
               onPress={testAI}
@@ -305,7 +299,6 @@ export default function WorkflowTestScreen() {
             </Button>
           </View>
 
-          {/* Image Workflow Test Buttons */}
           <View className="mb-6">
             <Text className="mb-3 text-lg font-semibold text-gray-900">
               Image Workflow Tests
@@ -340,7 +333,6 @@ export default function WorkflowTestScreen() {
             </View>
           </View>
 
-          {/* URL Workflow Test Buttons */}
           <View className="mb-6">
             <Text className="mb-3 text-lg font-semibold text-gray-900">
               URL Workflow Tests
@@ -393,7 +385,6 @@ export default function WorkflowTestScreen() {
             </View>
           </View>
 
-          {/* Direct Notification Test */}
           <View className="mb-6">
             <Text className="mb-3 text-lg font-semibold text-gray-900">
               Direct Notification Test
@@ -408,7 +399,6 @@ export default function WorkflowTestScreen() {
             </Button>
           </View>
 
-          {/* Access Groups Test */}
           <View className="mb-4 rounded-lg bg-slate-100 p-4">
             <Text className="mb-2 text-lg font-semibold">
               Access Groups Test
@@ -427,7 +417,6 @@ export default function WorkflowTestScreen() {
             </Pressable>
           </View>
 
-          {/* Results */}
           {testResults.length > 0 && (
             <View className="mb-6 rounded-lg bg-white p-4 shadow-sm">
               <View className="mb-3 flex-row items-center justify-between">
@@ -477,7 +466,6 @@ export default function WorkflowTestScreen() {
             </View>
           )}
 
-          {/* Instructions */}
           <View className="mb-6 rounded-lg bg-white p-4 shadow-sm">
             <Text className="mb-2 font-semibold text-gray-900">
               Instructions
@@ -498,7 +486,6 @@ export default function WorkflowTestScreen() {
             </View>
           </View>
 
-          {/* Expected Results */}
           <View className="mb-6 rounded-lg bg-blue-50 p-4 shadow-sm">
             <Text className="mb-2 font-semibold text-blue-900">
               Expected Results
@@ -543,7 +530,6 @@ export default function WorkflowTestScreen() {
             </Text>
           </View>
 
-          {/* Development Notes */}
           <View className="rounded-lg bg-yellow-50 p-4 shadow-sm">
             <Text className="mb-2 font-semibold text-yellow-800">
               Development Notes

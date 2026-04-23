@@ -1,7 +1,6 @@
 import { Redirect } from "expo-router";
 import { useUser } from "@clerk/clerk-expo";
 
-// Export Expo Router's error boundary
 export { ErrorBoundary } from "expo-router";
 
 export default function Index() {
@@ -11,6 +10,5 @@ export default function Index() {
     return null;
   }
 
-  // Always go to feed, which will handle auth check and redirect to onboarding if needed
   return <Redirect href="/(tabs)/feed" />;
 }

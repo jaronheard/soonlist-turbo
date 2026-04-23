@@ -30,7 +30,7 @@ import { logError } from "../utils/errorLogging";
 import { transferGuestData } from "../utils/guestDataTransfer";
 import { redeemStoredDiscoverCode } from "../utils/redeemStoredDiscoverCode";
 import { AppleSignInButton } from "./AppleSignInButton";
-import { EmailSignInButton } from "./EmailSignInButton"; // You'll need to create this component
+import { EmailSignInButton } from "./EmailSignInButton";
 import { GoogleSignInButton } from "./GoogleSignInButton";
 import { Logo } from "./Logo";
 import { ProgressBar } from "./ProgressBar";
@@ -49,15 +49,8 @@ interface SignInWithOAuthProps {
   hideImage?: boolean;
   imageSource?: ImageSourcePropType;
   imageSlot?: React.ReactNode;
-  /** Use the dark purple onboarding treatment (interactive-1 bg, white text). */
   dark?: boolean;
-  /** Shows an onboarding progress bar at the top. Pass the step out of total. */
   progress?: { current: number; total: number };
-  /**
-   * Match `QuestionContainer` / paywall footer: same horizontal inset, no extra
-   * bottom padding, progress bar spacing, and primary CTA (Apple) last so it
-   * aligns with the prior screen’s Continue button.
-   */
   onboardingFooterAlign?: boolean;
 }
 
@@ -115,7 +108,6 @@ const SignInWithOAuth = ({
 
       const result = await startOAuthFlow();
 
-      // Add null check for result
       if (!result) {
         logError("OAuth flow returned null result", { strategy });
         return;
@@ -127,10 +119,9 @@ const SignInWithOAuth = ({
         if (!pendingSignUp) return;
 
         const MAX_RETRIES = 5;
-        const BASE_DELAY = 1000; // 1 second base delay
+        const BASE_DELAY = 1000;
         let retryCount = 0;
 
-        // Get user info for username generation
         const firstName = pendingSignUp.firstName;
         const lastName = pendingSignUp.lastName;
         const email = pendingSignUp.emailAddress;
@@ -145,10 +136,8 @@ const SignInWithOAuth = ({
           return;
         }
 
-        // Retry function with exponential backoff
         const attemptSignupWithRetry = async (): Promise<boolean> => {
           try {
-            // Generate username with retry attempt info
             const username = await convex.query(api.users.generateUsername, {
               guestUserId,
               firstName: firstName || null,
@@ -158,7 +147,6 @@ const SignInWithOAuth = ({
               maxRetries: MAX_RETRIES,
             });
 
-            // Try to update pending signup with the generated username
             const res = await pendingSignUp.update({ username });
 
             if (res.status === "complete") {
@@ -170,7 +158,6 @@ const SignInWithOAuth = ({
                   strategy === "oauth_google" ? "google" : "apple",
               });
 
-              // Transfer guest data after successful sign up
               const session = Clerk.session;
               if (session?.user?.id) {
                 await transferGuestData({
@@ -184,22 +171,21 @@ const SignInWithOAuth = ({
                 }
               }
 
-              return true; // Success
+              return true;
             } else if (res.status === "missing_requirements") {
               setOauthError(
                 "There are other pending requirements for your account.",
               );
-              return false; // Different error, don't retry
+              return false;
             }
 
-            return false; // Unknown status, don't retry
+            return false;
           } catch (err: unknown) {
             const clerkError = err as {
               errors?: ClerkAPIError[];
               message?: string;
             };
 
-            // Check if this is a username conflict error
             let isUsernameConflict = false;
             let errorMessage = "";
 
@@ -220,17 +206,14 @@ const SignInWithOAuth = ({
                 errorMessage.toLowerCase().includes("taken");
             }
 
-            // If it's a username conflict and we haven't exceeded max retries, retry
             if (isUsernameConflict && retryCount < MAX_RETRIES) {
-              // Exponential backoff delay
               const delay = BASE_DELAY * Math.pow(2, retryCount);
               await new Promise((resolve) => setTimeout(resolve, delay));
 
               retryCount++;
-              return attemptSignupWithRetry(); // Recursive retry
+              return attemptSignupWithRetry();
             }
 
-            // If it's not a username conflict or we've exceeded max retries, show error
             if (retryCount >= MAX_RETRIES) {
               setOauthError(
                 "Unable to create a unique username after multiple attempts. Please try again later.",
@@ -242,11 +225,10 @@ const SignInWithOAuth = ({
               );
             }
 
-            return false; // Failed
+            return false;
           }
         };
 
-        // Start the retry process
         try {
           await attemptSignupWithRetry();
         } catch (err: unknown) {
@@ -263,10 +245,8 @@ const SignInWithOAuth = ({
               strategy === "oauth_google" ? "google" : "apple",
           });
 
-          // Wait a bit for the session to be fully initialized
           await new Promise((resolve) => setTimeout(resolve, 100));
 
-          // Safely access session data
           const session = Clerk.session;
           if (session?.user) {
             const email = session.user.emailAddresses?.[0]?.emailAddress;
@@ -295,7 +275,6 @@ const SignInWithOAuth = ({
                   userId,
                   transferGuestOnboardingData,
                 });
-                // Redeem any stored discover code and refresh user metadata
                 try {
                   await redeemStoredDiscoverCode(redeemDiscoverCode);
                 } catch (redeemErr) {
@@ -321,11 +300,9 @@ const SignInWithOAuth = ({
         await handleMissingRequirements(result.signUp);
       }
     } catch (err) {
-      // Handle error with more context
       console.error("OAuth flow error details:", err);
       logError("OAuth flow error", err);
 
-      // Check if it's a JSON parse error
       if (err instanceof Error && err.message?.includes("JSON Parse error")) {
         console.error(
           "OAuth response might be HTML instead of JSON. This could indicate a configuration issue.",
@@ -338,8 +315,6 @@ const SignInWithOAuth = ({
     router.navigate("/sign-up-email");
   };
 
-  // Progress bar must live inside the safe area so it clears the notch,
-  // so switch to SafeAreaView whenever a banner or progress bar is shown.
   const Container = banner || progress ? SafeAreaView : View;
 
   return (

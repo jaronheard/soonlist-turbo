@@ -60,12 +60,10 @@ import { eventFollowsToSavers } from "~/utils/eventFollows";
 import { getPlanStatusFromUser } from "~/utils/plan";
 import { formatUrlForDisplay } from "../../../utils/links";
 
-// Helper to get platform URL for mentions
 function getPlatformUrl(
   platform: string | undefined,
   username: string,
 ): string {
-  // Check if username is already a full URL
   const trimmedUsername = username.trim();
   if (
     trimmedUsername.toLowerCase().startsWith("http://") ||
@@ -73,7 +71,7 @@ function getPlatformUrl(
   ) {
     try {
       new URL(trimmedUsername);
-      return trimmedUsername; // Return as-is if it's a valid URL
+      return trimmedUsername;
     } catch {
       // Invalid URL, continue with platform logic
     }
@@ -81,7 +79,6 @@ function getPlatformUrl(
 
   const cleanUsername = trimmedUsername.replace(/^@/, "");
 
-  // Only return URLs for explicitly supported platforms
   switch (platform?.toLowerCase()) {
     case "tiktok":
       return `https://tiktok.com/@${cleanUsername}`;
@@ -92,14 +89,10 @@ function getPlatformUrl(
     case "instagram":
       return `https://instagram.com/${cleanUsername}`;
     default:
-      return ""; // Return empty string for unsupported platforms
+      return "";
   }
 }
 
-// Sized to match Apple's observed iOS 26 Liquid Glass nav-bar buttons
-// (Mail, Safari, Music): ~36pt visible capsule, ~18pt SF Symbol, ≥44pt hit
-// area via hitSlop. Apple has not published exact point values; these match
-// stock-app appearance per design research.
 const headerButtonStyle = {
   width: 36,
   height: 36,
@@ -116,8 +109,6 @@ const headerButtonStyle = {
 export default function Page() {
   const { id } = useLocalSearchParams<{ id: string }>();
 
-  // key={id} ensures React unmounts/remounts EventDetail when id changes,
-  // automatically resetting all state and refs without a useEffect.
   return <EventDetail key={id} id={id} />;
 }
 
@@ -130,23 +121,16 @@ function EventDetail({ id }: { id: string }) {
     ? getPlanStatusFromUser(currentUser).showDiscover
     : false;
 
-  // Check if we can go back in the navigation stack
   const canGoBack = navigation.canGoBack();
 
-  // Store the aspect ratio for the main event image
   const [imageAspectRatio, setImageAspectRatio] = useState<number | null>(null);
-  // Track if we've already counted this event view to prevent multiple increments
   const hasCountedViewRef = useRef(false);
 
   const queryEvent = useQuery(api.events.get, { eventId: id });
-  // Use cached event data from the list for instant rendering while Convex loads
   const cachedEvent = useMemo(() => (id ? getEventCache(id) : undefined), [id]);
-  // Only fall back to cache while query is loading (undefined), not when query
-  // returned null (event not found)
   const event = queryEvent !== undefined ? queryEvent : cachedEvent;
   const userTimezone = useUserTimezone();
 
-  // Event view tracking
   const { customerInfo, showProPaywallIfNeeded } = useRevenueCat();
   const hasUnlimited =
     customerInfo?.entitlements.active.unlimited?.isActive ?? false;
@@ -155,7 +139,6 @@ function EventDetail({ id }: { id: string }) {
   const shouldShowViewPaywall = useShouldShowViewPaywall();
   const markPaywallShown = useMarkPaywallShown();
 
-  // Track event view and show paywall if needed
   useEffect(() => {
     if (event && !hasUnlimited && !hasCountedViewRef.current) {
       hasCountedViewRef.current = true;
@@ -178,7 +161,6 @@ function EventDetail({ id }: { id: string }) {
     }
   }, [event, hasUnlimited, showProPaywallIfNeeded, customerInfo]);
 
-  // Properly check if the event is saved by the current user
   const isSaved =
     event && currentUser
       ? event.eventFollows.some((follow) => follow.userId === currentUser.id)
@@ -198,13 +180,11 @@ function EventDetail({ id }: { id: string }) {
     source: "event_detail",
   });
 
-  // Handlers
   const handleDeleteAndRedirect = useCallback(async () => {
     await handleDelete();
     router.replace("/");
   }, [handleDelete]);
 
-  // Pre-calculate the image URI for the event image
   const imageUri = useMemo(() => {
     if (!event?.event) return null;
 
@@ -216,7 +196,6 @@ function EventDetail({ id }: { id: string }) {
     return `${eventImage}?max-w=1284&fit=contain&f=webp&q=80`;
   }, [event?.event?.images]);
 
-  // Thumbnail URI matching what the list items cache (used as a placeholder)
   const thumbnailUri = useMemo(() => {
     if (!event?.event) return null;
 
@@ -226,7 +205,6 @@ function EventDetail({ id }: { id: string }) {
     return `${eventImage}?w=160&h=160&fit=cover&f=webp&q=80`;
   }, [event?.event?.images]);
 
-  // Build the header-left UI if we can't go back
   const HeaderLeft = useCallback(() => {
     if (!canGoBack) {
       return <HeaderLogo />;
@@ -234,7 +212,6 @@ function EventDetail({ id }: { id: string }) {
     return null;
   }, [canGoBack]);
 
-  // Build the header-right UI if we have data
   const HeaderRight = useCallback(() => {
     if (!event) return null;
 
@@ -279,7 +256,6 @@ function EventDetail({ id }: { id: string }) {
     openShareSheet,
   ]);
 
-  // Early return if the 'id' is missing or invalid
   if (!id || typeof id !== "string") {
     return (
       <>
@@ -301,7 +277,6 @@ function EventDetail({ id }: { id: string }) {
     );
   }
 
-  // Loading state
   if (event === undefined) {
     return (
       <>
@@ -323,7 +298,6 @@ function EventDetail({ id }: { id: string }) {
     );
   }
 
-  // Not found or error
   if (event === null) {
     return (
       <>
@@ -345,11 +319,9 @@ function EventDetail({ id }: { id: string }) {
     );
   }
 
-  // Normal render
   const eventData = event.event as AddToCalendarButtonPropsRestricted;
   const isCurrentUserEvent = currentUser?.id === event.userId;
 
-  // Normalize timezones for comparison
   const normalizeTimezone = (tz?: string): string => {
     if (!tz || tz === "unknown" || tz.trim() === "") return "";
     return tz.trim().toLowerCase();
@@ -358,18 +330,16 @@ function EventDetail({ id }: { id: string }) {
   const normalizedEventTz = normalizeTimezone(eventData.timeZone);
   const normalizedUserTz = normalizeTimezone(userTimezone);
 
-  // Get timezone abbreviation if timezones differ
   const shouldShowTimezone =
     normalizedEventTz &&
     normalizedUserTz &&
     normalizedEventTz !== normalizedUserTz &&
-    eventData.startTime; // Only show for timed events
+    eventData.startTime;
 
   const timezoneAbbreviation = shouldShowTimezone
     ? getTimezoneAbbreviation(eventData.timeZone || "")
     : undefined;
 
-  // Compute event date/time strings
   const { date, time, eventTime } = formatEventDateRange(
     eventData.startDate || "",
     eventData.startTime,
@@ -378,10 +348,7 @@ function EventDetail({ id }: { id: string }) {
     timezoneAbbreviation,
   );
 
-  // Determine primary and secondary actions
   const showSaveButton = true;
-  // Owners of the event always see "Saved" state (they already have it in
-  // their list by virtue of creating it); non-owners see live local state.
   const displayIsSaved = isCurrentUserEvent || optimisticIsSaved;
 
   return (
@@ -404,7 +371,6 @@ function EventDetail({ id }: { id: string }) {
         maximumZoomScale={5}
       >
         <View className="p-4">
-          {/* Date + title */}
           <View className="flex flex-col gap-2">
             <View>
               <Text className="text-lg font-medium text-neutral-2">
@@ -423,10 +389,8 @@ function EventDetail({ id }: { id: string }) {
             </Text>
           </View>
 
-          {/* Meta rows (venue + visibility) */}
           {(eventData.location || (showDiscover && isCurrentUserEvent)) && (
             <View className="mt-4 flex flex-col gap-2">
-              {/* Location link */}
               {eventData.location && (
                 <Link
                   href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(
@@ -445,8 +409,6 @@ function EventDetail({ id }: { id: string }) {
                 </Link>
               )}
 
-              {/* Visibility (owner-only info). Attribution now lives in the
-                  "From these Soonlists" section below. */}
               {showDiscover && isCurrentUserEvent && (
                 <View className="flex-row items-center gap-2">
                   {event.visibility === "public" ? (
@@ -464,12 +426,10 @@ function EventDetail({ id }: { id: string }) {
             </View>
           )}
 
-          {/* Description */}
           <View className="mb-3 mt-6">
             <Text className="text-neutral-1">{eventData.description}</Text>
           </View>
 
-          {/* Metadata Section */}
           {event.eventMetadata && (
             <>
               {(() => {
@@ -593,10 +553,6 @@ function EventDetail({ id }: { id: string }) {
             </>
           )}
 
-          {/* Attribution grid — unified attribution of people + lists.
-              Lives after the event content and source attribution so the
-              reading order is: what it is → what it's about → where it
-              came from → who has it. */}
           {event.user && (
             <View className="mb-4">
               <AttributionGrid
@@ -614,7 +570,6 @@ function EventDetail({ id }: { id: string }) {
             </View>
           )}
 
-          {/* Hidden probe to detect image dimensions without layout shift */}
           {imageUri && !imageAspectRatio && (
             <ExpoImage
               source={{ uri: imageUri }}
@@ -634,7 +589,6 @@ function EventDetail({ id }: { id: string }) {
             />
           )}
 
-          {/* Main Event Image - only rendered once we know the real aspect ratio */}
           {imageUri && imageAspectRatio && (
             <View
               className="mb-4 overflow-hidden"
@@ -659,7 +613,6 @@ function EventDetail({ id }: { id: string }) {
         </View>
       </ScrollView>
 
-      {/* Floating Action Buttons */}
       <View
         className="absolute bottom-8 flex-row items-center justify-center gap-4 self-center"
         style={{

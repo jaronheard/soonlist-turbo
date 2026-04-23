@@ -20,20 +20,17 @@ import { Check, ChevronDown, Search, X } from "~/components/icons";
 import { getUserTimeZone } from "~/utils/dates";
 import { logError } from "../utils/errorLogging";
 
-// Type for timezone data
 interface TimeZoneItem {
-  value: string; // IANA timezone identifier
-  label: string; // Formatted timezone label for display
-  search: string; // Lowercase string for searching
-  offset: number; // Offset in minutes
-  abbreviation: string; // Timezone abbreviation (EST, PST, etc.)
-  locationName: string; // Location name without offset
+  value: string;
+  label: string;
+  search: string;
+  offset: number;
+  abbreviation: string;
+  locationName: string;
 }
 
-// Helper function to get timezone abbreviation
 const getTimezoneAbbreviation = (timezone: string): string => {
   try {
-    // Use moment-timezone to get the abbreviation
     return moment().tz(timezone).zoneAbbr();
   } catch (error) {
     logError(`Error getting abbreviation for ${timezone}`, error);
@@ -41,7 +38,6 @@ const getTimezoneAbbreviation = (timezone: string): string => {
   }
 };
 
-// Get timezone offset in minutes
 const getTimezoneOffset = (timezone: string): number => {
   try {
     return moment().tz(timezone).utcOffset();
@@ -51,7 +47,6 @@ const getTimezoneOffset = (timezone: string): number => {
   }
 };
 
-// Format offset for display in GMT format
 const formatGMTOffset = (offsetMinutes: number): string => {
   const sign = offsetMinutes >= 0 ? "+" : "-";
   const absMinutes = Math.abs(offsetMinutes);
@@ -61,7 +56,6 @@ const formatGMTOffset = (offsetMinutes: number): string => {
   return `GMT${sign}${hours.toString().padStart(2, "0")}:${minutes.toString().padStart(2, "0")}`;
 };
 
-// Get the current timezone using moment-timezone
 const getCurrentTimezone = (): string => {
   try {
     return moment.tz.guess() || getUserTimeZone();
@@ -71,9 +65,7 @@ const getCurrentTimezone = (): string => {
   }
 };
 
-// Get friendly timezone names
 const getTimezoneNames = (): Record<string, string> => {
-  // This mapping associates IANA timezone identifiers with user-friendly names
   const timezoneNames: Record<string, string> = {
     "Pacific/Midway": "Midway Island, Samoa",
     "Pacific/Honolulu": "Hawaii",
@@ -187,21 +179,15 @@ export function TimezoneSelectNative({
 
   const didAutoScrollRef = useRef(false);
 
-  // Process timezones into a format that's easier to use with memoization
   const processedTimezones = useMemo((): TimeZoneItem[] => {
     const timezoneNames = getTimezoneNames();
 
-    // Instead of using all moment timezone names, only use the ones in our curated list
-    // This keeps the list manageable and focused on common timezones
     return Object.keys(timezoneNames)
       .map((tzName) => {
         const offset = getTimezoneOffset(tzName);
         const abbr = getTimezoneAbbreviation(tzName);
-        // Since we're iterating over the keys of timezoneNames,
-        // we know locationName exists, but TypeScript doesn't, so we add a fallback
         const locationName = timezoneNames[tzName] || tzName;
 
-        // Format the label to match: (GMT-11:00) Midway Island, Samoa (SST)
         const formattedOffset = formatGMTOffset(offset);
         const label = `(${formattedOffset}) ${locationName}${abbr ? ` (${abbr})` : ""}`;
 
@@ -215,7 +201,7 @@ export function TimezoneSelectNative({
           locationName,
         };
       })
-      .sort((a, b) => a.offset - b.offset); // Sort by offset
+      .sort((a, b) => a.offset - b.offset);
   }, []);
 
   const selectedTimezone = useMemo(() => {
@@ -227,16 +213,12 @@ export function TimezoneSelectNative({
     );
   }, [value, placeholder, processedTimezones]);
 
-  // Prepare the list of timezones, marking the device timezone
   const displayTimezones = useMemo(() => {
-    // Create complete list of timezones
     const timezones = [...processedTimezones];
 
-    // Mark the current device timezone with an icon if we have it and we're not searching
     if (currentTimezone && !searchQuery) {
       return timezones.map((tz) => {
         if (tz.value === currentTimezone) {
-          // Mark the current timezone with an icon but keep it in its sorted position
           return {
             ...tz,
             label: `📍 ${tz.label} (Current)`,
@@ -260,7 +242,6 @@ export function TimezoneSelectNative({
     );
   }, [displayTimezones, searchQuery]);
 
-  // Find index of the currently selected timezone in the filtered list
   const selectedIndex = useMemo(() => {
     if (!value) return -1;
     return filteredTimezones.findIndex((tz) => tz.value === value);
@@ -268,7 +249,6 @@ export function TimezoneSelectNative({
 
   const openModal = useCallback(() => {
     setModalVisible(true);
-    // Pre-scroll to selected timezone after modal is opened
     const timeoutId = setTimeout(() => {
       if (selectedIndex !== -1 && flatListRef.current) {
         flatListRef.current.scrollToIndex({
@@ -282,8 +262,6 @@ export function TimezoneSelectNative({
     return () => clearTimeout(timeoutId);
   }, [selectedIndex]);
 
-  // When autoOpen starts the modal already visible, run the same
-  // scroll-to-current-selection logic openModal normally performs.
   useEffect(() => {
     if (!autoOpen || didAutoScrollRef.current) return;
     if (selectedIndex === -1) return;
@@ -340,7 +318,6 @@ export function TimezoneSelectNative({
     );
   };
 
-  // Handle scroll to index error
   const handleScrollToIndexFailed = (info: {
     index: number;
     highestMeasuredFrameIndex: number;

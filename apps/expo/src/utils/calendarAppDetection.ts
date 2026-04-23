@@ -10,16 +10,10 @@ export interface CalendarAppInfo {
   isInstalled: boolean;
 }
 
-/**
- * Checks if a specific calendar app is installed on the device
- * @param urlScheme The URL scheme to check
- * @returns Promise<boolean> True if the app is installed
- */
 export const isAppInstalled = async (urlScheme: string): Promise<boolean> => {
   try {
     return await Linking.canOpenURL(urlScheme);
   } catch (error) {
-    // If we get an error about LSApplicationQueriesSchemes, log it but don't treat as an error
     if (
       error instanceof Error &&
       error.message.includes("LSApplicationQueriesSchemes")
@@ -34,10 +28,6 @@ export const isAppInstalled = async (urlScheme: string): Promise<boolean> => {
   }
 };
 
-/**
- * Detects which calendar apps are installed on the device
- * @returns Promise<CalendarAppInfo[]> Array of calendar app info
- */
 export const detectCalendarApps = async (): Promise<CalendarAppInfo[]> => {
   const calendarApps: CalendarAppInfo[] = [
     {
@@ -54,7 +44,6 @@ export const detectCalendarApps = async (): Promise<CalendarAppInfo[]> => {
     },
   ];
 
-  // Check which apps are installed in parallel for better performance
   const detectionPromises = calendarApps.map(async (app) => {
     app.isInstalled = await isAppInstalled(app.urlScheme);
     return app;
@@ -65,11 +54,6 @@ export const detectCalendarApps = async (): Promise<CalendarAppInfo[]> => {
   return calendarApps;
 };
 
-/**
- * Creates a Google Calendar URL with prefilled event details
- * @param event The event to add to Google Calendar
- * @returns string The Google Calendar URL
- */
 export const createGoogleCalendarLink = (event: {
   name?: string;
   description?: string;
@@ -84,9 +68,6 @@ export const createGoogleCalendarLink = (event: {
   const details = encodeURIComponent(event.description || "");
   const location = encodeURIComponent(event.location || "");
 
-  // Build dates for Google Calendar
-  // For timed events: YYYYMMDDTHHMMSSZ/YYYYMMDDTHHMMSSZ (UTC)
-  // For all-day events: YYYYMMDD/YYYYMMDD (end is exclusive)
   let dates = "";
   const tz = event.timeZone || Temporal.Now.timeZoneId();
 
@@ -106,11 +87,8 @@ export const createGoogleCalendarLink = (event: {
     const isAllDay = !event.startTime && !event.endTime;
 
     if (isAllDay) {
-      // Use all-day format; Google expects end date exclusive
       const startPlain = event.startDate.replace(/-/g, "");
       const endBase = (event.endDate || event.startDate).replace(/-/g, "");
-      // Use Temporal.PlainDate for robust date arithmetic to compute the exclusive end
-      // This avoids edge cases at month/year boundaries and leap years.
       const endPlain = Temporal.PlainDate.from(
         `${endBase.substring(0, 4)}-${endBase.substring(4, 6)}-${endBase.substring(6, 8)}`,
       ).add({ days: 1 });

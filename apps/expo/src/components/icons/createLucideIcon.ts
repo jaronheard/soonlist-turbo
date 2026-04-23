@@ -1,4 +1,3 @@
-/* This file is directly copied from Lucide icons - TypeScript errors are expected and suppressed on specific lines */
 import type { FunctionComponent } from "react";
 import { createElement, forwardRef } from "react";
 import * as NativeSvg from "react-native-svg";
@@ -42,7 +41,6 @@ const createLucideIcon = (iconName: string, iconNode: IconNode): LucideIcon => {
           ...(iconNode.map(([tag, attrs], index) => {
             const upperCasedTag = (tag.charAt(0).toUpperCase() +
               tag.slice(1)) as keyof typeof NativeSvg;
-            // duplicating the attributes here because generating the OTA update bundles don't inherit the SVG properties from parent (codepush, expo-updates)
             return createElement(
               NativeSvg[upperCasedTag] as FunctionComponent<LucideProps>,
               {

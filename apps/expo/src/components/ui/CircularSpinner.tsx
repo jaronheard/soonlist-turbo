@@ -13,7 +13,7 @@ interface CircularSpinnerProps {
   size: number;
   strokeWidth: number;
   color: string;
-  duration?: number; // Optional duration for one full rotation in ms
+  duration?: number;
 }
 
 const AnimatedView = Animated.createAnimatedComponent(View);
@@ -31,7 +31,7 @@ export function CircularSpinner({
 
   const radius = (size - strokeWidth) / 2;
   const circumference = 2 * Math.PI * radius;
-  const arcLength = circumference * 0.25; // 25% of the circle
+  const arcLength = circumference * 0.25;
   const strokeDasharray = `${arcLength} ${circumference}`;
 
   const rotation = useSharedValue(0);
@@ -43,9 +43,9 @@ export function CircularSpinner({
       false, // Don't reverse
     );
     return () => {
-      rotation.value = 0; // Cancel animation on cleanup
+      rotation.value = 0;
     };
-  }, [duration, rotation]); // Rerun if duration changes
+  }, [duration, rotation]);
 
   const animatedStyle = useAnimatedStyle(() => {
     return {
@@ -64,7 +64,6 @@ export function CircularSpinner({
           </LinearGradient>
         </Defs>
 
-        {/* Subtle track behind the spinner */}
         <Circle
           cx={size / 2}
           cy={size / 2}
@@ -75,7 +74,6 @@ export function CircularSpinner({
           opacity={0.2}
         />
 
-        {/* Foreground animated arc */}
         <Circle
           cx={size / 2}
           cy={size / 2}

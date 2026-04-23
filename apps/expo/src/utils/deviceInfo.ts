@@ -2,19 +2,15 @@ import { Platform } from "react-native";
 import Constants from "expo-constants";
 
 export const isSimulator = () => {
-  // Constants.isDevice can be undefined in development builds
-  // So we need additional checks
   if (Constants.isDevice === true) {
-    return false; // Definitely a real device
+    return false;
   }
 
   if (Constants.isDevice === false) {
-    return true; // Definitely a simulator
+    return true;
   }
 
-  // If Constants.isDevice is undefined, use platform-specific checks
   if (Platform.OS === "ios") {
-    // Check for simulator-specific properties
     return (
       Constants.platform?.ios?.model?.includes("Simulator") ||
       Constants.deviceName?.includes("Simulator") ||
@@ -23,7 +19,6 @@ export const isSimulator = () => {
   }
 
   if (Platform.OS === "android") {
-    // Android emulator checks
     return (
       Constants.deviceName?.toLowerCase().includes("emulator") ||
       Constants.deviceName?.toLowerCase().includes("sdk") ||
@@ -31,7 +26,6 @@ export const isSimulator = () => {
     );
   }
 
-  // Default to assuming it's a real device if we can't determine
   return false;
 };
 
@@ -40,6 +34,5 @@ export const isDevelopment = () => {
 };
 
 export const shouldMockPaywall = () => {
-  // Mock paywall only in simulator, not on real devices
   return isSimulator();
 };

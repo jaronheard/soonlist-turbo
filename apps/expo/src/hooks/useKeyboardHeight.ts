@@ -1,4 +1,3 @@
-// useKeyboardHeight.ts
 import type {
   EmitterSubscription,
   KeyboardEvent,
@@ -13,11 +12,6 @@ import {
   withTiming,
 } from "react-native-reanimated";
 
-/**
- * Returns an object containing a Reanimated `style` that
- * you can spread onto a View. It animates marginBottom when
- * the keyboard shows/hides, offset by `offset`.
- */
 export function useKeyboardHeight(offset: number) {
   const keyboardHeight = useSharedValue(0);
 
@@ -32,7 +26,6 @@ export function useKeyboardHeight(offset: number) {
     });
 
     function handleKeyboardShow(e: KeyboardEvent) {
-      // iOS provides e.duration, Android often doesn’t
       const duration = e.duration && e.duration > 0 ? e.duration : 250;
       keyboardHeight.value = withTiming(e.endCoordinates.height, {
         duration,
@@ -41,7 +34,6 @@ export function useKeyboardHeight(offset: number) {
     }
 
     function handleKeyboardHide(e: KeyboardEvent) {
-      // iOS provides e.duration, Android often doesn’t
       const duration = e.duration && e.duration > 0 ? e.duration : 250;
       keyboardHeight.value = withTiming(0, {
         duration,
@@ -64,7 +56,6 @@ export function useKeyboardHeight(offset: number) {
     };
   }, [keyboardHeight]);
 
-  // Use a Reanimated style to transform the marginBottom
   const style = useAnimatedStyle(() => {
     return {
       marginBottom: keyboardHeight.value + offset,

@@ -35,11 +35,8 @@ type Segment = "upcoming" | "past";
 function MyFeedContent() {
   const { user } = useUser();
   const [selectedSegment, setSelectedSegment] = useState<Segment>("upcoming");
-  // Use the stable timestamp from the store that updates every 15 minutes
-  // This prevents InvalidCursor errors while still filtering for upcoming events
   const stableTimestamp = useStableTimestamp();
 
-  // Request location permission once on first feed landing
   const hasRequestedLocation = useRef(false);
   useEffect(() => {
     if (hasRequestedLocation.current) return;
@@ -52,13 +49,11 @@ function MyFeedContent() {
     })();
   }, []);
 
-  // Check for contributing lists
   const contributingLists = useQuery(api.lists.getContributingLists);
   const contributingCount = contributingLists?.length ?? 0;
   const singleContributingList =
     contributingCount === 1 ? contributingLists?.[0] : null;
 
-  // Memoize query args - changes when segment changes, triggering refetch
   const queryArgs = useMemo(() => {
     return {
       filter: selectedSegment,
@@ -76,7 +71,6 @@ function MyFeedContent() {
   const { listBodyLoading, markSegmentSwitchPending } =
     useStableFeedListBodyLoading(status);
 
-  // Memoize saved events query args to prevent unnecessary re-renders
   const savedEventsQueryArgs = useMemo(() => {
     if (!user?.username) return "skip";
     return { userName: user.username };
@@ -98,8 +92,6 @@ function MyFeedContent() {
     [savedEventIdsQuery],
   );
 
-  // Transform grouped events into the format UserEventsList expects
-  // The server now handles similarity grouping, so we just enrich the events
   const enrichedEvents = useMemo(() => {
     const events = groupedEvents.map((group) => ({
       event: {
@@ -107,17 +99,11 @@ function MyFeedContent() {
         comments: [],
         eventToLists: [],
         lists: group.event.lists ?? [],
-        // queryGroupedFeed returns source-list attribution at the group
-        // level, but UserEventsList reads these fields off `item.event`.
-        // Merge them in so the "via [List]" link and the "+N" badge render
-        // on the My Feed tab (same surface as the Following tab, which
-        // uses queryFeed where these fields already live at event level).
         sourceListId: group.sourceListId,
         sourceListName: group.sourceListName,
         sourceListSlug: group.sourceListSlug,
         additionalSourceCount: group.additionalSourceCount,
       },
-      // Server-computed count (already shows just similar events, not including primary)
       similarEvents: Array(group.similarEventsCount).fill({
         event: null,
         similarityDetails: null,
@@ -143,10 +129,6 @@ function MyFeedContent() {
 
   const { requestShare } = useShareMyList();
 
-  // On threshold crossing, route to the share-setup modal (which is the
-  // "your Soonlist is ready to share" moment). Skip for users who've already
-  // shared — requestShare would auto-launch native share, which we don't
-  // want here. Either way mark the one-shot seen.
   const currentUser = useQuery(api.users.getCurrentUser);
   const hasSharedListBefore = currentUser?.hasSharedListBefore ?? false;
   useEffect(() => {
@@ -173,7 +155,6 @@ function MyFeedContent() {
     requestShare({ eventCount: upcomingCount });
   }, [posthog, requestShare, upcomingCount]);
 
-  // Update tab badge count based on upcoming events
   const setMyListBadgeCount = useAppStore((s) => s.setMyListBadgeCount);
   useEffect(() => {
     if (selectedSegment === "upcoming") {
@@ -258,7 +239,6 @@ function MyFeed() {
       </AuthLoading>
 
       <Unauthenticated>
-        {/* For guest users, check if they've seen onboarding */}
         {!hasSeenOnboarding ? (
           <Redirect href="/(onboarding)/onboarding" />
         ) : (
@@ -275,5 +255,4 @@ function MyFeed() {
 
 export default MyFeed;
 
-// Export Expo Router's error boundary
 export { ErrorBoundary } from "expo-router";

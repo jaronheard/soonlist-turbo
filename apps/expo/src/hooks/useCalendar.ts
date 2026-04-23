@@ -24,7 +24,6 @@ export function useCalendar() {
   const [isDetecting, setIsDetecting] = useState(false);
   const hasDetectedRef = useRef(false);
 
-  // Detect installed calendar apps
   useEffect(() => {
     if (hasDetectedRef.current) return;
     hasDetectedRef.current = true;
@@ -58,22 +57,18 @@ export function useCalendar() {
     event: NonNullable<FunctionReturnType<typeof api.events.get>>,
   ) => {
     try {
-      // Ensure we have detected apps at least once
       const apps =
         calendarApps.length > 0 ? calendarApps : await detectCalendarApps();
 
-      // First-use selection: if no preference is set, decide or ask the user
       let currentPreferred = preferredCalendarApp;
       if (!currentPreferred) {
         const googleInstalled =
           apps.find((a) => a.id === "google")?.isInstalled === true;
-        // On iOS, Apple Calendar is effectively always available via the system UI
         const appleInstalled =
           apps.find((a) => a.id === "apple")?.isInstalled === true ||
           Platform.OS === "ios";
 
         if (googleInstalled && appleInstalled && Platform.OS === "ios") {
-          // Ask the user which app to use
           const choice = await new Promise<"apple" | "google" | "cancel">(
             (resolve) => {
               ActionSheetIOS.showActionSheetWithOptions(
@@ -99,17 +94,14 @@ export function useCalendar() {
           setPreferredCalendarApp("google");
           currentPreferred = "google";
         } else {
-          // Default to Apple on iOS
           setPreferredCalendarApp("apple");
           currentPreferred = "apple";
         }
       }
 
-      // The event.event comes from Convex and should match our expected interface
 
       const calendarEvent = event.event as AddToCalendarButtonPropsRestricted;
 
-      // Build enriched description (used for Google Calendar as well)
       const baseUrlForDesc = Config.apiBaseUrl;
       const eventUrlForDesc =
         event.userName && event.id && baseUrlForDesc
@@ -125,7 +117,6 @@ export function useCalendar() {
             : "Captured on Soonlist";
       const fullDescriptionForGoogle = `${calendarEvent.description}\n\n${additionalTextForDesc}`;
 
-      // If Google Calendar is preferred and installed, use it
       if (currentPreferred === "google") {
         const sourceApps = calendarApps.length > 0 ? calendarApps : apps;
         const googleInstalled =
@@ -148,7 +139,6 @@ export function useCalendar() {
             void hapticSuccess();
             return;
           } else {
-            // Fall back to system calendar if Google Calendar URL can't be opened
             toast.warning(
               "Couldn't open Google Calendar, using Apple Calendar",
             );
@@ -156,15 +146,12 @@ export function useCalendar() {
             currentPreferred = "apple";
           }
         } else {
-          // Google Calendar was preferred but is no longer installed
           toast.warning("Google Calendar not installed, using Apple Calendar");
           setPreferredCalendarApp("apple");
           currentPreferred = "apple";
         }
       }
 
-      // Check if we need calendar permissions
-      // iOS 17+ doesn't require permissions when using the system calendar UI
       const needsPermissionCheck =
         Platform.OS === "android" ||
         (Platform.OS === "ios" && Number(Platform.Version.split(".")[0]) < 17);

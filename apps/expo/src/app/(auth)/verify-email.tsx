@@ -80,8 +80,6 @@ const VerifyEmail = () => {
           af_registration_method: "email",
         });
 
-        // Transfer guest data after successful sign up
-        // Use the createdUserId from the sign-up response
         const userId = completeSignUp.createdUserId;
         if (userId) {
           await transferGuestData({
@@ -89,7 +87,6 @@ const VerifyEmail = () => {
             transferGuestOnboardingData,
           });
           await redeemStoredDiscoverCode(redeemDiscoverCode);
-          // Refresh Clerk user to reflect updated publicMetadata immediately
           await user?.reload?.();
           if (user?.publicMetadata?.showDiscover) {
             setDiscoverAccessOverride(false);

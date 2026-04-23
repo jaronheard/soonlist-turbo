@@ -51,7 +51,6 @@ export function SavedByModal({
           }
         />
 
-        {/* Scrollable content */}
         <ScrollView
           contentContainerStyle={{
             paddingHorizontal: 16,

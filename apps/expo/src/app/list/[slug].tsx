@@ -84,8 +84,6 @@ export default function ListDetailScreen() {
     const current = localStore.getQuery(api.lists.getFollowedLists, {});
     if (current === undefined || !listData) return;
     if (current.some((l) => l.id === args.listId)) return;
-    // getBySlug returns an enriched shape; strip fields not on Doc<"lists">
-    // before writing to the getFollowedLists cache.
     const {
       owner: _owner,
       contributorCount: _contributorCount,
@@ -239,7 +237,6 @@ export default function ListDetailScreen() {
     );
   }
 
-  // listResult.status === "ok" — listData is non-null
   if (!listData) {
     return null;
   }

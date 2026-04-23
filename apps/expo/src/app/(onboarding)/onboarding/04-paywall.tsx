@@ -47,9 +47,6 @@ export default function CommunitySupportedScreen() {
   const markRatingPromptShown = useMarkRatingPromptShown();
   const { saveStep } = useOnboarding();
 
-  // Keep the existing step math: this screen sits at totalSteps - 2,
-  // with sign-in at totalSteps - 1 and the final tick reserved for the
-  // "account created" state.
   const totalSteps = pendingFollowUsername ? 7 : 6;
   const currentStep = totalSteps - 2;
 

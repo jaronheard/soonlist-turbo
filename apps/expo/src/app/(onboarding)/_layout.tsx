@@ -4,7 +4,6 @@ import { useConvexAuth } from "convex/react";
 
 import { useAppStore } from "~/store";
 
-// Export Expo Router's error boundary
 export { ErrorBoundary } from "expo-router";
 
 export default function OnboardingLayout() {
@@ -14,9 +13,6 @@ export default function OnboardingLayout() {
     (state) => state.pendingFollowUsername,
   );
 
-  // Only redirect if authenticated AND onboarding is complete AND no pending follow
-  // This prevents a race condition where the redirect fires before usePendingFollow
-  // can execute the auto-follow mutation
   if (isAuthenticated && hasSeenOnboarding && !pendingFollowUsername) {
     return <Redirect href="/(tabs)/feed" />;
   }

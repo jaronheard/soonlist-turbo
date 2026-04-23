@@ -21,7 +21,6 @@ function CircularProgress({ progress }: { progress: number }) {
   return (
     <View className="relative">
       <Svg width={size} height={size}>
-        {/* Background circle */}
         <Circle
           stroke="#FFD1BA"
           fill="none"
@@ -31,7 +30,6 @@ function CircularProgress({ progress }: { progress: number }) {
           strokeWidth={strokeWidth}
           opacity={0.2}
         />
-        {/* Progress circle */}
         <Circle
           stroke="#FFD1BA"
           fill="none"

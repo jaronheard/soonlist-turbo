@@ -1,4 +1,3 @@
-// src/app/add.tsx
 import React, { useCallback } from "react";
 import { View } from "react-native";
 import Animated from "react-native-reanimated";
@@ -101,7 +100,6 @@ export default function AddEventModal() {
     if (!input.trim() && !imagePreview && !linkPreview) return;
     if (!user?.id || !user.username) return;
 
-    // Store values needed for event creation before resetting state
     const eventData = {
       rawText: input,
       linkPreview: linkPreview ?? undefined,
@@ -116,7 +114,6 @@ export default function AddEventModal() {
       router.replace("/feed");
     }
 
-    // Reset state immediately for better UX
     resetAddEventState();
 
     try {
@@ -224,5 +221,4 @@ export default function AddEventModal() {
   );
 }
 
-// Export Expo Router's error boundary
 export { ErrorBoundary } from "expo-router";

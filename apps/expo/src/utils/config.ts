@@ -1,7 +1,6 @@
 import Constants from "expo-constants";
 import * as Updates from "expo-updates";
 
-// https://docs.expo.dev/eas-update/environment-variables/#setting-a-custom-local-environment
 
 interface Config {
   env: "development" | "production";

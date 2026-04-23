@@ -60,7 +60,6 @@ export function DefaultEmptyState({
         </View>
 
         <View className="px-6 pt-6">
-          {/* Shared-first primary block — soft surface so it doesn’t read as a stark white slab */}
           <View
             className="mb-6 rounded-2xl border border-neutral-3/70 p-3"
             style={{ backgroundColor: "rgba(255,255,255,0.72)" }}
@@ -82,7 +81,6 @@ export function DefaultEmptyState({
             </TouchableOpacity>
           </View>
 
-          {/* Divider — only show when we have featured lists to offer */}
           {featuredLists.length > 0 ? (
             <View className="mb-4 flex-row items-center gap-3">
               <View className="h-px flex-1 bg-neutral-3" />

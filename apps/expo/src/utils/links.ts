@@ -3,9 +3,9 @@ export function normalizeUrlForStorage(input: string): string {
   if (!trimmed) return trimmed;
   const lower = trimmed.toLowerCase();
   if (lower.startsWith("http://") || lower.startsWith("https://"))
-    return trimmed; // preserve entered protocol
-  if (trimmed.startsWith("//")) return `https:${trimmed}`; // protocol-relative
-  return `https://${trimmed}`; // default to https
+    return trimmed;
+  if (trimmed.startsWith("//")) return `https:${trimmed}`;
+  return `https://${trimmed}`;
 }
 
 export function formatUrlForDisplay(url: string): string {

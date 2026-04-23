@@ -1,4 +1,3 @@
-// react native button component
 import type { VariantProps } from "class-variance-authority";
 import React from "react";
 import { ActivityIndicator, Text, TouchableOpacity, View } from "react-native";

@@ -13,8 +13,6 @@ const nativeBuildVersion = Application.nativeBuildVersion;
 async function setExtraParams() {
   await Updates.setExtraParamAsync(
     isIOS ? "ios-build-number" : "android-build-number",
-    // Hilariously, `buildVersion` is not actually a string on Android even though the TS type says it is.
-    // This just ensures it gets passed as a string
     `${nativeBuildVersion}`,
   );
   await Updates.setExtraParamAsync(
@@ -31,7 +29,6 @@ export function useOTAUpdates() {
   const timeout = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
   const { isUpdatePending } = Updates.useUpdates();
 
-  ///////////////////////////////////////////////////////////////////////////
 
   const setCheckTimeout = useCallback(() => {
     // eslint-disable-next-line @typescript-eslint/no-misused-promises
@@ -92,10 +89,6 @@ export function useOTAUpdates() {
   }, []);
 
   useEffect(() => {
-    // We use this setTimeout to allow Statsig to initialize before we check for an update
-    // For Testflight users, we can prompt the user to update immediately whenever there's an available update. This
-    // is suspect however with the Apple App Store guidelines, so we don't want to prompt production users to update
-    // immediately.
     if (IS_TESTFLIGHT) {
       void onIsTestFlight();
       return;
@@ -107,8 +100,6 @@ export function useOTAUpdates() {
     ranInitialCheck.current = true;
   }, [onIsTestFlight, setCheckTimeout, shouldReceiveUpdates]);
 
-  // After the app has been minimized for 15 minutes, we want to either A. install an update if one has become available
-  // or B check for an update again.
   useEffect(() => {
     if (!Updates.isEnabled) return;
 
@@ -120,8 +111,6 @@ export function useOTAUpdates() {
           /inactive|background/.exec(appState.current) &&
           nextAppState === "active"
         ) {
-          // If it's been 15 minutes since the last "minimize", we should feel comfortable updating the client since
-          // chances are that there isn't anything important going on in the current session.
           if (lastMinimize.current <= Date.now() - MINIMUM_MINIMIZE_TIME) {
             if (isUpdatePending) {
               await Updates.reloadAsync();

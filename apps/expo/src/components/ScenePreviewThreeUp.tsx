@@ -12,7 +12,6 @@ export const sceneCardShadow =
       }
     : { elevation: 2 };
 
-/** Three tilted tiles; soft edges, no harsh strokes. */
 export function ScenePreviewThreeUp({
   imageUris,
   align = "start",

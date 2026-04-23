@@ -9,7 +9,6 @@ import { api } from "@soonlist/backend/convex/_generated/api";
 import { DISCOVER_CODE_KEY } from "~/constants";
 import { useAppStore } from "~/store";
 
-// Moved DISCOVER_CODE_KEY to shared constants
 
 interface CodeEntryModalProps {
   isVisible: boolean;
@@ -45,17 +44,13 @@ export function CodeEntryModal({
     try {
       const normalizedCode = code.trim().toUpperCase();
 
-      // Always validate the code first using the backend action
       const result = await redeemCode({ code: normalizedCode });
 
       if (result.success) {
         if (isAuthenticated) {
-          // Force UI to enable Discover immediately
           setDiscoverAccessOverride(true);
-          // Refresh Clerk user so publicMetadata updates immediately
           if (user && typeof user.reload === "function") {
             await user.reload();
-            // Check if showDiscover is now true in metadata and clear override
             if (user.publicMetadata.showDiscover) {
               setDiscoverAccessOverride(false);
             }
@@ -67,7 +62,6 @@ export function CodeEntryModal({
             setCode("");
           }, 1500);
         } else {
-          // User is anonymous, store the validated code for later
           await AsyncStorage.setItem(DISCOVER_CODE_KEY, normalizedCode);
           setSuccess(true);
           timeoutRef.current = setTimeout(() => {

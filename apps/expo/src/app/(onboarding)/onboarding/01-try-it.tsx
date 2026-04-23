@@ -53,9 +53,6 @@ function ParsingAnimation() {
   );
 }
 
-// Demo event data for the onboarding try-it flow. Cast as Event since
-// this is synthetic data that doesn't come from the backend. Dates are
-// generated relative to today so the demo never shows as a past event.
 function getDemoEvent(): Event {
   const today = new Date();
   const demoDay = new Date(today);
@@ -127,7 +124,6 @@ export default function TryItScreen() {
 
   const totalSteps = pendingFollowUsername ? 7 : 6;
 
-  // Escalating haptic pattern during "capturing" phase
   const hapticIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   const startCapturingHaptics = useCallback(() => {
@@ -156,7 +152,6 @@ export default function TryItScreen() {
     }
   }, []);
 
-  // Clean up on unmount
   useEffect(() => {
     return () => stopCapturingHaptics();
   }, [stopCapturingHaptics]);

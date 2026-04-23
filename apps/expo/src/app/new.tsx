@@ -15,12 +15,6 @@ import { useAppStore } from "~/store";
 import { toast } from "~/utils/feedback";
 import { logError } from "../utils/errorLogging";
 
-/**
- * This screen is specifically for share-extension usage:
- * - It's simpler than add.tsx
- * - No photo grid.
- * - Takes `text` or `imageUri` from the deep link or store's `intentParams`.
- */
 
 const OFFSET_VALUE = 32;
 
@@ -37,16 +31,11 @@ export default function NewShareScreen() {
     resetNewEventState,
   } = useAppStore();
 
-  // Grab "text" or "imageUri" from the share extension
   const { text, imageUri } = useLocalSearchParams<{
     text?: string;
     imageUri?: string;
   }>();
 
-  /**
-   * Use same initialization logic from old new.tsx
-   * Use a key to force re-initialization when text or imageUri changes
-   */
   const { initialized } = useInitializeInput(
     {
       text,
@@ -57,9 +46,6 @@ export default function NewShareScreen() {
     `${text || ""}-${imageUri || ""}`,
   );
 
-  /**
-   * Link detection from typed input (if user modifies text).
-   */
   const handleTextChange = useCallback(
     (newText: string) => {
       setInput(newText, "new");
@@ -75,9 +61,6 @@ export default function NewShareScreen() {
     [setInput, setLinkPreview],
   );
 
-  /**
-   * Actually create the event
-   */
   const { newEventState } = useAppStore();
 
   const handleCreateEvent = async () => {
@@ -85,7 +68,6 @@ export default function NewShareScreen() {
     if (!input.trim() && !imagePreview && !linkPreview) return;
     if (!user?.id || !user.username) return;
 
-    // Store values needed for event creation before resetting state
     const eventData = {
       rawText: input,
       linkPreview: linkPreview ?? undefined,
@@ -94,25 +76,21 @@ export default function NewShareScreen() {
       username: user.username,
     };
 
-    // Navigate immediately
     if (router.canGoBack()) {
       router.back();
     } else {
       router.replace("/feed");
     }
 
-    // Reset state and fire the createEvent call after interactions/animations
     void InteractionManager.runAfterInteractions(() => {
-      resetNewEventState(); // Reset state first
+      resetNewEventState();
       void createEvent(eventData).catch((error) => {
         logError("Error creating event in background", error);
-        // Notify user of background failure
         toast.error("Failed to save event");
       });
     });
   };
 
-  // Set activeInput to "describe" when text is passed
   useEffect(() => {
     if (text) {
       setActiveInput("describe");
@@ -169,7 +147,6 @@ export default function NewShareScreen() {
           />
         </View>
 
-        {/* Capture button at bottom */}
         <Animated.View className="px-4" style={keyboardStyle}>
           <CaptureEventButton
             handleCreateEvent={handleCreateEvent}
@@ -183,5 +160,4 @@ export default function NewShareScreen() {
   );
 }
 
-// Export Expo Router's error boundary
 export { ErrorBoundary } from "expo-router";

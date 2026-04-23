@@ -42,22 +42,12 @@ function FollowingFeedContent() {
     (state) => state.pendingFollowUsername,
   );
 
-  // Check if user is following any lists
   const followedLists = useQuery(api.lists.getFollowedLists);
   const hasFollowings = (followedLists?.length ?? 0) > 0;
 
-  // Sticky so users can subscribe to multiple featured lists without the
-  // screen flipping to the feed mid-flow. Re-latches to "show" after an
-  // unfollow-all so the feed isn't stuck on stale paginated results.
   const [emptyStateMode, setEmptyStateMode] = useState<
     "unset" | "show" | "dismissed"
   >("unset");
-  // Tracks whether we've ever observed `hasFollowings=true` so the
-  // dismissed→show re-latch only fires on a genuine unfollow-all. Without
-  // this, calling `setEmptyStateMode("dismissed")` from an empty-state's
-  // subscribe action would immediately flip back to "show" because Convex
-  // hasn't propagated the new follow yet — leaving users stuck returning
-  // to an empty state after successfully subscribing.
   const sawFollowingsRef = useRef(false);
   useEffect(() => {
     if (hasFollowings) {
@@ -77,11 +67,6 @@ function FollowingFeedContent() {
     ) {
       setEmptyStateMode("show");
       sawFollowingsRef.current = false;
-      // Reset to the default segment so the onboarding confirmation count and
-      // the subsequent feed view both reflect upcoming events, not whatever
-      // segment the user had picked under their prior subscriptions.
-      // No markSegmentSwitchPending: unfollow-all clears followings, so the
-      // paginated feed query is skipped — not a segment refetch race.
       setSelectedSegment("upcoming");
     }
   }, [followedLists, hasFollowings, emptyStateMode]);
@@ -89,7 +74,6 @@ function FollowingFeedContent() {
     setEmptyStateMode("dismissed");
   }, []);
 
-  // Memoize query args
   const queryArgs = useMemo(() => {
     return {
       filter: selectedSegment,
@@ -122,7 +106,6 @@ function FollowingFeedContent() {
     [markSegmentSwitchPending],
   );
 
-  // Memoize saved events query args
   const savedEventsQueryArgs = useMemo(() => {
     if (!user?.username) return "skip";
     return { userName: user.username };
@@ -158,7 +141,6 @@ function FollowingFeedContent() {
       }));
   }, [events, stableTimestamp, selectedSegment]);
 
-  // Update tab badge count based on upcoming events
   const setCommunityBadgeCount = useAppStore((s) => s.setCommunityBadgeCount);
   useEffect(() => {
     if (selectedSegment === "upcoming") {
@@ -240,7 +222,6 @@ function FollowingFeedContent() {
     handleShareList,
   ]);
 
-  // Second branch avoids a one-frame flash before the latch effect commits.
   const showEmptyState =
     emptyStateMode === "show" ||
     (followedLists !== undefined && !hasFollowings);
@@ -316,5 +297,4 @@ function FollowingFeed() {
 
 export default FollowingFeed;
 
-// Export Expo Router's error boundary
 export { ErrorBoundary } from "expo-router";

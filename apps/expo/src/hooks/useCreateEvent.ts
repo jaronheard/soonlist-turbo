@@ -12,7 +12,6 @@ import { useInFlightEventStore } from "~/store/useInFlightEventStore";
 import { logError } from "~/utils/errorLogging";
 import { hapticError } from "~/utils/feedback";
 
-// Generate a simple batch ID without external dependencies
 function generateBatchId(): string {
   return `batch_${Date.now()}_${Math.random().toString(36).substring(2, 9)}`;
 }
@@ -23,15 +22,12 @@ interface CreateEventOptions {
   username: string;
   sendNotification?: boolean;
   suppressCapturing?: boolean;
-  // Legacy field for text events (not yet implemented with workflows)
   rawText?: string;
   linkPreview?: string;
 }
 
-// Optimize image off the main JS thread and return a base64 string
 async function optimizeImage(uri: string): Promise<string> {
   try {
-    // Resize & compress on the native thread and get base64 in a single step
     const { base64 } = await ImageManipulator.manipulateAsync(
       uri,
       [{ resize: { width: 640 } }],
@@ -60,11 +56,9 @@ export function useCreateEvent() {
   const { hasNotificationPermission } = useOneSignal();
   const userTimezone = useUserTimezone();
 
-  // Batch mutations for all image events (single and multiple)
   const createEventBatch = useMutation(api.ai.createEventBatch);
   const addImagesToBatch = useMutation(api.ai.addImagesToBatch);
 
-  // Keep workflow versions for URL and text (for now)
   const eventFromUrl = useMutation(api.ai.eventFromUrlThenCreate);
   const eventFromText = useMutation(api.ai.eventFromTextThenCreate);
 
@@ -85,13 +79,10 @@ export function useCreateEvent() {
           setIsCapturing(true);
         }
 
-        // Check if we have an image to process
         if (imageUri) {
-          // Set loading state for both routes since we don't know which one is active
           setIsImageLoading(true, "add");
           setIsImageLoading(true, "new");
 
-          // Convert photo library URI to file URI if needed
           let fileUri = imageUri;
           if (imageUri.startsWith("ph://")) {
             const assetId = imageUri.replace("ph://", "");
@@ -107,15 +98,12 @@ export function useCreateEvent() {
             fileUri = asset.localUri;
           }
 
-          // Validate image URI
           if (!fileUri.startsWith("file://")) {
             throw new Error("Invalid image URI format");
           }
 
-          // Route single images through batch system for unified tracking
           const batchId = generateBatchId();
 
-          // 1. Create the batch with totalCount of 1
           await createEventBatch({
             batchId,
             images: [],
@@ -128,16 +116,13 @@ export function useCreateEvent() {
             sendNotification,
           });
 
-          // 2. Optimize image and get base64
           const base64 = await optimizeImage(fileUri);
 
-          // 3. Add the image to the batch
           await addImagesToBatch({
             batchId,
             images: [{ base64Image: base64, tempId: `${batchId}-0` }],
           });
 
-          // 4. Track batch for completion feedback if user doesn't have notifications
           if (!hasNotificationPermission || !sendNotification) {
             addPendingBatchId(batchId);
           }
@@ -145,9 +130,7 @@ export function useCreateEvent() {
           return batchId;
         }
 
-        // Handle URL events with workflow
         if (linkPreview) {
-          // Start URL workflow
           const startWorkflow = await eventFromUrl({
             url: linkPreview,
             userId,
@@ -158,13 +141,11 @@ export function useCreateEvent() {
             sendNotification,
           });
 
-          // Track the workflow in our store
           addWorkflowId(startWorkflow.workflowId);
 
           return startWorkflow.workflowId;
         }
 
-        // Handle text events (not yet implemented with workflows)
         if (rawText) {
           const startWorkflow = await eventFromText({
             rawText,
@@ -176,7 +157,6 @@ export function useCreateEvent() {
             sendNotification,
           });
 
-          // Track the workflow in our store
           addWorkflowId(startWorkflow.workflowId);
 
           return startWorkflow.workflowId;
@@ -186,9 +166,8 @@ export function useCreateEvent() {
       } catch (error) {
         logError("Error processing event", error);
         void hapticError();
-        throw error; // Rethrow to trigger mutation's onError
+        throw error;
       } finally {
-        // Reset loading state for both routes
         setIsImageLoading(false, "add");
         setIsImageLoading(false, "new");
 
@@ -211,7 +190,6 @@ export function useCreateEvent() {
     ],
   );
 
-  // Batch creation with smart notifications
   const createMultipleEvents = useCallback(
     async (
       tasks: CreateEventOptions[],
@@ -230,7 +208,6 @@ export function useCreateEvent() {
 
         const { userId, username, sendNotification = true } = tasks[0]!;
 
-        // Step 1: Create the batch immediately (with 0 images)
         await createEventBatch({
           batchId,
           images: [], // Start with empty array
@@ -243,13 +220,11 @@ export function useCreateEvent() {
           sendNotification,
         });
 
-        // Step 2: Process and stream images as they're ready
         const imagePromises = tasks.map(async (task, index) => {
           if (!task.imageUri) {
             throw new Error("No image URI provided");
           }
 
-          // Convert photo library URI to file URI if needed
           let fileUri = task.imageUri;
           if (task.imageUri.startsWith("ph://")) {
             const assetId = task.imageUri.replace("ph://", "");
@@ -265,15 +240,12 @@ export function useCreateEvent() {
             fileUri = asset.localUri;
           }
 
-          // Validate image URI
           if (!fileUri.startsWith("file://")) {
             throw new Error("Invalid image URI format");
           }
 
-          // Optimize image and get base64
           const base64 = await optimizeImage(fileUri);
 
-          // Immediately send this image to the backend
           const image = {
             base64Image: base64,
             tempId: `${batchId}-${index}`,
@@ -287,10 +259,8 @@ export function useCreateEvent() {
           return image;
         });
 
-        // Wait for all images to be processed and sent
         await Promise.all(imagePromises);
 
-        // Track batch for completion feedback if user doesn't have notifications
         if (!hasNotificationPermission || !sendNotification) {
           addPendingBatchId(batchId);
         }

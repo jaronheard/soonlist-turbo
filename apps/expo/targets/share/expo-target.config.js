@@ -1,4 +1,3 @@
-/** @type {import('@bacons/apple-targets').Config} */
 module.exports = {
   type: "share",
   name: "ShareExtension",
@@ -15,7 +14,6 @@ module.exports = {
     ],
   },
   infoPlist: {
-    // Hardcoded Convex site URLs for HTTP endpoints
     ConvexHttpBaseURL: "https://convex-http.soonlist.com",
     ConvexHttpBaseURLDev: "https://lovable-camel-478.convex.site",
   },

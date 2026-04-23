@@ -24,7 +24,6 @@ export default function QRModal() {
 
   return (
     <View className="flex-1 bg-interactive-3">
-      {/* Background Image Container */}
       {eventImage && (
         <View className="absolute inset-0 h-full w-full overflow-hidden">
           <Image

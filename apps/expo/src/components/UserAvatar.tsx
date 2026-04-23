@@ -12,7 +12,6 @@ interface UserAvatarProps {
   recyclingKey?: string;
 }
 
-/** Bit bigger avatars (e.g. From these Soonlists 32–44px) use standard `lg` flair. */
 export function UserAvatar({ user, size, recyclingKey }: UserAvatarProps) {
   const flairSize = size >= 28 ? "lg" : "xs";
 

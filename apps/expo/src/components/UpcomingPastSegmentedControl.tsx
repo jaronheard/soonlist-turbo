@@ -17,11 +17,6 @@ interface UpcomingPastSegmentedControlProps {
   onSegmentChange: (segment: UpcomingPastSegment) => void;
 }
 
-/**
- * Upcoming / Past toggle. On iOS 26+ uses SwiftUI segmented picker (Liquid Glass).
- * On older iOS, RN fallback avoids low-contrast SwiftUI segmented styling in light mode.
- * Fires selection haptic on change (iOS HIG: UISelectionFeedbackGenerator).
- */
 export function UpcomingPastSegmentedControl({
   selectedSegment,
   onSegmentChange,

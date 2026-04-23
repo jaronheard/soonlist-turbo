@@ -21,7 +21,6 @@ export async function redeemStoredDiscoverCode(
 
     if (result.success) {
       logMessage("Redeemed stored discover code", { code: normalized });
-      // Set override immediately so UI updates on first render post-signup
       try {
         const setOverride = useAppStore.getState().setDiscoverAccessOverride;
         setOverride(true);
@@ -35,7 +34,6 @@ export async function redeemStoredDiscoverCode(
         new Error(result.error || "Unknown error"),
         { code: normalized },
       );
-      // Only clear on known invalid-code responses to avoid losing retry on transient failures
       if (result.error === "Invalid code") {
         shouldClear = true;
       }

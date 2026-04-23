@@ -21,12 +21,9 @@ function DiscoverContent() {
   const { user } = useUser();
   const discoverAccessOverride = useAppStore((s) => s.discoverAccessOverride);
 
-  // Compute access early to skip queries if denied
   const showDiscover = user ? getPlanStatusFromUser(user).showDiscover : false;
   const canAccessDiscover = discoverAccessOverride || showDiscover;
 
-  // Use the stable timestamp from the store that updates every 15 minutes
-  // This prevents InvalidCursor errors while still filtering for upcoming events
   const stableTimestamp = useStableTimestamp();
 
   const {
@@ -45,7 +42,6 @@ function DiscoverContent() {
     },
   );
 
-  // Memoize saved events query args to avoid unnecessary re-renders
   const savedEventsQueryArgs = useMemo(() => {
     if (!canAccessDiscover || !user?.username) return "skip";
     return { userName: user.username };
@@ -67,20 +63,15 @@ function DiscoverContent() {
     [savedEventIdsQuery],
   );
 
-  // Add missing properties that UserEventsList expects and filter out ended events
   const enrichedEvents = useMemo(() => {
-    // Use stableTimestamp instead of recalculating Date.now()
     const currentTime = new Date(stableTimestamp).getTime();
     return events
       .filter((event) => {
-        // Client-side safety filter: hide events that have ended
-        // This prevents showing ended events if the cron job hasn't run recently
         const eventEndTime = new Date(event.endDateTime).getTime();
         return eventEndTime >= currentTime;
       })
       .map((event) => ({
         ...event,
-        // Preserve eventFollows from the query (includes user data for each saver)
         eventFollows: event.eventFollows ?? [],
         comments: event.comments ?? [],
         eventToLists: event.eventToLists ?? [],
@@ -88,7 +79,6 @@ function DiscoverContent() {
       }));
   }, [events, stableTimestamp]);
 
-  // Check if user has access to discover feature (only if authenticated)
   if (user && !canAccessDiscover) {
     return <Redirect href="/feed" />;
   }
@@ -118,7 +108,6 @@ export default function Page() {
       </AuthLoading>
 
       <Unauthenticated>
-        {/* For guest users, check if they've seen onboarding */}
         {!hasSeenOnboarding ? (
           <Redirect href="/(onboarding)/onboarding" />
         ) : (
@@ -133,5 +122,4 @@ export default function Page() {
   );
 }
 
-// Export Expo Router's error boundary
 export { ErrorBoundary } from "expo-router";

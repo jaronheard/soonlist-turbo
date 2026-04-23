@@ -15,7 +15,6 @@ export function ResetAuthButton({ style }: ResetAuthButtonProps) {
   const signOut = useSignOut();
   const pathname = usePathname();
 
-  // Don't show on main sign-in page
   if (pathname === "/sign-in") {
     return null;
   }

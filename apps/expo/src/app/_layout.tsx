@@ -57,16 +57,12 @@ const styles = StyleSheet.create({
 
 const queryClient = new QueryClient();
 
-// Export Expo Router's default error boundary
 export { ErrorBoundary } from "expo-router";
 
-// Anchor modals to tabs so deep links show the modal over the feed
-// See: https://docs.expo.dev/router/advanced/modals/#handle-deep-linked-modals
 export const unstable_settings = {
   anchor: "(tabs)",
 };
 
-// This adds accessGroup support to Clerk's token cache: https://github.com/clerk/javascript/blob/main/packages/expo/src/token-cache/index.ts
 const tokenCache = {
   async getToken(key: string) {
     try {
@@ -107,7 +103,6 @@ Sentry.init({
   tracesSampleRate: 1.0,
   profilesSampleRate: 1.0,
   sendDefaultPii: true,
-  // Session replay disabled since mobileReplayIntegration causes scroll jank
   replaysSessionSampleRate: 0,
   replaysOnErrorSampleRate: 0,
 });
@@ -135,7 +130,6 @@ function RootLayout() {
   const { setUserTimezone } = useAppStore();
 
   useEffect(() => {
-    // Initialize user timezone on app start
     setUserTimezone(getUserTimeZone());
   }, [setUserTimezone]);
 
@@ -147,8 +141,6 @@ function RootLayout() {
     );
   }
 
-  // Wait for fonts to load to avoid flash of unstyled text. The Kalam font
-  // is used in the app shell so we block the initial render until it's ready.
   if (!fontsLoaded) {
     return <View style={{ flex: 1 }} />;
   }
@@ -172,9 +164,6 @@ function RootLayout() {
                   options={{
                     host: "https://us.i.posthog.com",
                     disabled: isDev,
-                    // Session replay disabled — causes scroll jank on iOS
-                    // list views (same symptom class as Sentry's
-                    // mobileReplayIntegration, disabled above).
                     enableSessionReplay: false,
                   }}
                 >
@@ -202,9 +191,6 @@ export default Sentry.wrap(RootLayout);
 const InitialLayout = () => {
   useOTAUpdates();
   const { isAuthenticated, isLoading: isAuthLoading } = useConvexAuth();
-  // Keep protected screens mounted during the auth hydration window so a
-  // signed-in user on a cold-start deep link doesn't get bounced to the anchor
-  // before Convex finishes validating the cached token.
   const isAuthAllowed = isAuthLoading || isAuthenticated;
   return (
     <Stack
@@ -217,9 +203,6 @@ const InitialLayout = () => {
         },
       }}
     >
-      {/* Tabs aren't protected: the feed tab's <Unauthenticated> owns the
-          onboarding-vs-sign-in branching, which Stack.Protected's anchor
-          redirect alone can't express. */}
       <Stack.Screen
         name="index"
         options={{
@@ -252,9 +235,6 @@ const InitialLayout = () => {
           presentation: "containedModal",
         }}
       />
-      {/* Content and create/settings routes: require auth. When the guard
-          flips false, expo-router redirects to the anchor (tabs), whose feed
-          screen in turn redirects to onboarding or sign-in. */}
       <Stack.Protected guard={isAuthAllowed}>
         <Stack.Screen
           name="event/[id]/index"
@@ -319,7 +299,6 @@ const InitialLayout = () => {
             headerBackVisible: true,
           }}
         />
-        {/* SHARE EXTENSION ROUTE */}
         <Stack.Screen
           name="new"
           options={{
@@ -327,7 +306,6 @@ const InitialLayout = () => {
             headerShown: true,
           }}
         />
-        {/* REGULAR ADD ROUTE */}
         <Stack.Screen
           name="add"
           options={{
@@ -392,7 +370,6 @@ function RootLayoutContent() {
     routingInstrumentation.registerNavigationContainer(ref);
   }, [ref]);
 
-  // Enable automatic PostHog screen tracking
   useEffect(() => {
     if (posthog) {
       void posthog.screen(pathname, params);
@@ -409,7 +386,6 @@ function RootLayoutContent() {
   return (
     <View style={{ flex: 1 }}>
       <InitialLayout />
-      {/* App is light-only (app.config userInterfaceStyle: light); force dark status bar content */}
       <StatusBar style="dark" />
     </View>
   );

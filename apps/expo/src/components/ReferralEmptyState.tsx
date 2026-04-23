@@ -51,14 +51,11 @@ export function ReferralEmptyState({
   const [isModalVisible, setIsModalVisible] = useState(false);
   const isMutatingRef = useRef(false);
 
-  // Look up the pending referral target.
   const targetUser = useQuery(
     api.users.getByUsername,
     pendingFollowUsername ? { userName: pendingFollowUsername } : "skip",
   );
 
-  // Look up the target's personal list so we can call the same
-  // `followList` mutation + optimistic update pattern FeaturedListRow uses.
   const targetUserFound = targetUser !== null && targetUser !== undefined;
   const personalList = useQuery(
     api.lists.getPersonalListForUser,
@@ -77,15 +74,12 @@ export function ReferralEmptyState({
     ]);
   });
 
-  // Look up the current authenticated user by their Clerk username so we can
-  // detect the self-share case.
   const currentUserRecord = useQuery(
     api.users.getByUsername,
     clerkUser?.username ? { userName: clerkUser.username } : "skip",
   );
   const currentUserId = currentUserRecord?.id;
 
-  // Pull a preview feed for the target user (mirrors FeaturedListRow).
   const previewUsername = targetUserFound ? pendingFollowUsername : null;
   const { results: events, status: feedStatus } = useStablePaginatedQuery(
     api.feeds.getPublicUserFeed,
@@ -118,10 +112,6 @@ export function ReferralEmptyState({
     };
   }, [events, stableTimestamp, feedStatus]);
 
-  // Fallback handling: if the referral target doesn't exist or resolves to
-  // the current user, clear the pending state and fall back to the default
-  // empty state. The Clerk-username check is sync/cached, so it catches the
-  // self-share case even before the convex `currentUserRecord` query resolves.
   const clerkUsernameLower = clerkUser?.username?.toLowerCase() ?? null;
   const pendingUsernameLower = pendingFollowUsername?.toLowerCase() ?? null;
   const isSelfReferral =
@@ -132,9 +122,7 @@ export function ReferralEmptyState({
   const shouldFallback =
     pendingFollowUsername != null &&
     (isSelfReferral ||
-      // Target lookup resolved with null (user doesn't exist)
       targetUser === null ||
-      // OR target is the current signed-in user (confirmed via convex lookup)
       (targetUserFound &&
         currentUserId !== undefined &&
         targetUser.id === currentUserId));
@@ -147,19 +135,11 @@ export function ReferralEmptyState({
 
   const handleSubscribe = useCallback(() => {
     if (!personalList || isMutatingRef.current) return;
-    // Defense in depth: if the Clerk username matches the pending username, a
-    // tap between `targetUser` resolving and `currentUserRecord` resolving would
-    // otherwise follow the user's own list. The fallback effect will also clear
-    // pending; bail out so we never call the mutation for the self-share case.
     if (isSelfReferral) return;
     isMutatingRef.current = true;
     void hapticLight();
     followListMutation({ listId: personalList.id })
       .then(() => {
-        // Clear pending on confirmed success. If the mutation had failed, the
-        // optimistic revert would drop hasFollowings back to false and the
-        // parent's latch effect would re-show this referral empty state so
-        // the user can retry.
         setPendingFollowUsername(null);
       })
       .catch((error: unknown) => {
@@ -171,8 +151,6 @@ export function ReferralEmptyState({
       .finally(() => {
         isMutatingRef.current = false;
       });
-    // Optimistic dismiss: the optimistic update flips hasFollowings to true,
-    // so dismissing the empty state here shows the populated feed immediately.
     onExitToFeed();
   }, [
     personalList,
@@ -182,10 +160,6 @@ export function ReferralEmptyState({
     onExitToFeed,
   ]);
 
-  // If pending was cleared (e.g., by fallback effect), render default. The
-  // `targetUser === null` clause is logically redundant with `shouldFallback`
-  // but is required here so TypeScript can narrow `targetUser` below — TS
-  // cannot see through the `shouldFallback` composition.
   if (!pendingFollowUsername || shouldFallback || targetUser === null) {
     return (
       <DefaultEmptyState
@@ -198,7 +172,6 @@ export function ReferralEmptyState({
     );
   }
 
-  // Still loading the target user — avoid flashing the default state.
   if (targetUser === undefined) {
     return (
       <View style={{ flex: 1, backgroundColor: "#F4F1FF" }}>
@@ -207,7 +180,6 @@ export function ReferralEmptyState({
     );
   }
 
-  // From here on, `targetUser` is a resolved, non-null user doc.
 
   const displayName =
     targetUser.displayName && targetUser.displayName.length > 0
@@ -246,7 +218,6 @@ export function ReferralEmptyState({
         </View>
 
         <View className="px-6 pt-6">
-          {/* Hero block */}
           <View className="mb-4 flex-row items-center gap-3">
             {targetUser.userImage ? (
               <Image
@@ -268,7 +239,6 @@ export function ReferralEmptyState({
             </Text>
           </View>
 
-          {/* Preview card */}
           <View className="mb-6 flex-row items-center gap-3">
             <ScenePreviewThreeUp imageUris={imageUris} align="start" />
             <View className="min-w-0 flex-1">
@@ -290,8 +260,6 @@ export function ReferralEmptyState({
             </View>
           </View>
 
-          {/* Primary CTA — fire-and-forget with optimistic update, matching
-              the FeaturedListRow subscribe pattern. */}
           <TouchableOpacity
             onPress={handleSubscribe}
             disabled={!personalList}
@@ -307,7 +275,6 @@ export function ReferralEmptyState({
             </Text>
           </TouchableOpacity>
 
-          {/* Secondary: find someone else */}
           <View className="flex-row items-center justify-center gap-1">
             <Text className="text-sm text-neutral-2">Not them?</Text>
             <TouchableOpacity

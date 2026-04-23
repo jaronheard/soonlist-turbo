@@ -12,14 +12,6 @@ interface GlassButtonProps {
   style?: object;
 }
 
-/**
- * GlassButton
- * -----------
- * iOS 26 Liquid Glass icon button.
- * Specs: blur=60, opacity=0.8, shadow=18, circular shape
- *
- * Falls back to a solid background on devices without liquid glass support.
- */
 export function GlassButton({
   children,
   size = 70,
@@ -37,9 +29,7 @@ export function GlassButton({
     >
       {SUPPORTS_LIQUID_GLASS ? (
         <>
-          {/* iOS 26 blur: intensity 60 */}
           <BlurView intensity={60} tint="light" style={styles.blur} />
-          {/* Color tint */}
           <View
             style={[
               styles.tint,
@@ -48,25 +38,15 @@ export function GlassButton({
           />
         </>
       ) : (
-        /* Fallback: solid background for devices without blur support */
         <View
           style={[styles.fallbackBackground, { backgroundColor: tintColor }]}
         />
       )}
-      {/* Content */}
       <View style={styles.content}>{children}</View>
     </View>
   );
 }
 
-/**
- * GlassPill
- * ---------
- * iOS 26 Liquid Glass primary button (pill shape).
- * Specs: blur=60, opacity=0.6, cornerRadius=28, shadow=18
- *
- * Falls back to a solid background on devices without liquid glass support.
- */
 export function GlassPill({
   children,
   tintColor = "#5A32FB",
@@ -77,9 +57,7 @@ export function GlassPill({
     <View style={[styles.pillContainer, style]}>
       {SUPPORTS_LIQUID_GLASS ? (
         <>
-          {/* iOS 26 blur: intensity 60 */}
           <BlurView intensity={60} tint="light" style={styles.blur} />
-          {/* Color tint */}
           <View
             style={[
               styles.tint,
@@ -88,12 +66,10 @@ export function GlassPill({
           />
         </>
       ) : (
-        /* Fallback: solid background for devices without blur support */
         <View
           style={[styles.fallbackBackground, { backgroundColor: tintColor }]}
         />
       )}
-      {/* Content */}
       <View style={styles.pillContent}>{children}</View>
     </View>
   );
@@ -102,7 +78,6 @@ export function GlassPill({
 const styles = StyleSheet.create({
   iconContainer: {
     overflow: "hidden",
-    // iOS 26: shadow radius 18
     shadowColor: "#5A32FB",
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.25,
@@ -122,14 +97,11 @@ const styles = StyleSheet.create({
     flex: 1,
     alignItems: "center",
     justifyContent: "center",
-    // iOS 26: padding 12 for icon buttons
     padding: 12,
   },
   pillContainer: {
     overflow: "hidden",
-    // iOS 26: corner radius 28
     borderRadius: 28,
-    // iOS 26: shadow radius 18
     shadowColor: "#5A32FB",
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.25,
@@ -140,7 +112,6 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     gap: 16,
-    // iOS 26: padding 16
     paddingHorizontal: 24,
     paddingVertical: 16,
   },

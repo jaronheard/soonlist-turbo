@@ -1,7 +1,6 @@
 import type { OnboardingData } from "@soonlist/validators";
 
 export type OnboardingStep =
-  // New flow steps
   | "welcome"
   | "tryIt"
   | "yourList"

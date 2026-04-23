@@ -3,7 +3,6 @@ import { NativeTabs } from "expo-router/unstable-native-tabs";
 import { SUPPORTS_LIQUID_GLASS } from "~/hooks/useLiquidGlass";
 import { useAppStore } from "~/store";
 
-// Export Expo Router's error boundary
 export { ErrorBoundary } from "expo-router";
 
 export const unstable_settings = {
@@ -20,7 +19,7 @@ export default function TabsLayout() {
       {...(SUPPORTS_LIQUID_GLASS
         ? { minimizeBehavior: "onScrollDown" as const }
         : {})}
-      blurEffect="systemChromeMaterialLight" /* interactive-1 */
+      blurEffect="systemChromeMaterialLight"
     >
       <NativeTabs.Trigger name="feed">
         <NativeTabs.Trigger.Label>My Soonlist</NativeTabs.Trigger.Label>
@@ -48,7 +47,6 @@ export default function TabsLayout() {
           <NativeTabs.Trigger.Badge hidden />
         )}
       </NativeTabs.Trigger>
-      {/* Discover tab hidden */}
       <NativeTabs.Trigger name="discover" hidden>
         <NativeTabs.Trigger.Label hidden />
         <NativeTabs.Trigger.Icon

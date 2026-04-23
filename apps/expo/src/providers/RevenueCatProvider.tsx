@@ -37,7 +37,6 @@ export function RevenueCatProvider({ children }: PropsWithChildren) {
   const { hasNotificationPermission } = useOneSignal();
   const posthog = usePostHog();
 
-  // Initialize RevenueCat only once when the component mounts
   useMountEffect(() => {
     let updateListener: ((customerInfo: CustomerInfo) => void) | undefined;
     let isMounted = true;
@@ -53,18 +52,15 @@ export function RevenueCatProvider({ children }: PropsWithChildren) {
           await setPostHogUserId(initialDistinctId);
         }
 
-        // Check if component is still mounted before proceeding
         if (!isMounted) return;
 
         setIsInitialized(true);
 
-        // Set up customer info update listener
         updateListener = (customerInfo: CustomerInfo) => {
           setCustomerInfo(customerInfo);
         };
         Purchases.addCustomerInfoUpdateListener(updateListener);
 
-        // Only try to log in if there's a userId after initialization
         if (userId) {
           await loginInternal(userId);
         }
@@ -79,7 +75,6 @@ export function RevenueCatProvider({ children }: PropsWithChildren) {
 
     void initializeRevenueCatOnce();
 
-    // Cleanup listener on unmount
     return () => {
       isMounted = false;
       if (updateListener) {
@@ -88,14 +83,12 @@ export function RevenueCatProvider({ children }: PropsWithChildren) {
     };
   });
 
-  // Handle Clerk user ID changes, but only after initialization
   useMountEffect(() => {
     if (isInitialized && isAuthenticated && userId) {
       void loginInternal(userId);
     }
   }, [isInitialized, isAuthenticated, userId]);
 
-  // Internal login function that doesn't depend on the PostHog context
   const loginInternal = async (userIdToLogin: string) => {
     if (!isInitialized) {
       logMessage("RevenueCat not initialized yet", { action: "login" });
@@ -116,7 +109,6 @@ export function RevenueCatProvider({ children }: PropsWithChildren) {
     }
   };
 
-  // Public login function exposed in the context
   const login = useCallback(async (userIdToLogin: string) => {
     await loginInternal(userIdToLogin);
     // eslint-disable-next-line react-compiler/react-compiler
@@ -138,7 +130,6 @@ export function RevenueCatProvider({ children }: PropsWithChildren) {
         await setPostHogUserId(nextDistinctId);
       }
     } catch (error) {
-      // Ignore errors about logging out anonymous users - this is expected
       if (
         error instanceof Error &&
         error.message.includes("current user is anonymous")
@@ -168,7 +159,6 @@ export function RevenueCatProvider({ children }: PropsWithChildren) {
       switch (paywallResult) {
         case PAYWALL_RESULT.PURCHASED:
         case PAYWALL_RESULT.RESTORED:
-          // Refresh customer info after successful purchase
           try {
             const updatedCustomerInfo = await Purchases.getCustomerInfo();
             setCustomerInfo(updatedCustomerInfo);
@@ -176,7 +166,6 @@ export function RevenueCatProvider({ children }: PropsWithChildren) {
             logError("Error refreshing customer info after purchase", error);
           }
 
-          // Send welcome notification if notifications are enabled
           void hapticSuccess();
           if (hasNotificationPermission) {
             toast.success(
@@ -191,7 +180,6 @@ export function RevenueCatProvider({ children }: PropsWithChildren) {
           }
           break;
         default:
-          // Not purchased, or user cancelled
           break;
       }
     } catch (err) {

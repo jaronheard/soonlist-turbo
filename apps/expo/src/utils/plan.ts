@@ -6,7 +6,7 @@ export const getPlanStatusFromUser = (user: UserResource) => {
       customerId?: string;
     };
     plan?: {
-      name?: string; //"free" | "personal" | "pro";
+      name?: string;
       productId?: string;
       status?: string;
       id?: string;

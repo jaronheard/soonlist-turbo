@@ -56,7 +56,6 @@ import SaveButton from "./SaveButton";
 
 type ShowCreatorOption = "always" | "otherUsers" | "never" | "savedFromOthers";
 
-// Type for enriched event follow with user data
 interface EnrichedEventFollow {
   userId: string;
   eventId: string;
@@ -68,7 +67,6 @@ interface EnrichedEventFollow {
   } | null;
 }
 
-// Define the type for the stats data based on the expected query output
 type EventStatsData = FunctionReturnType<typeof api.events.getStats>;
 
 export type Event = NonNullable<FunctionReturnType<typeof api.events.get>>;
@@ -122,7 +120,6 @@ export function UserEventListItem(props: UserEventListItemProps) {
   const e = event.event as AddToCalendarButtonPropsRestricted;
   const userTimezone = useUserTimezone();
 
-  // Normalize timezones for comparison
   const normalizeTimezone = (tz?: string): string => {
     if (!tz || tz === "unknown" || tz.trim() === "") return "";
     return tz.trim().toLowerCase();
@@ -131,12 +128,11 @@ export function UserEventListItem(props: UserEventListItemProps) {
   const normalizedEventTz = normalizeTimezone(e.timeZone);
   const normalizedUserTz = normalizeTimezone(userTimezone);
 
-  // Get timezone abbreviation if timezones differ
   const shouldShowTimezone =
     normalizedEventTz &&
     normalizedUserTz &&
     normalizedEventTz !== normalizedUserTz &&
-    e.startTime; // Only show for timed events
+    e.startTime;
 
   const timezoneAbbreviation = shouldShowTimezone
     ? getTimezoneAbbreviation(e.timeZone || "")
@@ -181,7 +177,6 @@ export function UserEventListItem(props: UserEventListItemProps) {
   const [showFallbackSavedByModal, setShowFallbackSavedByModal] =
     useState(false);
 
-  // Prefetch the full-size image for the detail screen so it loads instantly
   useEffect(() => {
     const imageUrl = e.images?.[3];
     if (imageUrl && typeof imageUrl === "string") {
@@ -192,11 +187,9 @@ export function UserEventListItem(props: UserEventListItemProps) {
   const isRecent = useMemo(() => {
     const threeHoursAgoTimestamp = Date.now() - 3 * 60 * 60 * 1000;
 
-    // Convert potential date strings to Date objects before comparison
     const createdAtDate = event.created_at ? new Date(event.created_at) : null;
     const savedAtDate = isSaved && savedAt ? new Date(savedAt) : null;
 
-    // Check if the conversion resulted in a valid date and compare timestamps
     if (
       createdAtDate &&
       !isNaN(createdAtDate.getTime()) &&
@@ -221,13 +214,11 @@ export function UserEventListItem(props: UserEventListItemProps) {
   const imageRotation = index % 2 === 0 ? "10deg" : "-10deg";
 
   const dynamicCardStyle = useMemo(() => {
-    let currentBorderColor = "white"; // Default border color
-    // Based on the "Happening now" badge, accent-yellow is #FEEA9F
+    let currentBorderColor = "white";
     if (isHappeningNow) {
       currentBorderColor = "#FEEA9F";
     }
 
-    // Base style properties - flat design with minimal shadows
     const style: ViewStyle = {
       paddingRight: imageWidth * 1.1,
       borderWidth: 3,
@@ -236,7 +227,7 @@ export function UserEventListItem(props: UserEventListItemProps) {
     };
 
     if (isRecent) {
-      style.borderColor = "#E0D9FF"; // Glow border color
+      style.borderColor = "#E0D9FF";
     }
     return style;
   }, [isRecent, isHappeningNow, imageWidth]);
@@ -261,7 +252,6 @@ export function UserEventListItem(props: UserEventListItemProps) {
 
   const isOwner = demoMode || isCurrentUser;
 
-  // Get emoji and background color based on event type/category
   const { emoji, bgColor } = getEventEmoji(event);
 
   return (
@@ -716,7 +706,6 @@ const GhostEventCard = ({ index }: { index: number }) => {
 
   return (
     <View className="relative mb-6 px-4 opacity-50">
-      {/* Ghost image placeholder with dashed border - matching exact positioning */}
       <View
         style={{
           position: "absolute",
@@ -740,7 +729,6 @@ const GhostEventCard = ({ index }: { index: number }) => {
         />
       </View>
 
-      {/* Ghost card content with dashed border - matching exact card style */}
       <View
         className="my-1 mt-4 p-3"
         style={{
@@ -752,9 +740,7 @@ const GhostEventCard = ({ index }: { index: number }) => {
           backgroundColor: "#F4F1FF",
         }}
       >
-        {/* Gray lines representing text content */}
         <View>
-          {/* Date/time line */}
           <View
             className="mb-2 rounded"
             style={{
@@ -764,7 +750,6 @@ const GhostEventCard = ({ index }: { index: number }) => {
             }}
           />
 
-          {/* Title line */}
           <View
             className="mb-2 rounded"
             style={{
@@ -774,7 +759,6 @@ const GhostEventCard = ({ index }: { index: number }) => {
             }}
           />
 
-          {/* Location line */}
           <View
             className="mb-1 rounded"
             style={{
@@ -784,9 +768,7 @@ const GhostEventCard = ({ index }: { index: number }) => {
             }}
           />
 
-          {/* Action buttons row */}
           <View className="-mb-2 mt-1.5 flex-row items-center justify-start gap-3">
-            {/* Ghost Share button */}
             <View
               className="-ml-2 rounded"
               style={{
@@ -797,7 +779,6 @@ const GhostEventCard = ({ index }: { index: number }) => {
               }}
             />
 
-            {/* Two circular buttons */}
             {[0, 1].map((i) => (
               <View
                 key={i}
@@ -861,7 +842,6 @@ const EmptyStateHeader = () => {
         >
           Turn screenshots
         </Text>
-        {/* App source icons in mini 9:16 dashed containers */}
         <View
           style={{
             flexDirection: "row",
@@ -926,19 +906,12 @@ const EmptyStateHeader = () => {
 };
 
 interface UserEventsListProps {
-  // Either provide raw events (for backward compatibility with client-side grouping)
   events?: Event[];
-  // Or provide pre-grouped events from server (for new server-side grouping)
   groupedEvents?: EventWithSimilarity[];
   ActionButton?: React.ComponentType<ActionButtonProps>;
   showCreator: ShowCreatorOption;
   onEndReached: () => void;
   isFetchingNextPage: boolean;
-  /**
-   * Purple spinner: list body when `HeaderComponent`/`stats` exist, otherwise
-   * full-screen loading (MatchAuthLoadingSurface). Use for initial load / segment
-   * refetch so titles and toggles stay on the FlatList.
-   */
   listBodyLoading?: boolean;
   showSourceStickers?: boolean;
   demoMode?: boolean;
@@ -975,13 +948,10 @@ export default function UserEventsList(props: UserEventsListProps) {
     onSharePress,
   } = props;
   const { user } = useUser();
-  // Use pre-grouped events if provided, otherwise collapse client-side
   const collapsedEvents = useMemo(() => {
     if (groupedEvents) {
-      // Server already grouped the events
       return groupedEvents;
     }
-    // Fallback: client-side grouping for backward compatibility
     return events ? collapseSimilarEvents(events, user?.id) : [];
   }, [groupedEvents, events, user?.id]);
 
@@ -1072,7 +1042,6 @@ export default function UserEventsList(props: UserEventsListProps) {
             allTimeEvents={stats.allTimeEvents ?? 0}
           />
         )}
-        {/* when showing list items, add a bit of padding. not needed for empty state */}
         <View style={{ height: 16 }} />
       </>
     );
@@ -1087,17 +1056,14 @@ export default function UserEventsList(props: UserEventsListProps) {
       ListEmptyComponent={renderListEmpty}
       renderItem={({ item, index }) => {
         const eventData = item.event;
-        // Use savedEventIds if provided, otherwise check eventFollows
         const isSaved = savedEventIds
           ? savedEventIds.has(eventData.id)
           : (eventData.eventFollows?.some(
               (follow: { userId: string }) => follow.userId === user?.id,
             ) ?? false);
-        // TODO: Add savedAt
 
         const similarEventsCount = item.similarEvents.length;
 
-        // Source attribution from feed entry
         const sourceListName = (eventData as { sourceListName?: string })
           .sourceListName;
         const sourceListSlug = (eventData as { sourceListSlug?: string })
@@ -1112,7 +1078,6 @@ export default function UserEventsList(props: UserEventsListProps) {
             ActionButton={ActionButton}
             showCreator={showCreator}
             isSaved={isSaved}
-            // TODO: Add savedAt
             savedAt={undefined}
             similarEventsCount={
               similarEventsCount > 0 ? similarEventsCount : undefined

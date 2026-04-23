@@ -11,13 +11,11 @@ import UserEventsList from "~/components/UserEventsList";
 export default function BatchResultsPage() {
   const { batchId } = useLocalSearchParams<{ batchId: string }>();
 
-  // Get batch status
   const batchStatus = useQuery(
     api.eventBatches.getBatchStatus,
     batchId ? { batchId } : "skip",
   );
 
-  // Get events for this batch
   const events = useQuery(
     api.events.getEventsByBatchId,
     batchId ? { batchId } : "skip",

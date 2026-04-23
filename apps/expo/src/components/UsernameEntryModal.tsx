@@ -12,11 +12,6 @@ import { hapticLight } from "~/utils/feedback";
 interface UsernameEntryModalProps {
   isVisible: boolean;
   onClose: () => void;
-  /**
-   * Called on a successful subscribe. Parents use this to dismiss their
-   * sticky `emptyStateMode` so the newly populated feed takes over without
-   * re-showing the empty state.
-   */
   onSubscribeSuccess?: () => void;
 }
 
@@ -36,9 +31,6 @@ export function UsernameEntryModal({
   const [error, setError] = useState("");
   const [success, setSuccess] = useState(false);
   const timeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-  // Synchronous guard against rapid double-taps — React state updates are async,
-  // so `isSubmitting` alone does not prevent two calls from queuing before the
-  // button disables. Mirrors the pattern used in FeaturedListRow.
   const isMutatingRef = useRef(false);
 
   const convex = useConvex();
@@ -59,7 +51,6 @@ export function UsernameEntryModal({
       return;
     }
 
-    // Client-side self-follow precheck. Backend does not reject self-follows.
     const currentUsername = user?.username?.toLowerCase();
     if (currentUsername && normalized === currentUsername) {
       setError("That's you!");
@@ -77,8 +68,6 @@ export function UsernameEntryModal({
       });
 
       if (result.success) {
-        // Dismiss the parent's sticky empty-state mode and stay on My Scene.
-        // The populated feed takes over in place; no navigation.
         onSubscribeSuccess?.();
 
         if (pendingFollowUsername) {
