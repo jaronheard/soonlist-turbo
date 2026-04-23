@@ -3,12 +3,6 @@ import { v } from "convex/values";
 import { internal } from "../_generated/api";
 import { internalAction, internalMutation } from "../_generated/server";
 
-/**
- * Batch mutation: backfill sourceListId for followedLists_ feed entries that lack it.
- * Caches listFollows per userId within a batch to avoid re-reading them
- * for every entry, and uses a conservative batch size to stay under
- * Convex transaction limits.
- */
 export const backfillSourceListIdBatch = internalMutation({
   args: {
     cursor: v.union(v.string(), v.null()),
@@ -26,17 +20,13 @@ export const backfillSourceListIdBatch = internalMutation({
       .paginate({ numItems: batchSize, cursor });
 
     let updated = 0;
-    // Cache a user's followed-list ids within this batch so we only query
-    // listFollows once per user per batch.
     const followedListsByUser = new Map<string, Set<string>>();
 
     for (const entry of result.page) {
-      // Only process followedLists_ entries that lack sourceListId
       if (!entry.feedId.startsWith("followedLists_") || entry.sourceListId) {
         continue;
       }
 
-      // Extract userId from feedId
       const userId = entry.feedId.replace("followedLists_", "");
 
       let followedListIds = followedListsByUser.get(userId);
@@ -53,9 +43,6 @@ export const backfillSourceListIdBatch = internalMutation({
         continue;
       }
 
-      // Find which list (that the user follows) the event is in.
-      // Query per-followed-list instead of fetching all eventToLists for the
-      // event, so we stay bounded by the user's follow set.
       let matchingListId: string | undefined = undefined;
       for (const listId of followedListIds) {
         const etl = await ctx.db
@@ -87,9 +74,6 @@ export const backfillSourceListIdBatch = internalMutation({
   },
 });
 
-/**
- * Action: orchestrate backfill of sourceListId
- */
 export const runBackfillSourceListId = internalAction({
   args: {},
   returns: v.null(),

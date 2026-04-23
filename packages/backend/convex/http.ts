@@ -22,7 +22,6 @@ interface ClerkWebhookEvent {
 
 const http = httpRouter();
 
-// Helpers for JSON parsing, data URL handling, format validation, and size limits
 const ALLOWED_FORMATS = ["image/webp", "image/jpeg"] as const;
 type AllowedFormat = (typeof ALLOWED_FORMATS)[number];
 
@@ -60,16 +59,14 @@ function validateFormat(format: string | undefined): format is AllowedFormat {
   return !!format && (ALLOWED_FORMATS as readonly string[]).includes(format);
 }
 
-const MAX_IMAGE_BYTES = 5 * 1024 * 1024; // 5 MB limit
+const MAX_IMAGE_BYTES = 5 * 1024 * 1024;
 
 function isTooLargeBase64(base64: string): boolean {
   const compact = base64.replace(/\s+/g, "");
-  // Base64 encoding increases size by ~33%, +2 for padding
   const maxChars = Math.ceil(MAX_IMAGE_BYTES / 3) * 4 + 2;
   return compact.length > maxChars;
 }
 
-// Helper function for classifying database constraint errors
 function isUniqueConstraintError(error: unknown): boolean {
   const msg =
     error instanceof Error
@@ -139,7 +136,6 @@ http.route({
   }),
 });
 
-// Share extension capture endpoint
 http.route({
   path: "/share/v1/capture",
   method: "POST",
@@ -156,7 +152,6 @@ http.route({
         );
       }
 
-      // Resolve token → user
       let resolved;
       try {
         resolved = await ctx.runQuery(internal.shareTokens.resolveShareToken, {
@@ -189,7 +184,6 @@ http.route({
         );
       }
 
-      // Parse body using helper
       const parsedJson = await parseJsonOr400(request);
       if (!parsedJson.ok) return parsedJson.response;
       const body = parsedJson.body as {
@@ -216,7 +210,6 @@ http.route({
       const lists = Array.isArray(body.lists) ? body.lists : [];
       const visibility = body.visibility ?? "private";
 
-      // Validate format
       const providedFormat = body.format;
       if (providedFormat && !validateFormat(providedFormat)) {
         return new Response(
@@ -230,7 +223,6 @@ http.route({
           ? providedFormat
           : undefined;
 
-      // Enforce maximum size using character-bound check
       if (isTooLargeBase64(base64)) {
         return new Response(
           JSON.stringify({ ok: false, error: "Payload too large" }),
@@ -238,7 +230,6 @@ http.route({
         );
       }
 
-      // Schedule processing
       const result = await ctx.runMutation(api.ai.eventFromImageBase64Direct, {
         base64Image: base64,
         timezone,
@@ -328,13 +319,11 @@ function parseVenueFromLocation(location: string | undefined): {
   };
 }
 
-// FreakScene integration endpoint
 http.route({
   path: "/api/freakscene",
   method: "GET",
   handler: httpAction(async (ctx) => {
     try {
-      // Get discover feed events
       const events = await ctx.runQuery(
         internal.feeds.getDiscoverEventsForIntegration,
         { limit: 500 },
@@ -381,7 +370,6 @@ http.route({
   }),
 });
 
-// Health check endpoint
 http.route({
   path: "/sync/health",
   method: "GET",

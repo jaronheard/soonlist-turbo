@@ -5,7 +5,6 @@ import { internal } from "./_generated/api";
 import { internalAction, internalMutation } from "./_generated/server";
 import { userFeedsAggregate } from "./aggregates";
 
-// Helper to add an event to feeds when it's created or updated
 export const updateEventInFeeds = internalMutation({
   args: {
     eventId: v.string(),
@@ -36,7 +35,6 @@ export const updateEventInFeeds = internalMutation({
     const eventEndTime = new Date(endDateTime).getTime();
     const currentTime = Date.now();
 
-    // 1. Always add to creator's personal feed
     const creatorFeedId = `user_${userId}`;
     await upsertFeedEntry(
       ctx,
@@ -98,14 +96,12 @@ export const updateEventInFeeds = internalMutation({
   },
 });
 
-// Helper to add event to a user's feed when they follow it
 export const addEventToUserFeed = internalMutation({
   args: {
     userId: v.string(),
     eventId: v.string(),
   },
   handler: async (ctx, { userId, eventId }) => {
-    // Get the event to get its start time and similarityGroupId
     const event = await ctx.db
       .query("events")
       .withIndex("by_custom_id", (q) => q.eq("id", eventId))
@@ -121,7 +117,6 @@ export const addEventToUserFeed = internalMutation({
     const currentTime = Date.now();
     const similarityGroupId = event.similarityGroupId;
 
-    // Check if already in feed
     const existing = await ctx.db
       .query("userFeeds")
       .withIndex("by_feed_event", (q) =>
@@ -144,7 +139,6 @@ export const addEventToUserFeed = internalMutation({
       const insertedDoc = (await ctx.db.get(id))!;
       await userFeedsAggregate.replaceOrInsert(ctx, insertedDoc, insertedDoc);
 
-      // Update grouped feed entry if similarityGroupId exists
       if (similarityGroupId) {
         await ctx.runMutation(
           internal.feedGroupHelpers.upsertGroupedFeedEntry,
@@ -155,7 +149,6 @@ export const addEventToUserFeed = internalMutation({
   },
 });
 
-// Helper to update event visibility across all feed entries for an event
 export const updateEventVisibilityInFeeds = internalMutation({
   args: {
     eventId: v.string(),
@@ -168,7 +161,6 @@ export const updateEventVisibilityInFeeds = internalMutation({
       .withIndex("by_event", (q) => q.eq("eventId", eventId))
       .collect();
 
-    // Track affected (feedId, similarityGroupId) pairs for grouped feed updates
     const affectedGroups: { feedId: string; similarityGroupId: string }[] = [];
 
     for (const entry of feedEntries) {
@@ -178,7 +170,6 @@ export const updateEventVisibilityInFeeds = internalMutation({
         const updatedDoc = { ...entry, eventVisibility: visibility };
         await userFeedsAggregate.replaceOrInsert(ctx, oldDoc, updatedDoc);
 
-        // Track the group for later update
         if (entry.similarityGroupId) {
           affectedGroups.push({
             feedId: entry.feedId,
@@ -188,7 +179,6 @@ export const updateEventVisibilityInFeeds = internalMutation({
       }
     }
 
-    // Update grouped feed entries for affected groups
     for (const { feedId, similarityGroupId } of affectedGroups) {
       await ctx.runMutation(internal.feedGroupHelpers.upsertGroupedFeedEntry, {
         feedId,
@@ -200,7 +190,6 @@ export const updateEventVisibilityInFeeds = internalMutation({
   },
 });
 
-// Helper to remove event from feeds (e.g., when visibility changes to private)
 export const removeEventFromFeeds = internalMutation({
   args: {
     eventId: v.string(),
@@ -211,13 +200,11 @@ export const removeEventFromFeeds = internalMutation({
     ctx,
     { eventId, keepCreatorFeed = true, keepListFeeds = true },
   ) => {
-    // Get all feed entries for this event
     const feedEntries = await ctx.db
       .query("userFeeds")
       .withIndex("by_event", (q) => q.eq("eventId", eventId))
       .collect();
 
-    // Fetch the event once if we need to check creator
     let event = null;
     if (keepCreatorFeed) {
       event = await ctx.db
@@ -226,26 +213,17 @@ export const removeEventFromFeeds = internalMutation({
         .first();
     }
 
-    // Track affected (feedId, similarityGroupId) pairs for grouped feed updates
     const affectedGroups: { feedId: string; similarityGroupId: string }[] = [];
 
     for (const entry of feedEntries) {
-      // If keepCreatorFeed is true, skip only the creator's feed
       if (keepCreatorFeed && event && entry.feedId === `user_${event.userId}`) {
         continue;
       }
 
-      // List-detail feeds (`list_${listId}`) are persistent membership records,
-      // not fan-out targets — they live as long as the eventToLists junction
-      // does. Removing them here would lose membership across visibility
-      // toggles (private→public), since the restore path doesn't recreate
-      // them. getEventsForList filters by eventVisibility="public", so private
-      // events stay invisible without needing to delete the entry.
       if (keepListFeeds && entry.feedId.startsWith("list_")) {
         continue;
       }
 
-      // Track the group for later update
       if (entry.similarityGroupId) {
         affectedGroups.push({
           feedId: entry.feedId,
@@ -253,12 +231,10 @@ export const removeEventFromFeeds = internalMutation({
         });
       }
 
-      // Delete all other entries (including discover and other user feeds)
       await userFeedsAggregate.deleteIfExists(ctx, entry);
       await ctx.db.delete(entry._id);
     }
 
-    // Update grouped feed entries for affected groups
     for (const group of affectedGroups) {
       await ctx.runMutation(
         internal.feedGroupHelpers.upsertGroupedFeedEntry,
@@ -268,7 +244,6 @@ export const removeEventFromFeeds = internalMutation({
   },
 });
 
-// Helper to update event times across all feed entries for an event
 export const updateEventTimesInAllFeeds = internalMutation({
   args: {
     eventId: v.string(),
@@ -293,7 +268,6 @@ export const updateEventTimesInAllFeeds = internalMutation({
       .withIndex("by_event", (q) => q.eq("eventId", eventId))
       .collect();
 
-    // Track affected (feedId, similarityGroupId) pairs for grouped feed updates
     const affectedGroups = new Set<string>();
 
     for (const entry of feedEntries) {
@@ -306,13 +280,11 @@ export const updateEventTimesInAllFeeds = internalMutation({
       const updatedDoc = { ...entry, eventStartTime, eventEndTime, hasEnded };
       await userFeedsAggregate.replaceOrInsert(ctx, oldDoc, updatedDoc);
 
-      // Track the group for later update
       if (entry.similarityGroupId) {
         affectedGroups.add(`${entry.feedId}:${entry.similarityGroupId}`);
       }
     }
 
-    // Update grouped feed entries for affected groups
     for (const pair of affectedGroups) {
       const [feedId, similarityGroupId] = pair.split(":");
       if (feedId && similarityGroupId) {
@@ -356,7 +328,6 @@ async function canUserViewListForFeed(
   return !!membership;
 }
 
-// Helper to upsert a feed entry (insert if missing, update timestamps if exists)
 export async function upsertFeedEntry(
   ctx: MutationCtx,
   feedId: string,
@@ -391,11 +362,9 @@ export async function upsertFeedEntry(
       sourceListId,
     };
     const id = await ctx.db.insert("userFeeds", doc);
-    // Read back to get _id and _creationTime needed by aggregate
     const insertedDoc = (await ctx.db.get(id))!;
     await userFeedsAggregate.replaceOrInsert(ctx, insertedDoc, insertedDoc);
 
-    // Update grouped feed entry if similarityGroupId exists
     if (similarityGroupId) {
       await ctx.runMutation(internal.feedGroupHelpers.upsertGroupedFeedEntry, {
         feedId,
@@ -404,8 +373,6 @@ export async function upsertFeedEntry(
     }
   } else {
     const oldDoc = existingEntry;
-    // Also update similarityGroupId and eventVisibility if provided (for migration scenarios)
-    // Don't overwrite sourceListId — first source wins
     const patchFields = {
       eventStartTime,
       eventEndTime,
@@ -418,7 +385,6 @@ export async function upsertFeedEntry(
     const updatedDoc = { ...existingEntry, ...patchFields };
     await userFeedsAggregate.replaceOrInsert(ctx, oldDoc, updatedDoc);
 
-    // Update grouped feed entry if similarityGroupId exists
     const effectiveGroupId =
       similarityGroupId || existingEntry.similarityGroupId;
     if (effectiveGroupId) {
@@ -430,7 +396,6 @@ export async function upsertFeedEntry(
   }
 }
 
-// Helper to add all events from a list to a user's followedLists feed
 export const addListEventsToUserFeed = internalMutation({
   args: {
     userId: v.string(),
@@ -468,7 +433,6 @@ export const addListEventsToUserFeed = internalMutation({
       const eventEndTime = new Date(event.endDateTime).getTime();
       const similarityGroupId = event.similarityGroupId;
 
-      // Upsert into followedLists feed
       await upsertFeedEntry(
         ctx,
         followedListsFeedId,
@@ -484,7 +448,6 @@ export const addListEventsToUserFeed = internalMutation({
   },
 });
 
-// Helper to remove all events from a list from a user's followedLists feed
 export const removeListEventsFromUserFeed = internalMutation({
   args: {
     userId: v.string(),
@@ -498,18 +461,14 @@ export const removeListEventsFromUserFeed = internalMutation({
 
     const followedListsFeedId = `followedLists_${userId}`;
 
-    // Get all lists the user follows (excluding the one being unfollowed)
-    // This is used to check if events are in other followed lists
     const userListFollows = await ctx.db
       .query("listFollows")
       .withIndex("by_user", (q) => q.eq("userId", userId))
       .collect();
 
     const followedListIds = new Set(userListFollows.map((f) => f.listId));
-    followedListIds.delete(listId); // Exclude the list being unfollowed
+    followedListIds.delete(listId);
 
-    // Cache the first replacement list per event during this scan so the
-    // sourceListId reattribution below is a map lookup instead of a re-query.
     const eventIdsInThisList = new Set(eventToLists.map((etl) => etl.eventId));
     const eventsInOtherFollowedLists = new Set<string>();
     const eventToReplacementList = new Map<string, string>();
@@ -533,7 +492,6 @@ export const removeListEventsFromUserFeed = internalMutation({
     }
 
     for (const etl of eventToLists) {
-      // Check if event is in another list the user follows (using precomputed set)
       const isInOtherFollowedList = eventsInOtherFollowedLists.has(etl.eventId);
 
       const existingFollowedListsEntry = await ctx.db
@@ -547,7 +505,6 @@ export const removeListEventsFromUserFeed = internalMutation({
         continue;
       }
 
-      // Remove from followedLists feed only if event is not in any other followed list
       if (!isInOtherFollowedList) {
         const similarityGroupId = existingFollowedListsEntry.similarityGroupId;
         await userFeedsAggregate.deleteIfExists(
@@ -556,7 +513,6 @@ export const removeListEventsFromUserFeed = internalMutation({
         );
         await ctx.db.delete(existingFollowedListsEntry._id);
 
-        // Update grouped feed entry
         if (similarityGroupId) {
           await ctx.runMutation(
             internal.feedGroupHelpers.upsertGroupedFeedEntry,
@@ -564,8 +520,6 @@ export const removeListEventsFromUserFeed = internalMutation({
           );
         }
       } else if (existingFollowedListsEntry.sourceListId === listId) {
-        // Keep the entry but update sourceListId to a different followed list
-        // that also contains this event so the source attribution doesn't go stale.
         const newSourceListId = eventToReplacementList.get(etl.eventId);
         if (newSourceListId) {
           const oldDoc = existingFollowedListsEntry;
@@ -582,7 +536,6 @@ export const removeListEventsFromUserFeed = internalMutation({
   },
 });
 
-// Helper to add an event to all followers' followedLists feeds when added to a list
 export const addEventToListFollowersFeeds = internalMutation({
   args: {
     eventId: v.string(),
@@ -620,7 +573,6 @@ export const addEventToListFollowersFeeds = internalMutation({
 
       const followedListsFeedId = `followedLists_${follow.userId}`;
 
-      // Upsert into followedLists feed
       await upsertFeedEntry(
         ctx,
         followedListsFeedId,
@@ -636,7 +588,6 @@ export const addEventToListFollowersFeeds = internalMutation({
   },
 });
 
-// Helper to remove an event from all followers' followedLists feeds when removed from a list
 export const removeEventFromListFollowersFeeds = internalMutation({
   args: {
     eventId: v.string(),
@@ -659,19 +610,16 @@ export const removeEventFromListFollowersFeeds = internalMutation({
       return;
     }
 
-    // Hoist eventToLists query outside the loop — the event's list memberships
-    // are the same regardless of which follower we're processing
     const eventListMemberships = await ctx.db
       .query("eventToLists")
       .withIndex("by_event", (q) => q.eq("eventId", eventId))
       .collect();
     const eventListIds = new Set(eventListMemberships.map((etl) => etl.listId));
-    eventListIds.delete(listId); // Exclude the list being removed from
+    eventListIds.delete(listId);
 
     for (const follow of listFollows) {
       const followedListsFeedId = `followedLists_${follow.userId}`;
 
-      // Check if event is in another list this user follows
       const userListFollows = await ctx.db
         .query("listFollows")
         .withIndex("by_user", (q) => q.eq("userId", follow.userId))
@@ -679,12 +627,10 @@ export const removeEventFromListFollowersFeeds = internalMutation({
 
       const followedListIds = new Set(userListFollows.map((f) => f.listId));
 
-      // Check intersection of user's followed lists with event's other lists
       const isInOtherFollowedList = [...eventListIds].some((lid) =>
         followedListIds.has(lid),
       );
 
-      // Remove from followedLists feed only if event is not in any other followed list
       if (!isInOtherFollowedList) {
         const existingFollowedListsEntry = await ctx.db
           .query("userFeeds")
@@ -702,7 +648,6 @@ export const removeEventFromListFollowersFeeds = internalMutation({
           );
           await ctx.db.delete(existingFollowedListsEntry._id);
 
-          // Update grouped feed entry
           if (similarityGroupId) {
             await ctx.runMutation(
               internal.feedGroupHelpers.upsertGroupedFeedEntry,
@@ -715,8 +660,6 @@ export const removeEventFromListFollowersFeeds = internalMutation({
   },
 });
 
-// Helper to add all public upcoming events from a followed user to the follower's "Following" feed
-// This is the batch mutation that processes a page of events at a time
 export const addUserEventsToUserFeedBatch = internalMutation({
   args: {
     userId: v.string(),
@@ -734,7 +677,6 @@ export const addUserEventsToUserFeedBatch = internalMutation({
     const currentTime = Date.now();
     const followedUsersFeedId = `followedUsers_${userId}`;
 
-    // Query events with pagination
     const result = await ctx.db
       .query("events")
       .withIndex("by_user", (q) => q.eq("userId", followedUserId))
@@ -743,7 +685,6 @@ export const addUserEventsToUserFeedBatch = internalMutation({
     let added = 0;
 
     for (const event of result.page) {
-      // Only add public upcoming events
       if (event.visibility !== "public") {
         continue;
       }
@@ -751,14 +692,12 @@ export const addUserEventsToUserFeedBatch = internalMutation({
       const eventStartTime = new Date(event.startDateTime).getTime();
       const eventEndTime = new Date(event.endDateTime).getTime();
 
-      // Skip past events (endDateTime < now)
       if (eventEndTime < currentTime) {
         continue;
       }
 
       const similarityGroupId = event.similarityGroupId;
 
-      // Check if already in feed
       const existing = await ctx.db
         .query("userFeeds")
         .withIndex("by_feed_event", (q) =>
@@ -781,7 +720,6 @@ export const addUserEventsToUserFeedBatch = internalMutation({
         const insertedDoc = (await ctx.db.get(id))!;
         await userFeedsAggregate.replaceOrInsert(ctx, insertedDoc, insertedDoc);
 
-        // Update grouped feed entry if similarityGroupId exists
         if (similarityGroupId) {
           await ctx.runMutation(
             internal.feedGroupHelpers.upsertGroupedFeedEntry,
@@ -801,7 +739,6 @@ export const addUserEventsToUserFeedBatch = internalMutation({
   },
 });
 
-// Action to orchestrate adding user events to feed in batches
 export const addUserEventsToUserFeedAction = internalAction({
   args: {
     userId: v.string(),
@@ -815,9 +752,8 @@ export const addUserEventsToUserFeedAction = internalAction({
     let totalProcessed = 0;
     let totalAdded = 0;
     let cursor: string | null = null;
-    const batchSize = 100; // Process 100 events per batch
+    const batchSize = 100;
 
-    // Process batches until no more data
     while (true) {
       const result: {
         processed: number;
@@ -854,7 +790,6 @@ export const addUserEventsToUserFeedAction = internalAction({
   },
 });
 
-// Legacy mutation kept for backwards compatibility - schedules the action
 export const addUserEventsToUserFeed = internalMutation({
   args: {
     userId: v.string(),
@@ -862,7 +797,6 @@ export const addUserEventsToUserFeed = internalMutation({
   },
   returns: v.null(),
   handler: async (ctx, { userId, followedUserId }) => {
-    // Schedule the action to run immediately
     await ctx.scheduler.runAfter(
       0,
       internal.feedHelpers.addUserEventsToUserFeedAction,
@@ -916,13 +850,8 @@ export const addEventToContributorLists = internalMutation({
           listId: membership.listId,
         });
 
-        // Maintain the list's own feed (list_${listId}) alongside the
-        // eventToLists insert so getEventsForList stays consistent.
         await addEventToListFeedInline(ctx, eventId, membership.listId);
 
-        // Schedule follower feed fan-out atomically with the insert.
-        // Both the insert and this schedule commit in the same transaction,
-        // matching the pattern in backfillContributorEventsBatch (lists.ts).
         await ctx.scheduler.runAfter(
           0,
           internal.feedHelpers.addEventToListFollowersFeeds,
@@ -938,7 +867,6 @@ export const addEventToContributorLists = internalMutation({
   },
 });
 
-// Helper to remove all events from an unfollowed user from the follower's "Following" feed
 export const removeUserEventsFromUserFeed = internalMutation({
   args: {
     userId: v.string(),
@@ -946,7 +874,6 @@ export const removeUserEventsFromUserFeed = internalMutation({
   },
   returns: v.null(),
   handler: async (ctx, { userId, unfollowedUserId }) => {
-    // Get all events from the unfollowed user
     const events = await ctx.db
       .query("events")
       .withIndex("by_user", (q) => q.eq("userId", unfollowedUserId))
@@ -955,7 +882,6 @@ export const removeUserEventsFromUserFeed = internalMutation({
     const followedUsersFeedId = `followedUsers_${userId}`;
 
     for (const event of events) {
-      // Remove from followedUsers feed (Following tab only)
       const existingEntry = await ctx.db
         .query("userFeeds")
         .withIndex("by_feed_event", (q) =>
@@ -968,7 +894,6 @@ export const removeUserEventsFromUserFeed = internalMutation({
         await userFeedsAggregate.deleteIfExists(ctx, existingEntry);
         await ctx.db.delete(existingEntry._id);
 
-        // Update grouped feed entry
         if (similarityGroupId) {
           await ctx.runMutation(
             internal.feedGroupHelpers.upsertGroupedFeedEntry,
@@ -982,23 +907,6 @@ export const removeUserEventsFromUserFeed = internalMutation({
   },
 });
 
-/**
- * List detail feed: `list_${listId}`
- *
- * Every list has a feed mirroring its eventToLists membership so the list
- * detail query can paginate directly off `userFeeds.by_feed_visibility_hasEnded_startTime`,
- * matching how `getPublicUserFeed` reads `user_${userId}`. This avoids the
- * sparse-page problem where paginating `eventToLists` and filtering after
- * produced partial pages on large lists with many past or private events.
- *
- * Write-path rules:
- * - Added on `addEventToList` / `addEventToContributorLists` / `backfillContributorEventsBatch`.
- * - Removed on `removeEventFromList` / `removeContributorEventsBatch` and when a list is deleted.
- * - Time/visibility/deletion of the underlying event are already fanned out
- *   across every `userFeeds` entry by `updateEventTimesInAllFeeds`,
- *   `updateEventVisibilityInFeeds`, and `removeEventFromFeeds`, so no extra
- *   wiring is needed there.
- */
 export function listFeedId(listId: string): string {
   return `list_${listId}`;
 }
@@ -1061,13 +969,6 @@ export async function removeEventFromListFeedInline(
   }
 }
 
-/**
- * Batch-delete up to `batchSize` `list_${listId}` feed entries. Used by the
- * user-deletion cascade. Uses `.take()` rather than `.paginate()` because
- * we delete every row we pull on the index prefix — a paginate cursor
- * would point at a deleted document in the next transaction, which is
- * unsafe. The caller loops until `processed === 0`.
- */
 export const removeListFeedBatch = internalMutation({
   args: {
     listId: v.string(),
@@ -1110,17 +1011,10 @@ export const removeListFeedBatch = internalMutation({
   },
 });
 
-/**
- * Orchestrator for `removeListFeedBatch`. Called by the user-deletion cascade
- * where we don't want the caller to block waiting for many batches.
- */
 export const removeListFeedAction = internalAction({
   args: { listId: v.string() },
   returns: v.null(),
   handler: async (ctx, { listId }) => {
-    // take()/delete-everything pattern: loop until the batch returns zero
-    // rows. No cursor to track because each batch re-queries from the
-    // start of the index prefix.
     while (true) {
       const result: {
         processed: number;

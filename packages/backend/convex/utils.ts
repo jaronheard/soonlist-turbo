@@ -10,22 +10,16 @@ export function generatePublicId() {
 }
 
 export function generateNumericId(): number {
-  // Use a base timestamp relative to a more recent epoch to reduce digits
-  // Using Jan 1, 2024 as base: 1704067200000
   const baseEpoch = 1704067200000;
   const relativeTimestamp = Date.now() - baseEpoch;
 
-  // Add cryptographically secure random digits for additional entropy
   const randomArray = new Uint32Array(1);
   crypto.getRandomValues(randomArray);
   // eslint-disable-next-line @typescript-eslint/no-unnecessary-type-assertion, @typescript-eslint/no-non-null-assertion
-  const randomPart = randomArray[0]! % 1000; // Get last 3 digits (0-999)
+  const randomPart = randomArray[0]! % 1000;
 
-  // Combine relative timestamp with random part
-  // This creates a smaller number that stays within safe integer range
   const result = relativeTimestamp * 1000 + randomPart;
 
-  // Ensure we don't exceed MAX_SAFE_INTEGER
   if (result > Number.MAX_SAFE_INTEGER) {
     throw new Error("Generated ID would exceed safe integer range");
   }
@@ -50,9 +44,6 @@ export function deploymentName() {
   return regex.exec(url)?.[1];
 }
 
-/**
- * Safely converts an unknown value to a string for error logging
- */
 export function safeStringify(value: unknown): string {
   if (value === null) return "null";
   if (value === undefined) return "undefined";
@@ -60,16 +51,13 @@ export function safeStringify(value: unknown): string {
   try {
     return JSON.stringify(value);
   } catch {
-    // If JSON.stringify fails, try to get a meaningful string representation
     if (typeof value === "object") {
-      // For objects, try to get constructor name or use toString
       // eslint-disable-next-line @typescript-eslint/consistent-type-assertions
       const objectConstructor = (value as Record<string, unknown>)
         .constructor as { name?: string } | undefined;
       if (objectConstructor?.name && objectConstructor.name !== "Object") {
         return `[${objectConstructor.name} object]`;
       }
-      // Use toString() which might be more informative than [object Object]
       try {
         // eslint-disable-next-line @typescript-eslint/consistent-type-assertions
         const stringValue = (value as { toString?: () => string }).toString?.();
@@ -80,7 +68,6 @@ export function safeStringify(value: unknown): string {
         return "[object Object]";
       }
     }
-    // For primitives that failed JSON.stringify, just return their type
     return `[${typeof value}]`;
   }
 }

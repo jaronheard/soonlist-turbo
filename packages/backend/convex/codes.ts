@@ -2,10 +2,6 @@ import { v } from "convex/values";
 
 import { action } from "./_generated/server";
 
-/**
- * Redeem a code to enable discover access
- * This action updates the user's public metadata via Clerk
- */
 export const redeemCode = action({
   args: {
     code: v.string(),
@@ -17,11 +13,8 @@ export const redeemCode = action({
   handler: async (ctx, { code }) => {
     const normalized = code.trim().toUpperCase();
     const validCode = "DISCOVER";
-    // Check if user is authenticated
     const identity = await ctx.auth.getUserIdentity();
 
-    // For anonymous users: validation only. The client persists the code
-    // (e.g., AsyncStorage) and redeems post-auth.
     if (!identity) {
       if (normalized === validCode) {
         return { success: true };
@@ -30,9 +23,7 @@ export const redeemCode = action({
       }
     }
 
-    // For authenticated users, update their Clerk metadata directly
     try {
-      // Make HTTP request to update Clerk user metadata
       const clerkEndpoint =
         process.env.CLERK_API_ENDPOINT || "https://api.clerk.dev/v1";
       const secretKey = process.env.CLERK_SECRET_KEY;
@@ -42,12 +33,10 @@ export const redeemCode = action({
         return { success: false, error: "Configuration error" };
       }
 
-      // Only support the "DISCOVER" code
       if (normalized !== validCode) {
         return { success: false, error: "Invalid code" };
       }
 
-      // Update user's public metadata
       const response = await fetch(
         `${clerkEndpoint}/users/${identity.subject}`,
         {

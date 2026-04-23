@@ -3,9 +3,6 @@ import { ConvexError, v } from "convex/values";
 import { internalAction } from "./_generated/server";
 import * as Files from "./model/files";
 
-/**
- * Upload base64 image to CDN
- */
 export const uploadImage = internalAction({
   args: {
     base64Image: v.string(),

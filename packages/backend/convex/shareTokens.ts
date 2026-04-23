@@ -5,7 +5,6 @@ import { internalMutation, internalQuery, mutation } from "./_generated/server";
 function generateShareToken(): string {
   const bytes = new Uint8Array(32);
   crypto.getRandomValues(bytes);
-  // Convert to lowercase hex string
   return Array.from(bytes)
     .map((byte) => byte.toString(16).padStart(2, "0"))
     .join("");
@@ -17,7 +16,6 @@ export const createShareToken = mutation({
   },
   returns: v.object({ token: v.string() }),
   handler: async (ctx, { userId }) => {
-    // Authentication check
     const identity = await ctx.auth.getUserIdentity();
     if (!identity) {
       throw new ConvexError({
@@ -26,7 +24,6 @@ export const createShareToken = mutation({
       });
     }
 
-    // Authorization check - ensure the authenticated user matches the requested userId
     if (identity.subject !== userId) {
       throw new ConvexError({
         message: "You can only create share tokens for yourself",
@@ -57,7 +54,6 @@ export const createShareToken = mutation({
 
     const username = user.username;
 
-    // Generate a unique token, checking for collisions
     let token: string;
     let attempts = 0;
     const maxAttempts = 10;

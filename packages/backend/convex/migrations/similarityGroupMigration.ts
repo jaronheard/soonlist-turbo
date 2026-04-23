@@ -7,28 +7,20 @@ import { generatePublicId } from "../utils.js";
 
 export const migrations = new Migrations<DataModel>(components.migrations);
 
-/**
- * Phase 1: Backfill events.similarityGroupId
- * Groups events by similarity, assigning the same group ID to similar events
- */
 export const backfillEventSimilarityGroups = migrations.define({
   table: "events",
   batchSize: 50,
   migrateOne: async (ctx, event) => {
-    // Skip if already has a similarity group
     if (event.similarityGroupId) {
       return;
     }
 
     try {
-      // Search window: events within ±2 hours of the start time
       const startDateTime = new Date(event.startDateTime);
       const windowMs = 2 * 60 * 60 * 1000;
       const lowerBound = new Date(startDateTime.getTime() - windowMs);
       const upperBound = new Date(startDateTime.getTime() + windowMs);
 
-      // Query events within the time window that were created before this event
-      // and already have a similarity group
       const candidateEvents = await ctx.db
         .query("events")
         .withIndex("by_startDateTime", (q) =>
@@ -44,7 +36,6 @@ export const backfillEventSimilarityGroups = migrations.define({
         )
         .collect();
 
-      // Check each candidate for similarity
       let foundGroupId: string | null = null;
 
       for (const candidate of candidateEvents) {
@@ -73,7 +64,6 @@ export const backfillEventSimilarityGroups = migrations.define({
         }
       }
 
-      // Assign group: found similar event's group or create new
       const similarityGroupId = foundGroupId || `sg_${generatePublicId()}`;
 
       await ctx.db.patch(event._id, {
@@ -97,21 +87,15 @@ export const runBackfillEventSimilarityGroups = migrations.runner(
   internal.migrations.similarityGroupMigration.backfillEventSimilarityGroups,
 );
 
-/**
- * Phase 2: Backfill userFeeds.similarityGroupId from events
- * Copies the similarityGroupId from the event to each userFeeds entry
- */
 export const backfillUserFeedsSimilarityGroups = migrations.define({
   table: "userFeeds",
   batchSize: 100,
   migrateOne: async (ctx, feedEntry) => {
-    // Skip if already has a similarity group
     if (feedEntry.similarityGroupId) {
       return;
     }
 
     try {
-      // Get the event to fetch its similarity group
       const event = await ctx.db
         .query("events")
         .withIndex("by_custom_id", (q) => q.eq("id", feedEntry.eventId))
@@ -151,15 +135,10 @@ export const runBackfillUserFeedsSimilarityGroups = migrations.runner(
     .backfillUserFeedsSimilarityGroups,
 );
 
-/**
- * Phase 3: Derive userFeedGroups from userFeeds
- * Creates grouped feed entries from the userFeeds table
- */
 export const deriveUserFeedGroups = migrations.define({
   table: "userFeeds",
   batchSize: 100,
   migrateOne: async (ctx, feedEntry) => {
-    // Skip entries without a similarity group
     if (!feedEntry.similarityGroupId) {
       return;
     }
@@ -168,7 +147,6 @@ export const deriveUserFeedGroups = migrations.define({
       const feedId = feedEntry.feedId;
       const similarityGroupId = feedEntry.similarityGroupId;
 
-      // Check if a grouped entry already exists
       const existingGroupEntry = await ctx.db
         .query("userFeedGroups")
         .withIndex("by_feed_group", (q) =>
@@ -177,11 +155,9 @@ export const deriveUserFeedGroups = migrations.define({
         .first();
 
       if (existingGroupEntry) {
-        // Already exists, skip
         return;
       }
 
-      // Get all members of this group in this feed
       const members = await ctx.db
         .query("userFeeds")
         .withIndex("by_feed_group", (q) =>
@@ -193,7 +169,6 @@ export const deriveUserFeedGroups = migrations.define({
         return;
       }
 
-      // Fetch all member events to select primary
       const memberEvents = await Promise.all(
         members.map(async (m) => {
           return await ctx.db
@@ -211,7 +186,6 @@ export const deriveUserFeedGroups = migrations.define({
         return;
       }
 
-      // Priority 1: If this is a user feed, prefer that user's own event
       const feedUserId = feedId.startsWith("user_")
         ? feedId.replace("user_", "")
         : null;
@@ -221,7 +195,6 @@ export const deriveUserFeedGroups = migrations.define({
         primaryEvent = validEvents.find((e) => e.userId === feedUserId) || null;
       }
 
-      // Priority 2: earliest by created_at
       if (!primaryEvent) {
         primaryEvent = validEvents.sort(
           (a, b) =>
@@ -233,7 +206,6 @@ export const deriveUserFeedGroups = migrations.define({
         return;
       }
 
-      // Calculate times and counts
       const eventStartTime = new Date(primaryEvent.startDateTime).getTime();
       const eventEndTime = new Date(primaryEvent.endDateTime).getTime();
       const currentTime = Date.now();
@@ -241,7 +213,6 @@ export const deriveUserFeedGroups = migrations.define({
       const minAddedAt = Math.min(...members.map((m) => m.addedAt));
       const similarEventsCount = Math.max(0, members.length - 1);
 
-      // Insert the grouped entry
       await ctx.db.insert("userFeedGroups", {
         feedId,
         similarityGroupId,

@@ -11,7 +11,6 @@ import * as Events from "./model/events";
 import { enrichEventsAndFilterNulls } from "./model/events";
 import { getViewableListIds } from "./model/lists";
 
-// Validators for complex types
 const eventMetadataValidator = v.optional(
   v.object({
     accessibility: v.optional(v.array(v.string())),
@@ -47,19 +46,14 @@ const listValidator = v.object({
   value: v.string(),
 });
 
-/**
- * Get events by batch ID
- */
 export const getEventsByBatchId = query({
   args: { batchId: v.string() },
   handler: async (ctx, args) => {
-    // Enforce authentication
     const identity = await ctx.auth.getUserIdentity();
     if (!identity) {
       throw new ConvexError("Authentication required");
     }
 
-    // Verify batch ownership
     const batch = await ctx.db
       .query("eventBatches")
       .withIndex("by_batch_id", (q) => q.eq("batchId", args.batchId))
@@ -74,14 +68,10 @@ export const getEventsByBatchId = query({
       .order("desc")
       .collect();
 
-    // Enrich events with user data, comments, and follows
     return await enrichEventsAndFilterNulls(ctx, events);
   },
 });
 
-/**
- * Get saved event IDs for a user
- */
 export const getSavedIdsForUser = query({
   args: { userName: v.string() },
   handler: async (ctx, args) => {
@@ -89,18 +79,12 @@ export const getSavedIdsForUser = query({
   },
 });
 
-/**
- * Get a single event by ID
- */
 export const get = query({
   args: { eventId: v.string() },
   handler: async (ctx, args) => {
     const event = await Events.getEventById(ctx, args.eventId);
     if (!event) return null;
 
-    // Strip lists the viewer can't see so the event-detail attribution
-    // (AttributionGrid / SavedByModal) doesn't leak private list
-    // names or slugs to non-members.
     const identity = await ctx.auth.getUserIdentity();
     const viewerId = identity?.subject ?? null;
     const viewableListIds = await getViewableListIds(
@@ -113,9 +97,6 @@ export const get = query({
   },
 });
 
-/**
- * Get discover events with Convex pagination
- */
 export const getDiscoverPaginated = query({
   args: {
     paginationOpts: paginationOptsValidator,
@@ -125,14 +106,11 @@ export const getDiscoverPaginated = query({
     const identity = await ctx.auth.getUserIdentity();
     const { beforeThisDateTime } = args;
 
-    // Get all events that are upcoming and public
     const result = await ctx.db
       .query("events")
       .filter((q) => {
-        // Always filter for public events
         let baseFilter = q.eq(q.field("visibility"), "public");
 
-        // If authenticated, exclude user's own events
         if (identity) {
           baseFilter = q.and(
             baseFilter,
@@ -140,7 +118,6 @@ export const getDiscoverPaginated = query({
           );
         }
 
-        // Apply date filter only if beforeThisDateTime is provided
         if (beforeThisDateTime) {
           return q.and(
             baseFilter,
@@ -153,7 +130,6 @@ export const getDiscoverPaginated = query({
       .order("asc")
       .paginate(args.paginationOpts);
 
-    // Enrich events with user data, comments, and follows
     const enrichedEvents = await enrichEventsAndFilterNulls(ctx, result.page);
 
     return {
@@ -163,10 +139,6 @@ export const getDiscoverPaginated = query({
   },
 });
 
-/**
- * Get events for user with Convex pagination (upcoming or past)
- * This efficiently queries both owned and followed events in a single operation
- */
 export const getEventsForUserPaginated = query({
   args: {
     paginationOpts: paginationOptsValidator,
@@ -189,7 +161,6 @@ export const getEventsForUserPaginated = query({
       });
     }
 
-    // Get followed event IDs efficiently
     const eventFollows = await ctx.db
       .query("eventFollows")
       .withIndex("by_user", (q) => q.eq("userId", user.id))
@@ -197,16 +168,10 @@ export const getEventsForUserPaginated = query({
 
     const followedEventIds = new Set(eventFollows.map((ef) => ef.eventId));
 
-    // Create a single query that filters for events that are either:
-    // 1. Created by the user, OR
-    // 2. Followed by the user
-    // AND optionally match the date filter
     const eventsQuery = ctx.db.query("events").filter((q) => {
       const userFilter = q.eq(q.field("userId"), user.id);
 
-      // If there are no followed events, just filter by user
       if (followedEventIds.size === 0) {
-        // Apply date filter only if beforeThisDateTime is provided
         if (beforeThisDateTime) {
           const dateFilter =
             filter === "upcoming"
@@ -217,14 +182,12 @@ export const getEventsForUserPaginated = query({
         return userFilter;
       }
 
-      // Create OR conditions for followed events
       const followedEventFilters = Array.from(followedEventIds).map((eventId) =>
         q.eq(q.field("id"), eventId),
       );
 
       const eventFilter = q.or(userFilter, ...followedEventFilters);
 
-      // Apply date filter only if beforeThisDateTime is provided
       if (beforeThisDateTime) {
         const dateFilter =
           filter === "upcoming"
@@ -236,7 +199,6 @@ export const getEventsForUserPaginated = query({
       return eventFilter;
     });
 
-    // Apply ordering and pagination
     const orderedQuery =
       filter === "upcoming"
         ? eventsQuery.order("asc")
@@ -244,7 +206,6 @@ export const getEventsForUserPaginated = query({
 
     const result = await orderedQuery.paginate(args.paginationOpts);
 
-    // Enrich events with user data, comments, and follows
     const enrichedEvents = await enrichEventsAndFilterNulls(ctx, result.page);
 
     return {
@@ -254,9 +215,6 @@ export const getEventsForUserPaginated = query({
   },
 });
 
-/**
- * Get user stats
- */
 export const getStats = query({
   args: { userName: v.string() },
   handler: async (ctx, args) => {
@@ -264,9 +222,6 @@ export const getStats = query({
   },
 });
 
-/**
- * Create a new event
- */
 export const create = mutation({
   args: {
     event: eventDataValidator,
@@ -284,7 +239,6 @@ export const create = mutation({
       });
     }
 
-    // Get user info
     const user = await ctx.db
       .query("users")
       .withIndex("by_custom_id", (q) => q.eq("id", identity.subject))
@@ -310,9 +264,6 @@ export const create = mutation({
   },
 });
 
-/**
- * Update an existing event
- */
 export const update = mutation({
   args: {
     id: v.string(),
@@ -331,7 +282,6 @@ export const update = mutation({
       });
     }
 
-    // Check if user is admin
     const isAdmin = isUserAdmin(identity);
 
     return await Events.updateEvent(
@@ -348,9 +298,6 @@ export const update = mutation({
   },
 });
 
-/**
- * Delete an event
- */
 export const deleteEvent = mutation({
   args: { id: v.string() },
   handler: async (ctx, args) => {
@@ -362,16 +309,12 @@ export const deleteEvent = mutation({
       });
     }
 
-    // Check if user is admin
     const isAdmin = isUserAdmin(identity);
 
     return await Events.deleteEvent(ctx, identity.subject, args.id, isAdmin);
   },
 });
 
-/**
- * Follow an event
- */
 export const follow = mutation({
   args: { id: v.string() },
   handler: async (ctx, args) => {
@@ -387,9 +330,6 @@ export const follow = mutation({
   },
 });
 
-/**
- * Unfollow an event
- */
 export const unfollow = mutation({
   args: { id: v.string() },
   handler: async (ctx, args) => {
@@ -405,9 +345,6 @@ export const unfollow = mutation({
   },
 });
 
-/**
- * Toggle event visibility
- */
 export const toggleVisibility = mutation({
   args: {
     id: v.string(),
@@ -431,27 +368,8 @@ export const toggleVisibility = mutation({
   },
 });
 
-// ============================================================================
-// ADMIN HELPERS
-// ============================================================================
 
-/**
- * ADMIN ROLE SETUP:
- *
- * To use the admin functionality, you need to configure roles in Clerk:
- *
- * 1. In your Clerk Dashboard, go to JWT Templates
- * 2. Edit your Convex template (or create custom claims)
- * 3. Add roles to the JWT claims, mapping to unsafe_metadata:
- *    - Add a "roles" claim that maps to user.unsafe_metadata.roles
- *
- * The admin check will look for "admin" in the roles array from the
- * unsafe_metadata property in the JWT identity object.
- */
 
-/**
- * Helper function to safely extract roles from an object
- */
 function extractRolesFromObject(obj: unknown): string[] {
   if (!obj || typeof obj !== "object") {
     return [];
@@ -467,9 +385,6 @@ function extractRolesFromObject(obj: unknown): string[] {
   return [];
 }
 
-/**
- * Check if the current user is an admin based on their Clerk session claims
- */
 function isUserAdmin(identity: Record<string, unknown> | null): boolean {
   try {
     if (!identity) {
@@ -494,13 +409,7 @@ function isUserAdmin(identity: Record<string, unknown> | null): boolean {
   }
 }
 
-// ============================================================================
-// INTERNAL ACTIONS FOR WORKFLOW
-// ============================================================================
 
-/**
- * Insert event into database
- */
 export const insertEvent = internalMutation({
   args: {
     firstEvent: eventDataValidator,
@@ -524,10 +433,8 @@ export const insertEvent = internalMutation({
       batchId,
     } = args;
 
-    // Extract eventMetadata from firstEvent before creating eventData
     const { eventMetadata, ...eventDataWithoutMetadata } = firstEvent;
 
-    // Add uploaded image to event if available
     const eventData = {
       ...eventDataWithoutMetadata,
       ...(uploadedImageUrl && {
@@ -556,9 +463,6 @@ export const insertEvent = internalMutation({
   },
 });
 
-/**
- * Internal mutation to create an event (called from workflow)
- */
 export const createEvent = internalMutation({
   args: {
     userId: v.string(),
@@ -584,9 +488,6 @@ export const createEvent = internalMutation({
   },
 });
 
-/**
- * Internal query to get an event by ID (called from workflow)
- */
 export const getEventById = internalQuery({
   args: { eventId: v.string() },
   returns: v.union(v.object({ name: v.string() }), v.null()),
@@ -599,9 +500,6 @@ export const getEventById = internalQuery({
   },
 });
 
-/**
- * Internal query to get today's events count for a user (called from workflow)
- */
 export const getTodayEventsCount = internalQuery({
   args: { userId: v.string() },
   returns: v.array(v.object({ id: v.string() })),

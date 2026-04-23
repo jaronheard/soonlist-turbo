@@ -39,9 +39,6 @@ export interface AIErrorResponse {
   error?: string;
 }
 
-/**
- * Generate text using Anthropic's Claude model via direct API call
- */
 export async function generateText({
   prompt,
   temperature = 0,
@@ -99,10 +96,6 @@ export async function generateText({
   }
 }
 
-/**
- * Generate structured event data from base64 image using AI
- * Extracted from eventFromImageBase64ThenCreate in ai router
- */
 
 export async function processEventFromBase64Image(
   ctx: ActionCtx,
@@ -123,7 +116,7 @@ export async function processEventFromBase64Image(
 
     return aiResult;
   } catch (error) {
-    console.error("Error in processEventFromBase64Image:", error); // Log the actual error
+    console.error("Error in processEventFromBase64Image:", error);
     throw new ConvexError({
       message:
         error instanceof Error
@@ -133,10 +126,6 @@ export async function processEventFromBase64Image(
     });
   }
 }
-/**
- * Generate structured event data from URL using AI
- * Extracted from eventFromUrlThenCreateThenNotification in ai router
- */
 
 export async function processEventFromUrl(
   ctx: ActionCtx,
@@ -161,7 +150,6 @@ export async function processEventFromUrl(
       fnName: "eventFromUrlThenCreateThenNotification",
     });
 
-    // Validate that we have at least one event
     if (events.length === 0) {
       throw new ConvexError({
         message: "No events found in response",
@@ -176,7 +164,7 @@ export async function processEventFromUrl(
       validatedEvent,
     };
   } catch (error) {
-    console.error("Error in processEventFromUrl:", error); // Log the actual error
+    console.error("Error in processEventFromUrl:", error);
     throw new ConvexError({
       message:
         error instanceof Error
@@ -186,10 +174,6 @@ export async function processEventFromUrl(
     });
   }
 }
-/**
- * Generate structured event data from raw text using AI
- * Extracted from eventFromRawTextThenCreateThenNotification in ai router
- */
 
 export async function processEventFromText(
   ctx: ActionCtx,
@@ -215,7 +199,6 @@ export async function processEventFromText(
       fnName: "eventFromRawTextThenCreateThenNotification",
     });
 
-    // Validate that we have at least one event
     if (events.length === 0) {
       throw new ConvexError({
         message: "No events found in response",
@@ -231,7 +214,7 @@ export async function processEventFromText(
       response,
     };
   } catch (error) {
-    console.error("Error in processEventFromText:", error); // Log the actual error
+    console.error("Error in processEventFromText:", error);
     throw new ConvexError({
       message:
         error instanceof Error
@@ -256,9 +239,7 @@ export function validateEvent(event: unknown) {
   try {
     validatedEvent = EventWithMetadataSchema.parse(event);
   } catch (e) {
-    // If Zod parsing fails, it's invalid event data
     if (e instanceof Error) {
-      // You could log e.message here if more detail is needed for debugging
       console.error("Zod validation failed:", e.message);
     }
 
@@ -274,7 +255,6 @@ export function validateEvent(event: unknown) {
     });
   }
 
-  // 1. Check if event has proper date/time information
   if (
     !validatedEvent.startDate ||
     validatedEvent.startDate === "TBD" ||
@@ -290,11 +270,9 @@ export function validateEvent(event: unknown) {
     });
   }
 
-  // 2. Check for extremely generic event names that suggest hallucination
   const name = validatedEvent.name.toLowerCase() || "";
   const description = validatedEvent.description.toLowerCase() || "";
 
-  // Invalid names - only reject if the entire name is one of these generic placeholders
   const invalidNames = [
     "title",
     "name",
@@ -306,7 +284,6 @@ export function validateEvent(event: unknown) {
     "new event",
   ];
 
-  // Very specific patterns that indicate the AI made something up from error/test content
   const invalidPatterns = [
     "paramvalidationerror",
     "domain resolution error",
@@ -323,7 +300,6 @@ export function validateEvent(event: unknown) {
     "http error",
   ];
 
-  // Use exact match (after trimming) instead of partial matching
   const isInvalidName = invalidNames.some((invalid) => name.trim() === invalid);
 
   const isInvalidPattern = invalidPatterns.some(
@@ -342,6 +318,5 @@ export function validateEvent(event: unknown) {
     });
   }
 
-  // If all checks pass, return the Zod-validated event
   return validatedEvent;
 }

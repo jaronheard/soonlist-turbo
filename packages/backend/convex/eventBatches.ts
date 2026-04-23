@@ -11,16 +11,12 @@ import {
 import { DEFAULT_TIMEZONE, DEFAULT_VISIBILITY } from "./constants";
 import { getNotificationContent } from "./model/notificationHelpers";
 
-// Batch tracking schema
 export const batchStatusValidator = v.union(
   v.literal("processing"),
   v.literal("completed"),
   v.literal("failed"),
 );
 
-/**
- * Create a new batch tracking record
- */
 export const createBatch = internalMutation({
   args: {
     batchId: v.string(),
@@ -29,18 +25,15 @@ export const createBatch = internalMutation({
     timezone: v.string(),
   },
   handler: async (ctx, args) => {
-    // Validate timezone
     if (!args.timezone || args.timezone.trim() === "") {
       throw new ConvexError("Timezone is required");
     }
 
-    // Check if timezone is supported (using a simple check)
     try {
       new Intl.DateTimeFormat("en-US", { timeZone: args.timezone });
     } catch {
       throw new ConvexError(`Invalid timezone: ${args.timezone}`);
     }
-    // Get username from user record
     const user = await ctx.db
       .query("users")
       .withIndex("by_custom_id", (q) => q.eq("id", args.userId))
@@ -61,9 +54,6 @@ export const createBatch = internalMutation({
   },
 });
 
-/**
- * Update batch status after processing
- */
 export const updateBatchStatus = internalMutation({
   args: {
     batchId: v.string(),
@@ -93,9 +83,6 @@ export const updateBatchStatus = internalMutation({
   },
 });
 
-/**
- * Send appropriate notification based on batch size
- */
 export const sendBatchNotificationWithErrors = internalAction({
   args: {
     batchId: v.string(),
@@ -113,7 +100,6 @@ export const sendBatchNotificationWithErrors = internalAction({
   },
   handler: async (ctx, args) => {
     try {
-      // Call the original sendBatchNotification logic but with enhanced error details
       return await sendBatchNotificationHandler(ctx, args);
     } catch (error) {
       console.error("Error in sendBatchNotificationWithErrors:", error);
@@ -122,9 +108,6 @@ export const sendBatchNotificationWithErrors = internalAction({
   },
 });
 
-/**
- * Get batch info for processing additional images
- */
 export const getBatchInfo = internalQuery({
   args: {
     batchId: v.string(),
@@ -148,9 +131,6 @@ export const getBatchInfo = internalQuery({
   },
 });
 
-/**
- * Increment batch progress as images are processed
- */
 export const incrementBatchProgress = internalMutation({
   args: {
     batchId: v.string(),
@@ -178,13 +158,10 @@ export const incrementBatchProgress = internalMutation({
       successCount: newSuccessCount,
       failureCount: newFailureCount,
       progress: newProgress,
-      // Update status if all images are processed
       status: newProgress >= 1 ? "completed" : "processing",
     });
 
-    // Check if we should send the batch notification
     if (newProgress >= 1) {
-      // Get the full batch details for notification
       const updatedBatch = await ctx.db.get(batch._id);
       if (updatedBatch) {
         await ctx.scheduler.runAfter(
@@ -205,7 +182,6 @@ export const incrementBatchProgress = internalMutation({
   },
 });
 
-// Keep the original for backward compatibility
 export const sendBatchNotification = internalAction({
   args: {
     batchId: v.string(),
@@ -216,7 +192,6 @@ export const sendBatchNotification = internalAction({
     failureCount: v.number(),
   },
   handler: async (ctx, args) => {
-    // Call the handler with empty failed images array
     return await sendBatchNotificationHandler(ctx, {
       ...args,
       failedImages: [],
@@ -224,7 +199,6 @@ export const sendBatchNotification = internalAction({
   },
 });
 
-// Shared handler function
 async function sendBatchNotificationHandler(
   ctx: ActionCtx,
   args: {
@@ -238,15 +212,11 @@ async function sendBatchNotificationHandler(
   },
 ) {
   try {
-    // Get the created events for this batch
     const events = await ctx.runQuery(internal.eventBatches.getEventsForBatch, {
       batchId: args.batchId,
     });
 
-    // Determine notification strategy
     if (args.totalCount <= 3) {
-      // Send individual notifications for each successful event
-      // Pass explicit position to ensure accurate count
       const results = [];
       for (let i = 0; i < events.length; i++) {
         const event = events[i];
@@ -254,9 +224,8 @@ async function sendBatchNotificationHandler(
           console.error(`Event at index ${i} is undefined`);
           continue;
         }
-        const position = i + 1; // 1-based position
+        const position = i + 1;
         try {
-          // Add a small delay between notifications to ensure they arrive in order
           if (i > 0) {
             await new Promise((resolve) => setTimeout(resolve, 300));
           }
@@ -274,22 +243,19 @@ async function sendBatchNotificationHandler(
             `Failed to send notification for event ${event.id}:`,
             error,
           );
-          // Don't throw - we want to continue sending other notifications
           results.push({ success: false, error: String(error) });
         }
       }
     } else {
-      // Build enhanced message with error details
       let message: string;
       if (args.failureCount === 0) {
         message = `Successfully captured ${args.successCount} events`;
       } else {
         message = `Captured ${args.successCount} of ${args.totalCount} events`;
 
-        // Add specific error details if available
         if (args.failedImages && args.failedImages.length > 0) {
           const errorSummary = args.failedImages
-            .slice(0, 3) // Show first 3 errors
+            .slice(0, 3)
             .map((img, idx) => `${idx + 1}. ${img.error}`)
             .join("\n");
 
@@ -321,9 +287,6 @@ async function sendBatchNotificationHandler(
   }
 }
 
-/**
- * Get events created in a batch
- */
 export const getEventsForBatch = internalQuery({
   args: {
     batchId: v.string(),
@@ -338,14 +301,12 @@ export const getEventsForBatch = internalQuery({
   },
 });
 
-// Notification content for individual events in a batch
 const notificationContentValidator = v.object({
   title: v.string(),
   subtitle: v.string(),
   body: v.string(),
 });
 
-// Event info for banners
 const eventInfoValidator = v.object({
   id: v.string(),
   name: v.string(),
@@ -358,10 +319,6 @@ const eventInfoValidator = v.object({
   notificationContent: notificationContentValidator,
 });
 
-/**
- * Get batch status for client polling
- * Includes notification content for completion feedback
- */
 export const getBatchStatus = query({
   args: {
     batchId: v.string(),
@@ -374,9 +331,7 @@ export const getBatchStatus = query({
     failureCount: v.number(),
     progress: v.number(),
     firstEventId: v.union(v.string(), v.null()),
-    // Events with notification content for banners (only when completed)
     events: v.array(eventInfoValidator),
-    // Summary content for batch summary banner (2+ events)
     batchSummaryContent: v.union(
       v.object({
         title: v.string(),
@@ -405,7 +360,6 @@ export const getBatchStatus = query({
         ? Math.round((processedCount / batch.totalCount) * 100)
         : 0;
 
-    // Get the first event ID if there's exactly one successful event
     let firstEventId: string | null = null;
     if (batch.successCount === 1) {
       const firstEvent = await ctx.db
@@ -415,7 +369,6 @@ export const getBatchStatus = query({
       firstEventId = firstEvent?.id ?? null;
     }
 
-    // Get events with notification content when batch is completed
     let events: {
       id: string;
       name: string;
@@ -434,15 +387,11 @@ export const getBatchStatus = query({
     } | null = null;
 
     if (batch.status === "completed" || batch.status === "failed") {
-      // Get events for this batch
       const batchEvents = await ctx.db
         .query("events")
         .withIndex("by_batch_id", (q) => q.eq("batchId", args.batchId))
         .collect();
 
-      // Get today's event count for this user (for notification content).
-      // Compute day boundaries in the batch's timezone so daily counts
-      // are accurate regardless of where the server is located.
       const tz = batch.timezone ?? DEFAULT_TIMEZONE;
       const { startOfDay, endOfDay } = getDayBoundsForTimezone(tz);
 
@@ -459,9 +408,7 @@ export const getBatchStatus = query({
 
       const totalTodayCount = todayEvents.length;
 
-      // For 1 event, provide individual event info with notification content
       if (batch.totalCount <= 1) {
-        // Calculate position for each event
         const countBeforeBatch = Math.max(
           0,
           totalTodayCount - batchEvents.length,
@@ -470,7 +417,6 @@ export const getBatchStatus = query({
         events = batchEvents.map((event, index) => {
           const position = countBeforeBatch + index + 1;
           const content = getNotificationContent(event.name ?? "", position);
-          // Extract event data safely - the event field contains the calendar event JSON
           const eventData = event.event as
             | {
                 startDate?: string;
@@ -493,7 +439,6 @@ export const getBatchStatus = query({
           };
         });
       } else {
-        // For 4+ events, provide batch summary content
         if (batch.failureCount === 0) {
           batchSummaryContent = {
             title: "Events captured ✨",
@@ -531,23 +476,12 @@ export const getBatchStatus = query({
   },
 });
 
-/**
- * Get the start and end of "today" as Date objects in UTC,
- * where "today" is determined by the given IANA timezone.
- *
- * For example, at 2024-03-15T02:00:00Z:
- * - In "America/New_York" (UTC-4), it's still March 14, so this returns
- *   March 14 00:00 ET -> March 14 04:00 UTC  to  March 14 23:59:59.999 ET -> March 15 03:59:59.999 UTC
- * - In "Asia/Tokyo" (UTC+9), it's already March 15, so this returns
- *   March 15 00:00 JST -> March 14 15:00 UTC  to  March 15 23:59:59.999 JST -> March 15 14:59:59.999 UTC
- */
 function getDayBoundsForTimezone(tz: string): {
   startOfDay: Date;
   endOfDay: Date;
 } {
   const now = new Date();
 
-  // Use Intl to get the current date parts in the target timezone
   const parts = new Intl.DateTimeFormat("en-US", {
     timeZone: tz,
     year: "numeric",
@@ -563,19 +497,15 @@ function getDayBoundsForTimezone(tz: string): {
     Number(parts.find((p) => p.type === type)?.value ?? 0);
 
   const year = get("year");
-  const month = get("month"); // 1-based
+  const month = get("month");
   const day = get("day");
   const hour = get("hour");
   const minute = get("minute");
   const second = get("second");
 
-  // Compute the UTC offset for this timezone at this instant.
-  // We build a Date from the wall-clock parts (interpreted as UTC) and
-  // compare it to the real UTC instant (`now`).
   const wallAsUtc = Date.UTC(year, month - 1, day, hour, minute, second);
   const offsetMs = wallAsUtc - now.getTime();
 
-  // Build midnight and end-of-day in the target timezone as UTC timestamps
   const midnightWallUtc = Date.UTC(year, month - 1, day, 0, 0, 0, 0);
   const endWallUtc = Date.UTC(year, month - 1, day, 23, 59, 59, 999);
 

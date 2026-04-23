@@ -6,21 +6,15 @@ import { userFeedsAggregate } from "../aggregates.js";
 
 export const migrations = new Migrations<DataModel>(components.migrations);
 
-/**
- * Backfill eventVisibility in userFeeds table
- * Copies the visibility from the event to each userFeeds entry
- */
 export const backfillUserFeedVisibility = migrations.define({
   table: "userFeeds",
   batchSize: 100,
   migrateOne: async (ctx, feedEntry) => {
-    // Skip if already has eventVisibility
     if (feedEntry.eventVisibility) {
       return;
     }
 
     try {
-      // Get the event to fetch its visibility
       const event = await ctx.db
         .query("events")
         .withIndex("by_custom_id", (q) => q.eq("id", feedEntry.eventId))

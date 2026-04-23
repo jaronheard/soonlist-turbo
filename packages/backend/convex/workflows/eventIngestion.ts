@@ -6,7 +6,6 @@ import { query } from "../_generated/server";
 
 const workflow = new WorkflowManager(components.workflow);
 
-// Validators for complex types
 const listValidator = v.object({
   value: v.string(),
 });
@@ -28,7 +27,6 @@ export const eventFromImageBase64Workflow = workflow.define({
       base64Image: undefined,
       sendNotification: undefined,
     };
-    // ── step 1 (parallel)
     const [aiResult, uploadedImageUrl] = await Promise.all([
       step.runAction(
         internal.ai.extractEventFromBase64Image,
@@ -47,14 +45,12 @@ export const eventFromImageBase64Workflow = workflow.define({
       ),
     ]);
 
-    // ── step 2 validate
     const firstEvent = await step.runAction(
       internal.ai.validateFirstEvent,
       { events: aiResult.events },
       { name: "validateEvent" },
     );
 
-    // ── step 3 write DB
     const eventId = await step.runMutation(
       internal.events.insertEvent,
       {
@@ -65,7 +61,6 @@ export const eventFromImageBase64Workflow = workflow.define({
       { name: "insertEvent" },
     );
 
-    // ── step 4 push notification
     if (args.sendNotification ?? true) {
       await step.runAction(
         internal.notifications.push,
@@ -97,7 +92,6 @@ export const eventFromUrlWorkflow = workflow.define({
       sendNotification: undefined,
     };
 
-    // ── step 1: Extract content from URL and process with AI
     const aiResult = await step.runAction(
       internal.ai.extractEventFromUrl,
       {
@@ -107,14 +101,12 @@ export const eventFromUrlWorkflow = workflow.define({
       { name: "extractEventFromUrl" },
     );
 
-    // ── step 2: Validate first event
     const firstEvent = await step.runAction(
       internal.ai.validateFirstEvent,
       { events: aiResult.events },
       { name: "validateEvent" },
     );
 
-    // ── step 3: Write to database
     const eventId = await step.runMutation(
       internal.events.insertEvent,
       {
@@ -125,7 +117,6 @@ export const eventFromUrlWorkflow = workflow.define({
       { name: "insertEvent" },
     );
 
-    // ── step 4: Send push notification
     if (args.sendNotification ?? true) {
       await step.runAction(
         internal.notifications.push,
@@ -157,7 +148,6 @@ export const eventFromTextWorkflow = workflow.define({
       sendNotification: undefined,
     };
 
-    // ── step 1: Extract content from raw text and process with AI
     const aiResult = await step.runAction(
       internal.ai.extractEventFromText,
       {
@@ -167,14 +157,12 @@ export const eventFromTextWorkflow = workflow.define({
       { name: "extractEventFromText" },
     );
 
-    // ── step 2: Validate first event
     const firstEvent = await step.runAction(
       internal.ai.validateFirstEvent,
       { events: aiResult.events },
       { name: "validateEvent" },
     );
 
-    // ── step 3: Write to database
     const eventId = await step.runMutation(
       internal.events.insertEvent,
       {
@@ -185,7 +173,6 @@ export const eventFromTextWorkflow = workflow.define({
       { name: "insertEvent" },
     );
 
-    // ── step 4: Send push notification
     if (args.sendNotification ?? true) {
       await step.runAction(
         internal.notifications.push,
@@ -199,9 +186,6 @@ export const eventFromTextWorkflow = workflow.define({
   returns: v.string(),
 });
 
-/**
- * Get workflow status for client-side tracking
- */
 export const getWorkflowStatus = query({
   args: { workflowId: v.string() },
   returns: v.object({
@@ -227,12 +211,10 @@ export const getWorkflowStatus = query({
         },
       );
 
-      // Determine the current step and progress
       let currentStep: string | undefined;
       let progress: number | undefined;
 
       if (status.workflow.runResult) {
-        // Workflow is complete
         const runResult = status.workflow.runResult;
         if (runResult.kind === "success") {
           return {
@@ -252,7 +234,6 @@ export const getWorkflowStatus = query({
             startedAt: status.workflow._creationTime,
           };
         } else {
-          // cancelled case
           return {
             workflowId: args.workflowId,
             status: "canceled" as const,
@@ -261,9 +242,8 @@ export const getWorkflowStatus = query({
         }
       }
 
-      // Workflow is in progress
       const inProgressSteps = status.inProgress;
-      const totalSteps = 4; // Based on our workflow: extract+upload (parallel), validate, insert, notify
+      const totalSteps = 4;
 
       if (inProgressSteps.length > 0) {
         const latestStep = inProgressSteps[inProgressSteps.length - 1] || {
@@ -272,9 +252,8 @@ export const getWorkflowStatus = query({
         };
         currentStep = latestStep.step.name;
 
-        // Calculate progress based on completed steps
         const completedSteps = latestStep.stepNumber || 0;
-        progress = Math.min((completedSteps / totalSteps) * 100, 90); // Cap at 90% until complete
+        progress = Math.min((completedSteps / totalSteps) * 100, 90);
       } else {
         currentStep = "Starting";
         progress = 10;
@@ -288,7 +267,6 @@ export const getWorkflowStatus = query({
         startedAt: status.workflow._creationTime,
       };
     } catch (error) {
-      // Workflow might not exist or be cleaned up
       return {
         workflowId: args.workflowId,
         status: "failed" as const,

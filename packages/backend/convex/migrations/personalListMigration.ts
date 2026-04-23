@@ -7,11 +7,6 @@ import { getOrCreatePersonalList } from "../lists";
 
 const EVENTS_PER_BATCH = 100;
 
-/**
- * Batch mutation: create personal lists for a page of users.
- * Event backfill is scheduled as separate bounded mutations to avoid
- * exceeding Convex transaction document-read limits for power users.
- */
 export const personalListBatch = internalMutation({
   args: {
     cursor: v.union(v.string(), v.null()),
@@ -31,10 +26,8 @@ export const personalListBatch = internalMutation({
     let created = 0;
 
     for (const user of result.page) {
-      // Create personal list (idempotent)
       const personalList = await getOrCreatePersonalList(ctx, user.id);
 
-      // Check if any events are already linked
       const existingLink = await ctx.db
         .query("eventToLists")
         .withIndex("by_list", (q) => q.eq("listId", personalList.id))
@@ -44,8 +37,6 @@ export const personalListBatch = internalMutation({
         created++;
       }
 
-      // Schedule per-user backfill as a separate transaction so a single
-      // power user's events never blow the batch-level read budget.
       await ctx.scheduler.runAfter(
         0,
         internal.migrations.personalListMigration.backfillUserEventsBatch,
@@ -66,10 +57,6 @@ export const personalListBatch = internalMutation({
   },
 });
 
-/**
- * Paginated backfill of a single user's events → personal list.
- * Self-schedules the next page to stay under transaction limits.
- */
 export const backfillUserEventsBatch = internalMutation({
   args: {
     userId: v.string(),
@@ -101,11 +88,6 @@ export const backfillUserEventsBatch = internalMutation({
           eventId: event.id,
           listId,
         });
-        // Keep the list's `list_${listId}` feed in lockstep with the
-        // junction. `getOrCreatePersonalList` stamps `feedBackfilledAt`
-        // at creation, so `getEventsForList` trusts the feed for these
-        // lists — skipping this call would leave migrated personal lists
-        // with an empty feed and return empty pages to users.
         await addEventToListFeedInline(ctx, event.id, listId);
         linked++;
       }
@@ -131,9 +113,6 @@ export const backfillUserEventsBatch = internalMutation({
   },
 });
 
-/**
- * Action: orchestrate batch processing for personal list migration
- */
 export const runPersonalListMigration = internalAction({
   args: {},
   returns: v.null(),

@@ -332,7 +332,6 @@ function constructMessagesBase64Image({
 function validateUrl(url: string): void {
   let parsedUrl: URL;
 
-  // Check if URL is well-formed
   try {
     parsedUrl = new URL(url);
   } catch (error) {
@@ -345,7 +344,6 @@ function validateUrl(url: string): void {
     });
   }
 
-  // Only allow http and https protocols
   if (!["http:", "https:"].includes(parsedUrl.protocol)) {
     throw new ConvexError({
       message: "Only HTTP and HTTPS protocols are allowed",
@@ -355,7 +353,6 @@ function validateUrl(url: string): void {
 
   const hostname = parsedUrl.hostname.toLowerCase();
 
-  // Prevent localhost access
   if (
     hostname === "localhost" ||
     hostname === "127.0.0.1" ||
@@ -367,7 +364,6 @@ function validateUrl(url: string): void {
     });
   }
 
-  // Prevent access to private IP ranges
   const ipv4Regex = /^(\d{1,3})\.(\d{1,3})\.(\d{1,3})\.(\d{1,3})$/;
   const ipv4Match = ipv4Regex.exec(hostname);
 
@@ -381,17 +377,11 @@ function validateUrl(url: string): void {
     ];
     const [, a, b, _c, _d] = octetsAsTuple;
 
-    // Check for private IP ranges
     if (
-      // 10.0.0.0/8
       a === 10 ||
-      // 172.16.0.0/12
       (a === 172 && b >= 16 && b <= 31) ||
-      // 192.168.0.0/16
       (a === 192 && b === 168) ||
-      // 169.254.0.0/16 (link-local)
       (a === 169 && b === 254) ||
-      // 127.0.0.0/8 (additional loopback check)
       a === 127
     ) {
       throw new ConvexError({
@@ -401,7 +391,6 @@ function validateUrl(url: string): void {
     }
   }
 
-  // Prevent access to common cloud metadata endpoints
   const blockedHosts = [
     "metadata.google.internal",
     "169.254.169.254", // AWS/Azure/GCP metadata
@@ -494,7 +483,6 @@ export async function fetchAndProcessEvent({
     });
   } else if (input.url) {
     try {
-      // Validate URL to prevent SSRF attacks
       validateUrl(input.url);
 
       const jinaReader = await fetch(`https://r.jina.ai/${input.url}`, {
@@ -531,12 +519,10 @@ export async function fetchAndProcessEvent({
         rawText: rawText,
       });
     } catch (error) {
-      // If the error is already a ConvexError, re-throw it
       if (error instanceof ConvexError) {
         throw error;
       }
 
-      // Handle network errors and other fetch failures
       throw new ConvexError({
         message: "Network error when fetching content from Jina Reader API",
         data: {
@@ -574,10 +560,6 @@ export async function fetchAndProcessEvent({
   const generatedEvent = event.object;
   const generatedMetadata = EventMetadataSchema.parse(metadata.object);
 
-  // Deterministically compute the year from the MM-DD the model extracted.
-  // The model is unreliable at enforcing a year window in the prompt (see
-  // migrations/fix2027Dates.ts and fix2027FeedDates.ts for the history);
-  // this replaces the year whenever the source did not explicitly state one.
   const today = Temporal.Now.instant()
     .toZonedDateTimeISO(formatOffsetAsIANASoft(input.timezone))
     .toPlainDate();
@@ -614,16 +596,12 @@ export async function fetchAndProcessEvent({
   return { events, response };
 }
 
-/**
- * Validates Jina API response for common error patterns and content issues
- */
 export function validateJinaResponse(aiResult: {
   events: EventWithMetadata[];
   response: string;
 }): void {
   const responseText = aiResult.response.toLowerCase();
 
-  // 1. Check for Jina/network error responses
   if (
     responseText.includes("failed to fetch") ||
     responseText.includes("network error") ||
@@ -637,7 +615,6 @@ export function validateJinaResponse(aiResult: {
     });
   }
 
-  // 2. Check for HTTP error content
   if (
     responseText.includes("500 internal server error") ||
     responseText.includes("404 not found") ||
@@ -651,7 +628,6 @@ export function validateJinaResponse(aiResult: {
     });
   }
 
-  // 3. Check for robots.txt content specifically
   if (
     responseText.includes("user-agent:") &&
     responseText.includes("disallow:")
@@ -663,7 +639,6 @@ export function validateJinaResponse(aiResult: {
     });
   }
 
-  // 4. Check for minimal/empty content that Jina couldn't process
   if (responseText.trim().length < 100) {
     throw new ConvexError({
       message: "URL content parsing failed: Insufficient content retrieved",

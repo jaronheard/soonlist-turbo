@@ -22,7 +22,6 @@ export const handleEventIngestionComplete = internalMutation({
     } else if (result.kind === "failed") {
       console.error("Event ingestion failed:", result.error);
 
-      // Send failure notification to user
       try {
         await ctx.scheduler.runAfter(0, internal.notifications.pushFailure, {
           userId: context.userId,
@@ -37,7 +36,6 @@ export const handleEventIngestionComplete = internalMutation({
         );
       }
     } else {
-      // Cancelled case
       console.log("Event ingestion was canceled");
       // Optionally send cancellation notification
     }

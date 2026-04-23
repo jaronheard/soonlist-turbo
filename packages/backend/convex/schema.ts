@@ -1,7 +1,6 @@
 import { defineSchema, defineTable } from "convex/server";
 import { v } from "convex/values";
 
-// Define reusable validators
 export const priorityValidator = v.object({
   text: v.string(),
   emoji: v.string(),
@@ -26,7 +25,6 @@ export const onboardingDataValidator = v.object({
   priority: v.optional(priorityValidator), // Keep for backward compatibility
   watchedDemo: v.optional(v.boolean()), // Whether user watched the demo
   completedAt: v.optional(v.string()), // ISO date string
-  // Subscription fields
   subscribed: v.optional(v.boolean()),
   subscribedAt: v.optional(v.string()), // ISO date string
   subscriptionPlan: v.optional(v.string()),
@@ -67,7 +65,6 @@ export default defineSchema({
     visibility: v.union(v.literal("public"), v.literal("private")),
     created_at: v.string(), // ISO date string
     updatedAt: v.union(v.string(), v.null()), // ISO date string or null
-    // Fields extracted from nested event object
     name: v.optional(v.string()),
     image: v.optional(v.union(v.string(), v.null())), // First image from images array or null
     endDate: v.optional(v.string()),
@@ -77,10 +74,7 @@ export default defineSchema({
     startDate: v.optional(v.string()),
     startTime: v.optional(v.string()),
     description: v.optional(v.string()),
-    // Batch tracking
     batchId: v.optional(v.string()),
-    // Similarity group ID (set on creation; optional during migration)
-    // Format: "sg_" + generatePublicId()
     similarityGroupId: v.optional(v.string()),
   })
     .index("by_user", ["userId"])
@@ -146,12 +140,6 @@ export default defineSchema({
     slug: v.optional(v.string()),
     created_at: v.string(), // ISO date string
     updatedAt: v.union(v.string(), v.null()), // ISO date string or null
-    // Set once the list's `list_${id}` userFeeds entries are known to mirror
-    // `eventToLists` — populated immediately on list creation (new lists
-    // never need the backfill fallback) and retroactively by
-    // `migrations/backfillListFeeds`. Absence signals getEventsForList to
-    // use the junction-scan fallback during the backfill window. Field is
-    // optional so pre-existing docs validate until the migration runs.
     feedBackfilledAt: v.optional(v.string()),
   })
     .index("by_user", ["userId"])
@@ -191,10 +179,8 @@ export default defineSchema({
     publicWebsite: v.union(v.string(), v.null()),
     publicMetadata: v.union(v.any(), v.null()), // JSON field
     emoji: v.union(v.string(), v.null()),
-    // Onboarding fields - now properly typed
     onboardingData: v.union(onboardingDataValidator, v.null()),
     onboardingCompletedAt: v.union(v.string(), v.null()), // ISO date string or null
-    // Public list sharing
     publicListEnabled: v.optional(v.boolean()),
     publicListName: v.optional(v.string()),
     hasSharedListBefore: v.optional(v.boolean()),
@@ -229,23 +215,20 @@ export default defineSchema({
     addedAt: v.number(), // When added to feed (timestamp)
     hasEnded: v.boolean(), // Pre-computed field: true if event has ended, false if ongoing/upcoming (now required)
     beforeThisDateTime: v.optional(v.string()), // Optional ISO date string for custom filtering
-    // Group membership for grouped feed derivation (optional during migration)
     similarityGroupId: v.optional(v.string()),
-    // Event visibility for filtering public feeds (optional during migration)
     eventVisibility: v.optional(
       v.union(v.literal("public"), v.literal("private")),
     ),
-    // Source list tracking — which list surfaced this event into this feed
     sourceListId: v.optional(v.string()),
   })
     .index("by_feed_hasEnded_startTime", [
       "feedId",
       "hasEnded",
       "eventStartTime",
-    ]) // For efficient filtering and sorting
-    .index("by_feed_event", ["feedId", "eventId"]) // For deduplication checks
-    .index("by_event", ["eventId"]) // For event removal across all feeds
-    .index("by_feed_group", ["feedId", "similarityGroupId"]) // Lookup membership for a given feed+group
+    ])
+    .index("by_feed_event", ["feedId", "eventId"])
+    .index("by_event", ["eventId"])
+    .index("by_feed_group", ["feedId", "similarityGroupId"])
     .index("by_feed_visibility_hasEnded_startTime", [
       "feedId",
       "eventVisibility",
@@ -253,18 +236,14 @@ export default defineSchema({
       "eventStartTime",
     ]), // For filtering by visibility before pagination
 
-  // Grouped feed table - one entry per similarity group per feed (used for pagination and server-side grouping)
   userFeedGroups: defineTable({
     feedId: v.string(),
     similarityGroupId: v.string(),
-    // Which specific event to display (event custom id string)
     primaryEventId: v.string(),
-    // Same ordering/filtering shape as legacy feed entries
     eventStartTime: v.number(),
     eventEndTime: v.number(),
     addedAt: v.number(),
     hasEnded: v.boolean(),
-    // Server-computed, feed-scoped count (memberCount - 1)
     similarEventsCount: v.number(),
   })
     .index("by_feed_hasEnded_startTime", [
@@ -317,6 +296,6 @@ export default defineSchema({
     createdAt: v.string(), // ISO date string
     revokedAt: v.union(v.string(), v.null()), // ISO date string or null
   })
-    .index("by_token", ["token"]) // For quick token lookup
+    .index("by_token", ["token"])
     .index("by_user", ["userId"]),
 });

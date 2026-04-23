@@ -24,7 +24,6 @@ type EnrichedEvent = Awaited<
   ReturnType<typeof enrichEventsAndFilterNulls>
 >[number];
 
-// Helper function to get the current user ID from auth
 async function getUserId(ctx: QueryCtx): Promise<string | null> {
   const identity = await ctx.auth.getUserIdentity();
   if (!identity) {
@@ -33,14 +32,11 @@ async function getUserId(ctx: QueryCtx): Promise<string | null> {
   return identity.subject;
 }
 
-// Result type for list access check
 type ListAccessResult =
   | { status: "notFound" }
   | { status: "forbidden" }
   | { status: "ok"; list: Doc<"lists"> };
 
-// Helper function to check if user can view a list
-// Returns a discriminated union to distinguish "not found" from "access denied"
 async function checkListAccess(
   ctx: QueryCtx,
   listId: string,
@@ -55,24 +51,19 @@ async function checkListAccess(
     return { status: "notFound" };
   }
 
-  // Public and unlisted lists are viewable by anyone
   if (list.visibility === "public" || list.visibility === "unlisted") {
     return { status: "ok", list };
   }
 
-  // Private lists are only viewable by owner or members
   if (!userId) {
     return { status: "forbidden" };
   }
 
-  // At this point, userId is guaranteed to be a string
   const userIdString = userId;
 
-  // Owner can always view
   if (list.userId === userIdString) {
     return { status: "ok", list };
   }
-  // Check if user is a member
   const membership = await ctx.db
     .query("listMembers")
     .withIndex("by_list_and_user", (q) =>
@@ -87,8 +78,6 @@ async function checkListAccess(
   return { status: "forbidden" };
 }
 
-// Helper function to check if user can view a list (backward compatibility)
-// Returns boolean for cases where we don't need to distinguish error types
 async function canUserViewList(
   ctx: QueryCtx,
   listId: string,
@@ -107,7 +96,6 @@ async function _canUserContributeToList(
     return false;
   }
 
-  // At this point, userId is guaranteed to be a string
   const userIdString = userId;
 
   const list = await ctx.db
@@ -119,19 +107,16 @@ async function _canUserContributeToList(
     return false;
   }
 
-  // Owner can always contribute
   if (list.userId === userIdString) {
     return true;
   }
 
   const contribution = list.contribution ?? "open";
 
-  // Open contribution mode: anyone who can view can contribute
   if (contribution === "open") {
     return canUserViewList(ctx, listId, userIdString);
   }
 
-  // Restricted and owner modes: only members can contribute
   const membership = await ctx.db
     .query("listMembers")
     .withIndex("by_list_and_user", (q) =>
@@ -141,15 +126,10 @@ async function _canUserContributeToList(
   return !!membership;
 }
 
-/**
- * Internal helper: get or create a user's personal Soonlist.
- * Used during event creation and user signup.
- */
 export async function getOrCreatePersonalList(
   ctx: MutationCtx,
   userId: string,
 ): Promise<Doc<"lists">> {
-  // Look up existing personal list
   const existing = await ctx.db
     .query("lists")
     .withIndex("by_user_and_isSystemList_and_systemListType", (q) =>
@@ -164,7 +144,6 @@ export async function getOrCreatePersonalList(
     return existing;
   }
 
-  // Look up user for display name
   const user = await ctx.db
     .query("users")
     .withIndex("by_custom_id", (q) => q.eq("id", userId))
@@ -185,18 +164,12 @@ export async function getOrCreatePersonalList(
     slug: `user-${username}`,
     created_at: new Date().toISOString(),
     updatedAt: null,
-    // New lists never need the backfill fallback — the write path
-    // (addEventToList → addEventToListFeedInline) keeps the list feed in
-    // lockstep with eventToLists from day one.
     feedBackfilledAt: new Date().toISOString(),
   });
 
   return (await ctx.db.get(docId))!;
 }
 
-/**
- * Get the personal list for a user (public query)
- */
 export const getPersonalListForUser = query({
   args: { userId: v.string() },
   handler: async (ctx, { userId }) => {
@@ -228,25 +201,18 @@ export const getPersonalListForUser = query({
   },
 });
 
-/**
- * Get all public/unlisted lists for a user (personal list first), plus contributed lists.
- * Includes follower count per list.
- */
 export const getListsForUser = query({
   args: { userId: v.string() },
   handler: async (ctx, { userId }) => {
-    // Get user's own lists
     const ownedLists = await ctx.db
       .query("lists")
       .withIndex("by_user", (q) => q.eq("userId", userId))
       .collect();
 
-    // Filter to public/unlisted only
     const visibleOwned = ownedLists.filter(
       (l) => l.visibility === "public" || l.visibility === "unlisted",
     );
 
-    // Get lists where user is a member (contributor)
     const memberships = await ctx.db
       .query("listMembers")
       .withIndex("by_user", (q) => q.eq("userId", userId))
@@ -269,17 +235,14 @@ export const getListsForUser = query({
         l.userId !== userId, // Exclude owned lists (already in visibleOwned)
     );
 
-    // Combine and deduplicate
     const allLists = [...visibleOwned, ...visibleContributed];
 
-    // Sort: personal list first, then by name
     allLists.sort((a, b) => {
       if (a.isSystemList && a.systemListType === "personal") return -1;
       if (b.isSystemList && b.systemListType === "personal") return 1;
       return a.name.localeCompare(b.name);
     });
 
-    // Add follower count per list (O(log n) via aggregate)
     const listsWithCounts = await Promise.all(
       allLists.map(async (list) => {
         const followerCount = await listFollowsAggregate.count(ctx, {
@@ -294,9 +257,6 @@ export const getListsForUser = query({
   },
 });
 
-/**
- * Get lists where the current user is a listMember (contributing to)
- */
 export const getContributingLists = query({
   args: {},
   handler: async (ctx) => {
@@ -324,9 +284,6 @@ export const getContributingLists = query({
   },
 });
 
-/**
- * Follow a list
- */
 export const followList = mutation({
   args: {
     listId: v.string(),
@@ -345,7 +302,6 @@ export const followList = mutation({
       throw new ConvexError("Cannot follow this list: access denied");
     }
 
-    // accessResult.status === "ok", and we have the list
     const existingFollow = await ctx.db
       .query("listFollows")
       .withIndex("by_user_and_list", (q) =>
@@ -373,10 +329,6 @@ export const followList = mutation({
   },
 });
 
-/**
- * Follow a user's personal list by username.
- * Encapsulates user lookup, personal list lookup, and follow in one server-side call.
- */
 export const followUserByUsername = mutation({
   args: { username: v.string() },
   handler: async (ctx, { username }) => {
@@ -385,7 +337,6 @@ export const followUserByUsername = mutation({
       throw new ConvexError("Authentication required");
     }
 
-    // Look up target user by username
     const targetUser = await ctx.db
       .query("users")
       .withIndex("by_username", (q) => q.eq("username", username))
@@ -395,7 +346,6 @@ export const followUserByUsername = mutation({
       return { success: false as const, reason: "User not found" };
     }
 
-    // Get their personal list
     const personalList = await ctx.db
       .query("lists")
       .withIndex("by_user_and_isSystemList_and_systemListType", (q) =>
@@ -420,7 +370,6 @@ export const followUserByUsername = mutation({
       };
     }
 
-    // Check if already following
     const existingFollow = await ctx.db
       .query("listFollows")
       .withIndex("by_user_and_list", (q) =>
@@ -448,9 +397,6 @@ export const followUserByUsername = mutation({
   },
 });
 
-/**
- * Unfollow a list
- */
 export const unfollowList = mutation({
   args: {
     listId: v.string(),
@@ -481,9 +427,6 @@ export const unfollowList = mutation({
   },
 });
 
-/**
- * Get all lists a user follows
- */
 export const getFollowedLists = query({
   args: {},
   handler: async (ctx) => {
@@ -523,9 +466,6 @@ export const getFollowedLists = query({
   },
 });
 
-/**
- * Get all users following a list
- */
 export const getListFollowers = query({
   args: {
     listId: v.string(),
@@ -544,7 +484,6 @@ export const getListFollowers = query({
       throw new ConvexError("Cannot view this list: access denied");
     }
 
-    // accessResult.status === "ok"
     const follows = await ctx.db
       .query("listFollows")
       .withIndex("by_list", (q) => q.eq("listId", listId))
@@ -554,9 +493,6 @@ export const getListFollowers = query({
   },
 });
 
-/**
- * Check if user follows a specific list
- */
 export const isFollowingList = query({
   args: {
     listId: v.string(),
@@ -578,9 +514,6 @@ export const isFollowingList = query({
   },
 });
 
-/**
- * Add a member to a list (for restricted/owner contribution modes)
- */
 export const addListMember = mutation({
   args: {
     listId: v.string(),
@@ -592,7 +525,6 @@ export const addListMember = mutation({
       throw new ConvexError("Authentication required");
     }
 
-    // At this point, userId is guaranteed to be a string
     const userIdString = userId;
 
     const list = await ctx.db
@@ -628,9 +560,6 @@ export const addListMember = mutation({
   },
 });
 
-/**
- * Remove a member from a list
- */
 export const removeListMember = mutation({
   args: {
     listId: v.string(),
@@ -642,7 +571,6 @@ export const removeListMember = mutation({
       throw new ConvexError("Authentication required");
     }
 
-    // At this point, userId is guaranteed to be a string
     const userIdString = userId;
 
     const list = await ctx.db
@@ -673,15 +601,6 @@ export const removeListMember = mutation({
   },
 });
 
-/**
- * Get a list by its slug.
- *
- * Returns a discriminated union so callers can distinguish
- * "not found" from "exists but private":
- *   { status: "ok", list }       — public/unlisted or viewer has access
- *   { status: "private", owner } — list exists but viewer cannot see contents
- *   { status: "notFound" }       — no list with this slug
- */
 const listOwnerValidator = v.union(
   v.object({
     _id: v.id("users"),
@@ -782,9 +701,6 @@ export const getBySlug = query({
         }
       : null;
 
-    // Use the same access rules as the rest of the backend so owners and
-    // members of a private list can still resolve its detail page (used by
-    // the saver-attribution flow which deep-links to `/list/[slug]`).
     const viewerId = await getUserId(ctx);
     const accessResult = await checkListAccess(ctx, list.id, viewerId);
 
@@ -819,16 +735,6 @@ export const getBySlug = query({
   },
 });
 
-/**
- * Get contributors (non-owner members with role="contributor") for a list.
- *
- * Used by the list detail hero to show who has captured events into the list,
- * mirroring the "From these Soonlists" attribution on event detail (owner is
- * the creator-equivalent, contributors are the savers-equivalent).
- *
- * Returns a bounded slice of UserForDisplay-shaped users. Respects list
- * access rules — private lists only yield contributors to authorized viewers.
- */
 export const getContributorsForList = query({
   args: {
     slug: v.string(),
@@ -886,9 +792,6 @@ export const getContributorsForList = query({
   },
 });
 
-/**
- * Get all system lists
- */
 export const getSystemLists = query({
   args: {},
   returns: v.array(
@@ -929,9 +832,6 @@ export const getSystemLists = query({
   },
 });
 
-/**
- * Add a contributor to a contributor list
- */
 export const addContributor = mutation({
   args: {
     listId: v.string(),
@@ -1007,9 +907,6 @@ export const addContributor = mutation({
   },
 });
 
-/**
- * Remove a contributor from a contributor list
- */
 export const removeContributor = mutation({
   args: {
     listId: v.string(),
@@ -1065,9 +962,6 @@ export const removeContributor = mutation({
   },
 });
 
-/**
- * Internal: Remove a contributor's events from a list (one batch/page)
- */
 export const removeContributorEventsBatch = internalMutation({
   args: {
     listId: v.string(),
@@ -1097,12 +991,8 @@ export const removeContributorEventsBatch = internalMutation({
       if (event?.userId === contributorUserId) {
         await ctx.db.delete(entry._id);
 
-        // Keep the list's own feed (list_${listId}) in sync with eventToLists.
         await removeEventFromListFeedInline(ctx, entry.eventId, listId);
 
-        // Schedule feed cleanup in a separate transaction to reduce bandwidth
-        // of this batch mutation — removeEventFromListFollowersFeeds does
-        // multiple queries per follower
         await ctx.scheduler.runAfter(
           0,
           internal.feedHelpers.removeEventFromListFollowersFeeds,
@@ -1124,10 +1014,6 @@ export const removeContributorEventsBatch = internalMutation({
   },
 });
 
-/**
- * Internal: Remove a contributor's events from a list.
- * Orchestrates batch processing to avoid transaction limits.
- */
 export const removeContributorEventsAction = internalAction({
   args: {
     listId: v.string(),
@@ -1176,9 +1062,6 @@ export const removeContributorEventsAction = internalAction({
   },
 });
 
-/**
- * Internal: Backfill a contributor's existing public events into a list (one batch/page)
- */
 export const backfillContributorEventsBatch = internalMutation({
   args: {
     listId: v.string(),
@@ -1218,13 +1101,8 @@ export const backfillContributorEventsBatch = internalMutation({
           listId,
         });
 
-        // Maintain the list's own feed (list_${listId}) inline in this
-        // batch — addEventToListFeedInline is a single upsert on userFeeds
-        // and stays well within the per-mutation transaction budget.
         await addEventToListFeedInline(ctx, event.id, listId);
 
-        // Schedule feed population in a separate transaction to avoid
-        // hitting transaction limits when there are many followers
         await ctx.scheduler.runAfter(
           0,
           internal.feedHelpers.addEventToListFollowersFeeds,
@@ -1246,11 +1124,6 @@ export const backfillContributorEventsBatch = internalMutation({
   },
 });
 
-/**
- * Enrich a page of raw event docs with user / follows / lists data and
- * strip lists the viewer can't see — shared by both the feed-backed path
- * and the backfill-window fallback so they return the same shape.
- */
 async function enrichListEventsForViewer(
   ctx: QueryCtx,
   events: Doc<"events">[],
@@ -1258,12 +1131,6 @@ async function enrichListEventsForViewer(
 ) {
   const enrichedEvents = await enrichEventsAndFilterNulls(ctx, events);
 
-  // Strip private-unviewable lists from each event.lists before returning.
-  // enrichEventsAndFilterNulls hydrates event.lists with ALL lists the
-  // event belongs to, including ones this viewer can't see. The client
-  // (SavedByModal) trusts the server's filtering, so we must enforce
-  // visibility here — same contract as queryFeed/queryGroupedFeed in
-  // feeds.ts.
   const allListsAcrossEvents = enrichedEvents.flatMap((e) => e.lists ?? []);
   const viewableListIds = await getViewableListIds(
     ctx,
@@ -1276,30 +1143,12 @@ async function enrichListEventsForViewer(
   }));
 }
 
-/**
- * Continuation cursors emitted by the backfill-window fallback are tagged
- * with this prefix so the next paginate call routes back to the fallback
- * path. Without it, page 2 would feed an `eventToLists` cursor into the
- * `userFeeds` index — Convex would reject it as an invalid cursor.
- */
 const FALLBACK_CURSOR_PREFIX = "etl:";
 
 function isFallbackCursor(cursor: string | null): cursor is string {
   return cursor?.startsWith(FALLBACK_CURSOR_PREFIX) ?? false;
 }
 
-/**
- * Backfill-window fallback: paginate `eventToLists` directly and filter
- * events in memory. Reproduces the pre-feed behavior — sparse pages and
- * all — but only fires when `list_${listId}` has zero `userFeeds` entries
- * for a list that still has membership rows. The migration drains this
- * branch into the feed; once it completes for a list the dense feed path
- * takes over.
- *
- * Once a request enters this path, every subsequent page must stay on it —
- * the returned `continueCursor` is wrapped with `FALLBACK_CURSOR_PREFIX`
- * and the main handler re-routes wrapped cursors back here.
- */
 async function getEventsForListBackfillFallback(
   ctx: QueryCtx,
   listId: string,
@@ -1333,8 +1182,6 @@ async function getEventsForListBackfillFallback(
 
   return {
     ...eventToLists,
-    // Tag the cursor only when there's more data to fetch; once isDone the
-    // client won't call back, so leave the original (possibly empty) value.
     continueCursor: eventToLists.isDone
       ? eventToLists.continueCursor
       : `${FALLBACK_CURSOR_PREFIX}${eventToLists.continueCursor}`,
@@ -1342,20 +1189,6 @@ async function getEventsForListBackfillFallback(
   };
 }
 
-/**
- * Get events for a list by slug.
- *
- * Paginates the list's dedicated feed (`list_${listId}`) in `userFeeds` so
- * every page comes back densely filled with matching events — previously we
- * paginated the `eventToLists` junction and then discarded past/private
- * events, which produced sparse pages on large lists.
- *
- * Write-path wiring that keeps the feed in sync lives in `feedHelpers.ts`
- * (`addEventToListFeedInline` / `removeEventFromListFeedInline` /
- * `removeListFeedAction`). Existing `eventToLists` rows are backfilled by
- * `migrations/backfillListFeeds.ts`; lists not yet reached by the migration
- * fall back to a legacy scan so the deploy window doesn't show empty lists.
- */
 export const getEventsForList = query({
   args: {
     slug: v.string(),
@@ -1364,10 +1197,6 @@ export const getEventsForList = query({
   },
   handler: async (ctx, { slug, paginationOpts, filter = "upcoming" }) => {
     const emptyResults = async () => {
-      // Pass a null cursor rather than the incoming one: the page is empty
-      // anyway (isDone=true), and a tagged fallback cursor (`etl:...`) or
-      // any stale cursor from a deleted/inaccessible list would otherwise
-      // be rejected by `userFeeds.paginate` as invalid.
       const emptyPage = await ctx.db
         .query("userFeeds")
         .withIndex("by_feed_hasEnded_startTime", (q) =>
@@ -1380,7 +1209,6 @@ export const getEventsForList = query({
       };
     };
 
-    // Find the list by slug
     const list = await ctx.db
       .query("lists")
       .withIndex("by_slug", (q) => q.eq("slug", slug))
@@ -1390,17 +1218,12 @@ export const getEventsForList = query({
       return emptyResults();
     }
 
-    // Private lists are still viewable by their owner or members — mirror
-    // getBySlug / checkListAccess so authorized viewers see the events.
     const viewerId = await getUserId(ctx);
     const accessResult = await checkListAccess(ctx, list.id, viewerId);
     if (accessResult.status !== "ok") {
       return emptyResults();
     }
 
-    // If the previous page came from the backfill fallback, its cursor is
-    // tagged so we stay on the same path — feeding an `eventToLists`
-    // cursor into the `userFeeds` index would fail.
     if (isFallbackCursor(paginationOpts.cursor)) {
       return getEventsForListBackfillFallback(
         ctx,
@@ -1414,17 +1237,6 @@ export const getEventsForList = query({
       );
     }
 
-    // Backfill-window safety: a list is only known to have its `list_*`
-    // feed fully mirrored from `eventToLists` once `list.feedBackfilledAt`
-    // is populated. New lists set this at creation; pre-existing lists get
-    // it set by `migrations/backfillListFeeds.runBackfillListFeeds`. When
-    // the marker is absent we fall back to the junction scan unconditionally
-    // — the feed may already have some entries (partial migration) but we
-    // can't trust that they're complete, so returning a partial first page
-    // would silently hide unmigrated events.
-    //
-    // Gated on cursor=null because subsequent pages within a fallback run
-    // already route via `isFallbackCursor` above.
     if (paginationOpts.cursor === null && !list.feedBackfilledAt) {
       return getEventsForListBackfillFallback(
         ctx,
@@ -1439,10 +1251,6 @@ export const getEventsForList = query({
     const hasEnded = filter === "past";
     const order = filter === "upcoming" ? "asc" : "desc";
 
-    // Filter + sort at the index BEFORE paginating so every page is densely
-    // populated with matching events (no sparse pages from post-filtering).
-    // `eventVisibility` is pinned to "public" to mirror the previous
-    // behavior of dropping private events from list detail views.
     const feedResults = await ctx.db
       .query("userFeeds")
       .withIndex("by_feed_visibility_hasEnded_startTime", (q) =>
@@ -1474,10 +1282,6 @@ export const getEventsForList = query({
   },
 });
 
-/**
- * Internal: Backfill a contributor's existing public events into a list.
- * Orchestrates batch processing to avoid transaction limits.
- */
 export const backfillContributorEvents = internalAction({
   args: {
     listId: v.string(),
@@ -1526,11 +1330,6 @@ export const backfillContributorEvents = internalAction({
   },
 });
 
-// Only return images hosted on our Bytescale account. @vercel/og (satori)
-// only decodes PNG/JPEG, and the OG route relies on Bytescale's `/image/`
-// processor with `f=jpg` to transcode WebP origin bytes — a trick that only
-// works for URLs on our account. External WebP URLs (scraped from other
-// CDNs) would fail satori's image fetch and crash the entire render.
 const OUR_BYTESCALE_URL_PREFIX = "https://upcdn.io/12a1yek/";
 function isRenderableEventImage(value: unknown): value is string {
   return (
@@ -1538,18 +1337,6 @@ function isRenderableEventImage(value: unknown): value is string {
   );
 }
 
-/**
- * Get the minimal data needed to render an OpenGraph preview image for a list.
- *
- * Separate from `getBySlug` so the OG-specific shape can evolve independently.
- * This query runs unauthenticated at crawl time, so private lists intentionally
- * return `status: "private"` — never leak member-only content to crawlers.
- *
- * Returns one of:
- *   { status: "ok", list, owner, upcomingEvents }  — 0–3 upcoming events, chronological
- *   { status: "private" }
- *   { status: "notFound" }
- */
 export const getOgData = query({
   args: { slug: v.string() },
   returns: v.union(
@@ -1595,15 +1382,6 @@ export const getOgData = query({
       return { status: "private" as const };
     }
 
-    // Bounded per Convex's `.take()`-over-`.collect()` rule (see
-    // packages/backend/.cursor/rules/convex_rules.mdc). `.order("desc")` scans
-    // the most-recently-added memberships first — upcoming events are far
-    // more likely to be in the tail of the insertion order than the head, so
-    // this prevents older-only lists from falling back to the branded
-    // default. The pill count below is still derived from this slice, so
-    // lists with >500 upcoming-public events show an approximate count; a
-    // denormalized counter updated by list mutations would be the rigorous
-    // fix if/when that becomes visible.
     const OG_EVENT_SCAN_LIMIT = 500;
     const [owner, eventToLists] = await Promise.all([
       ctx.db
@@ -1631,8 +1409,6 @@ export const getOgData = query({
       ),
     );
 
-    // Pill count reports the *upcoming* count so it aligns with what the
-    // preview promises (the screenshots are upcoming events).
     const upcomingPublic = events
       .filter((e): e is NonNullable<typeof e> => e !== null)
       .filter((e) => e.visibility !== "private")

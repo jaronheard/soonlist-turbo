@@ -8,9 +8,6 @@ import * as OneSignal from "./model/oneSignal";
 import { createDeepLink } from "./model/utils/urlScheme";
 import { generateNotificationId } from "./utils";
 
-/**
- * Send a single notification to a specific user
- */
 export const sendSingleNotification = action({
   args: {
     userId: v.string(),
@@ -59,9 +56,6 @@ export const sendSingleNotification = action({
   },
 });
 
-/**
- * Send weekly notifications to all users
- */
 export const sendWeeklyNotifications = internalAction({
   args: {},
   returns: v.object({
@@ -84,7 +78,6 @@ export const sendWeeklyNotifications = internalAction({
     successfulNotifications: number;
     errors: { userId: string; error: string }[];
   }> => {
-    // Get all users
     const allUsers: {
       id: string;
       username: string;
@@ -92,7 +85,6 @@ export const sendWeeklyNotifications = internalAction({
       displayName: string;
     }[] = await ctx.runQuery(internal.notifications.getAllUsersQuery);
 
-    // Process notifications concurrently
     const results = await Promise.all(
       allUsers.map(
         async (user: {
@@ -147,9 +139,6 @@ export const sendWeeklyNotifications = internalAction({
   },
 });
 
-/**
- * Send trial expiration reminders to users who started their trial 5 days ago
- */
 export const sendTrialExpirationReminders = internalAction({
   args: {},
   returns: v.object({
@@ -171,7 +160,6 @@ export const sendTrialExpirationReminders = internalAction({
     successfulNotifications: number;
     errors: { error: string }[];
   }> => {
-    // Get users who started their trial 5 days ago
     const trialUsers: {
       id: string;
       username: string;
@@ -190,7 +178,6 @@ export const sendTrialExpirationReminders = internalAction({
       };
     }
 
-    // Extract user IDs
     const userIds: string[] = trialUsers.map(
       (user: {
         id: string;
@@ -200,7 +187,6 @@ export const sendTrialExpirationReminders = internalAction({
       }) => user.id,
     );
 
-    // Send batch notification using OneSignal
     const result = await OneSignal.sendBatchNotifications({
       userIds,
       title: "2 days left on your trial",
@@ -277,9 +263,6 @@ export const sendMarketingNotification = internalAction({
   },
 });
 
-/**
- * Internal action to process a single user's weekly notification
- */
 export const processUserWeeklyNotification = internalAction({
   args: { userId: v.string() },
   returns: v.object({
@@ -293,7 +276,6 @@ export const processUserWeeklyNotification = internalAction({
     const notificationId = generateNotificationId();
 
     try {
-      // Get notification content for the user
       const content: {
         title: string;
         message: string;
@@ -309,7 +291,6 @@ export const processUserWeeklyNotification = internalAction({
       let message = content.message;
       const title = content.title;
 
-      // If we have event descriptions, generate AI content
       if (content.eventDescriptions) {
         const prompt = Notifications.getPromptForWeeklyNotificationWithEvents(
           content.eventDescriptions,
@@ -330,7 +311,6 @@ export const processUserWeeklyNotification = internalAction({
         }
       }
 
-      // Send notification using OneSignal
       const result = await OneSignal.sendNotification({
         userId: args.userId,
         title,
@@ -361,9 +341,6 @@ export const processUserWeeklyNotification = internalAction({
   },
 });
 
-/**
- * Internal query to generate weekly notification content for a user
- */
 export const generateWeeklyNotificationContentQuery = internalQuery({
   args: { userId: v.string() },
   returns: v.object({
@@ -380,9 +357,6 @@ export const generateWeeklyNotificationContentQuery = internalQuery({
   },
 });
 
-/**
- * Internal query to get all users
- */
 export const getAllUsersQuery = internalQuery({
   args: {},
   returns: v.array(
@@ -398,9 +372,6 @@ export const getAllUsersQuery = internalQuery({
   },
 });
 
-/**
- * Internal query to get trial expiration users
- */
 export const getTrialExpirationUsersQuery = internalQuery({
   args: {},
   returns: v.array(
@@ -416,19 +387,12 @@ export const getTrialExpirationUsersQuery = internalQuery({
   },
 });
 
-// ============================================================================
-// INTERNAL ACTIONS FOR WORKFLOW
-// ============================================================================
 
-/**
- * Send push notification for event creation
- */
 export const push = internalAction({
   args: {
     eventId: v.string(),
     userId: v.string(),
     userName: v.string(),
-    // Optional: for batch processing, explicitly pass the position
     batchPosition: v.optional(v.number()),
     batchTotal: v.optional(v.number()),
   },
@@ -440,7 +404,6 @@ export const push = internalAction({
   handler: async (ctx, args) => {
     const { eventId, userId, batchPosition, batchTotal } = args;
 
-    // Get the event to extract the name for notification
     const event = await ctx.runQuery(internal.events.getEventById, {
       eventId,
     });
@@ -452,18 +415,13 @@ export const push = internalAction({
       };
     }
 
-    // Determine the event count/position
     let eventCount: number;
 
     if (batchPosition !== undefined && batchTotal !== undefined) {
-      // For batch processing, we need to get the count BEFORE this batch
-      // and add the position within the batch
       const todayEvents = await ctx.runQuery(
         internal.events.getTodayEventsCount,
         { userId },
       );
-      // Subtract the total batch size to get count before this batch
-      // Then add the current position
       const countBeforeBatch = Math.max(0, todayEvents.length - batchTotal);
       eventCount = countBeforeBatch + batchPosition;
       console.log(
@@ -471,7 +429,6 @@ export const push = internalAction({
           `today's total: ${todayEvents.length}, count for this event: ${eventCount}`,
       );
     } else {
-      // Get today's event count for this user (for non-batch captures)
       const todayEvents = await ctx.runQuery(
         internal.events.getTodayEventsCount,
         { userId },
@@ -480,7 +437,6 @@ export const push = internalAction({
       console.log(`Single event notification - today's count: ${eventCount}`);
     }
 
-    // Generate notification content based on count
     let title: string;
     let subtitle: string;
     let body: string;
@@ -503,10 +459,8 @@ export const push = internalAction({
       subtitle = event.name;
     }
 
-    // Create deep link
     const url = createDeepLink(`event/${eventId}`);
 
-    // Send notification
     const result = await OneSignal.sendNotification({
       userId,
       title,
@@ -526,9 +480,6 @@ export const push = internalAction({
   },
 });
 
-/**
- * Send failure notification for event creation
- */
 export const pushBatchSummary = internalAction({
   args: {
     userId: v.string(),
@@ -546,14 +497,12 @@ export const pushBatchSummary = internalAction({
   handler: async (ctx, args) => {
     const { userId, message, successCount, failureCount } = args;
 
-    // Get today's total event count
     const todayEvents = await ctx.runQuery(
       internal.events.getTodayEventsCount,
       { userId },
     );
     const totalCount = todayEvents.length;
 
-    // Create batch summary notification with daily count
     let title: string;
     let subtitle: string | undefined;
     let body: string;
@@ -562,7 +511,6 @@ export const pushBatchSummary = internalAction({
       title = "Events captured ✨";
       subtitle = `Successfully captured ${successCount} events`;
 
-      // Add daily count message
       if (totalCount === successCount && totalCount === 1) {
         body = "First capture today! 🤔 What's next?";
       } else if (totalCount === 2) {
@@ -579,7 +527,6 @@ export const pushBatchSummary = internalAction({
     }
     const deepLink = createDeepLink(`batch/${args.batchId}`);
 
-    // Send notification
     const result = await OneSignal.sendNotification({
       userId,
       title,
@@ -617,11 +564,9 @@ export const pushFailure = internalAction({
   handler: async (_ctx, args) => {
     const { userId, failureReason } = args;
 
-    // Create failure notification content
     const title = "Event creation failed";
     const body = "We couldn't create your event. Please try again.";
 
-    // Send notification
     const result = await OneSignal.sendNotification({
       userId,
       title,

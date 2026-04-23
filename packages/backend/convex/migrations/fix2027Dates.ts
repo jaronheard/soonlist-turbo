@@ -2,18 +2,7 @@ import { v } from "convex/values";
 
 import { internalMutation, internalQuery } from "../_generated/server";
 
-/**
- * Migration to fix events that incorrectly have 2027 dates instead of 2026.
- *
- * Usage:
- * 1. Run dry run first to review changes:
- *    npx convex run migrations/fix2027Dates:dryRun
- *
- * 2. After reviewing, run the actual migration:
- *    npx convex run migrations/fix2027Dates:migrate
- */
 
-// Helper to replace 2027 with 2026 in date strings
 function fixYear(dateStr: string): string {
   return dateStr.replace(/2027/g, "2026");
 }
@@ -26,7 +15,6 @@ function fixYearOptional(dateStr: string | undefined): string | undefined {
 export const dryRun = internalQuery({
   args: {},
   handler: async (ctx) => {
-    // Find all events with 2027 in their dates (ISO strings, so range query works)
     const affectedEvents = await ctx.db
       .query("events")
       .filter((q) =>
@@ -78,7 +66,6 @@ export const migrate = internalMutation({
   handler: async (ctx, args) => {
     const isDryRun = args.dryRun ?? false;
 
-    // Find all events with 2027 in their dates (ISO strings, so range query works)
     const affectedEvents = await ctx.db
       .query("events")
       .filter((q) =>
@@ -113,7 +100,6 @@ export const migrate = internalMutation({
         updates.endDate = fixYearOptional(event.endDate);
       }
 
-      // Also fix the nested event object if it exists
       if (event.event && typeof event.event === "object") {
         const eventStr = JSON.stringify(event.event);
         if (eventStr.includes("2027")) {

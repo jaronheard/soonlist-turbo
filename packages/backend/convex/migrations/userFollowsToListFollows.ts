@@ -5,9 +5,6 @@ import { internalAction, internalMutation } from "../_generated/server";
 import { listFollowsAggregate } from "../aggregates";
 import { getOrCreatePersonalList } from "../lists";
 
-/**
- * Batch mutation: convert userFollows to listFollows by following the target user's personal list
- */
 export const userFollowsToListFollowsBatch = internalMutation({
   args: {
     cursor: v.union(v.string(), v.null()),
@@ -27,13 +24,11 @@ export const userFollowsToListFollowsBatch = internalMutation({
     let migrated = 0;
 
     for (const userFollow of result.page) {
-      // Get or create the followed user's personal list
       const personalList = await getOrCreatePersonalList(
         ctx,
         userFollow.followingId,
       );
 
-      // Check if listFollow already exists
       const existingListFollow = await ctx.db
         .query("listFollows")
         .withIndex("by_user_and_list", (q) =>
@@ -49,7 +44,6 @@ export const userFollowsToListFollowsBatch = internalMutation({
         const followDoc = (await ctx.db.get(followId))!;
         await listFollowsAggregate.insert(ctx, followDoc);
 
-        // Schedule feed population
         await ctx.scheduler.runAfter(
           0,
           internal.feedHelpers.addListEventsToUserFeed,
@@ -72,9 +66,6 @@ export const userFollowsToListFollowsBatch = internalMutation({
   },
 });
 
-/**
- * Action: orchestrate migration of userFollows → listFollows
- */
 export const runUserFollowsToListFollows = internalAction({
   args: {},
   returns: v.null(),

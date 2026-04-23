@@ -8,19 +8,6 @@ import {
 } from "../_generated/server";
 import { userFeedsAggregate } from "../aggregates";
 
-/**
- * Migration to fix userFeeds and userFeedGroups entries that have incorrect 2027 timestamps.
- *
- * The events table has already been fixed, but the feed tables still have wrong timestamps.
- * This migration uses cursor-based pagination to avoid the 32k document scan limit.
- *
- * Usage:
- * 1. Run dry run first to review changes:
- *    npx convex run migrations/fix2027FeedDates:dryRunFix2027FeedDates --prod
- *
- * 2. After reviewing, run the actual migration:
- *    npx convex run migrations/fix2027FeedDates:fix2027FeedDates --prod
- */
 
 const YEAR_2027_START_MS = new Date("2027-01-01T00:00:00.000Z").getTime();
 const YEAR_2028_START_MS = new Date("2028-01-01T00:00:00.000Z").getTime();
@@ -29,7 +16,6 @@ function isIn2027(timestamp: number): boolean {
   return timestamp >= YEAR_2027_START_MS && timestamp < YEAR_2028_START_MS;
 }
 
-// --- Batched mutations ---
 
 export const migrateFeedsBatch = internalMutation({
   args: {
@@ -162,7 +148,6 @@ export const migrateGroupsBatch = internalMutation({
   },
 });
 
-// --- Batched queries (dry run) ---
 
 export const dryRunFeedsBatch = internalQuery({
   args: {
@@ -280,7 +265,6 @@ export const dryRunGroupsBatch = internalQuery({
   },
 });
 
-// --- Orchestrating actions ---
 
 const BATCH_SIZE = 2048;
 
@@ -299,7 +283,6 @@ export const fix2027FeedDates = internalAction({
     }),
   }),
   handler: async (ctx) => {
-    // Migrate userFeeds
     let feedsProcessed = 0;
     let feedsUpdated = 0;
     let feedsSkipped = 0;
@@ -329,7 +312,6 @@ export const fix2027FeedDates = internalAction({
       `userFeeds: ${feedsUpdated} updated, ${feedsSkipped} skipped (event not found), ${feedsProcessed} total scanned`,
     );
 
-    // Migrate userFeedGroups
     let groupsProcessed = 0;
     let groupsUpdated = 0;
     let groupsSkipped = 0;
@@ -389,7 +371,6 @@ export const dryRunFix2027FeedDates = internalAction({
     }),
   }),
   handler: async (ctx) => {
-    // Dry run userFeeds
     let feedsProcessed = 0;
     let feedsAffected = 0;
     let feedsSkipped = 0;
@@ -419,7 +400,6 @@ export const dryRunFix2027FeedDates = internalAction({
       `[DRY RUN] userFeeds: ${feedsAffected} would update, ${feedsSkipped} missing events, ${feedsProcessed} total scanned`,
     );
 
-    // Dry run userFeedGroups
     let groupsProcessed = 0;
     let groupsAffected = 0;
     let groupsSkipped = 0;

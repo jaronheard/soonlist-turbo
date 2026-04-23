@@ -1,9 +1,3 @@
-/**
- * Migration to initialize userFeeds aggregate for existing userFeeds entries
- *
- * Run this once after deploying the aggregate changes to populate the
- * aggregate with existing data.
- */
 
 import { v } from "convex/values";
 
@@ -13,9 +7,6 @@ import { userFeedsAggregate } from "../aggregates";
 
 const BATCH_SIZE = 100;
 
-/**
- * Initialize aggregate for a batch of userFeeds entries
- */
 export const initializeUserFeedsAggregateBatch = internalMutation({
   args: {
     cursor: v.union(v.string(), v.null()),
@@ -39,7 +30,6 @@ export const initializeUserFeedsAggregateBatch = internalMutation({
       await userFeedsAggregate.replaceOrInsert(ctx, feedEntry, feedEntry);
     }
 
-    // If there are more pages, schedule the next batch
     if (!result.isDone) {
       await ctx.scheduler.runAfter(
         0,
@@ -57,15 +47,11 @@ export const initializeUserFeedsAggregateBatch = internalMutation({
   },
 });
 
-/**
- * Initialize aggregate for all existing userFeeds entries (orchestrator)
- */
 export const initializeUserFeedsAggregate = internalMutation({
   args: {},
   returns: v.null(),
   handler: async (ctx) => {
     console.log("Starting userFeeds aggregate initialization...");
-    // Kick off the first batch; subsequent batches self-schedule
     await ctx.scheduler.runAfter(
       0,
       internal.migrations.initializeUserFeedsAggregate

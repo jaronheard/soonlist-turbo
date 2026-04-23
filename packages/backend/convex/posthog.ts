@@ -6,7 +6,7 @@ import { internalAction, internalQuery } from "./_generated/server";
 import * as PostHog from "./model/posthog";
 
 interface UserStats {
-  visitorId: string; // email - used as distinct_id in PostHog
+  visitorId: string;
   upcoming_created_events_count: number;
   upcoming_saved_events_count: number;
   upcoming_events_count: number;
@@ -25,9 +25,6 @@ const userStatsValidator = v.object({
   days_since_last_event_created: v.union(v.number(), v.null()),
 });
 
-/**
- * Debug query to check stats for a specific user by username
- */
 export const debugUserStats = internalQuery({
   args: { username: v.string() },
   returns: v.union(userStatsValidator, v.null()),
@@ -122,9 +119,6 @@ export const debugUserStats = internalQuery({
   },
 });
 
-/**
- * Fetch all users with computed stats for PostHog sync
- */
 export const getAllUsersWithStatsQuery = internalQuery({
   args: {},
   returns: v.array(userStatsValidator),
@@ -216,9 +210,6 @@ export const getAllUsersWithStatsQuery = internalQuery({
   },
 });
 
-/**
- * Sync user properties to PostHog (called by daily cron)
- */
 export const syncUserPropertiesToPostHog = internalAction({
   args: {},
   returns: v.object({

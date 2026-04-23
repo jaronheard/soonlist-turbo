@@ -5,7 +5,6 @@ import { components, internal } from "../_generated/api.js";
 
 export const migrations = new Migrations<DataModel>(components.migrations);
 
-// Migration to populate user feeds from existing events
 export const populateUserFeeds = migrations.define({
   table: "events",
   batchSize: 100,
@@ -16,7 +15,6 @@ export const populateUserFeeds = migrations.define({
       const currentTime = Date.now();
       let addedCount = 0;
 
-      // 1. Add to creator's personal feed
       const creatorFeedId = `user_${event.userId}`;
       try {
         const existingCreatorEntry = await ctx.db
@@ -45,7 +43,6 @@ export const populateUserFeeds = migrations.define({
         throw error;
       }
 
-      // 2. Add to discover feed if public
       if (event.visibility === "public") {
         const discoverFeedId = "discover";
         try {
@@ -76,7 +73,6 @@ export const populateUserFeeds = migrations.define({
         }
       }
 
-      // 3. Add to feeds of users who follow this event
       try {
         const eventFollows = await ctx.db
           .query("eventFollows")
@@ -109,7 +105,6 @@ export const populateUserFeeds = migrations.define({
               `Failed to add event ${event.id} to follower feed ${followerFeedId}:`,
               error,
             );
-            // Continue with other followers rather than failing the entire migration
             continue;
           }
         }
@@ -131,18 +126,15 @@ export const populateUserFeeds = migrations.define({
   },
 });
 
-// Specific runner for the populateUserFeeds migration
 export const runPopulateUserFeeds = migrations.runner(
   internal.migrations.userFeedsMigration.populateUserFeeds,
 );
 
-// Optional: cleanup migration for orphaned entries
 export const cleanupOrphanedFeedEntries = migrations.define({
   table: "userFeeds",
   batchSize: 50,
   migrateOne: async (ctx, feedEntry) => {
     try {
-      // Check if event exists by querying with the custom id
       const event = await ctx.db
         .query("events")
         .withIndex("by_custom_id", (q) => q.eq("id", feedEntry.eventId))

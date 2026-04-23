@@ -1,6 +1,5 @@
 import type { QueryCtx } from "../_generated/server";
 
-// Types for notification operations
 export interface NotificationResult {
   success: boolean;
   id?: string;
@@ -16,21 +15,14 @@ export interface BatchNotificationResult {
   errors: { userId?: string; error: string }[];
 }
 
-/**
- * Get all users from the database
- */
 export async function getAllUsers(ctx: QueryCtx) {
   return await ctx.db.query("users").collect();
 }
 
-/**
- * Get upcoming events for a user within the next week
- */
 export async function getUpcomingEventsForUser(ctx: QueryCtx, userId: string) {
   const now = new Date();
   const oneWeekFromNow = new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000);
 
-  // Get events created by the user
   const userEvents = await ctx.db
     .query("events")
     .withIndex("by_user", (q) => q.eq("userId", userId))
@@ -42,7 +34,6 @@ export async function getUpcomingEventsForUser(ctx: QueryCtx, userId: string) {
     )
     .collect();
 
-  // Get events the user is following
   const eventFollows = await ctx.db
     .query("eventFollows")
     .withIndex("by_user", (q) => q.eq("userId", userId))
@@ -70,7 +61,6 @@ export async function getUpcomingEventsForUser(ctx: QueryCtx, userId: string) {
 
   const validFollowedEvents = followedEvents.filter((event) => event !== null);
 
-  // Combine and deduplicate events
   const allEvents = [...userEvents, ...validFollowedEvents];
   const eventMap = new Map(allEvents.map((event) => [event.id, event]));
   const uniqueEvents = Array.from(eventMap.values());
@@ -78,9 +68,6 @@ export async function getUpcomingEventsForUser(ctx: QueryCtx, userId: string) {
   return uniqueEvents;
 }
 
-/**
- * Get users who started their trial 5 days ago and are still trialing
- */
 export async function getTrialExpirationUsers(ctx: QueryCtx) {
   const fiveBusinessDaysAgo = new Date();
   fiveBusinessDaysAgo.setDate(fiveBusinessDaysAgo.getDate() - 5);
@@ -97,7 +84,6 @@ export async function getTrialExpirationUsers(ctx: QueryCtx) {
           ? JSON.parse(user.publicMetadata)
           : user.publicMetadata;
 
-      // Type guard to check if metadata has the expected structure
       if (
         !metadata ||
         typeof metadata !== "object" ||
@@ -129,9 +115,6 @@ export async function getTrialExpirationUsers(ctx: QueryCtx) {
   });
 }
 
-/**
- * Generate a prompt for creating a weekly notification with events
- */
 export function getPromptForWeeklyNotificationWithEvents(
   eventDescriptions: string,
 ): string {
@@ -161,9 +144,6 @@ Example output:
 Remember to vary your output for different weeks, maintaining the exciting and unique elements that make each week special.`;
 }
 
-/**
- * Generate notification content for a user based on their upcoming events
- */
 export async function generateWeeklyNotificationContent(
   ctx: QueryCtx,
   userId: string,
@@ -193,11 +173,8 @@ export async function generateWeeklyNotificationContent(
     summary =
       "Keep capturing events you see. Missing any? Check your screenshots now!";
   } else {
-    // For 3+ events, we'll need to generate AI content
-    // This will be handled in the action that calls the AI
     const eventDescriptions = upcomingEvents
       .map((event) => {
-        // Safely access event data
         const eventData = event.event as Record<string, unknown> | undefined;
         const name =
           (eventData?.name as string) || event.name || "Untitled Event";

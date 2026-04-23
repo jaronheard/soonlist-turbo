@@ -1,13 +1,10 @@
 "use node";
 
-// OneSignal REST API base URL
 const ONE_SIGNAL_API_URL = "https://onesignal.com/api/v1";
 
-// Use CONVEX_ENV for explicit environment detection, fallback to NODE_ENV
 const ENV = process.env.CONVEX_ENV || process.env.NODE_ENV || "production";
 const IS_DEV = ENV === "development";
 
-// Log environment detection for debugging
 console.log("OneSignal Environment Detection:", {
   CONVEX_ENV: process.env.CONVEX_ENV,
   NODE_ENV: process.env.NODE_ENV,
@@ -15,7 +12,6 @@ console.log("OneSignal Environment Detection:", {
   IS_DEV,
 });
 
-// OneSignal API key from environment variables
 const ONE_SIGNAL_REST_API_KEY = IS_DEV
   ? process.env.ONE_SIGNAL_REST_API_KEY_DEV
   : process.env.ONE_SIGNAL_REST_API_KEY_PROD;
@@ -24,7 +20,6 @@ const EXPO_PUBLIC_ONE_SIGNAL_APP_ID = IS_DEV
   ? process.env.EXPO_PUBLIC_ONE_SIGNAL_APP_ID_DEV
   : process.env.EXPO_PUBLIC_ONE_SIGNAL_APP_ID_PROD;
 
-// Check if OneSignal is properly configured
 if (!ONE_SIGNAL_REST_API_KEY || !EXPO_PUBLIC_ONE_SIGNAL_APP_ID) {
   console.warn(
     "OneSignal API key or App ID not configured. Notifications will not be sent.",
@@ -49,7 +44,6 @@ export interface SendNotificationParams {
   eventId?: string;
 }
 
-// OneSignal API response types
 interface OneSignalSuccessResponse {
   id: string;
   recipients: number;
@@ -65,9 +59,6 @@ interface OneSignalErrorResponse {
 
 type OneSignalResponse = OneSignalSuccessResponse | OneSignalErrorResponse;
 
-/**
- * Sends a notification to a specific user using OneSignal's API
- */
 export async function sendNotification({
   userId,
   title,
@@ -84,7 +75,6 @@ export async function sendNotification({
   id?: string;
   error?: string;
 }> {
-  // If OneSignal is not configured, log and return early
   if (!ONE_SIGNAL_REST_API_KEY || !EXPO_PUBLIC_ONE_SIGNAL_APP_ID) {
     console.error("OneSignal API key or App ID not configured", {
       userId,
@@ -99,11 +89,9 @@ export async function sendNotification({
     };
   }
 
-  // Generate a notification ID if not provided
   const finalNotificationId = notificationId || crypto.randomUUID();
 
   try {
-    // Prepare the notification payload
     const payload = {
       app_id: EXPO_PUBLIC_ONE_SIGNAL_APP_ID,
       include_external_user_ids: [userId],
@@ -119,7 +107,6 @@ export async function sendNotification({
       url: url,
     };
 
-    // Send the notification using OneSignal's REST API
     const response = await fetch(`${ONE_SIGNAL_API_URL}/notifications`, {
       method: "POST",
       headers: {
@@ -163,9 +150,6 @@ export async function sendNotification({
   }
 }
 
-/**
- * Sends a notification to multiple users using OneSignal's API
- */
 export async function sendBatchNotifications({
   userIds,
   title,
@@ -184,7 +168,6 @@ export async function sendBatchNotifications({
   error?: string;
   recipients?: number;
 }> {
-  // If OneSignal is not configured, log and return early
   if (!ONE_SIGNAL_REST_API_KEY || !EXPO_PUBLIC_ONE_SIGNAL_APP_ID) {
     console.error("OneSignal API key or App ID not configured", {
       userIds: userIds.length,
@@ -200,7 +183,6 @@ export async function sendBatchNotifications({
   }
 
   try {
-    // Prepare the notification payload
     const payload = {
       app_id: EXPO_PUBLIC_ONE_SIGNAL_APP_ID,
       include_external_user_ids: userIds,
@@ -214,7 +196,6 @@ export async function sendBatchNotifications({
       url: url,
     };
 
-    // Send the notification using OneSignal's REST API
     const response = await fetch(`${ONE_SIGNAL_API_URL}/notifications`, {
       method: "POST",
       headers: {

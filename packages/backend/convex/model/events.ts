@@ -26,7 +26,6 @@ import {
   shouldRegroupEvent,
 } from "./similarityHelpers";
 
-// Type for event data (based on AddToCalendarButtonProps)
 interface EventData {
   name: string;
   startDate: string;
@@ -40,7 +39,6 @@ interface EventData {
   [key: string]: unknown;
 }
 
-// Helper function to filter duplicates
 function filterDuplicates<T extends { id: string }>(items: T[]): T[] {
   const seen = new Set<string>();
   return items.filter((item) => {
@@ -52,7 +50,6 @@ function filterDuplicates<T extends { id: string }>(items: T[]): T[] {
   });
 }
 
-// Helper to batch-fetch users by IDs (avoids N+1 queries)
 async function batchGetUsersByIds(ctx: QueryCtx, userIds: string[]) {
   const uniqueIds = [...new Set(userIds)];
   const users = await Promise.all(
@@ -68,18 +65,14 @@ async function batchGetUsersByIds(ctx: QueryCtx, userIds: string[]) {
   return userMap;
 }
 
-// Helper used by paginated queries to hydrate events (batch-optimized)
-// Accepts full event documents to avoid redundant re-fetching
 export async function enrichEventsAndFilterNulls(
   ctx: QueryCtx,
   events: Doc<"events">[],
 ) {
   if (events.length === 0) return [];
 
-  // Use passed events directly - no need to re-fetch
   const validEvents = events;
 
-  // Batch fetch all eventFollows, comments, and eventToLists in parallel
   const [allEventFollows, allComments, allEventToLists] = await Promise.all([
     Promise.all(
       validEvents.map((event) =>
@@ -107,7 +100,6 @@ export async function enrichEventsAndFilterNulls(
     ),
   ]);
 
-  // Collect all unique user IDs (event creators + followers)
   const allUserIds: string[] = validEvents.map((e) => e.userId);
   for (const follows of allEventFollows) {
     for (const follow of follows) {
@@ -115,7 +107,6 @@ export async function enrichEventsAndFilterNulls(
     }
   }
 
-  // Collect all unique list IDs
   const allListIds: string[] = [];
   for (const etls of allEventToLists) {
     for (const etl of etls) {
@@ -123,7 +114,6 @@ export async function enrichEventsAndFilterNulls(
     }
   }
 
-  // Batch fetch all users and lists
   const [userMap, listDocs] = await Promise.all([
     batchGetUsersByIds(ctx, allUserIds),
     Promise.all(
@@ -136,7 +126,6 @@ export async function enrichEventsAndFilterNulls(
     ),
   ]);
 
-  // Build list map
   const uniqueListIds = [...new Set(allListIds)];
   const listMap = new Map<string, Doc<"lists">>();
   uniqueListIds.forEach((listId, i) => {
@@ -144,14 +133,12 @@ export async function enrichEventsAndFilterNulls(
     if (list) listMap.set(listId, list);
   });
 
-  // Assemble enriched events
   return validEvents.map((event, idx) => {
     const user = userMap.get(event.userId) ?? null;
     const eventFollowsRaw = allEventFollows[idx] ?? [];
     const comments = allComments[idx] ?? [];
     const eventToLists = allEventToLists[idx] ?? [];
 
-    // Enrich eventFollows with cached user data
     const eventFollows = eventFollowsRaw.map((follow) => {
       const follower = userMap.get(follow.userId);
       return {
@@ -167,7 +154,6 @@ export async function enrichEventsAndFilterNulls(
       };
     });
 
-    // Map lists from cache
     const lists: Doc<"lists">[] = [];
     for (const etl of eventToLists) {
       const list = listMap.get(etl.listId);
@@ -184,16 +170,13 @@ export async function enrichEventsAndFilterNulls(
   });
 }
 
-// Helper function to parse date/time with timezone using Temporal
 function parseDateTime(date: string, time: string, timeZone: string): Date {
-  // Validate inputs
   if (!date || !time) {
     throw new ConvexError(
       `Invalid date or time: date="${date}", time="${time}"`,
     );
   }
 
-  // Validate date format (YYYY-MM-DD)
   const datePattern = /^\d{4}-\d{2}-\d{2}$/;
   if (!datePattern.test(date)) {
     throw new ConvexError(
@@ -201,7 +184,6 @@ function parseDateTime(date: string, time: string, timeZone: string): Date {
     );
   }
 
-  // Validate time format (HH:MM or HH:MM:SS)
   const timePattern = /^([01]?[0-9]|2[0-3]):[0-5][0-9](:[0-5][0-9])?$/;
   if (!timePattern.test(time)) {
     throw new ConvexError(
@@ -210,19 +192,15 @@ function parseDateTime(date: string, time: string, timeZone: string): Date {
   }
 
   try {
-    // Ensure time has seconds
     const timeWithSeconds =
       time.includes(":") && time.split(":").length === 3 ? time : `${time}:00`;
 
-    // Use Temporal to properly handle timezone conversion
     const zonedDateTime = Temporal.ZonedDateTime.from(
       `${date}T${timeWithSeconds}[${timeZone || DEFAULT_TIMEZONE}]`,
     );
 
-    // Convert to a regular Date object
     return new Date(zonedDateTime.epochMilliseconds);
   } catch (error) {
-    // Fallback to simplified approach if Temporal fails
     console.warn(
       "Temporal parsing failed, falling back to simple Date parsing:",
       error,
@@ -233,7 +211,6 @@ function parseDateTime(date: string, time: string, timeZone: string): Date {
     const dateTimeString = `${date}T${timeWithSeconds}`;
     const parsedDate = new Date(dateTimeString);
 
-    // Validate that the Date object is valid
     if (isNaN(parsedDate.getTime())) {
       throw new ConvexError(
         `Invalid date/time combination: "${dateTimeString}"`,
@@ -244,9 +221,6 @@ function parseDateTime(date: string, time: string, timeZone: string): Date {
   }
 }
 
-/**
- * Get events for a specific user by username
- */
 export async function getEventsForUser(ctx: QueryCtx, userName: string) {
   const user = await ctx.db
     .query("users")
@@ -262,21 +236,17 @@ export async function getEventsForUser(ctx: QueryCtx, userName: string) {
     .withIndex("by_user", (q) => q.eq("userId", user.id))
     .collect();
 
-  // Sort by start date time
   return events.sort(
     (a, b) =>
       new Date(a.startDateTime).getTime() - new Date(b.startDateTime).getTime(),
   );
 }
 
-/**
- * Get upcoming events for a user (created + saved)
- */
 export async function getUpcomingEventsForUser(
   ctx: QueryCtx,
   userName: string,
 ) {
-  const now = new Date(new Date().getTime() - 24 * 60 * 60 * 1000); // 24 hours ago
+  const now = new Date(new Date().getTime() - 24 * 60 * 60 * 1000);
 
   const user = await ctx.db
     .query("users")
@@ -287,14 +257,12 @@ export async function getUpcomingEventsForUser(
     return [];
   }
 
-  // Get created events
   const createdEvents = await ctx.db
     .query("events")
     .withIndex("by_user", (q) => q.eq("userId", user.id))
     .filter((q) => q.gte(q.field("startDateTime"), now.toISOString()))
     .collect();
 
-  // Get saved events
   const eventFollows = await ctx.db
     .query("eventFollows")
     .withIndex("by_user", (q) => q.eq("userId", user.id))
@@ -319,9 +287,6 @@ export async function getUpcomingEventsForUser(
   );
 }
 
-/**
- * Get events that a user is following (from lists, users, and individual events)
- */
 export async function getFollowingEventsForUser(
   ctx: QueryCtx,
   userName: string,
@@ -337,7 +302,6 @@ export async function getFollowingEventsForUser(
 
   const allEvents: Doc<"events">[] = [];
 
-  // Get events from followed individual events
   const eventFollows = await ctx.db
     .query("eventFollows")
     .withIndex("by_user", (q) => q.eq("userId", user.id))
@@ -353,7 +317,6 @@ export async function getFollowingEventsForUser(
     }
   }
 
-  // Get events from followed lists
   const listFollows = await ctx.db
     .query("listFollows")
     .withIndex("by_user", (q) => q.eq("userId", user.id))
@@ -376,7 +339,6 @@ export async function getFollowingEventsForUser(
     }
   }
 
-  // Get events from followed users
   const userFollows = await ctx.db
     .query("userFollows")
     .withIndex("by_follower", (q) => q.eq("followerId", user.id))
@@ -398,9 +360,6 @@ export async function getFollowingEventsForUser(
   );
 }
 
-/**
- * Get upcoming events from following (optimized version)
- */
 export async function getFollowingUpcomingEventsForUser(
   ctx: QueryCtx,
   userName: string,
@@ -418,7 +377,6 @@ export async function getFollowingUpcomingEventsForUser(
 
   const eventIds = new Set<string>();
 
-  // Collect event IDs from all sources
   const eventFollows = await ctx.db
     .query("eventFollows")
     .withIndex("by_user", (q) => q.eq("userId", user.id))
@@ -452,7 +410,6 @@ export async function getFollowingUpcomingEventsForUser(
     followedUserEvents.forEach((e) => eventIds.add(e.id));
   }
 
-  // Fetch upcoming events
   const upcomingEvents = [];
   for (const eventId of eventIds) {
     const event = await ctx.db
@@ -471,9 +428,6 @@ export async function getFollowingUpcomingEventsForUser(
   );
 }
 
-/**
- * Get saved events for a user
- */
 export async function getSavedEventsForUser(ctx: QueryCtx, userName: string) {
   const user = await ctx.db
     .query("users")
@@ -506,9 +460,6 @@ export async function getSavedEventsForUser(ctx: QueryCtx, userName: string) {
   );
 }
 
-/**
- * Get saved event IDs for a user
- */
 export async function getSavedEventIdsForUser(ctx: QueryCtx, userName: string) {
   const user = await ctx.db
     .query("users")
@@ -527,9 +478,6 @@ export async function getSavedEventIdsForUser(ctx: QueryCtx, userName: string) {
   return eventFollows.map((follow) => ({ id: follow.eventId }));
 }
 
-/**
- * Get possible duplicate events based on start time
- */
 export async function getPossibleDuplicateEvents(
   ctx: QueryCtx,
   startDateTime: Date,
@@ -539,7 +487,6 @@ export async function getPossibleDuplicateEvents(
   const startDateTimeUpperBound = new Date(startDateTime);
   startDateTimeUpperBound.setHours(startDateTime.getHours() + 1);
 
-  // Use range query with index instead of fetching all events and filtering
   const events = await ctx.db
     .query("events")
     .withIndex("by_startDateTime", (q) =>
@@ -552,9 +499,6 @@ export async function getPossibleDuplicateEvents(
   return events;
 }
 
-/**
- * Get a single event by ID
- */
 export async function getEventById(ctx: QueryCtx, eventId: string) {
   const event = await ctx.db
     .query("events")
@@ -565,7 +509,6 @@ export async function getEventById(ctx: QueryCtx, eventId: string) {
     return null;
   }
 
-  // Get related data
   const user = await ctx.db
     .query("users")
     .withIndex("by_custom_id", (q) => q.eq("id", event.userId))
@@ -576,11 +519,9 @@ export async function getEventById(ctx: QueryCtx, eventId: string) {
     .withIndex("by_event", (q) => q.eq("eventId", eventId))
     .collect();
 
-  // Batch fetch all follower users (avoids N+1 queries)
   const followerIds = eventFollowsRaw.map((f) => f.userId);
   const followerMap = await batchGetUsersByIds(ctx, followerIds);
 
-  // Enrich eventFollows with user data
   const eventFollows = eventFollowsRaw.map((follow) => {
     const follower = followerMap.get(follow.userId);
     return {
@@ -617,7 +558,6 @@ export async function getEventById(ctx: QueryCtx, eventId: string) {
     }
   }
 
-  // If the user is not found, still return the event but log a warning
   if (!user) {
     console.warn(
       `User not found for event ${eventId} with userId ${event.userId}`,
@@ -634,9 +574,6 @@ export async function getEventById(ctx: QueryCtx, eventId: string) {
   };
 }
 
-/**
- * Get all events
- */
 export async function getAllEvents(ctx: QueryCtx) {
   const events = await ctx.db.query("events").collect();
   return events.sort(
@@ -645,9 +582,6 @@ export async function getAllEvents(ctx: QueryCtx) {
   );
 }
 
-/**
- * Get next upcoming events
- */
 export async function getNextEvents(
   ctx: QueryCtx,
   limit?: number,
@@ -655,11 +589,8 @@ export async function getNextEvents(
 ) {
   const now = new Date();
 
-  // Use range query with index instead of fetching all events and filtering
   const query = ctx.db.query("events").withIndex("by_startDateTime", (q) => {
     if (excludeCurrent) {
-      // Filter by endDateTime for excludeCurrent, but we need to fetch and filter
-      // since we don't have an endDateTime index
       return q.gte("startDateTime", now.toISOString());
     } else {
       return q.gte("startDateTime", now.toISOString());
@@ -668,7 +599,6 @@ export async function getNextEvents(
 
   const events = await query.collect();
 
-  // Additional filtering for excludeCurrent since we can't efficiently query endDateTime
   const filteredEvents = excludeCurrent
     ? events.filter((event) => new Date(event.endDateTime) >= now)
     : events;
@@ -681,9 +611,6 @@ export async function getNextEvents(
   return limit ? sortedEvents.slice(0, limit) : sortedEvents;
 }
 
-/**
- * Get discover events (excluding user's own events)
- */
 export async function getDiscoverEvents(
   ctx: QueryCtx,
   userId: string,
@@ -692,7 +619,6 @@ export async function getDiscoverEvents(
 ) {
   const now = new Date();
 
-  // Use compound index to filter by visibility and startDateTime efficiently
   const query = ctx.db
     .query("events")
     .withIndex("by_visibility_and_startDateTime", (q) =>
@@ -707,7 +633,7 @@ export async function getDiscoverEvents(
     if (excludeCurrent) {
       return new Date(event.endDateTime) >= now;
     }
-    return true; // visibility and startDateTime filters already applied in query
+    return true;
   });
 
   const sortedEvents = filteredEvents.sort(
@@ -718,9 +644,6 @@ export async function getDiscoverEvents(
   return limit ? sortedEvents.slice(0, limit) : sortedEvents;
 }
 
-/**
- * Create a new event
- */
 export async function createEvent(
   ctx: MutationCtx,
   userId: string,
@@ -734,7 +657,6 @@ export async function createEvent(
 ) {
   const eventId = generatePublicId();
 
-  // Parse dates and times
   const startTime = eventData.startTime || "00:00";
   const endTime = eventData.endTime || "23:59";
   const timeZone = eventData.timeZone || DEFAULT_TIMEZONE;
@@ -742,7 +664,6 @@ export async function createEvent(
   const startDateTime = parseDateTime(eventData.startDate, startTime, timeZone);
   const endDateTime = parseDateTime(eventData.endDate, endTime, timeZone);
 
-  // Find or create similarity group
   const similarityGroupId =
     (await findSimilarityGroup(ctx, {
       startDateTime: startDateTime.toISOString(),
@@ -752,18 +673,15 @@ export async function createEvent(
       location: eventData.location,
     })) || generateSimilarityGroupId();
 
-  // Determine effective visibility based on user's publicListEnabled setting if not specified
   let effectiveVisibility = visibility;
   if (effectiveVisibility === undefined) {
     const user = await ctx.db
       .query("users")
       .withIndex("by_custom_id", (q) => q.eq("id", userId))
       .first();
-    // Default to user's publicListEnabled setting, or "private" if not set
     effectiveVisibility = user?.publicListEnabled ? "public" : "private";
   }
 
-  // Create the event with similarity group
   const eventDocId = await ctx.db.insert("events", {
     id: eventId,
     userId,
@@ -775,7 +693,6 @@ export async function createEvent(
     visibility: effectiveVisibility,
     created_at: new Date().toISOString(),
     updatedAt: null,
-    // Extract fields for easier querying
     name: eventData.name,
     image: eventData.images?.[0] || null,
     endDate: eventData.endDate,
@@ -786,18 +703,15 @@ export async function createEvent(
     startTime,
     description: eventData.description,
     batchId,
-    // Similarity group for feed grouping
     similarityGroupId,
   });
 
-  // Sync with aggregates for efficient stats
   const createdEvent = await ctx.db.get(eventDocId);
   if (createdEvent) {
     await eventsByCreation.replaceOrInsert(ctx, createdEvent, createdEvent);
     await eventsByStartTime.replaceOrInsert(ctx, createdEvent, createdEvent);
   }
 
-  // Add comment if provided
   if (comment && comment.length > 0) {
     await ctx.db.insert("comments", {
       content: comment,
@@ -810,7 +724,6 @@ export async function createEvent(
     });
   }
 
-  // Add to lists if provided, enforcing list contribution rules
   if (lists && lists.length > 0) {
     for (const list of lists) {
       if (list.value) {
@@ -819,12 +732,9 @@ export async function createEvent(
     }
   }
 
-  // Link event to creator's personal list. Use addEventToList so that
-  // followers of the personal list get the event propagated to their feed.
   const personalList = await getOrCreatePersonalList(ctx, userId);
   await addEventToList(ctx, eventId, personalList.id, userId);
 
-  // Add event to feeds (with similarity group for grouped feed support)
   await ctx.runMutation(internal.feedHelpers.updateEventInFeeds, {
     eventId,
     userId,
@@ -837,17 +747,12 @@ export async function createEvent(
   return { id: eventId };
 }
 
-/**
- * Regroup an event to a new similarity group
- * Updates: events table, userFeeds table, userFeedGroups table
- */
 async function regroupEvent(
   ctx: MutationCtx,
   eventId: string,
   oldGroupId: string,
   newGroupId: string,
 ): Promise<void> {
-  // Step 1: Update the event's similarityGroupId
   const event = await ctx.db
     .query("events")
     .withIndex("by_custom_id", (q) => q.eq("id", eventId))
@@ -861,32 +766,26 @@ async function regroupEvent(
     similarityGroupId: newGroupId,
   });
 
-  // Step 2: Update all userFeeds entries for this event
   const feedEntries = await ctx.db
     .query("userFeeds")
     .withIndex("by_event", (q) => q.eq("eventId", eventId))
     .collect();
 
-  // Track affected feed+group pairs for userFeedGroups updates
   const affectedOldGroups = new Set<string>();
   const affectedNewGroups = new Set<string>();
 
   for (const entry of feedEntries) {
-    // Track old group (for cleanup/re-election)
     if (entry.similarityGroupId) {
       affectedOldGroups.add(`${entry.feedId}:${entry.similarityGroupId}`);
     }
 
-    // Update the feed entry
     await ctx.db.patch(entry._id, {
       similarityGroupId: newGroupId,
     });
 
-    // Track new group (for creation/update)
     affectedNewGroups.add(`${entry.feedId}:${newGroupId}`);
   }
 
-  // Step 3: Update userFeedGroups for affected old groups
   for (const pair of affectedOldGroups) {
     const [feedId, groupId] = pair.split(":");
     if (feedId && groupId) {
@@ -897,7 +796,6 @@ async function regroupEvent(
     }
   }
 
-  // Step 4: Update userFeedGroups for affected new groups
   for (const pair of affectedNewGroups) {
     const [feedId, groupId] = pair.split(":");
     if (feedId && groupId) {
@@ -909,9 +807,6 @@ async function regroupEvent(
   }
 }
 
-/**
- * Update an existing event
- */
 export async function updateEvent(
   ctx: MutationCtx,
   userId: string,
@@ -923,7 +818,6 @@ export async function updateEvent(
   visibility?: "public" | "private",
   isAdmin?: boolean,
 ) {
-  // Check if user owns the event or is admin
   const existingEvent = await ctx.db
     .query("events")
     .withIndex("by_custom_id", (q) => q.eq("id", eventId))
@@ -937,12 +831,10 @@ export async function updateEvent(
     throw new ConvexError("Unauthorized");
   }
 
-  // Parse dates and times
   const startTime = eventData.startTime || "00:00";
   const endTime = eventData.endTime || "23:59";
   const timeZone = eventData.timeZone || DEFAULT_TIMEZONE;
 
-  // Validate required date fields
   if (!eventData.startDate) {
     throw new ConvexError("Start date is required");
   }
@@ -953,7 +845,6 @@ export async function updateEvent(
   const startDateTime = parseDateTime(eventData.startDate, startTime, timeZone);
   const endDateTime = parseDateTime(eventData.endDate, endTime, timeZone);
 
-  // Update the event
   await ctx.db.patch(existingEvent._id, {
     event: eventData,
     eventMetadata,
@@ -961,7 +852,6 @@ export async function updateEvent(
     endDateTime: endDateTime.toISOString(),
     ...(visibility && { visibility }),
     updatedAt: new Date().toISOString(),
-    // Update extracted fields
     name: eventData.name,
     image: eventData.images?.[0] || null,
     endDate: eventData.endDate,
@@ -973,15 +863,12 @@ export async function updateEvent(
     description: eventData.description,
   });
 
-  // Get updated event for aggregates
   const updatedEvent = await ctx.db.get(existingEvent._id);
   if (updatedEvent) {
-    // Sync with aggregates (replace updates the sort keys)
     await eventsByCreation.replaceOrInsert(ctx, existingEvent, updatedEvent);
     await eventsByStartTime.replaceOrInsert(ctx, existingEvent, updatedEvent);
   }
 
-  // Handle comment
   const existingComment = await ctx.db
     .query("comments")
     .withIndex("by_event", (q) => q.eq("eventId", eventId))
@@ -1009,14 +896,12 @@ export async function updateEvent(
     await ctx.db.delete(existingComment._id);
   }
 
-  // Handle lists
   if (lists !== undefined) {
     const existingEventToLists = await ctx.db
       .query("eventToLists")
       .withIndex("by_event", (q) => q.eq("eventId", eventId))
       .collect();
 
-    // Track which lists were removed and which were added
     const existingListIds = new Set(
       existingEventToLists.map((etl) => etl.listId),
     );
@@ -1024,14 +909,12 @@ export async function updateEvent(
       lists.filter((l) => l.value).map((l) => l.value),
     );
 
-    // Delete existing list associations that are no longer in the new list
     for (const etl of existingEventToLists) {
       if (!newListIds.has(etl.listId)) {
         await removeEventFromList(ctx, eventId, etl.listId, userId);
       }
     }
 
-    // Add new list associations
     if (lists.length > 0) {
       for (const list of lists) {
         if (list.value && !existingListIds.has(list.value)) {
@@ -1041,14 +924,12 @@ export async function updateEvent(
     }
   }
 
-  // Update feeds if visibility or time changed
   const visibilityChanged =
     visibility && existingEvent.visibility !== visibility;
   const timeChanged =
     existingEvent.startDateTime !== startDateTime.toISOString() ||
     existingEvent.endDateTime !== endDateTime.toISOString();
 
-  // Check if regrouping is needed (when similarity-affecting fields change)
   const newEventData = {
     startDateTime: startDateTime.toISOString(),
     endDateTime: endDateTime.toISOString(),
@@ -1061,7 +942,6 @@ export async function updateEvent(
     newEventData,
   );
 
-  // Determine the similarity group ID (may change if regrouping)
   let similarityGroupId = existingEvent.similarityGroupId;
 
   if (similarityFieldsChanged && existingEvent.similarityGroupId) {
@@ -1084,7 +964,6 @@ export async function updateEvent(
   }
 
   if (visibilityChanged || timeChanged) {
-    // If changing to private, remove from discover feed
     if (visibility === "private" && existingEvent.visibility === "public") {
       await ctx.runMutation(internal.feedHelpers.removeEventFromFeeds, {
         eventId,
@@ -1092,7 +971,6 @@ export async function updateEvent(
       });
     }
 
-    // Update event in feeds with new visibility and/or time (pass similarityGroupId for grouped feed support)
     await ctx.runMutation(internal.feedHelpers.updateEventInFeeds, {
       eventId,
       userId: existingEvent.userId,
@@ -1103,17 +981,12 @@ export async function updateEvent(
     });
 
     if (visibilityChanged) {
-      // updateEventInFeeds only touches creator/follower/discover feeds, but
-      // the event also lives in list_${listId} entries that removeEventFromFeeds
-      // intentionally preserves. Sync their `eventVisibility` so the
-      // index-level filter in getEventsForList stays correct after toggles.
       await ctx.runMutation(internal.feedHelpers.updateEventVisibilityInFeeds, {
         eventId,
         visibility: visibility || existingEvent.visibility,
       });
     }
 
-    // If changing to public, fan out to list followers
     if (visibility === "public" && existingEvent.visibility === "private") {
       const eventToLists = await ctx.db
         .query("eventToLists")
@@ -1143,9 +1016,6 @@ export async function updateEvent(
   return { id: eventId };
 }
 
-/**
- * Delete an event
- */
 export async function deleteEvent(
   ctx: MutationCtx,
   userId: string,
@@ -1165,7 +1035,6 @@ export async function deleteEvent(
     throw new ConvexError("Unauthorized");
   }
 
-  // Delete related records
   const eventFollows = await ctx.db
     .query("eventFollows")
     .withIndex("by_event", (q) => q.eq("eventId", eventId))
@@ -1181,9 +1050,7 @@ export async function deleteEvent(
     .withIndex("by_event", (q) => q.eq("eventId", eventId))
     .collect();
 
-  // Delete all related records
   for (const ef of eventFollows) {
-    // Remove from eventFollows aggregate before deleting
     await eventFollowsAggregate.deleteIfExists(ctx, ef);
     await ctx.db.delete(ef._id);
   }
@@ -1196,34 +1063,25 @@ export async function deleteEvent(
     await ctx.db.delete(etl._id);
   }
 
-  // Remove event from all feeds, including the list_${listId} membership
-  // entries — the event row itself is going away, so its dedicated list
-  // feeds must too.
   await ctx.runMutation(internal.feedHelpers.removeEventFromFeeds, {
     eventId,
     keepCreatorFeed: false,
     keepListFeeds: false,
   });
 
-  // Remove from aggregates before deleting the event
   await eventsByCreation.deleteIfExists(ctx, event);
   await eventsByStartTime.deleteIfExists(ctx, event);
 
-  // Delete the event
   await ctx.db.delete(event._id);
 
   return { id: eventId };
 }
 
-/**
- * Follow an event
- */
 export async function followEvent(
   ctx: MutationCtx,
   userId: string,
   eventId: string,
 ) {
-  // Check if already following
   const existingFollow = await ctx.db
     .query("eventFollows")
     .withIndex("by_user_and_event", (q) =>
@@ -1237,7 +1095,6 @@ export async function followEvent(
       eventId,
     });
 
-    // Sync with eventFollows aggregate
     const createdFollow = await ctx.db.get(followId);
     if (createdFollow) {
       await eventFollowsAggregate.replaceOrInsert(
@@ -1247,14 +1104,12 @@ export async function followEvent(
       );
     }
 
-    // Get event to add to user's feed
     const event = await ctx.db
       .query("events")
       .withIndex("by_custom_id", (q) => q.eq("id", eventId))
       .unique();
 
     if (event) {
-      // Add to user's feed
       await ctx.runMutation(internal.feedHelpers.addEventToUserFeed, {
         userId,
         eventId,
@@ -1265,9 +1120,6 @@ export async function followEvent(
   return await getEventById(ctx, eventId);
 }
 
-/**
- * Unfollow an event
- */
 export async function unfollowEvent(
   ctx: MutationCtx,
   userId: string,
@@ -1329,7 +1181,6 @@ export async function unfollowEvent(
         await userFeedsAggregate.deleteIfExists(ctx, feedEntry);
         await ctx.db.delete(feedEntry._id);
 
-        // Sync grouped feed entry (removes group if empty, or updates primary/count)
         if (similarityGroupId) {
           await ctx.runMutation(
             internal.feedGroupHelpers.upsertGroupedFeedEntry,
@@ -1343,9 +1194,6 @@ export async function unfollowEvent(
   return await getEventById(ctx, eventId);
 }
 
-/**
- * Add event to list
- */
 export async function addEventToList(
   ctx: MutationCtx,
   eventId: string,
@@ -1368,12 +1216,10 @@ export async function addEventToList(
   } else if (contribution === "open") {
     // Open mode: anyone can contribute
   } else if (contribution === "owner") {
-    // Owner mode: only the list owner can contribute
     throw new ConvexError(
       "Cannot add event to list: contribution is restricted to owner only",
     );
   } else {
-    // Restricted mode: only members can contribute
     const membership = await ctx.db
       .query("listMembers")
       .withIndex("by_list_and_user", (q) =>
@@ -1401,11 +1247,8 @@ export async function addEventToList(
       listId,
     });
 
-    // Maintain the list's own feed (list_${listId}) so getEventsForList can
-    // paginate efficiently by the userFeeds visibility/hasEnded index.
     await addEventToListFeedInline(ctx, eventId, listId);
 
-    // Add event to followers' feeds
     await ctx.runMutation(internal.feedHelpers.addEventToListFollowersFeeds, {
       eventId,
       listId,
@@ -1413,9 +1256,6 @@ export async function addEventToList(
   }
 }
 
-/**
- * Remove event from list
- */
 export async function removeEventFromList(
   ctx: MutationCtx,
   eventId: string,
@@ -1438,12 +1278,10 @@ export async function removeEventFromList(
   } else if (contribution === "open") {
     // Open mode: anyone can contribute
   } else if (contribution === "owner") {
-    // Owner mode: only the list owner can contribute
     throw new ConvexError(
       "Cannot remove event from list: contribution is restricted to owner only",
     );
   } else {
-    // Restricted mode: only members can contribute
     const membership = await ctx.db
       .query("listMembers")
       .withIndex("by_list_and_user", (q) =>
@@ -1470,11 +1308,8 @@ export async function removeEventFromList(
       await ctx.db.delete(link._id);
     }
 
-    // Drop this event from the list's own feed before fanning out to
-    // followers, mirroring the symmetric write in addEventToList.
     await removeEventFromListFeedInline(ctx, eventId, listId);
 
-    // Remove event from followers' feeds
     await ctx.runMutation(
       internal.feedHelpers.removeEventFromListFollowersFeeds,
       {
@@ -1485,9 +1320,6 @@ export async function removeEventFromList(
   }
 }
 
-/**
- * Toggle event visibility
- */
 export async function toggleEventVisibility(
   ctx: MutationCtx,
   userId: string,
@@ -1512,16 +1344,13 @@ export async function toggleEventVisibility(
     updatedAt: new Date().toISOString(),
   });
 
-  // Update feeds based on visibility change
   if (event.visibility !== visibility) {
-    // If changing to private, remove from public feeds
     if (visibility === "private") {
       await ctx.runMutation(internal.feedHelpers.removeEventFromFeeds, {
         eventId,
         keepCreatorFeed: true,
       });
     } else {
-      // If changing to public, add to feeds
       await ctx.runMutation(internal.feedHelpers.updateEventInFeeds, {
         eventId,
         userId: event.userId,
@@ -1530,7 +1359,6 @@ export async function toggleEventVisibility(
         endDateTime: event.endDateTime,
       });
 
-      // Fan out to list followers when event becomes public
       const eventToLists = await ctx.db
         .query("eventToLists")
         .withIndex("by_event", (q) => q.eq("eventId", eventId))
@@ -1547,9 +1375,6 @@ export async function toggleEventVisibility(
       }
     }
 
-    // Sync eventVisibility on persistent feed entries (creator + list_*).
-    // updateEventInFeeds / removeEventFromFeeds don't touch list_* visibility,
-    // so the getEventsForList index filter would otherwise read a stale value.
     await ctx.runMutation(internal.feedHelpers.updateEventVisibilityInFeeds, {
       eventId,
       visibility,
@@ -1559,9 +1384,6 @@ export async function toggleEventVisibility(
   return event;
 }
 
-/**
- * Get user stats using aggregates for O(log(n)) performance
- */
 export async function getUserStats(ctx: QueryCtx, userName: string) {
   const user = await ctx.db
     .query("users")
@@ -1584,11 +1406,9 @@ export async function getUserStats(ctx: QueryCtx, userName: string) {
   const nowMs = now.getTime();
   const sevenDaysAgoMs = sevenDaysAgo.getTime();
 
-  // Run all aggregate queries in parallel for better performance
   const feedId = `user_${user.id}`;
   const [capturesThisWeek, allTimeOwnEvents, totalFollows, upcomingEvents] =
     await Promise.all([
-      // Count events created in last 7 days using aggregate - O(log(n))
       eventsByCreation.count(ctx, {
         namespace: user.id,
         bounds: {
@@ -1597,17 +1417,14 @@ export async function getUserStats(ctx: QueryCtx, userName: string) {
         },
       }),
 
-      // Count all-time events (own) using aggregate - O(log(n))
       eventsByCreation.count(ctx, {
         namespace: user.id,
       }),
 
-      // Count total event follows using aggregate - O(log(n))
       eventFollowsAggregate.count(ctx, {
         namespace: user.id,
       }),
 
-      // Count upcoming events (own + followed) using userFeeds aggregate - O(log(n))
       userFeedsAggregate.count(ctx, {
         namespace: feedId,
         bounds: {
@@ -1626,9 +1443,6 @@ export async function getUserStats(ctx: QueryCtx, userName: string) {
   };
 }
 
-/**
- * Get events for user with pagination (upcoming or past)
- */
 export async function getEventsForUserPaginated(
   ctx: QueryCtx,
   userName: string,
@@ -1655,11 +1469,10 @@ export async function getEventsForUserPaginated(
       // Index provides ascending order by startDateTime by default as it's the second field.
       .filter((q) => q.gte(q.field("startDateTime"), now));
   } else {
-    // "past"
     queryBuilder = ctx.db
       .query("events")
       .withIndex("by_user_and_startDateTime", (q) => q.eq("userId", user.id))
-      .order("desc") // Reverse the natural index order to get most recent past events first
+      .order("desc")
       .filter((q) => q.lt(q.field("startDateTime"), now));
   }
 

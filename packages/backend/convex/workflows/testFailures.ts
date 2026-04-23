@@ -7,9 +7,6 @@ import { DEFAULT_VISIBILITY } from "../constants";
 
 const workflow = new WorkflowManager(components.workflow);
 
-/**
- * Test function that simulates AI extraction failure
- */
 export const testAIExtractionFailure = mutation({
   args: {
     userId: v.string(),
@@ -23,7 +20,6 @@ export const testAIExtractionFailure = mutation({
     ctx,
     args,
   ): Promise<{ success: boolean; workflowId: string }> => {
-    // Start workflow with a known bad base64 string that will cause AI extraction to fail
     const workflowId: string = await workflow.start(
       ctx,
       internal.workflows.eventIngestion.eventFromImageBase64Workflow,
@@ -53,9 +49,6 @@ export const testAIExtractionFailure = mutation({
   },
 });
 
-/**
- * Test function that simulates image upload failure
- */
 export const testImageUploadFailure = mutation({
   args: {
     userId: v.string(),
@@ -69,7 +62,6 @@ export const testImageUploadFailure = mutation({
     ctx,
     args,
   ): Promise<{ success: boolean; workflowId: string }> => {
-    // Start workflow with empty base64 string that will cause upload to fail
     const workflowId: string = await workflow.start(
       ctx,
       internal.workflows.eventIngestion.eventFromImageBase64Workflow,
@@ -99,9 +91,6 @@ export const testImageUploadFailure = mutation({
   },
 });
 
-/**
- * Test function that simulates validation failure by providing data that won't validate
- */
 export const testValidationFailure = mutation({
   args: {
     userId: v.string(),
@@ -115,7 +104,6 @@ export const testValidationFailure = mutation({
     ctx,
     args,
   ): Promise<{ success: boolean; workflowId: string }> => {
-    // Start workflow with a base64 string that might extract but will fail validation
     const workflowId: string = await workflow.start(
       ctx,
       internal.workflows.eventIngestion.eventFromImageBase64Workflow,
@@ -146,10 +134,6 @@ export const testValidationFailure = mutation({
   },
 });
 
-/**
- * Test function that simulates database insertion failure
- * This is harder to simulate without actually breaking the DB, so we'll rely on integration testing
- */
 export const testDatabaseFailure = mutation({
   args: {
     userId: v.string(),
@@ -169,9 +153,6 @@ export const testDatabaseFailure = mutation({
   },
 });
 
-/**
- * Workflow status checker to validate that workflows are failing and notifications are being sent
- */
 export const checkWorkflowFailureStatus = mutation({
   args: {
     workflowId: vWorkflowId,
@@ -225,9 +206,6 @@ export const checkWorkflowFailureStatus = mutation({
   },
 });
 
-/**
- * Utility function to test notification system directly
- */
 export const testNotificationSystemDirectly = mutation({
   args: {
     userId: v.string(),
@@ -241,7 +219,6 @@ export const testNotificationSystemDirectly = mutation({
   }),
   handler: async (ctx, args) => {
     try {
-      // Directly test the failure notification system
       await ctx.scheduler.runAfter(0, internal.notifications.pushFailure, {
         userId: args.userId,
         userName: args.username,
@@ -262,9 +239,6 @@ export const testNotificationSystemDirectly = mutation({
   },
 });
 
-/**
- * Test function that simulates URL fetch failure
- */
 export const simulateUrlFetchFailure = mutation({
   args: {
     userId: v.string(),
@@ -278,7 +252,6 @@ export const simulateUrlFetchFailure = mutation({
     ctx,
     args,
   ): Promise<{ success: boolean; workflowId: string }> => {
-    // Start workflow with an invalid URL that will cause fetch to fail
     const workflowId: string = await workflow.start(
       ctx,
       internal.workflows.eventIngestion.eventFromUrlWorkflow,
@@ -308,9 +281,6 @@ export const simulateUrlFetchFailure = mutation({
   },
 });
 
-/**
- * Test function that simulates URL content parsing failure
- */
 export const simulateUrlContentParsingFailure = mutation({
   args: {
     userId: v.string(),
@@ -324,7 +294,6 @@ export const simulateUrlContentParsingFailure = mutation({
     ctx,
     args,
   ): Promise<{ success: boolean; workflowId: string }> => {
-    // Start workflow with a URL that returns invalid/unparseable content
     const workflowId: string = await workflow.start(
       ctx,
       internal.workflows.eventIngestion.eventFromUrlWorkflow,
@@ -354,9 +323,6 @@ export const simulateUrlContentParsingFailure = mutation({
   },
 });
 
-/**
- * Test function that simulates URL AI processing failure
- */
 export const simulateUrlAiProcessingFailure = mutation({
   args: {
     userId: v.string(),
@@ -370,7 +336,6 @@ export const simulateUrlAiProcessingFailure = mutation({
     ctx,
     args,
   ): Promise<{ success: boolean; workflowId: string }> => {
-    // Start workflow with a URL that returns content but will fail AI processing
     const workflowId: string = await workflow.start(
       ctx,
       internal.workflows.eventIngestion.eventFromUrlWorkflow,
@@ -400,9 +365,6 @@ export const simulateUrlAiProcessingFailure = mutation({
   },
 });
 
-/**
- * Test function that simulates URL validation failure
- */
 export const simulateUrlValidationFailure = mutation({
   args: {
     userId: v.string(),
@@ -416,7 +378,6 @@ export const simulateUrlValidationFailure = mutation({
     ctx,
     args,
   ): Promise<{ success: boolean; workflowId: string }> => {
-    // Start workflow with a URL that might extract content but fail validation
     const workflowId: string = await workflow.start(
       ctx,
       internal.workflows.eventIngestion.eventFromUrlWorkflow,
@@ -446,9 +407,6 @@ export const simulateUrlValidationFailure = mutation({
   },
 });
 
-/**
- * Test function that simulates URL database failure
- */
 export const simulateUrlDatabaseFailure = mutation({
   args: {
     userId: v.string(),
@@ -460,9 +418,6 @@ export const simulateUrlDatabaseFailure = mutation({
     note: v.string(),
   }),
   handler: (_ctx, _args) => {
-    // Database failures are hard to simulate safely in production
-    // This would need to be tested with integration tests or by temporarily
-    // modifying the database schema to reject valid inserts
     return {
       success: false,
       workflowId: "test-url-db-failure",
@@ -471,9 +426,6 @@ export const simulateUrlDatabaseFailure = mutation({
   },
 });
 
-/**
- * Test URL workflow with valid data to ensure the workflow works correctly
- */
 export const testUrlWorkflowSuccess = mutation({
   args: {
     userId: v.string(),
@@ -487,7 +439,6 @@ export const testUrlWorkflowSuccess = mutation({
     ctx,
     args,
   ): Promise<{ success: boolean; workflowId: string }> => {
-    // Start workflow with a valid URL that should succeed
     const workflowId: string = await workflow.start(
       ctx,
       internal.workflows.eventIngestion.eventFromUrlWorkflow,
@@ -517,9 +468,6 @@ export const testUrlWorkflowSuccess = mutation({
   },
 });
 
-/**
- * Validation function specifically for URL workflow testing
- */
 export const validateUrlWorkflowFailure = mutation({
   args: {
     workflowId: vWorkflowId,
@@ -535,7 +483,6 @@ export const validateUrlWorkflowFailure = mutation({
   }),
   handler: async (ctx, args) => {
     try {
-      // Get workflow status
       const status = await ctx.runQuery(
         components.workflow.workflow.getStatus,
         {
@@ -556,7 +503,6 @@ export const validateUrlWorkflowFailure = mutation({
           isWorkflowFailed = true;
           error = runResult.error;
 
-          // Try to determine which step failed from the error message
           if (error.includes("extractEventFromUrl")) {
             failureStep = "URL_FETCH_OR_AI_PROCESSING";
           } else if (error.includes("validateEvent")) {
@@ -571,8 +517,6 @@ export const validateUrlWorkflowFailure = mutation({
         }
       }
 
-      // For URL workflow testing, we assume the URL-specific notification was sent
-      // In a real implementation, we would check the notification logs/database
       const hasUrlFailureNotification = isWorkflowFailed;
 
       return {
@@ -599,9 +543,6 @@ export const validateUrlWorkflowFailure = mutation({
   },
 });
 
-/**
- * Validation function to check URL workflow success scenarios
- */
 export const validateUrlWorkflowSuccess = mutation({
   args: {
     workflowId: vWorkflowId,
@@ -636,9 +577,8 @@ export const validateUrlWorkflowSuccess = mutation({
         if (runResult.kind === "success") {
           isWorkflowSuccessful = true;
           eventId = runResult.returnValue as string;
-          hasSuccessNotification = true; // Assume notification was sent for success
+          hasSuccessNotification = true;
 
-          // Extract completed steps from the workflow execution
           completedSteps = [
             "extractEventFromUrl",
             "validateEvent",
@@ -646,7 +586,6 @@ export const validateUrlWorkflowSuccess = mutation({
             "sendPush",
           ];
 
-          // Calculate execution time if available
           if (status.workflow._creationTime) {
             executionTime = Date.now() - status.workflow._creationTime;
           }
@@ -676,9 +615,6 @@ export const validateUrlWorkflowSuccess = mutation({
   },
 });
 
-/**
- * Validation function to verify URL workflow notification delivery
- */
 export const validateUrlWorkflowNotifications = mutation({
   args: {
     userId: v.string(),
@@ -696,8 +632,6 @@ export const validateUrlWorkflowNotifications = mutation({
     error: v.optional(v.string()),
   }),
   handler: async (ctx, args) => {
-    // In a real implementation, this would query the notifications table/system
-    // For now, we'll simulate the validation based on workflow status
     try {
       const status = await ctx.runQuery(
         components.workflow.workflow.getStatus,

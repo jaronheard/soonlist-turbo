@@ -1,9 +1,3 @@
-/**
- * Migration to initialize aggregates for existing events and eventFollows
- *
- * Run this once after deploying the aggregate changes to populate the
- * aggregates with existing data.
- */
 
 import { v } from "convex/values";
 
@@ -18,9 +12,6 @@ import {
 
 const BATCH_SIZE = 100;
 
-/**
- * Initialize aggregates for a batch of events
- */
 export const initializeEventAggregatesBatch = internalMutation({
   args: {
     cursor: v.union(v.string(), v.null()),
@@ -43,7 +34,6 @@ export const initializeEventAggregatesBatch = internalMutation({
       await eventsByStartTime.replaceOrInsert(ctx, event, event);
     }
 
-    // If there are more pages, schedule the next batch
     if (!result.isDone) {
       await ctx.scheduler.runAfter(
         0,
@@ -60,16 +50,12 @@ export const initializeEventAggregatesBatch = internalMutation({
   },
 });
 
-/**
- * Initialize aggregates for all existing events (orchestrator)
- */
 export const initializeEventAggregates = internalMutation({
   args: {},
   returns: v.null(),
   handler: async (ctx) => {
     console.log("Starting event aggregates initialization...");
 
-    // Kick off the first batch; subsequent batches self-schedule
     await ctx.scheduler.runAfter(
       0,
       internal.migrations.initializeAggregates.initializeEventAggregatesBatch,
@@ -79,9 +65,6 @@ export const initializeEventAggregates = internalMutation({
   },
 });
 
-/**
- * Initialize aggregates for a batch of eventFollows
- */
 export const initializeEventFollowsAggregatesBatch = internalMutation({
   args: {
     cursor: v.union(v.string(), v.null()),
@@ -103,7 +86,6 @@ export const initializeEventFollowsAggregatesBatch = internalMutation({
       await eventFollowsAggregate.replaceOrInsert(ctx, follow, follow);
     }
 
-    // If there are more pages, schedule the next batch
     if (!result.isDone) {
       await ctx.scheduler.runAfter(
         0,
@@ -121,16 +103,12 @@ export const initializeEventFollowsAggregatesBatch = internalMutation({
   },
 });
 
-/**
- * Initialize aggregates for all existing eventFollows (orchestrator)
- */
 export const initializeEventFollowsAggregates = internalMutation({
   args: {},
   returns: v.null(),
   handler: async (ctx) => {
     console.log("Starting eventFollows aggregates initialization...");
 
-    // Kick off the first batch; subsequent batches self-schedule
     await ctx.scheduler.runAfter(
       0,
       internal.migrations.initializeAggregates
@@ -141,9 +119,6 @@ export const initializeEventFollowsAggregates = internalMutation({
   },
 });
 
-/**
- * Initialize aggregates for a batch of listFollows
- */
 export const initializeListFollowsAggregatesBatch = internalMutation({
   args: {
     cursor: v.union(v.string(), v.null()),
@@ -165,7 +140,6 @@ export const initializeListFollowsAggregatesBatch = internalMutation({
       await listFollowsAggregate.replaceOrInsert(ctx, follow, follow);
     }
 
-    // If there are more pages, schedule the next batch
     if (!result.isDone) {
       await ctx.scheduler.runAfter(
         0,
@@ -183,16 +157,12 @@ export const initializeListFollowsAggregatesBatch = internalMutation({
   },
 });
 
-/**
- * Initialize aggregates for all existing listFollows (orchestrator)
- */
 export const initializeListFollowsAggregates = internalMutation({
   args: {},
   returns: v.null(),
   handler: async (ctx) => {
     console.log("Starting listFollows aggregates initialization...");
 
-    // Kick off the first batch; subsequent batches self-schedule
     await ctx.scheduler.runAfter(
       0,
       internal.migrations.initializeAggregates
@@ -203,14 +173,10 @@ export const initializeListFollowsAggregates = internalMutation({
   },
 });
 
-/**
- * Run all aggregate initializations
- */
 export const initializeAllAggregates = internalMutation({
   args: {},
   returns: v.null(),
   handler: async (ctx) => {
-    // Clear all namespaces once at the very beginning
     await ctx.runMutation(components.eventsByCreation.public.clear, {});
     await ctx.runMutation(components.eventsByStartTime.public.clear, {});
     await ctx.runMutation(components.eventFollowsAggregate.public.clear, {});

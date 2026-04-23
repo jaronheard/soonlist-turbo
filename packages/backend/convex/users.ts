@@ -13,10 +13,6 @@ import { onboardingDataValidator, userAdditionalInfoValidator } from "./schema";
 
 const MAX_USERNAME_LENGTH = 64;
 
-/**
- * Generate a unique username based on user's name or email
- * Uses slug-like generation: tries simplest form first, then adds numbers
- */
 async function generateUniqueUsername(
   db: DatabaseReader,
   firstName?: string | null,
@@ -30,15 +26,14 @@ async function generateUniqueUsername(
     timestamp: new Date().toISOString(),
   });
 
-  // Clean and format names for username (slug-like)
   const slugify = (text: string | null | undefined) => {
     if (!text) return "";
     const result = text
       .toLowerCase()
       .trim()
-      .replace(/[^a-z0-9]+/g, "-") // Replace non-alphanumeric with hyphens
-      .replace(/^-+|-+$/g, "") // Remove leading/trailing hyphens
-      .replace(/-+/g, "-"); // Replace multiple hyphens with single
+      .replace(/[^a-z0-9]+/g, "-")
+      .replace(/^-+|-+$/g, "")
+      .replace(/-+/g, "-");
 
     console.log("[USERNAME_GEN] Slugified", { input: text, output: result });
     return result;
@@ -54,36 +49,29 @@ async function generateUniqueUsername(
     emailPrefix,
   });
 
-  // Create a list of username candidates in order of preference
   const candidates: string[] = [];
 
-  // 1. Try just firstname (most common for social platforms)
   if (cleanFirst) {
     candidates.push(cleanFirst);
   }
 
-  // 2. Try firstname + lastname variations
-  // Only use characters allowed by username validation: letters, numbers, hyphens, underscores
   if (cleanFirst && cleanLast) {
-    candidates.push(`${cleanFirst}${cleanLast}`); // johnsmith
-    candidates.push(`${cleanFirst}-${cleanLast}`); // john-smith
-    candidates.push(`${cleanFirst}_${cleanLast}`); // john_smith
+    candidates.push(`${cleanFirst}${cleanLast}`);
+    candidates.push(`${cleanFirst}-${cleanLast}`);
+    candidates.push(`${cleanFirst}_${cleanLast}`);
   }
 
-  // 3. Try just lastname
   if (cleanLast) {
     candidates.push(cleanLast);
   }
 
-  // 4. Try email prefix
   if (emailPrefix && emailPrefix !== cleanFirst && emailPrefix !== cleanLast) {
     candidates.push(emailPrefix);
   }
 
-  // 5. Try combinations with first initial
   if (cleanFirst && cleanLast) {
-    candidates.push(`${cleanFirst[0]}${cleanLast}`); // jsmith
-    candidates.push(`${cleanFirst[0]}-${cleanLast}`); // j-smith
+    candidates.push(`${cleanFirst[0]}${cleanLast}`);
+    candidates.push(`${cleanFirst[0]}-${cleanLast}`);
   }
 
   console.log("[USERNAME_GEN] Generated candidates", {
@@ -91,13 +79,12 @@ async function generateUniqueUsername(
     candidateCount: candidates.length,
   });
 
-  // Filter candidates by length and ensure minimum length (4 characters minimum)
   const validCandidates = candidates
     .filter(
       (username) =>
         username.length >= 4 && username.length <= MAX_USERNAME_LENGTH,
     )
-    .slice(0, 10); // Limit to first 10 candidates
+    .slice(0, 10);
 
   console.log("[USERNAME_GEN] Valid candidates after filtering", {
     validCandidates,
@@ -105,7 +92,6 @@ async function generateUniqueUsername(
     filteredOut: candidates.length - validCandidates.length,
   });
 
-  // Batch check all candidates at once
   if (validCandidates.length > 0) {
     console.log("[USERNAME_GEN] Checking candidate availability...");
     const existingUsers = await Promise.all(
@@ -128,7 +114,6 @@ async function generateUniqueUsername(
       ),
     });
 
-    // Return first available candidate
     for (const candidate of validCandidates) {
       if (!takenUsernames.has(candidate)) {
         console.log("[USERNAME_GEN] SUCCESS: Found available username", {
@@ -140,11 +125,8 @@ async function generateUniqueUsername(
     }
   }
 
-  // If all candidates are taken, add numbers to the best candidate
-  // Ensure the base username is at least 4 characters long
   let baseUsername = validCandidates[0] || "user";
 
-  // If the base username is too short, pad it to meet the 4-character minimum
   if (baseUsername.length < 4) {
     console.log(
       "[USERNAME_GEN] Base username too short, padding to meet 4-character minimum",
@@ -153,7 +135,6 @@ async function generateUniqueUsername(
         length: baseUsername.length,
       },
     );
-    // Pad with 'x' characters to reach minimum length
     baseUsername = baseUsername.padEnd(4, "x");
     console.log("[USERNAME_GEN] Padded base username", {
       paddedBase: baseUsername,
@@ -169,8 +150,7 @@ async function generateUniqueUsername(
     },
   );
 
-  // Ensure base username with numbers fits within limit
-  const maxNumberLength = MAX_USERNAME_LENGTH - baseUsername.length - 1; // -1 for the number
+  const maxNumberLength = MAX_USERNAME_LENGTH - baseUsername.length - 1;
   if (maxNumberLength > 0) {
     const maxNumber = Math.pow(10, maxNumberLength) - 1;
 
@@ -180,7 +160,6 @@ async function generateUniqueUsername(
       baseUsernameLength: baseUsername.length,
     });
 
-    // Batch check numbered usernames (1-99)
     const numberedCandidates: string[] = [];
     for (let i = 1; i < 100 && i <= maxNumber; i++) {
       numberedCandidates.push(`${baseUsername}${i}`);
@@ -235,7 +214,6 @@ async function generateUniqueUsername(
     }
   }
 
-  // Ultimate fallback: use timestamp (ensure it fits)
   const timestamp = Date.now().toString();
   const fallbackUsername = `${baseUsername}${timestamp}`;
 
@@ -256,13 +234,9 @@ async function generateUniqueUsername(
     return fallbackUsername;
   }
 
-  // If even timestamp is too long, truncate the base and add timestamp
-  // Ensure we have at least 1 character from the base to maintain some personalization
-  // while still ensuring the final username is at least 4 characters long
   const minBaseChars = Math.max(1, 4 - timestamp.length);
   const maxBaseChars = MAX_USERNAME_LENGTH - timestamp.length;
 
-  // Use the maximum possible characters from base while respecting constraints
   const truncatedBase = baseUsername.substring(
     0,
     Math.max(minBaseChars, maxBaseChars),
@@ -280,9 +254,6 @@ async function generateUniqueUsername(
   return finalUsername;
 }
 
-/**
- * Generate a unique username - requires guest authentication
- */
 export const generateUsername = query({
   args: {
     guestUserId: v.string(),
@@ -309,7 +280,6 @@ export const generateUsername = query({
       timestamp: new Date().toISOString(),
     });
 
-    // Validate guest user ID format
     if (!args.guestUserId?.startsWith("guest_")) {
       console.error("[USERNAME_GEN] ERROR: Invalid guest user ID", {
         guestUserId: args.guestUserId,
@@ -324,7 +294,6 @@ export const generateUsername = query({
       let result: string;
 
       if (isLastAttempt) {
-        // On the last attempt, use timestamp-based generation for maximum uniqueness
         console.log(
           "[USERNAME_GEN] Using timestamp-based generation (final attempt)",
           {
@@ -343,7 +312,6 @@ export const generateUsername = query({
 
         result = `${baseUsername}${timestamp}`;
 
-        // Ensure it fits within length limits
         if (result.length > MAX_USERNAME_LENGTH) {
           const truncatedBase = baseUsername.substring(
             0,
@@ -359,7 +327,6 @@ export const generateUsername = query({
           strategy: "timestamp_final_attempt",
         });
       } else {
-        // Use normal username generation for non-final attempts
         console.log("[USERNAME_GEN] Using normal username generation", {
           retryAttempt,
           maxRetries,
@@ -395,9 +362,6 @@ export const generateUsername = query({
   },
 });
 
-/**
- * Get a user by their ID
- */
 export const getById = query({
   args: { id: v.string() },
   handler: async (ctx, args) => {
@@ -409,9 +373,6 @@ export const getById = query({
   },
 });
 
-/**
- * Get a user by their username
- */
 export const getByUsername = query({
   args: { userName: v.string() },
   handler: async (ctx, args) => {
@@ -423,9 +384,6 @@ export const getByUsername = query({
   },
 });
 
-/**
- * Get the current authenticated user
- */
 export const getCurrentUser = query({
   args: {},
   handler: async (ctx) => {
@@ -442,9 +400,6 @@ export const getCurrentUser = query({
   },
 });
 
-/**
- * Update user additional info (bio, public contact info)
- */
 export const updateAdditionalInfo = mutation({
   args: {
     userId: v.string(),
@@ -460,7 +415,6 @@ export const updateAdditionalInfo = mutation({
       });
     }
 
-    // Verify that the authenticated user's ID matches the userId being updated
     if (identity.subject !== args.userId) {
       throw new ConvexError({
         message: "Unauthorized: You can only update your own profile",
@@ -498,9 +452,6 @@ export const updateAdditionalInfo = mutation({
   },
 });
 
-/**
- * Save onboarding data for a user
- */
 export const saveOnboardingData = mutation({
   args: {
     userId: v.string(),
@@ -516,7 +467,6 @@ export const saveOnboardingData = mutation({
       });
     }
 
-    // Verify that the authenticated user's ID matches the userId being updated
     if (identity.subject !== args.userId) {
       throw new ConvexError({
         message: "Unauthorized: You can only update your own onboarding data",
@@ -536,10 +486,8 @@ export const saveOnboardingData = mutation({
       throw new ConvexError("User not found");
     }
 
-    // Get existing onboarding data - now properly typed
     const existingData = user.onboardingData || {};
 
-    // Merge existing data with new data
     const { userId: _, ...newData } = args;
     const mergedData = {
       ...existingData,
@@ -555,9 +503,6 @@ export const saveOnboardingData = mutation({
   },
 });
 
-/**
- * Get onboarding data for a user
- */
 export const getOnboardingData = query({
   args: { userId: v.string() },
   handler: async (ctx, args) => {
@@ -574,9 +519,6 @@ export const getOnboardingData = query({
   },
 });
 
-/**
- * Delete a user account and all related data
- */
 export const deleteAccount = mutation({
   args: { userId: v.string() },
   returns: v.null(),
@@ -587,7 +529,6 @@ export const deleteAccount = mutation({
       throw new ConvexError("User not authenticated");
     }
 
-    // Verify that the authenticated user's ID matches the userId being deleted
     if (identity.subject !== args.userId) {
       throw new ConvexError("User not authorized to delete this account");
     }
@@ -601,7 +542,6 @@ export const deleteAccount = mutation({
       throw new ConvexError("User not found");
     }
 
-    // Delete user from Clerk first
     const clerkSecretKey = process.env.CLERK_SECRET_KEY;
     if (!clerkSecretKey) {
       throw new ConvexError("Clerk secret key not configured");
@@ -626,17 +566,14 @@ export const deleteAccount = mutation({
         );
       }
     } catch (error) {
-      // If it's already a ConvexError, re-throw it
       if (error instanceof ConvexError) {
         throw error;
       }
-      // For other errors (network, etc.), wrap in ConvexError
       throw new ConvexError(
         `Failed to delete user from Clerk: ${String(error)}`,
       );
     }
 
-    // Use the new centralized cascade delete mutation
     await ctx.runMutation(internal.users.deleteUserAndCascade, {
       userId: args.userId,
     });
@@ -645,9 +582,6 @@ export const deleteAccount = mutation({
   },
 });
 
-/**
- * Reset onboarding for a user
- */
 export const resetOnboarding = mutation({
   args: { userId: v.string() },
   returns: v.null(),
@@ -660,7 +594,6 @@ export const resetOnboarding = mutation({
       });
     }
 
-    // Verify that the authenticated user's ID matches the userId being updated
     if (identity.subject !== args.userId) {
       throw new ConvexError({
         message: "Unauthorized: You can only reset your own onboarding",
@@ -690,9 +623,6 @@ export const resetOnboarding = mutation({
   },
 });
 
-/**
- * Set onboarding completed timestamp
- */
 export const setOnboardingCompletedAt = mutation({
   args: {
     userId: v.string(),
@@ -708,7 +638,6 @@ export const setOnboardingCompletedAt = mutation({
       });
     }
 
-    // Verify that the authenticated user's ID matches the userId being updated
     if (identity.subject !== args.userId) {
       throw new ConvexError({
         message: "Unauthorized: You can only update your own onboarding status",
@@ -728,7 +657,6 @@ export const setOnboardingCompletedAt = mutation({
       throw new ConvexError("User not found");
     }
 
-    // Update onboarding data to include completedAt - now properly typed
     const existingData = user.onboardingData || {};
     const updatedData = {
       ...existingData,
@@ -745,9 +673,6 @@ export const setOnboardingCompletedAt = mutation({
   },
 });
 
-/**
- * Internal mutation to sync user data from Clerk webhook
- */
 export const syncFromClerk = internalMutation({
   args: {
     id: v.string(),
@@ -781,7 +706,6 @@ export const syncFromClerk = internalMutation({
       .withIndex("by_custom_id", (q) => q.eq("id", args.id))
       .unique();
 
-    // Username must be set during signup - fail if missing
     const username = args.username;
     if (!username || username.trim() === "") {
       throw new ConvexError({
@@ -821,15 +745,11 @@ export const syncFromClerk = internalMutation({
         onboardingCompletedAt: null,
       });
 
-      // Create personal list for new user
       await getOrCreatePersonalList(ctx, args.id);
     }
   },
 });
 
-/**
- * Internal mutation to delete user from Clerk webhook
- */
 export const deleteUser = internalMutation({
   args: { id: v.string() },
   handler: async (ctx, args) => {
@@ -842,16 +762,12 @@ export const deleteUser = internalMutation({
       console.warn(`User ${args.id} not found for deletion`);
       return;
     }
-    // Use the new centralized cascade delete mutation
     await ctx.runMutation(internal.users.deleteUserAndCascade, {
       userId: args.id,
     });
   },
 });
 
-/**
- * Update user's public list settings
- */
 export const updatePublicListSettings = mutation({
   args: {
     userId: v.string(),
@@ -867,7 +783,6 @@ export const updatePublicListSettings = mutation({
       );
     }
 
-    // Verify that the authenticated user's ID matches the userId being updated
     if (identity.subject !== args.userId) {
       throw new ConvexError(
         "Unauthorized: You can only update your own public list settings",
@@ -897,7 +812,6 @@ export const updatePublicListSettings = mutation({
 
     await ctx.db.patch(user._id, updates);
 
-    // If publicListEnabled changed, bulk update all user's event visibility
     if (
       args.publicListEnabled !== undefined &&
       args.publicListEnabled !== user.publicListEnabled
@@ -917,12 +831,6 @@ export const updatePublicListSettings = mutation({
   },
 });
 
-/**
- * One-shot mutation for the first-share setup sheet.
- * Atomically commits list name, profile edits, and the hasSharedListBefore flag.
- * Also flips publicListEnabled to true (if it was false) and schedules the
- * bulk event visibility update that updatePublicListSettings would have done.
- */
 export const completeFirstShareSetup = mutation({
   args: {
     userId: v.string(),
@@ -991,9 +899,6 @@ export const completeFirstShareSetup = mutation({
   },
 });
 
-/**
- * Get user's public list if enabled
- */
 export const getPublicList = query({
   args: { username: v.string() },
   handler: async (ctx, args) => {
@@ -1019,10 +924,6 @@ export const getPublicList = query({
   },
 });
 
-/**
- * INTERNAL: Centralized cascade deletion logic for a user.
- * This function should be called by other mutations that need to delete a user.
- */
 export const deleteUserAndCascade = internalMutation({
   args: { userId: v.string() },
   handler: async (ctx, args) => {
@@ -1036,14 +937,12 @@ export const deleteUserAndCascade = internalMutation({
       return;
     }
 
-    // Delete events created by user and their cascade dependencies
     const events = await ctx.db
       .query("events")
       .withIndex("by_user", (q) => q.eq("userId", args.userId))
       .collect();
 
     for (const event of events) {
-      // Delete comments on this event (by all users)
       const eventComments = await ctx.db
         .query("comments")
         .withIndex("by_event", (q) => q.eq("eventId", event.id))
@@ -1052,7 +951,6 @@ export const deleteUserAndCascade = internalMutation({
         await ctx.db.delete(comment._id);
       }
 
-      // Delete follows of this event (by all users)
       const eventFollowsOfEvent = await ctx.db
         .query("eventFollows")
         .withIndex("by_event", (q) => q.eq("eventId", event.id))
@@ -1061,7 +959,6 @@ export const deleteUserAndCascade = internalMutation({
         await ctx.db.delete(follow._id);
       }
 
-      // Delete eventToLists associations for this event
       const eventToListsOfEvent = await ctx.db
         .query("eventToLists")
         .withIndex("by_event", (q) => q.eq("eventId", event.id))
@@ -1070,12 +967,6 @@ export const deleteUserAndCascade = internalMutation({
         await ctx.db.delete(etl._id);
       }
 
-      // Remove the event from every userFeeds entry it lives in — including
-      // list_${listId} entries in OTHER users' lists, followedLists_* and
-      // followedUsers_* entries in their followers' feeds, and the discover
-      // feed. Without this, those rows hydrate as null in future queries
-      // (sparse pagination and dead data growth). Scheduled so the
-      // user-deletion mutation stays within transaction limits.
       await ctx.scheduler.runAfter(
         0,
         internal.feedHelpers.removeEventFromFeeds,
@@ -1086,11 +977,9 @@ export const deleteUserAndCascade = internalMutation({
         },
       );
 
-      // Delete the event itself
       await ctx.db.delete(event._id);
     }
 
-    // Delete comments by user (on other users' events)
     const comments = await ctx.db
       .query("comments")
       .withIndex("by_user", (q) => q.eq("userId", args.userId))
@@ -1099,14 +988,12 @@ export const deleteUserAndCascade = internalMutation({
       await ctx.db.delete(comment._id);
     }
 
-    // Delete lists created by user and their cascade dependencies
     const lists = await ctx.db
       .query("lists")
       .withIndex("by_user", (q) => q.eq("userId", args.userId))
       .collect();
 
     for (const list of lists) {
-      // Delete follows of this list (by all users)
       const listFollowsOfList = await ctx.db
         .query("listFollows")
         .withIndex("by_list", (q) => q.eq("listId", list.id))
@@ -1115,7 +1002,6 @@ export const deleteUserAndCascade = internalMutation({
         await ctx.db.delete(follow._id);
       }
 
-      // Delete eventToLists associations for this list
       const eventToListsOfList = await ctx.db
         .query("eventToLists")
         .withIndex("by_list", (q) => q.eq("listId", list.id))
@@ -1124,20 +1010,15 @@ export const deleteUserAndCascade = internalMutation({
         await ctx.db.delete(etl._id);
       }
 
-      // Schedule cleanup of the list's own feed (list_${listId}) entries.
-      // Deferring to an action keeps this user-deletion mutation within
-      // transaction limits for users who own many lists with large feeds.
       await ctx.scheduler.runAfter(
         0,
         internal.feedHelpers.removeListFeedAction,
         { listId: list.id },
       );
 
-      // Delete the list itself
       await ctx.db.delete(list._id);
     }
 
-    // Delete event follows by user (follows of other users' events)
     const eventFollows = await ctx.db
       .query("eventFollows")
       .withIndex("by_user", (q) => q.eq("userId", args.userId))
@@ -1146,7 +1027,6 @@ export const deleteUserAndCascade = internalMutation({
       await ctx.db.delete(follow._id);
     }
 
-    // Delete list follows by user (follows of other users' lists)
     const listFollows = await ctx.db
       .query("listFollows")
       .withIndex("by_user", (q) => q.eq("userId", args.userId))
@@ -1155,7 +1035,6 @@ export const deleteUserAndCascade = internalMutation({
       await ctx.db.delete(follow._id);
     }
 
-    // Delete push tokens
     const pushTokens = await ctx.db
       .query("pushTokens")
       .withIndex("by_user", (q) => q.eq("userId", args.userId))
@@ -1164,7 +1043,6 @@ export const deleteUserAndCascade = internalMutation({
       await ctx.db.delete(token._id);
     }
 
-    // Delete event batches
     const eventBatches = await ctx.db
       .query("eventBatches")
       .withIndex("by_user", (q) => q.eq("userId", args.userId))
@@ -1173,7 +1051,6 @@ export const deleteUserAndCascade = internalMutation({
       await ctx.db.delete(batch._id);
     }
 
-    // Delete user feeds
     const userFeeds = await ctx.db
       .query("userFeeds")
       .filter((q) => q.eq(q.field("feedId"), `user_${args.userId}`))
@@ -1182,7 +1059,6 @@ export const deleteUserAndCascade = internalMutation({
       await ctx.db.delete(feed._id);
     }
 
-    // Delete user follows (both as follower and following)
     const followsAsFollower = await ctx.db
       .query("userFollows")
       .withIndex("by_follower", (q) => q.eq("followerId", args.userId))
@@ -1195,14 +1071,10 @@ export const deleteUserAndCascade = internalMutation({
       await ctx.db.delete(follow._id);
     }
 
-    // Finally, delete the user record
     await ctx.db.delete(user._id);
   },
 });
 
-/**
- * Follow a user - their public events will appear in the follower's feed
- */
 export const followUser = mutation({
   args: {
     followingId: v.string(),
@@ -1216,12 +1088,10 @@ export const followUser = mutation({
 
     const followerId = identity.subject;
 
-    // Can't follow yourself
     if (followerId === followingId) {
       throw new ConvexError("Cannot follow yourself");
     }
 
-    // Check if target user exists
     const targetUser = await ctx.db
       .query("users")
       .withIndex("by_custom_id", (q) => q.eq("id", followingId))
@@ -1231,7 +1101,6 @@ export const followUser = mutation({
       throw new ConvexError("User not found");
     }
 
-    // Check if already following
     const existingFollow = await ctx.db
       .query("userFollows")
       .withIndex("by_follower_and_following", (q) =>
@@ -1243,13 +1112,11 @@ export const followUser = mutation({
       return { success: true, alreadyFollowing: true };
     }
 
-    // Create the follow relationship
     await ctx.db.insert("userFollows", {
       followerId,
       followingId,
     });
 
-    // Add the followed user's events to the follower's feed
     await ctx.runMutation(internal.feedHelpers.addUserEventsToUserFeed, {
       userId: followerId,
       followedUserId: followingId,
@@ -1259,9 +1126,6 @@ export const followUser = mutation({
   },
 });
 
-/**
- * Unfollow a user - their events will be removed from the follower's feed
- */
 export const unfollowUser = mutation({
   args: {
     followingId: v.string(),
@@ -1275,7 +1139,6 @@ export const unfollowUser = mutation({
 
     const followerId = identity.subject;
 
-    // Find the existing follow relationship
     const existingFollow = await ctx.db
       .query("userFollows")
       .withIndex("by_follower_and_following", (q) =>
@@ -1287,10 +1150,8 @@ export const unfollowUser = mutation({
       return { success: true, wasFollowing: false };
     }
 
-    // Delete the follow relationship
     await ctx.db.delete(existingFollow._id);
 
-    // Remove the unfollowed user's events from the follower's feed
     await ctx.runMutation(internal.feedHelpers.removeUserEventsFromUserFeed, {
       userId: followerId,
       unfollowedUserId: followingId,
@@ -1300,9 +1161,6 @@ export const unfollowUser = mutation({
   },
 });
 
-/**
- * Check if the current user follows a specific user
- */
 export const isFollowingUser = query({
   args: {
     followingId: v.string(),
@@ -1327,9 +1185,6 @@ export const isFollowingUser = query({
   },
 });
 
-/**
- * Get users that the current user is following
- */
 export const getFollowingUsers = query({
   args: {},
   handler: async (ctx) => {
@@ -1361,9 +1216,6 @@ export const getFollowingUsers = query({
   },
 });
 
-/**
- * Get the count of followers for a user
- */
 export const getFollowerCount = query({
   args: {
     userId: v.string(),
@@ -1378,14 +1230,6 @@ export const getFollowerCount = query({
   },
 });
 
-/**
- * INTERNAL: Bulk update visibility of all events for a user and their feed entries
- * Called when publicListEnabled is toggled
- */
-/**
- * Batch mutation: update visibility for one page of events.
- * Feed updates are scheduled asynchronously to keep each transaction lightweight.
- */
 export const bulkUpdateEventVisibilityBatch = internalMutation({
   args: {
     userId: v.string(),
@@ -1415,7 +1259,6 @@ export const bulkUpdateEventVisibilityBatch = internalMutation({
         updatedAt: new Date().toISOString(),
       });
 
-      // Schedule feed visibility update in a separate transaction
       await ctx.scheduler.runAfter(
         0,
         internal.feedHelpers.updateEventVisibilityInFeeds,
@@ -1423,14 +1266,12 @@ export const bulkUpdateEventVisibilityBatch = internalMutation({
       );
 
       if (visibility === "private") {
-        // Schedule removal from discover/follower feeds
         await ctx.scheduler.runAfter(
           0,
           internal.feedHelpers.removeEventFromFeeds,
           { eventId: event.id, keepCreatorFeed: true },
         );
       } else {
-        // Schedule adding to appropriate feeds
         await ctx.scheduler.runAfter(
           0,
           internal.feedHelpers.updateEventInFeeds,
@@ -1457,9 +1298,6 @@ export const bulkUpdateEventVisibilityBatch = internalMutation({
   },
 });
 
-/**
- * Action: orchestrate paginated bulk visibility update.
- */
 export const bulkUpdateEventVisibilityAction = internalAction({
   args: {
     userId: v.string(),

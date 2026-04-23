@@ -1,6 +1,3 @@
-/**
- * Upload base64 image to CDN
- */
 export async function uploadImageToCDNFromBase64(
   base64Image: string,
   contentType?: string,
@@ -13,7 +10,6 @@ export async function uploadImageToCDNFromBase64(
 
     const base64Data = base64Image.replace(/^data:image\/\w+;base64,/, "");
 
-    // Convert base64 string to Uint8Array (Convex doesn't have Buffer)
     const binaryString = atob(base64Data);
     const bytes = new Uint8Array(binaryString.length);
     for (let i = 0; i < binaryString.length; i++) {

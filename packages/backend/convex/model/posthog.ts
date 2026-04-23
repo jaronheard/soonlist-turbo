@@ -4,7 +4,6 @@ const POSTHOG_API_URL = "https://app.posthog.com";
 const POSTHOG_KEY = process.env.POSTHOG_KEY;
 const POSTHOG_HOST = process.env.NEXT_PUBLIC_POSTHOG_HOST || POSTHOG_API_URL;
 
-// PostHog recommends keeping batches under ~1000 events
 const POSTHOG_BATCH_SIZE = 500;
 
 export interface UserProperties {
@@ -29,7 +28,6 @@ function chunkArray<T>(array: T[], size: number): T[][] {
   return chunks;
 }
 
-/** Batch identify multiple users in PostHog using the /batch endpoint */
 export async function batchIdentifyUsers(users: IdentifyUserParams[]): Promise<{
   success: boolean;
   successCount: number;
