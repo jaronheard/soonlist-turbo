@@ -1,4 +1,4 @@
-import React, { useCallback, useMemo, useRef } from "react";
+import React, { useCallback, useMemo, useState } from "react";
 import { Text, TouchableOpacity, View } from "react-native";
 import { Image } from "expo-image";
 import { useRouter } from "expo-router";
@@ -100,11 +100,11 @@ export function FeaturedListRow({
     return followedLists.some((l) => l.id === personalList.id);
   }, [personalList, followedLists]);
 
-  const isMutatingRef = useRef(false);
+  const [isMutating, setIsMutating] = useState(false);
 
   const handleToggleSubscribe = useCallback(() => {
-    if (!personalList || isSelf || isMutatingRef.current) return;
-    isMutatingRef.current = true;
+    if (!personalList || isSelf || isMutating) return;
+    setIsMutating(true);
     const promise = isSubscribed
       ? unfollowListMutation({ listId: personalList.id })
       : followListMutation({ listId: personalList.id });
@@ -118,11 +118,12 @@ export function FeaturedListRow({
         );
       })
       .finally(() => {
-        isMutatingRef.current = false;
+        setIsMutating(false);
       });
   }, [
     personalList,
     isSelf,
+    isMutating,
     isSubscribed,
     unfollowListMutation,
     followListMutation,
@@ -179,6 +180,7 @@ export function FeaturedListRow({
           isSubscribed={isSubscribed}
           onPress={handleToggleSubscribe}
           size="sm"
+          loading={isMutating}
           accessibilityLabel={
             isSubscribed
               ? `Unsubscribe from ${displayName}`

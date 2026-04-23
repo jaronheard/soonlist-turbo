@@ -358,6 +358,23 @@ export const getFollowedListsFeed = query({
   },
 });
 
+export const getFollowedListsUpcomingCount = query({
+  args: {},
+  returns: v.number(),
+  handler: async (ctx) => {
+    const userId = await getUserId(ctx);
+    if (!userId) return 0;
+    const feedId = `followedLists_${userId}`;
+    return await userFeedsAggregate.count(ctx, {
+      namespace: feedId,
+      bounds: {
+        lower: { key: 0, inclusive: true },
+        upper: { key: 0, inclusive: true },
+      },
+    });
+  },
+});
+
 // Helper query to get followed users feed (events from users you follow)
 export const getFollowedUsersFeed = query({
   args: {

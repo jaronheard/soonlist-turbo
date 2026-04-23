@@ -1,4 +1,7 @@
 import { NativeTabs } from "expo-router/unstable-native-tabs";
+import { useQuery } from "convex/react";
+
+import { api } from "@soonlist/backend/convex/_generated/api";
 
 import { SUPPORTS_LIQUID_GLASS } from "~/hooks/useLiquidGlass";
 import { useAppStore } from "~/store";
@@ -12,7 +15,10 @@ export const unstable_settings = {
 
 export default function TabsLayout() {
   const myListBadgeCount = useAppStore((s) => s.myListBadgeCount);
-  const communityBadgeCount = useAppStore((s) => s.communityBadgeCount);
+  const communityBadgeCountQuery = useQuery(
+    api.feeds.getFollowedListsUpcomingCount,
+  );
+  const communityBadgeCount = communityBadgeCountQuery ?? 0;
 
   return (
     <NativeTabs

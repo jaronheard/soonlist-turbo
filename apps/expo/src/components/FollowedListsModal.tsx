@@ -1,4 +1,4 @@
-import React, { useCallback } from "react";
+import React, { useCallback, useState } from "react";
 import {
   ActivityIndicator,
   FlatList,
@@ -16,9 +16,9 @@ import { useMutation, useQuery } from "convex/react";
 import type { Doc } from "@soonlist/backend/convex/_generated/dataModel";
 import { api } from "@soonlist/backend/convex/_generated/api";
 
-import { List, ShareIcon } from "~/components/icons";
+import { ShareIcon } from "~/components/icons";
 import { SheetHeader } from "~/components/SheetHeader";
-import { SubscribeButton } from "~/components/SubscribeButton";
+import { SubscribedListRow } from "~/components/SubscribedListRow";
 import Config from "~/utils/config";
 import { logError } from "~/utils/errorLogging";
 import { toast } from "~/utils/feedback";
@@ -33,25 +33,54 @@ export function FollowedListsModal({
   onClose,
 }: FollowedListsModalProps) {
   const insets = useSafeAreaInsets();
-  const followedLists = useQuery(api.lists.getFollowedLists);
+  const followedLists = useQuery(api.lists.getFollowedListsWithPreview);
+  const [unsubscribingIds, setUnsubscribingIds] = useState<Set<string>>(
+    () => new Set(),
+  );
+
   const unfollowListMutation = useMutation(
     api.lists.unfollowList,
   ).withOptimisticUpdate((localStore, args) => {
     const current = localStore.getQuery(api.lists.getFollowedLists, {});
-    if (current === undefined) return;
-    localStore.setQuery(
-      api.lists.getFollowedLists,
+    if (current !== undefined) {
+      localStore.setQuery(
+        api.lists.getFollowedLists,
+        {},
+        current.filter((l) => l.id !== args.listId),
+      );
+    }
+    const currentWithPreview = localStore.getQuery(
+      api.lists.getFollowedListsWithPreview,
       {},
-      current.filter((l) => l.id !== args.listId),
     );
+    if (currentWithPreview !== undefined) {
+      localStore.setQuery(
+        api.lists.getFollowedListsWithPreview,
+        {},
+        currentWithPreview.filter((row) => row.list.id !== args.listId),
+      );
+    }
   });
 
   const handleUnfollow = useCallback(
     (listId: string) => {
-      unfollowListMutation({ listId }).catch((error: unknown) => {
-        logError("Error unfollowing list", error);
-        toast.error("Failed to unsubscribe");
+      setUnsubscribingIds((prev) => {
+        const next = new Set(prev);
+        next.add(listId);
+        return next;
       });
+      unfollowListMutation({ listId })
+        .catch((error: unknown) => {
+          logError("Error unfollowing list", error);
+          toast.error("Failed to unsubscribe");
+        })
+        .finally(() => {
+          setUnsubscribingIds((prev) => {
+            const next = new Set(prev);
+            next.delete(listId);
+            return next;
+          });
+        });
     },
     [unfollowListMutation],
   );
@@ -116,63 +145,41 @@ export function FollowedListsModal({
         ) : (
           <FlatList
             data={followedLists}
-            keyExtractor={(list) => list.id}
+            keyExtractor={(row) => row.list.id}
             contentContainerStyle={{
               paddingHorizontal: 16,
               paddingBottom: insets.bottom + 16,
             }}
-            renderItem={({ item: list, index }) => {
-              const isFirst = index === 0;
-              const isLast = index === followedLists.length - 1;
-              return (
-                <View
-                  className={`flex-row items-center bg-interactive-3/60 px-4 py-2.5 ${
-                    isFirst ? "rounded-t-2xl pt-3" : ""
-                  } ${isLast ? "rounded-b-2xl pb-3" : ""}`}
-                >
-                  <TouchableOpacity
-                    className="min-w-0 flex-1 flex-row items-center"
-                    onPress={() => handleListPress(list)}
-                    activeOpacity={0.7}
-                    accessibilityRole="button"
-                    accessibilityLabel={`Open list ${list.name}`}
-                  >
-                    <View className="h-11 w-11 shrink-0 items-center justify-center rounded-full bg-interactive-3">
-                      <List size={20} color="#5A32FB" />
-                    </View>
-                    <View className="ml-3 min-w-0 flex-1">
-                      <Text
-                        className="text-base font-semibold text-neutral-1"
-                        numberOfLines={1}
-                      >
-                        {list.name}
-                      </Text>
-                    </View>
-                  </TouchableOpacity>
-
-                  <TouchableOpacity
-                    onPress={() =>
-                      void handleShareList(list.name, list.slug ?? undefined)
-                    }
-                    className="ml-2 rounded-full p-2"
-                    activeOpacity={0.7}
-                    accessibilityLabel={`Share ${list.name}`}
-                    hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
-                  >
-                    <ShareIcon size={18} color="#5A32FB" />
-                  </TouchableOpacity>
-
-                  <View className="ml-1">
-                    <SubscribeButton
-                      isSubscribed={true}
-                      onPress={() => handleUnfollow(list.id)}
-                      size="sm"
-                      accessibilityLabel={`Unsubscribe from ${list.name}`}
-                    />
-                  </View>
+            renderItem={({ item }) => (
+              <View className="flex-row items-center gap-1">
+                <View className="min-w-0 flex-1">
+                  <SubscribedListRow
+                    list={item.list}
+                    owner={item.owner}
+                    previewImageUrls={item.previewImageUrls}
+                    upcomingCount={item.upcomingCount}
+                    hasMoreUpcoming={item.hasMoreUpcoming}
+                    onPress={() => handleListPress(item.list)}
+                    onUnsubscribe={() => handleUnfollow(item.list.id)}
+                    isUnsubscribing={unsubscribingIds.has(item.list.id)}
+                  />
                 </View>
-              );
-            }}
+                <TouchableOpacity
+                  onPress={() =>
+                    void handleShareList(
+                      item.list.name,
+                      item.list.slug ?? undefined,
+                    )
+                  }
+                  className="rounded-full p-2"
+                  activeOpacity={0.7}
+                  accessibilityLabel={`Share ${item.list.name}`}
+                  hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+                >
+                  <ShareIcon size={18} color="#5A32FB" />
+                </TouchableOpacity>
+              </View>
+            )}
           />
         )}
       </View>

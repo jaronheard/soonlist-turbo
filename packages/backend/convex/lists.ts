@@ -10,7 +10,7 @@ import {
   mutation,
   query,
 } from "./_generated/server";
-import { listFollowsAggregate } from "./aggregates";
+import { listFollowsAggregate, userFeedsAggregate } from "./aggregates";
 import {
   addEventToListFeedInline,
   listFeedId,
@@ -519,6 +519,101 @@ export const getFollowedLists = query({
 
     return lists.filter(
       (list): list is NonNullable<typeof list> => list !== null,
+    );
+  },
+});
+
+/**
+ * Get followed lists enriched with owner, a 3-up image preview, and upcoming
+ * event counts. Drives the My Scene management sheet.
+ */
+export const getFollowedListsWithPreview = query({
+  args: {},
+  handler: async (ctx) => {
+    const userId = await getUserId(ctx);
+    if (!userId) {
+      return [];
+    }
+
+    const follows = await ctx.db
+      .query("listFollows")
+      .withIndex("by_user", (q) => q.eq("userId", userId))
+      .collect();
+
+    const results = await Promise.all(
+      follows.map(async (follow) => {
+        const list = await ctx.db
+          .query("lists")
+          .withIndex("by_custom_id", (q) => q.eq("id", follow.listId))
+          .first();
+
+        if (!list) return null;
+
+        const canView = await canUserViewList(ctx, follow.listId, userId);
+        if (!canView) return null;
+
+        const feedId = `list_${list.id}`;
+
+        const [owner, upcomingCount, previewEntries] = await Promise.all([
+          ctx.db
+            .query("users")
+            .withIndex("by_custom_id", (q) => q.eq("id", list.userId))
+            .first(),
+          userFeedsAggregate.count(ctx, {
+            namespace: feedId,
+            bounds: {
+              lower: { key: 0, inclusive: true },
+              upper: { key: 0, inclusive: true },
+            },
+          }),
+          ctx.db
+            .query("userFeeds")
+            .withIndex("by_feed_visibility_hasEnded_startTime", (q) =>
+              q
+                .eq("feedId", feedId)
+                .eq("eventVisibility", "public")
+                .eq("hasEnded", false),
+            )
+            .order("asc")
+            .take(3),
+        ]);
+
+        const previewEvents = await Promise.all(
+          previewEntries.map((entry) =>
+            ctx.db
+              .query("events")
+              .withIndex("by_custom_id", (q) => q.eq("id", entry.eventId))
+              .first(),
+          ),
+        );
+
+        const previewImageUrls: (string | null)[] = [0, 1, 2].map((i) => {
+          const event = previewEvents[i];
+          if (!event) return null;
+          return typeof event.image === "string" && event.image.length > 0
+            ? event.image
+            : null;
+        });
+
+        return {
+          list,
+          owner: owner
+            ? {
+                id: owner.id,
+                username: owner.username,
+                displayName: owner.displayName,
+                userImage: owner.userImage,
+              }
+            : null,
+          previewImageUrls,
+          upcomingCount,
+          hasMoreUpcoming: upcomingCount > 3,
+        };
+      }),
+    );
+
+    return results.filter(
+      (row): row is NonNullable<typeof row> => row !== null,
     );
   },
 });

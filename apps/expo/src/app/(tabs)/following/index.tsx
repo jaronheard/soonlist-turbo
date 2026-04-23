@@ -158,14 +158,6 @@ function FollowingFeedContent() {
       }));
   }, [events, stableTimestamp, selectedSegment]);
 
-  // Update tab badge count based on upcoming events
-  const setCommunityBadgeCount = useAppStore((s) => s.setCommunityBadgeCount);
-  useEffect(() => {
-    if (selectedSegment === "upcoming") {
-      setCommunityBadgeCount(enrichedEvents.length);
-    }
-  }, [enrichedEvents.length, selectedSegment, setCommunityBadgeCount]);
-
   const followedListCount = followedLists?.length ?? 0;
   const singleFollowedList =
     followedListCount === 1 ? followedLists?.[0] : null;

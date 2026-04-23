@@ -107,25 +107,36 @@ export function DefaultEmptyState({
             </View>
           ) : null}
 
-          {hasFollowings ? (
-            <View className="mt-4 items-center">
-              <Text className="mb-1 text-sm text-neutral-2">
-                {followedEventCount === 1
-                  ? "1 event added to My Scene"
-                  : `${followedEventCount}${
-                      hasMoreFollowedEvents ? "+" : ""
-                    } events added to My Scene`}
-              </Text>
+          {hasFollowings && followedEventCount > 0 ? (
+            <View className="mt-4">
+              <TouchableOpacity
+                onPress={onExitToFeed}
+                activeOpacity={0.85}
+                accessibilityRole="button"
+                accessibilityLabel="View My Scene"
+                className="w-full rounded-full bg-interactive-1 py-3 shadow"
+              >
+                <Text className="text-center text-base font-semibold text-white">
+                  {followedEventCount === 1
+                    ? "View My Scene (1 event)"
+                    : `View My Scene (${followedEventCount}${
+                        hasMoreFollowedEvents ? "+" : ""
+                      } events)`}
+                </Text>
+              </TouchableOpacity>
+            </View>
+          ) : null}
+
+          {!hasFollowings ? (
+            <View className="mt-6 items-center py-4">
               <TouchableOpacity
                 onPress={onExitToFeed}
                 activeOpacity={0.7}
                 accessibilityRole="button"
-                accessibilityLabel="View My Scene"
-                className="px-2 py-2"
+                accessibilityLabel="Skip for now"
+                className="px-4 py-2"
               >
-                <Text className="text-base font-semibold text-interactive-1">
-                  View My Scene →
-                </Text>
+                <Text className="text-sm text-neutral-2">Skip for now</Text>
               </TouchableOpacity>
             </View>
           ) : null}

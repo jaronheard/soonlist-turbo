@@ -1,5 +1,5 @@
 import React from "react";
-import { Text, TouchableOpacity } from "react-native";
+import { ActivityIndicator, Text, TouchableOpacity } from "react-native";
 
 import { Check, PlusIcon } from "~/components/icons";
 import { hapticLight } from "~/utils/feedback";
@@ -11,6 +11,8 @@ interface SubscribeButtonProps {
   size?: "sm" | "md";
   /** Override the default a11y label. */
   accessibilityLabel?: string;
+  /** When true, shows a spinner in place of the icon + label and blocks taps. */
+  loading?: boolean;
 }
 
 export function SubscribeButton({
@@ -18,6 +20,7 @@ export function SubscribeButton({
   onPress,
   size = "md",
   accessibilityLabel,
+  loading = false,
 }: SubscribeButtonProps) {
   const containerSize = size === "sm" ? "px-3 py-1" : "px-4 py-1.5";
   const textSize = size === "sm" ? "text-xs" : "text-sm";
@@ -27,7 +30,9 @@ export function SubscribeButton({
 
   return (
     <TouchableOpacity
+      disabled={loading}
       onPress={() => {
+        if (loading) return;
         void hapticLight();
         onPress();
       }}
@@ -41,14 +46,23 @@ export function SubscribeButton({
         isSubscribed ? "bg-interactive-2" : "bg-interactive-1"
       }`}
     >
-      <Icon size={iconSize} color={iconColor} strokeWidth={2.5} />
-      <Text
-        className={`${textSize} font-semibold ${
-          isSubscribed ? "text-interactive-1" : "text-white"
-        }`}
-      >
-        {isSubscribed ? "Subscribed" : "Subscribe"}
-      </Text>
+      {loading ? (
+        <ActivityIndicator
+          size="small"
+          color={isSubscribed ? "#5A32FB" : "#FFFFFF"}
+        />
+      ) : (
+        <>
+          <Icon size={iconSize} color={iconColor} strokeWidth={2.5} />
+          <Text
+            className={`${textSize} font-semibold ${
+              isSubscribed ? "text-interactive-1" : "text-white"
+            }`}
+          >
+            {isSubscribed ? "Subscribed" : "Subscribe"}
+          </Text>
+        </>
+      )}
     </TouchableOpacity>
   );
 }
