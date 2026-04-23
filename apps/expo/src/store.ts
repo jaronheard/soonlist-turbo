@@ -548,9 +548,6 @@ export const useAppStore = create<AppState>()(
 );
 
 // Selector hooks for commonly used state
-export const useRecentPhotos = () => useAppStore((state) => state.recentPhotos);
-export const useHasMediaPermission = () =>
-  useAppStore((state) => state.hasMediaPermission);
 export const useUserTimezone = () => useAppStore((state) => state.userTimezone);
 
 // Stable timestamp selectors
@@ -572,35 +569,6 @@ export const useStableTimestamp = () => {
   }, [lastTimestampUpdate, refreshStableTimestamp]);
 
   return stableTimestamp;
-};
-export const useRefreshStableTimestamp = () =>
-  useAppStore((state) => state.refreshStableTimestamp);
-
-/**
- * Hook to refresh the stable timestamp when a screen comes into focus.
- * Useful for ensuring fresh data when users navigate between screens.
- *
- * @example
- * ```tsx
- * function MyScreen() {
- *   useRefreshTimestampOnFocus();
- *   // ... rest of component
- * }
- * ```
- */
-export const useRefreshTimestampOnFocus = () => {
-  const refreshTimestamp = useRefreshStableTimestamp();
-
-  // You can uncomment this if you want to use react-navigation's focus events
-  // const isFocused = useIsFocused();
-  //
-  // React.useEffect(() => {
-  //   if (isFocused) {
-  //     refreshTimestamp();
-  //   }
-  // }, [isFocused, refreshTimestamp]);
-
-  return refreshTimestamp;
 };
 
 // Auto-generated selectors for actions (following Zustand best practices)
@@ -638,5 +606,3 @@ export const useSetPreferredCalendarApp = () =>
 // Pending follow selectors (for deferred deep link follow intent)
 export const usePendingFollowUsername = () =>
   useAppStore((state) => state.pendingFollowUsername);
-export const useSetPendingFollowUsername = () =>
-  useAppStore((state) => state.setPendingFollowUsername);

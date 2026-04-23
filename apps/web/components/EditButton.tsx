@@ -8,7 +8,7 @@ import { Button } from "@soonlist/ui/button";
 
 import { DropdownMenuItem } from "./DropdownMenu";
 
-export interface EditButtonProps {
+interface EditButtonProps {
   userId: string;
   id: string;
   type: "icon" | "button" | "dropdown";

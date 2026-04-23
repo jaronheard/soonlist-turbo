@@ -16,9 +16,7 @@
   },
   "dependencies": {
     "@next/eslint-plugin-next": "catalog:",
-    "eslint-config-turbo": "catalog:",
     "eslint-plugin-import": "catalog:",
-    "eslint-plugin-jsx-a11y": "catalog:",
     "eslint-plugin-react": "catalog:",
     "eslint-plugin-react-hooks": "catalog:",
     "typescript-eslint": "catalog:"

@@ -1,3 +1,8 @@
+// fallow-ignore-file circular-dependency
+// lists.ts and model/events.ts form a 2-file cycle: lists.ts calls
+// enrichEventsAndFilterNulls, while model/events.ts calls getOrCreatePersonalList
+// to ensure a personal list exists when enriching. Breaking this requires
+// moving getOrCreatePersonalList into model/lists.ts — tracked as follow-up.
 import { paginationOptsValidator } from "convex/server";
 import { ConvexError, v } from "convex/values";
 

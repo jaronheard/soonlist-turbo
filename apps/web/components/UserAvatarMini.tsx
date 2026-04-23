@@ -5,7 +5,7 @@ import Link from "next/link";
 
 import { UserProfileFlair } from "./UserProfileFlair";
 
-export interface UserAvatarMiniProps {
+interface UserAvatarMiniProps {
   username: string;
   displayName?: string;
   userImage: string;

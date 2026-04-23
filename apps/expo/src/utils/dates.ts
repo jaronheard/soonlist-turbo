@@ -1,41 +1,7 @@
 import * as Localization from "expo-localization";
 import { Temporal } from "@js-temporal/polyfill";
 
-import type { AddToCalendarButtonProps } from "@soonlist/cal/types";
-
 import { logError } from "./errorLogging";
-
-// Existing event defaults
-export const blankEvent = {
-  options: [
-    "Apple",
-    "Google",
-    "iCal",
-    "Microsoft365",
-    "MicrosoftTeams",
-    "Outlook.com",
-    "Yahoo",
-  ] as
-    | (
-        | "Apple"
-        | "Google"
-        | "iCal"
-        | "Microsoft365"
-        | "MicrosoftTeams"
-        | "Outlook.com"
-        | "Yahoo"
-      )[]
-    | undefined,
-  buttonStyle: "text" as const,
-  name: "Manual entry" as const,
-  description: "" as const,
-  location: "" as const,
-  startDate: "today" as const,
-  endDate: "" as const,
-  startTime: "" as const,
-  endTime: "" as const,
-  timeZone: "" as const,
-} as AddToCalendarButtonProps;
 
 const daysOfWeekTemporal = [
   "Monday",
@@ -62,7 +28,7 @@ const monthNames = [
   "December",
 ];
 
-export interface DateInfo {
+interface DateInfo {
   month: number;
   day: number;
   year: number;
@@ -181,29 +147,10 @@ export function getDateInfo(
 }
 
 /**
- * Check if an event that starts on `startDateInfo` and ends on `endDateInfo`
- * ends the next day (by local time) before 6am.
- */
-export function endsNextDayBeforeMorning(
-  startDateInfo: DateInfo | null,
-  endDateInfo: DateInfo | null,
-) {
-  if (!startDateInfo || !endDateInfo) {
-    return false;
-  }
-  const isNextDay =
-    (startDateInfo.month === endDateInfo.month &&
-      startDateInfo.day === endDateInfo.day - 1) ||
-    (startDateInfo.month !== endDateInfo.month && endDateInfo.day === 1); // Rough check
-  const isBeforeMorning = endDateInfo.hour < 6;
-  return isNextDay && isBeforeMorning;
-}
-
-/**
  * Returns true if `startTime` is exactly tomorrow relative to `now`, from a
  * local calendar-date perspective.
  */
-export function timeIsTomorrow(now: Date, startTime: Date): boolean {
+function timeIsTomorrow(now: Date, startTime: Date): boolean {
   // Normalize the current date to midnight
   const normalizedNow = new Date(
     now.getFullYear(),
@@ -226,47 +173,6 @@ export function timeIsTomorrow(now: Date, startTime: Date): boolean {
   return dayDifference === 1;
 }
 
-export function eventTimesAreDefined(
-  startTime: string | undefined,
-  endTime: string | undefined,
-) {
-  return startTime !== undefined && endTime !== undefined;
-}
-
-/**
- * Check if the local start and end day differ. Used for multi-day checks.
- */
-export function spansMultipleDays(
-  startDateInfo: DateInfo | null,
-  endDateInfo: DateInfo | null,
-) {
-  if (!startDateInfo || !endDateInfo) {
-    return false;
-  }
-  return (
-    startDateInfo.day !== endDateInfo.day ||
-    startDateInfo.month !== endDateInfo.month ||
-    startDateInfo.year !== endDateInfo.year
-  );
-}
-
-/**
- * If an event extends into more than one local day, AND it's not just
- * "ends next day before 6am," returns true.
- */
-export function showMultipleDays(
-  startDateInfo: DateInfo | null,
-  endDateInfo: DateInfo | null,
-) {
-  if (!startDateInfo || !endDateInfo) {
-    return false;
-  }
-  return (
-    spansMultipleDays(startDateInfo, endDateInfo) &&
-    !endsNextDayBeforeMorning(startDateInfo, endDateInfo)
-  );
-}
-
 /**
  * Format a raw "HH:MM" string (24-hour) into a 12-hour time with AM/PM.
  */
@@ -285,7 +191,7 @@ export function timeFormat(time?: string) {
 /**
  * Convert a DateInfo (already in local time) to a string like "6:30PM".
  */
-export function timeFormatDateInfo(dateInfo: DateInfo) {
+function timeFormatDateInfo(dateInfo: DateInfo) {
   let hours = dateInfo.hour;
   const minutes = dateInfo.minute;
   const ampm = hours >= 12 ? "PM" : "AM";
@@ -359,7 +265,7 @@ export function isOver(endDateInfo: DateInfo): boolean {
  * Get DateInfo in the event's original timezone (not converted to user timezone).
  * This is useful for displaying the original event time alongside the converted time.
  */
-export function getDateTimeInfoInTimezone(
+function getDateTimeInfoInTimezone(
   dateString: string,
   timeString: string,
   eventTimezone: string,
@@ -502,52 +408,6 @@ export function formatEventDateRange(
   }
 
   return { date: formattedDate, time: timeRange.trim() };
-}
-
-/**
- * Takes a date (YYYY-MM-DD), optional start/end times (HH:MM), and an event timezone.
- * Returns a user-facing { date, time } string pair in local time, in a more compact format.
- */
-export function formatEventDateRangeCompact(
-  date: string,
-  startTime: string | undefined,
-  endTime: string | undefined,
-  eventTimezone: string,
-): { date: string; time: string } {
-  if (!date) return { date: "", time: "" };
-
-  // Get local DateInfo for the start
-  const startDateInfo = getDateTimeInfo(
-    date,
-    startTime || "",
-    eventTimezone || "unknown",
-  );
-  if (!startDateInfo) return { date: "", time: "" };
-
-  // More compact date format: "Mon, Jan 1"
-  const formattedDate = `${startDateInfo.dayOfWeek.substring(0, 3)}, ${startDateInfo.monthName.substring(
-    0,
-    3,
-  )} ${startDateInfo.day}`;
-
-  // Handle time range formatting
-  let formattedTime = "";
-  if (startTime) {
-    formattedTime = timeFormatDateInfo(startDateInfo);
-
-    if (endTime) {
-      const endDateInfo = getDateTimeInfo(
-        date,
-        endTime,
-        eventTimezone || "unknown",
-      );
-      if (endDateInfo) {
-        formattedTime += ` - ${timeFormatDateInfo(endDateInfo)}`;
-      }
-    }
-  }
-
-  return { date: formattedDate, time: formattedTime };
 }
 
 // --- Functions moved from date-picker/date-utils --- //

@@ -15,7 +15,7 @@ export interface CalendarAppInfo {
  * @param urlScheme The URL scheme to check
  * @returns Promise<boolean> True if the app is installed
  */
-export const isAppInstalled = async (urlScheme: string): Promise<boolean> => {
+const isAppInstalled = async (urlScheme: string): Promise<boolean> => {
   try {
     return await Linking.canOpenURL(urlScheme);
   } catch (error) {

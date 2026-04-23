@@ -1,5 +1,5 @@
 // First define the interface for a single user's data
-export interface UserData2024 {
+interface UserData2024 {
   user_id: string;
   username: string;
   emoji: string | null;

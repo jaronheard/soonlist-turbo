@@ -108,16 +108,15 @@ function isEventSimilar(
   };
 }
 
-export type SimilarityDetails = ReturnType<typeof isEventSimilar>;
+type SimilarityDetails = ReturnType<typeof isEventSimilar>;
 
-export type SimilarEvents = {
-  event: Event;
-  similarityDetails: SimilarityDetails;
-}[];
 // Structure to store similarity info
 export interface EventWithSimilarity {
   event: Event;
-  similarEvents: SimilarEvents;
+  similarEvents: {
+    event: Event;
+    similarityDetails: SimilarityDetails;
+  }[];
 }
 
 function collapseSimilarEvents(events: Event[], currentUserId?: string) {
@@ -208,4 +207,4 @@ function collapseSimilarEvents(events: Event[], currentUserId?: string) {
   return uniqueEventsWithSimilarity;
 }
 
-export { isEventSimilar, collapseSimilarEvents };
+export { collapseSimilarEvents };

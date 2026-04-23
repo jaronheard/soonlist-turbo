@@ -10,14 +10,14 @@ import React, {
 
 import { Toast } from "./Toast";
 
-export type ToastVariant = "success" | "error";
+type ToastVariant = "success" | "error";
 
-export interface ToastAction {
+interface ToastAction {
   label: string;
   onPress: () => void;
 }
 
-export interface ToastOptions {
+interface ToastOptions {
   message: string;
   action?: ToastAction;
   duration?: number; // ms, default 4000

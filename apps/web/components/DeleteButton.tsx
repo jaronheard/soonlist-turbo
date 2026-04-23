@@ -12,7 +12,7 @@ import { Button } from "@soonlist/ui/button";
 
 import { DropdownMenuItem } from "./DropdownMenu";
 
-export interface DeleteButtonProps {
+interface DeleteButtonProps {
   userId: string;
   id: string;
   type: "icon" | "button" | "dropdown";

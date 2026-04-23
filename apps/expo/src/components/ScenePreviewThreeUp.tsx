@@ -2,7 +2,7 @@ import React from "react";
 import { Platform, View } from "react-native";
 import { Image } from "expo-image";
 
-export const sceneCardShadow =
+const sceneCardShadow =
   Platform.OS === "ios"
     ? {
         shadowColor: "#5A32FB",
@@ -13,7 +13,7 @@ export const sceneCardShadow =
     : { elevation: 2 };
 
 /** Three tilted tiles; soft edges, no harsh strokes. */
-export function ScenePreviewThreeUp({
+function ScenePreviewThreeUp({
   imageUris,
   align = "start",
 }: {

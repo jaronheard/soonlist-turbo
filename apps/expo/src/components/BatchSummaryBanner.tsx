@@ -15,7 +15,7 @@ interface BatchSummaryBannerProps {
   hideNotification?: () => void;
 }
 
-export function BatchSummaryBanner({
+function BatchSummaryBanner({
   batchId,
   notificationContent,
   hideNotification,

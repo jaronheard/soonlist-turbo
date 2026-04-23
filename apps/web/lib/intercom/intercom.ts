@@ -12,7 +12,7 @@
 // @ts-nocheck
 import { env } from "~/env";
 
-export const APP_ID = env.NEXT_PUBLIC_INTERCOM_APP_ID;
+const APP_ID = env.NEXT_PUBLIC_INTERCOM_APP_ID;
 
 // Loads Intercom with the snippet
 // This must be run before boot, it initializes window.Intercom
@@ -70,9 +70,4 @@ export const update = () => {
 
 export const newMessage = (text?: string) => {
   window && window.Intercom && window.Intercom("showNewMessage", text);
-};
-
-export const feedback = (subject: string) => {
-  const newMessageText = `Feedback: ${subject}\n\n`;
-  newMessage(newMessageText);
 };

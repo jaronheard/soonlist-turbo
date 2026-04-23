@@ -516,7 +516,7 @@ function TextEventForm({
   );
 }
 
-export function UrlEventForm({
+function UrlEventForm({
   input,
   onSubmit,
   isProcessing,

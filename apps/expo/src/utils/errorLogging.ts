@@ -80,42 +80,6 @@ export function logError(
 }
 
 /**
- * Logs multiple errors to Sentry as a single group
- *
- * @param message A descriptive message about the error context
- * @param errors Array of errors
- * @param additionalData Optional additional data to include with the errors
- */
-export function logErrorGroup(
-  message: string,
-  errors: unknown[],
-  additionalData?: Record<string, unknown>,
-): void {
-  if (__DEV__) {
-    console.error(`${message}:`, errors, additionalData);
-  }
-
-  // Create an error to preserve stack trace
-  const groupError = new Error(`Group Error: ${message}`);
-
-  Sentry.withScope((scope) => {
-    scope.setTag("errorContext", message);
-    scope.setTag("errorType", "group");
-
-    if (additionalData) {
-      Object.entries(additionalData).forEach(([key, value]) => {
-        scope.setExtra(key, value);
-      });
-    }
-
-    scope.setExtra("errors", safeStringify(errors));
-
-    // Use captureException instead of captureMessage to preserve the stack trace
-    Sentry.captureException(groupError);
-  });
-}
-
-/**
  * Logs a message to Sentry as info level and to console in development.
  * For non-error logging that should still be tracked in production.
  *

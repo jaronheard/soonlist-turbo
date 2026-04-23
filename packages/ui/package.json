@@ -18,11 +18,9 @@
     "ui-add": "pnpm dlx shadcn-ui add && prettier src --write --list-different"
   },
   "dependencies": {
-    "@hookform/resolvers": "catalog:",
     "@radix-ui/react-accordion": "catalog:",
     "@radix-ui/react-aspect-ratio": "catalog:",
     "@radix-ui/react-dialog": "catalog:",
-    "@radix-ui/react-dropdown-menu": "catalog:",
     "@radix-ui/react-label": "catalog:",
     "@radix-ui/react-navigation-menu": "catalog:",
     "@radix-ui/react-popover": "catalog:",
@@ -36,15 +34,15 @@
     "@radix-ui/react-toggle": "catalog:",
     "@radix-ui/react-visually-hidden": "catalog:",
     "class-variance-authority": "catalog:",
-    "embla-carousel-autoplay": "catalog:",
+    "cmdk": "catalog:",
     "embla-carousel-react": "catalog:",
     "lucide-react": "catalog:",
     "next-themes": "catalog:",
     "react-dom": "catalog:react19",
+    "react-easy-sort": "catalog:",
     "react-hook-form": "catalog:",
     "sonner": "catalog:",
     "tailwind-merge": "catalog:",
-    "tailwindcss-animate": "catalog:",
     "uuid": "catalog:",
     "vaul": "catalog:"
   },
@@ -59,12 +57,10 @@
     "prettier": "catalog:",
     "react": "catalog:react19",
     "tailwindcss": "catalog:",
-    "typescript": "catalog:",
-    "zod": "catalog:"
+    "typescript": "catalog:"
   },
   "peerDependencies": {
-    "react": "catalog:react19",
-    "zod": "catalog:"
+    "react": "catalog:react19"
   },
   "prettier": "@soonlist/prettier-config"
 }

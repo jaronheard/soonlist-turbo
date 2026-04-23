@@ -36,7 +36,7 @@ export function shouldHandlePasteEvent(event: ClipboardEvent): boolean {
 /**
  * Checks if an element is editable (input, textarea, contenteditable)
  */
-export function isEditableElement(element: Element): boolean {
+function isEditableElement(element: Element): boolean {
   // Check for input and textarea elements using instance checks
   if (
     element instanceof HTMLInputElement ||

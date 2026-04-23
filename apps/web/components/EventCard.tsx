@@ -1,5 +1,10 @@
 "use client";
 
+// fallow-ignore-file circular-dependency
+// EventCard and EventDisplays form a 2-file cycle; EventDisplays re-exports
+// EventCard for a preview variant while EventCard uses EventMetadataDisplay.
+// Breaking this cleanly requires splitting EventMetadataDisplay into its own
+// module — tracked as follow-up.
 import React from "react";
 import Image from "next/image";
 import { CalendarPlus, MapPinned } from "lucide-react";

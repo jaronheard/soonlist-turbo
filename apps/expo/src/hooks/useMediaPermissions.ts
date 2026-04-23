@@ -4,7 +4,7 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 
 import { useAppStore } from "~/store";
 
-export const mediaPermissionsQueryKey = ["mediaPermissions"];
+const mediaPermissionsQueryKey = ["mediaPermissions"];
 
 async function fetchMediaPermissions() {
   const { status, accessPrivileges } = await MediaLibrary.getPermissionsAsync();

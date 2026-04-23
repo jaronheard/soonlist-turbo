@@ -122,7 +122,7 @@ function GlyphTile({ icon: Icon, color }: GlyphTileProps) {
   );
 }
 
-export type RowAccessory =
+type RowAccessory =
   | { type: "chevron" }
   | {
       type: "toggle";

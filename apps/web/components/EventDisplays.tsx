@@ -1120,7 +1120,7 @@ export function EventListItem(props: EventListItemProps) {
   );
 }
 
-export function EventPreview(
+function EventPreview(
   props: EventListItemProps & { event: AddToCalendarCardProps },
 ) {
   const { id, event } = props;

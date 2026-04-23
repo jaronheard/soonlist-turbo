@@ -36,7 +36,7 @@ interface CTAButtonMembershipProps {
   children?: React.ReactNode;
 }
 
-export function CTAButtonMembership({
+function CTAButtonMembership({
   children = "Join Soonlist",
 }: CTAButtonMembershipProps) {
   return (

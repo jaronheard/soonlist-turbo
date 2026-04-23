@@ -11,7 +11,7 @@ import {
   update as updateIntercom,
 } from "./intercom";
 
-export interface IntercomProviderProps {
+interface IntercomProviderProps {
   children: ReactNode;
 }
 

@@ -13,7 +13,7 @@ interface WorkflowStatusToastProps {
   workflowId: string;
 }
 
-export function WorkflowStatusToast({ workflowId }: WorkflowStatusToastProps) {
+function WorkflowStatusToast({ workflowId }: WorkflowStatusToastProps) {
   const router = useRouter();
   const { removeWorkflowId } = useWorkflowStore();
   const toastIdRef = useRef<string | number | undefined>(undefined);

@@ -15,9 +15,6 @@ export const hapticSuccess = () =>
 export const hapticError = () =>
   Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
 
-export const hapticWarning = () =>
-  Haptics.notificationAsync(Haptics.NotificationFeedbackType.Warning);
-
 export const hapticLight = () =>
   Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
 
@@ -77,30 +74,5 @@ export const toast = {
    */
   dismiss: (): void => {
     // burnt toasts auto-dismiss, no manual dismiss needed
-  },
-};
-
-// Alert for important messages that require user acknowledgment
-export const alert = {
-  /**
-   * Show an alert that requires dismissal
-   */
-  show: (title: string, message?: string): void => {
-    void Burnt.alert({
-      title,
-      message,
-      preset: "done",
-    });
-  },
-
-  /**
-   * Show an error alert
-   */
-  error: (title: string, message?: string): void => {
-    void Burnt.alert({
-      title,
-      message,
-      preset: "error",
-    });
   },
 };

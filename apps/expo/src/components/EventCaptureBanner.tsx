@@ -15,7 +15,7 @@ interface EventCaptureBannerProps {
   hideNotification?: () => void;
 }
 
-export function EventCaptureBanner({
+function EventCaptureBanner({
   eventId,
   notificationContent,
   hideNotification,

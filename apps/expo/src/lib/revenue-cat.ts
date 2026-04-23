@@ -43,25 +43,6 @@ export async function initializeRevenueCat() {
   Purchases.configure({ apiKey });
 }
 
-export async function getCurrentSubscriptionStatus() {
-  try {
-    const customerInfo = await Purchases.getCustomerInfo();
-    return customerInfo.entitlements.active;
-  } catch (error) {
-    logError("Error getting subscription status", error);
-    return {};
-  }
-}
-
-export async function restorePurchases() {
-  try {
-    const customerInfo = await Purchases.restorePurchases();
-    return customerInfo;
-  } catch (error) {
-    logError("Error restoring purchases", error);
-  }
-}
-
 export async function setPostHogUserId(userId: string) {
   try {
     await Purchases.setAttributes({

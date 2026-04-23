@@ -130,7 +130,7 @@ export function Header() {
   );
 }
 
-export function Nav() {
+function Nav() {
   const { user } = useUser();
   const pathname = usePathname();
   const isJoinPage = pathname === "/join";
@@ -351,7 +351,7 @@ const sideNav = () => [
   },
 ];
 
-export function MobileNav() {
+function MobileNav() {
   const [open, setOpen] = React.useState(false);
   const { user } = useUser();
   const { signOut, openUserProfile } = useClerk();

@@ -4,8 +4,6 @@ import { encode } from "@jsquash/webp";
 // Constants for default values
 const DEFAULT_THUMBNAIL_WIDTH = 640;
 const DEFAULT_THUMBNAIL_QUALITY = 0.5;
-const DEFAULT_DISPLAY_WIDTH = 1284;
-const DEFAULT_DISPLAY_QUALITY = 0.8;
 
 /**
  * Converts ArrayBuffer to base64 string.
@@ -160,40 +158,4 @@ export async function imageUrlToBase64(url: string): Promise<string> {
   const arrayBuffer = await blob.arrayBuffer();
 
   return arrayBufferToBase64(arrayBuffer);
-}
-
-/**
- * Optimize image for high-quality display (event edit page).
- *
- * @param file - The File object to optimize
- * @param maxWidth - Maximum width in pixels (default: 1284)
- * @param quality - Compression quality between 0 and 1 (default: 0.8)
- * @returns Promise resolving to optimized image Blob
- * @throws Error if optimization fails
- */
-export async function optimizeImageForDisplay(
-  file: File,
-  maxWidth = DEFAULT_DISPLAY_WIDTH,
-  quality = DEFAULT_DISPLAY_QUALITY,
-): Promise<Blob> {
-  validateParameters(maxWidth, quality);
-
-  const imageData = await getImageData(file);
-  const { width: originalWidth, height: originalHeight } = imageData;
-
-  // Resize if needed
-  const shouldResize = originalWidth > maxWidth;
-  const resizedData = shouldResize
-    ? await resize(imageData, {
-        width: maxWidth,
-        height: Math.round((originalHeight / originalWidth) * maxWidth),
-      })
-    : imageData;
-
-  // Encode to WebP using jsquash
-  const webpBuffer = await encode(resizedData, {
-    quality: quality * 100,
-  });
-
-  return new Blob([webpBuffer], { type: "image/webp" });
 }

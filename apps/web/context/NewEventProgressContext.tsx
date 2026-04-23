@@ -19,7 +19,7 @@ export enum Status {
   Publish = "publish",
 }
 
-export enum UploadOptions {
+enum UploadOptions {
   Image = "image",
   Text = "text",
   Link = "link",
@@ -28,7 +28,7 @@ export enum UploadOptions {
 export const UploadOptionsSchema = z.nativeEnum(UploadOptions);
 
 // Create a context with empty objects and dummy functions
-export const NewEventProgressContext = createContext({
+const NewEventProgressContext = createContext({
   isShortcut: false,
   setIsShortcut: (isShortcut: boolean) =>
     console.warn("no isShortcut provider"),

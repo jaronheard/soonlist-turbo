@@ -40,7 +40,7 @@ export interface BlogPost {
   frontmatter: BlogFrontmatter;
 }
 
-export interface BlogPostWithContent extends BlogPost {
+interface BlogPostWithContent extends BlogPost {
   content: string;
 }
 

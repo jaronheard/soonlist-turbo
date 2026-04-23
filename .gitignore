@@ -79,3 +79,7 @@ docs/brainstorms/
 
 # brainstorm mockups (local only)
 .superpowers/
+
+# fallow: cache/churn regenerate locally; baselines are committed
+.fallow/cache.bin
+.fallow/churn.bin

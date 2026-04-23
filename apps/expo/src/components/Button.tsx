@@ -46,7 +46,7 @@ const textVariants = cva("text-lg font-medium", {
   },
 });
 
-export interface ButtonProps extends VariantProps<typeof buttonVariants> {
+interface ButtonProps extends VariantProps<typeof buttonVariants> {
   onPress?: () => void;
   disabled?: boolean;
   loading?: boolean;

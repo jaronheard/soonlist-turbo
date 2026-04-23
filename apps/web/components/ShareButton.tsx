@@ -9,7 +9,7 @@ import { Button } from "@soonlist/ui/button";
 import { env } from "~/env";
 import { DropdownMenuItem } from "./DropdownMenu";
 
-export interface ShareButtonProps {
+interface ShareButtonProps {
   id: string;
   event: AddToCalendarButtonProps;
   type: "button" | "dropdown" | "icon";

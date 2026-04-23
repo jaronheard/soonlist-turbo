@@ -12,7 +12,7 @@ import { Button } from "@soonlist/ui/button";
 
 import { DropdownMenuItem } from "./DropdownMenu";
 
-export function FollowEventDropdownButton({
+function FollowEventDropdownButton({
   eventId,
   following,
 }: {

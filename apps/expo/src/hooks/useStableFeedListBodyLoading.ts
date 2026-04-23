@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 
 /** Convex paginated query status (live, not stabilized results). */
-export type StablePaginatedStatus =
+type StablePaginatedStatus =
   | "LoadingFirstPage"
   | "CanLoadMore"
   | "Exhausted"

@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 
 export const GUEST_USER_KEY = "soonlist_guest_user_id";
-export const HAS_GUEST_EVENTS_KEY = "has_guest_events";
+const HAS_GUEST_EVENTS_KEY = "has_guest_events";
 
 export const useGuestUser = () => {
   const [guestUserId, setGuestUserId] = useState<string | null>(null);

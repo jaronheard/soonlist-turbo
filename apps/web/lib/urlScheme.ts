@@ -1,4 +1,4 @@
-export function getUrlScheme(): string {
+function getUrlScheme(): string {
   return process.env.NODE_ENV === "production" ? "soonlist" : "soonlist.dev";
 }
 
