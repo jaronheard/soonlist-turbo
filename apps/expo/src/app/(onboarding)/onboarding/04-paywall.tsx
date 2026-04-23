@@ -24,12 +24,12 @@ const FEATURE_ROWS: {
   },
   {
     emoji: "🛡️",
-    title: "No ads. No algorithm. No data sold.",
+    title: "No ads, no infinite scroll.",
     description: "We value your attention.",
   },
   {
     emoji: "💝",
-    title: "Support for extras, not access",
+    title: "Support for extras",
     description: "Optional extras fund the app.",
   },
 ];
@@ -71,22 +71,23 @@ export default function CommunitySupportedScreen() {
     <QuestionContainer
       question="Soonlist is free."
       subtitle="Free because community access matters."
+      questionTextClassName="text-4xl"
       currentStep={currentStep}
       totalSteps={totalSteps}
     >
       <View className="flex-1 justify-between">
         <View className="flex-1 justify-center">
-          <View className="gap-6">
+          <View className="gap-10">
             {FEATURE_ROWS.map(({ emoji, title, description }) => (
-              <View key={title} className="flex-row items-start gap-4">
-                <View className="h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-white">
-                  <Text className="text-3xl">{emoji}</Text>
-                </View>
-                <View className="min-w-0 flex-1 pt-0.5">
-                  <Text className="text-lg font-semibold text-white">
+              <View key={title} className="flex-row items-center gap-4">
+                <Text className="mt-1 shrink-0 text-5xl leading-none">
+                  {emoji}
+                </Text>
+                <View className="min-w-0 flex-1">
+                  <Text className="text-2xl font-semibold text-white">
                     {title}
                   </Text>
-                  <Text className="mt-1 text-base leading-snug text-white/70">
+                  <Text className="mt-1 text-lg leading-snug text-white/70">
                     {description}
                   </Text>
                 </View>
