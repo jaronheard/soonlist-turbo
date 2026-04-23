@@ -24,7 +24,7 @@ index 3270127a09a05af656566009ee6c4437590bb435..86617647ad4fc7706bd6cacea451608f
 +#if RNS_IPHONE_OS_VERSION_AVAILABLE(26_0)
 +    if (@available(iOS 26.0, *)) {
 +      navitem.largeTitleDisplayMode =
-+          config.largeTitleInline ? UINavigationItemLargeTitleDisplayModeInlineLarge : UINavigationItemLargeTitleDisplayModeAlways;
++          config.largeTitleInline ? UINavigationItemLargeTitleDisplayModeInline : UINavigationItemLargeTitleDisplayModeAlways;
 +    } else {
 +      navitem.largeTitleDisplayMode = UINavigationItemLargeTitleDisplayModeAlways;
 +    }
