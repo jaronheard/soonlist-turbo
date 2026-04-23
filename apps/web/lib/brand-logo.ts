@@ -1,4 +1,3 @@
-
 export const SOONLIST_MARK_VIEWBOX = "0 0 28 38";
 
 export const SOONLIST_MARK_CARD_PATH =

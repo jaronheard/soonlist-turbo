@@ -37,7 +37,6 @@ const testimonials = [
   },
 ];
 
-
 const faqs = [
   {
     question: "How does Soonlist help me show up to events?",
@@ -204,7 +203,6 @@ function ConnectWithWhatMatters() {
     </Section>
   );
 }
-
 
 function TestimonialsSection() {
   return (

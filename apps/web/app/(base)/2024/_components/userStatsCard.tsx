@@ -1,4 +1,3 @@
-
 import Image from "next/image";
 
 import { Logo } from "~/components/Logo";
@@ -19,7 +18,6 @@ export interface UserStatsCardProps {
   first_event_date: string | null;
   user_index?: number;
 }
-
 
 const Stat = ({
   label,

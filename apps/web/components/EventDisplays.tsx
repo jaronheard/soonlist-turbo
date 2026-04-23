@@ -523,7 +523,6 @@ function HappeningSoonBadge({ startDateInfo }: { startDateInfo: DateInfo }) {
   );
 }
 
-
 function EventActionButtons({
   user,
   event,
@@ -623,7 +622,6 @@ function EventActionButtons({
     </div>
   );
 }
-
 
 export function EventListItem(props: EventListItemProps) {
   const { user: clerkUser } = useUser();

@@ -50,6 +50,5 @@ export default async function Page(props: Props) {
     );
   }
 
-
   return <ProgressStages showUpload={true} />;
 }

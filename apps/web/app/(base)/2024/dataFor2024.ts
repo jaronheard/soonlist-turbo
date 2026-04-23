@@ -1,8 +1,6 @@
 const dataFor2024 = {
-
   totalEvents: 536,
   totalUsers: 33,
-
 
   topEventTypes: [
     { type: "concert", count: 84 },
@@ -12,7 +10,6 @@ const dataFor2024 = {
     { type: "meeting", count: 25 },
   ],
 
-
   topCategories: [
     { category: "music", count: 155 },
     { category: "community", count: 82 },
@@ -20,7 +17,6 @@ const dataFor2024 = {
     { category: "entertainment", count: 54 },
     { category: "literature", count: 15 },
   ],
-
 
   weekdayDistribution: [
     { day_of_week: "Sun", event_count: 136 },
@@ -100,7 +96,6 @@ const dataFor2024 = {
     },
   ],
 
-
   topCreators: [
     {
       username: "jaronheard",
@@ -149,13 +144,11 @@ const dataFor2024 = {
     },
   ],
 
-
   longestStreak: {
     streak_start: "2024-12-06",
     streak_end: "2024-12-16",
     streak_length: "11",
   },
-
 
   top5DaysWithMostEvents: [
     {
@@ -202,7 +195,6 @@ const dataFor2024 = {
       eventTypes: "concert, exhibition, party, performance, social",
     },
   ],
-
 
   categoryChampions: [
     { event_type: "concert", username: "joshcarr", type_count: "45" },

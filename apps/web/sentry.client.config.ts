@@ -1,4 +1,3 @@
-
 import * as Sentry from "@sentry/nextjs";
 import { posthog } from "posthog-js";
 

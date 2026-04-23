@@ -13,7 +13,6 @@ import { env } from "~/env";
 
 export const APP_ID = env.NEXT_PUBLIC_INTERCOM_APP_ID;
 
-
 export const load = () => {
   (function () {
     var w = window;

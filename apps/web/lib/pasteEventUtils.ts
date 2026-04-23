@@ -1,4 +1,3 @@
-
 export function shouldHandlePasteEvent(event: ClipboardEvent): boolean {
   let target: Element | null = null;
 

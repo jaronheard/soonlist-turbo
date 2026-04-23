@@ -1,4 +1,3 @@
-
 export const MAX_BATCH_SIZE = 20;
 
 export function generateBatchId(): string {

@@ -6,7 +6,6 @@ import { env } from "~/env";
 
 export const dynamic = "force-dynamic";
 
-
 async function forwardToConvex(
   body: string,
   svixHeaders: {
