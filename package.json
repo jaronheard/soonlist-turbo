@@ -81,13 +81,16 @@
     },
     "onlyBuiltDependencies": [
       "@clerk/shared",
+      "@react-navigation/native-stack",
       "@sentry/cli",
       "browser-tabs-lock",
       "core-js",
       "core-js-pure",
       "es5-ext",
       "esbuild",
-      "sharp"
+      "react-native-screens",
+      "sharp",
+      "xcode"
     ]
   }
 }
