@@ -51,7 +51,6 @@ const MultiSelect = React.forwardRef<HTMLButtonElement, MultiSelectProps>(
 
     React.useEffect(() => {
       const handleKeyDown = (e: KeyboardEvent) => {
-
         if (e.key === "Escape") {
           setOpen(false);
         }

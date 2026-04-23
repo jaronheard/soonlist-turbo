@@ -49,7 +49,6 @@ export const EventMetadataSchema = z.object({
 });
 export type EventMetadata = z.infer<typeof EventMetadataSchema>;
 
-
 export const AGE_RESTRICTIONS = ["all-ages", "18+", "21+", "unknown"] as const;
 export const AgeRestrictionSchema = z.enum(AGE_RESTRICTIONS);
 export type AgeRestriction = z.infer<typeof AgeRestrictionSchema>;

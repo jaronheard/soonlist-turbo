@@ -170,7 +170,6 @@ function collapseSimilarEvents(
     });
   });
 
-
   const uniqueEventsWithSimilarity: EventWithSimilarity[] = [];
 
   const seenEvents = new Set();

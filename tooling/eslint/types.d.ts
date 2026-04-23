@@ -1,4 +1,3 @@
-
 declare module "@eslint/js" {
   import type { Linter } from "eslint";
 

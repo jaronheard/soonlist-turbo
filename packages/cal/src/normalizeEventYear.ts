@@ -1,6 +1,5 @@
 import { Temporal } from "@js-temporal/polyfill";
 
-
 const DATE_REGEX = /^(\d{4})-(\d{2})-(\d{2})$/;
 const MAX_YEAR_OFFSET = 4;
 
