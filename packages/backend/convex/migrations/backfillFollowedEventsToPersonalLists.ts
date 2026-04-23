@@ -54,12 +54,28 @@ export const backfillFollowedEventsToPersonalListsBatch = internalMutation({
         listId: personalList.id,
       });
       await addEventToListFeedInline(ctx, follow.eventId, personalList.id);
-      await ctx.runMutation(internal.feedHelpers.addEventToListFollowersFeeds, {
-        eventId: follow.eventId,
-        listId: personalList.id,
-      });
+
+      // Schedule feed population in a separate transaction to avoid
+      // hitting transaction limits when there are many followers
+      await ctx.scheduler.runAfter(
+        0,
+        internal.feedHelpers.addEventToListFollowersFeeds,
+        {
+          eventId: follow.eventId,
+          listId: personalList.id,
+        },
+      );
 
       linked++;
+    }
+
+    if (!result.isDone) {
+      await ctx.scheduler.runAfter(
+        0,
+        internal.migrations.backfillFollowedEventsToPersonalLists
+          .backfillFollowedEventsToPersonalListsBatch,
+        { cursor: result.continueCursor, batchSize },
+      );
     }
 
     return {
@@ -68,5 +84,25 @@ export const backfillFollowedEventsToPersonalListsBatch = internalMutation({
       nextCursor: result.continueCursor,
       isDone: result.isDone,
     };
+  },
+});
+
+/**
+ * Orchestrator: kicks off the batched backfill. Subsequent batches
+ * self-schedule until `isDone`.
+ */
+export const backfillFollowedEventsToPersonalLists = internalMutation({
+  args: {
+    batchSize: v.optional(v.number()),
+  },
+  returns: v.null(),
+  handler: async (ctx, { batchSize }) => {
+    await ctx.scheduler.runAfter(
+      0,
+      internal.migrations.backfillFollowedEventsToPersonalLists
+        .backfillFollowedEventsToPersonalListsBatch,
+      { cursor: null, batchSize: batchSize ?? 100 },
+    );
+    return null;
   },
 });
