@@ -146,7 +146,9 @@ export function OneSignalProvider({ children }: OneSignalProviderProps) {
     // Initialize the OneSignal SDK
     OneSignal.initialize(oneSignalAppId);
 
-    // Check permission status
+    // Check permission status. Only mark resolved on a successful lookup —
+    // on error the real OS permission state is unknown, so downstream UI
+    // must not expose an opt-out that would persist a false negative.
     void OneSignal.Notifications.permissionNative()
       .then((permission) => {
         // Check if permission is granted
@@ -155,12 +157,10 @@ export function OneSignalProvider({ children }: OneSignalProviderProps) {
             permission === OSNotificationPermission.Provisional ||
             permission === OSNotificationPermission.Ephemeral,
         );
+        setIsPermissionResolved(true);
       })
       .catch((error) => {
         logError("Error checking notification permission", error);
-      })
-      .finally(() => {
-        setIsPermissionResolved(true);
       });
 
     // Set up notification handlers
@@ -270,7 +270,6 @@ export function OneSignalProvider({ children }: OneSignalProviderProps) {
       return isPermissionGranted;
     } catch (error) {
       logError("Error checking notification permission", error);
-      setIsPermissionResolved(true);
       return false;
     }
   };
