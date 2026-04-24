@@ -51,15 +51,12 @@ export function CaptureAccessoryContent({
     status?.status === "completed" || status?.status === "failed";
 
   const handleOpen = useCallback(() => {
-    if (!status) return;
     void hapticSelection();
-    if (!isTerminal) {
-      // While still processing, tap navigates to the batch detail so the
-      // user can watch events stream in.
-      router.navigate(`/batch/${batchId}`);
-      return;
-    }
-    if (status.events.length === 1 && status.events[0]) {
+    // If the single-event path is knowable, prefer it so the tap lands
+    // directly on the event. Otherwise (still loading, still processing,
+    // multi-event batch, or failure), open the batch screen — so a tap
+    // is never dropped just because `getBatchStatus` hasn't resolved.
+    if (isTerminal && status?.events.length === 1 && status.events[0]) {
       router.navigate(`/event/${status.events[0].id}`);
     } else {
       router.navigate(`/batch/${batchId}`);

@@ -3,6 +3,7 @@ import { useQuery } from "convex/react";
 
 import { api } from "@soonlist/backend/convex/_generated/api";
 
+import { SUPPORTS_LIQUID_GLASS } from "~/hooks/useLiquidGlass";
 import { useInFlightEventStore } from "~/store/useInFlightEventStore";
 
 // How long to keep a finished batch visible in the accessory before
@@ -31,9 +32,15 @@ export function useCaptureAccessoryLifecycle() {
   const markCompleted = useInFlightEventStore((s) => s.markAccessoryCompleted);
   const dismiss = useInFlightEventStore((s) => s.dismissAccessoryBatch);
 
+  // Defense in depth: the accessory only renders on iOS 26+, and
+  // useCreateEvent already gates `setAccessoryBatch` on this flag, but
+  // skipping here keeps the Convex subscription off on older OS versions
+  // even if a batch id ever leaks into the store from another code path.
   const batchStatus = useQuery(
     api.eventBatches.getBatchStatus,
-    accessoryBatchId ? { batchId: accessoryBatchId } : "skip",
+    SUPPORTS_LIQUID_GLASS && accessoryBatchId
+      ? { batchId: accessoryBatchId }
+      : "skip",
   );
 
   // Mark completion the first time the backend reports a terminal state.

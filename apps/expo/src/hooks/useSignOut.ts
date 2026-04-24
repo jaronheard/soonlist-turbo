@@ -53,6 +53,13 @@ export const useSignOut = () => {
       }
     }
 
+    // Clear in-flight capture state immediately after the Clerk token is
+    // revoked so Convex subscriptions (e.g. getBatchStatus via the tab bar
+    // accessory) stop firing under a stale identity before the rest of the
+    // cleanup runs.
+    useInFlightEventStore.getState().dismissAccessoryBatch();
+    useInFlightEventStore.getState().clearPendingBatchIds();
+
     // Step 3: Clean up local data and third-party sessions.
     // These should not require auth and can run concurrently.
     const logoutResults = await Promise.allSettled([
@@ -94,9 +101,5 @@ export const useSignOut = () => {
       resetForLogout();
     }
     setHasCompletedOnboarding(false);
-    // Clear any lingering tab-bar accessory so we don't query Convex
-    // under the new (signed-out) identity.
-    useInFlightEventStore.getState().dismissAccessoryBatch();
-    useInFlightEventStore.getState().clearPendingBatchIds();
   };
 };
