@@ -1,4 +1,6 @@
 import { useEffect, useRef, useState } from "react";
+import { AppState } from "react-native";
+import NetInfo from "@react-native-community/netinfo";
 import { useQuery } from "convex/react";
 
 import { api } from "@soonlist/backend/convex/_generated/api";
@@ -113,6 +115,31 @@ export function useCaptureAccessoryLifecycle() {
     observedProgressRef.current = progressCount;
     setLastProgressAt(Date.now());
   }, [progressCount]);
+
+  // Convex subscriptions pause while the app is backgrounded or offline,
+  // so `lastProgressAt` can appear stale through no fault of the batch.
+  // Give the subscription a fresh window whenever we regain an active
+  // foreground + online state — if the batch really is stuck, the timer
+  // will still fire once the app has been continuously active for
+  // NO_PROGRESS_STUCK_MS without new progress.
+  useEffect(() => {
+    if (!accessoryBatchId || accessoryCompletedAt) return;
+    const bumpTimer = () => {
+      if (useAppStore.getState().accessoryBatchId) {
+        setLastProgressAt(Date.now());
+      }
+    };
+    const appStateSub = AppState.addEventListener("change", (state) => {
+      if (state === "active") bumpTimer();
+    });
+    const netUnsub = NetInfo.addEventListener((state) => {
+      if (state.isConnected) bumpTimer();
+    });
+    return () => {
+      appStateSub.remove();
+      netUnsub();
+    };
+  }, [accessoryBatchId, accessoryCompletedAt]);
 
   // Force-dismiss batches whose backend progress has gone stale.
   // Covers both "never made it to the backend" and "Promise.all
