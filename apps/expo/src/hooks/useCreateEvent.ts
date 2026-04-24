@@ -59,9 +59,6 @@ export function useCreateEvent() {
   const setIsCapturing = useInFlightEventStore((s) => s.setIsCapturing);
   const addPendingBatchId = useInFlightEventStore((s) => s.addPendingBatchId);
   const setAccessoryBatch = useInFlightEventStore((s) => s.setAccessoryBatch);
-  const dismissAccessoryBatch = useInFlightEventStore(
-    (s) => s.dismissAccessoryBatch,
-  );
   const { hasNotificationPermission } = useOneSignal();
   const userTimezone = useUserTimezone();
 
@@ -198,13 +195,11 @@ export function useCreateEvent() {
       } catch (error) {
         logError("Error processing event", error);
         void hapticError();
-        // The accessory only shows a Dismiss control once the batch is
-        // terminal; if we bail before even adding images, the batch would
-        // never complete on the backend and the accessory would be stuck.
-        // Clear it here so the UI can't get stuck.
-        if (SUPPORTS_LIQUID_GLASS) {
-          dismissAccessoryBatch();
-        }
+        // We intentionally don't dismiss the accessory here. An error
+        // can still leave a partially-successful batch on the backend
+        // (e.g. Promise.all rejects after one addImagesToBatch has
+        // already landed), and truly stuck batches are cleaned up by
+        // the max-processing timeout in useCaptureAccessoryLifecycle.
         throw error; // Rethrow to trigger mutation's onError
       } finally {
         // Reset loading state for both routes
@@ -224,7 +219,6 @@ export function useCreateEvent() {
       hasNotificationPermission,
       addPendingBatchId,
       setAccessoryBatch,
-      dismissAccessoryBatch,
       userTimezone,
       addWorkflowId,
       eventFromUrl,
@@ -327,12 +321,11 @@ export function useCreateEvent() {
       } catch (error) {
         logError("Error creating events batch", error);
         void hapticError();
-        // Clear the accessory if we never got images queued: the backend
-        // won't transition a zero-image batch to a terminal state, so the
-        // accessory would otherwise stick on "Capturing…" forever.
-        if (SUPPORTS_LIQUID_GLASS) {
-          dismissAccessoryBatch();
-        }
+        // Don't dismiss the accessory on failure. Promise.all can reject
+        // after some images have already landed, and the user still
+        // wants to see whatever partial results the backend produces.
+        // Truly stuck batches (no progress at all) are cleared by the
+        // max-processing timeout in useCaptureAccessoryLifecycle.
         throw error;
       } finally {
         if (!suppressCapturing) {
@@ -348,7 +341,6 @@ export function useCreateEvent() {
       hasNotificationPermission,
       addPendingBatchId,
       setAccessoryBatch,
-      dismissAccessoryBatch,
       userTimezone,
       setIsCapturing,
       setIsImageLoading,

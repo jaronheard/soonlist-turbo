@@ -11,6 +11,13 @@ import { useInFlightEventStore } from "~/store/useInFlightEventStore";
 // enough that the accessory doesn't linger into the next session.
 const AUTO_DISMISS_MS = 5 * 60 * 1000;
 
+// Safety net for batches that never reach a terminal state — e.g. a
+// local preprocessing error leaves some images un-queued so the backend
+// progress can't advance to 100%. After this much wall-clock time from
+// start, we assume the batch is stuck and clear the accessory so it
+// doesn't sit on "Capturing…" indefinitely.
+const MAX_PROCESSING_MS = 10 * 60 * 1000;
+
 /**
  * useCaptureAccessoryLifecycle
  * ----------------------------
@@ -19,6 +26,9 @@ const AUTO_DISMISS_MS = 5 * 60 * 1000;
  *      "completed" or "failed" (so the accessory can flip from the
  *      "capturing…" UI to the "captured" UI).
  *   2. Auto-dismisses the accessory 5 minutes after completion.
+ *   3. Force-dismisses stuck batches after MAX_PROCESSING_MS to recover
+ *      from local preprocessing failures that leave the backend unable
+ *      to reach a terminal state on its own.
  *
  * Mounted once at the root, not inside the accessory itself — the
  * accessory renders two instances (regular + inline placements) and
@@ -26,6 +36,7 @@ const AUTO_DISMISS_MS = 5 * 60 * 1000;
  */
 export function useCaptureAccessoryLifecycle() {
   const accessoryBatchId = useInFlightEventStore((s) => s.accessoryBatchId);
+  const accessoryStartedAt = useInFlightEventStore((s) => s.accessoryStartedAt);
   const accessoryCompletedAt = useInFlightEventStore(
     (s) => s.accessoryCompletedAt,
   );
@@ -53,11 +64,11 @@ export function useCaptureAccessoryLifecycle() {
   }, [batchStatus, accessoryBatchId, accessoryCompletedAt, markCompleted]);
 
   // Auto-dismiss the accessory some time after completion.
-  const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const dismissTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   useEffect(() => {
-    if (timerRef.current) {
-      clearTimeout(timerRef.current);
-      timerRef.current = null;
+    if (dismissTimerRef.current) {
+      clearTimeout(dismissTimerRef.current);
+      dismissTimerRef.current = null;
     }
     if (!accessoryBatchId || !accessoryCompletedAt) return;
     const remaining = AUTO_DISMISS_MS - (Date.now() - accessoryCompletedAt);
@@ -65,14 +76,44 @@ export function useCaptureAccessoryLifecycle() {
       dismiss();
       return;
     }
-    timerRef.current = setTimeout(() => {
+    dismissTimerRef.current = setTimeout(() => {
       dismiss();
     }, remaining);
     return () => {
-      if (timerRef.current) {
-        clearTimeout(timerRef.current);
-        timerRef.current = null;
+      if (dismissTimerRef.current) {
+        clearTimeout(dismissTimerRef.current);
+        dismissTimerRef.current = null;
       }
     };
   }, [accessoryBatchId, accessoryCompletedAt, dismiss]);
+
+  // Force-dismiss batches that have been "processing" too long. Covers
+  // the case where useCreateEvent threw before all images were queued
+  // (so the backend's progress can't reach 100%) — we never dismiss in
+  // those catch blocks to avoid wiping partial-success state, so this
+  // is the single safety net.
+  const stuckTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  useEffect(() => {
+    if (stuckTimerRef.current) {
+      clearTimeout(stuckTimerRef.current);
+      stuckTimerRef.current = null;
+    }
+    if (!accessoryBatchId || !accessoryStartedAt || accessoryCompletedAt) {
+      return;
+    }
+    const remaining = MAX_PROCESSING_MS - (Date.now() - accessoryStartedAt);
+    if (remaining <= 0) {
+      dismiss();
+      return;
+    }
+    stuckTimerRef.current = setTimeout(() => {
+      dismiss();
+    }, remaining);
+    return () => {
+      if (stuckTimerRef.current) {
+        clearTimeout(stuckTimerRef.current);
+        stuckTimerRef.current = null;
+      }
+    };
+  }, [accessoryBatchId, accessoryStartedAt, accessoryCompletedAt, dismiss]);
 }

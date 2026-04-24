@@ -52,11 +52,19 @@ export function CaptureAccessoryContent({
 
   const handleOpen = useCallback(() => {
     void hapticSelection();
-    // If the single-event path is knowable, prefer it so the tap lands
-    // directly on the event. Otherwise (still loading, still processing,
-    // multi-event batch, or failure), open the batch screen — so a tap
-    // is never dropped just because `getBatchStatus` hasn't resolved.
-    if (isTerminal && status?.events.length === 1 && status.events[0]) {
+    // Prefer the direct event route only when this was a single-event
+    // capture to begin with. Partial-success multi-captures still have
+    // `events.length === 1` but the user needs to see the batch screen
+    // to review what failed, so gate on totalCount too. Otherwise (still
+    // loading, still processing, multi-event, or failure), fall through
+    // to the batch screen — so a tap is never dropped just because
+    // `getBatchStatus` hasn't resolved.
+    if (
+      isTerminal &&
+      status.totalCount === 1 &&
+      status.events.length === 1 &&
+      status.events[0]
+    ) {
       router.navigate(`/event/${status.events[0].id}`);
     } else {
       router.navigate(`/batch/${batchId}`);
@@ -121,8 +129,14 @@ function RegularAccessory({
   onDismiss,
 }: RegularAccessoryProps) {
   const copy = getAccessoryCopy(status, isTerminal, completedAt);
+  // Only treat this as a single-event capture when the batch was a
+  // single-event capture to begin with. Partial-success multi-captures
+  // have `events.length === 1` too, but the user needs the batch-level
+  // context, not the single-event Share shortcut.
   const singleEvent =
-    isTerminal && status?.events.length === 1 ? status.events[0] : null;
+    isTerminal && status?.totalCount === 1 && status.events.length === 1
+      ? status.events[0]
+      : null;
   const imageUrl = singleEvent?.image ?? null;
 
   return (
@@ -343,7 +357,7 @@ function getAccessoryCopy(
     };
   }
 
-  if (status.events.length === 1 && status.events[0]) {
+  if (total === 1 && status.events.length === 1 && status.events[0]) {
     const event = status.events[0];
     const name = event.name || "New event";
     const when = formatWhen(event.startDate, event.startTime);
