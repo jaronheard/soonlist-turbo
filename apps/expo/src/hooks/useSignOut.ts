@@ -7,6 +7,7 @@ import { api } from "@soonlist/backend/convex/_generated/api";
 
 import { useRevenueCat } from "~/providers/RevenueCatProvider";
 import { useAppStore } from "~/store";
+import { useInFlightEventStore } from "~/store/useInFlightEventStore";
 import { logError } from "~/utils/errorLogging";
 
 interface SignOutOptions {
@@ -93,5 +94,9 @@ export const useSignOut = () => {
       resetForLogout();
     }
     setHasCompletedOnboarding(false);
+    // Clear any lingering tab-bar accessory so we don't query Convex
+    // under the new (signed-out) identity.
+    useInFlightEventStore.getState().dismissAccessoryBatch();
+    useInFlightEventStore.getState().clearPendingBatchIds();
   };
 };

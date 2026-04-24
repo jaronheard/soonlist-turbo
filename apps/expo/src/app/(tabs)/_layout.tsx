@@ -1,7 +1,9 @@
 import { NativeTabs } from "expo-router/unstable-native-tabs";
 
+import { CaptureAccessoryContent } from "~/components/CaptureAccessory";
 import { SUPPORTS_LIQUID_GLASS } from "~/hooks/useLiquidGlass";
 import { useAppStore } from "~/store";
+import { useInFlightEventStore } from "~/store/useInFlightEventStore";
 
 // Export Expo Router's error boundary
 export { ErrorBoundary } from "expo-router";
@@ -13,6 +15,8 @@ export const unstable_settings = {
 export default function TabsLayout() {
   const myListBadgeCount = useAppStore((s) => s.myListBadgeCount);
   const communityBadgeCount = useAppStore((s) => s.communityBadgeCount);
+  const accessoryBatchId = useInFlightEventStore((s) => s.accessoryBatchId);
+  const showAccessory = SUPPORTS_LIQUID_GLASS && accessoryBatchId !== null;
 
   return (
     <NativeTabs
@@ -22,6 +26,11 @@ export default function TabsLayout() {
         : {})}
       blurEffect="systemChromeMaterialLight" /* interactive-1 */
     >
+      {showAccessory && accessoryBatchId ? (
+        <NativeTabs.BottomAccessory>
+          <CaptureAccessoryContent batchId={accessoryBatchId} />
+        </NativeTabs.BottomAccessory>
+      ) : null}
       <NativeTabs.Trigger name="feed">
         <NativeTabs.Trigger.Label>My Soonlist</NativeTabs.Trigger.Label>
         <NativeTabs.Trigger.Icon

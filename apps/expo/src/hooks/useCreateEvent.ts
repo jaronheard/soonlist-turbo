@@ -57,6 +57,7 @@ export function useCreateEvent() {
   const { setIsImageLoading, addWorkflowId } = useAppStore();
   const setIsCapturing = useInFlightEventStore((s) => s.setIsCapturing);
   const addPendingBatchId = useInFlightEventStore((s) => s.addPendingBatchId);
+  const setAccessoryBatch = useInFlightEventStore((s) => s.setAccessoryBatch);
   const { hasNotificationPermission } = useOneSignal();
   const userTimezone = useUserTimezone();
 
@@ -127,6 +128,9 @@ export function useCreateEvent() {
             visibility: DEFAULT_VISIBILITY,
             sendNotification,
           });
+
+          // Surface batch in the iOS 26 tab bar bottom accessory
+          setAccessoryBatch(batchId);
 
           // 2. Optimize image and get base64
           const base64 = await optimizeImage(fileUri);
@@ -204,6 +208,7 @@ export function useCreateEvent() {
       addImagesToBatch,
       hasNotificationPermission,
       addPendingBatchId,
+      setAccessoryBatch,
       userTimezone,
       addWorkflowId,
       eventFromUrl,
@@ -242,6 +247,9 @@ export function useCreateEvent() {
           visibility: "private",
           sendNotification,
         });
+
+        // Surface batch in the iOS 26 tab bar bottom accessory
+        setAccessoryBatch(batchId);
 
         // Step 2: Process and stream images as they're ready
         const imagePromises = tasks.map(async (task, index) => {
@@ -313,6 +321,7 @@ export function useCreateEvent() {
       addImagesToBatch,
       hasNotificationPermission,
       addPendingBatchId,
+      setAccessoryBatch,
       userTimezone,
       setIsCapturing,
       setIsImageLoading,
