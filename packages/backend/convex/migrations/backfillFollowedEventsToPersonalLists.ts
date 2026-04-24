@@ -34,6 +34,15 @@ export const backfillFollowedEventsToPersonalListsBatch = internalMutation({
     const personalListIdsByUser = new Map<string, string>();
 
     for (const follow of result.page) {
+      const event = await ctx.db
+        .query("events")
+        .withIndex("by_custom_id", (q) => q.eq("id", follow.eventId))
+        .first();
+
+      if (!event) {
+        continue;
+      }
+
       let personalListId = personalListIdsByUser.get(follow.userId);
       if (!personalListId) {
         const personalList = await getOrCreatePersonalList(ctx, follow.userId);
