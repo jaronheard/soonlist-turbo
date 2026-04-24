@@ -61,8 +61,6 @@ export function CaptureAccessoryContent({
     }
     if (status.events.length === 1 && status.events[0]) {
       router.navigate(`/event/${status.events[0].id}`);
-    } else if (status.successCount > 0) {
-      router.navigate(`/batch/${batchId}`);
     } else {
       router.navigate(`/batch/${batchId}`);
     }
@@ -331,7 +329,7 @@ function getAccessoryCopy(
   }
   const total = status.totalCount;
   if (!isTerminal) {
-    const plural = total === 1 ? "event" : `${total} events`;
+    const plural = total === 1 ? "1 event" : `${total} events`;
     return {
       title: `Capturing ${plural}…`,
       subtitle:
