@@ -3,7 +3,6 @@ import React, { useCallback } from "react";
 import {
   ActivityIndicator,
   Pressable,
-  Share,
   StyleSheet,
   Text,
   View,
@@ -17,9 +16,7 @@ import { useQuery } from "convex/react";
 import { api } from "@soonlist/backend/convex/_generated/api";
 
 import { useAppStore } from "~/store";
-import Config from "~/utils/config";
-import { logError } from "~/utils/errorLogging";
-import { hapticSelection, hapticSuccess } from "~/utils/feedback";
+import { hapticSelection } from "~/utils/feedback";
 
 type BatchStatus = FunctionReturnType<typeof api.eventBatches.getBatchStatus>;
 
@@ -71,19 +68,6 @@ export function CaptureAccessoryContent({
     }
   }, [batchId, status, isTerminal]);
 
-  const handleShare = useCallback(async () => {
-    if (!status) return;
-    if (status.events.length !== 1) return;
-    const event = status.events[0];
-    if (!event) return;
-    void hapticSuccess();
-    try {
-      await Share.share({ url: `${Config.apiBaseUrl}/event/${event.id}` });
-    } catch (error) {
-      logError("Error sharing captured event from accessory", error);
-    }
-  }, [status]);
-
   const handleDismiss = useCallback(() => {
     void hapticSelection();
     useAppStore.getState().dismissAccessoryBatch();
@@ -105,7 +89,6 @@ export function CaptureAccessoryContent({
       isTerminal={isTerminal}
       completedAt={completedAt}
       onOpen={handleOpen}
-      onShare={handleShare}
       onDismiss={handleDismiss}
     />
   );
@@ -116,7 +99,6 @@ interface RegularAccessoryProps {
   isTerminal: boolean;
   completedAt: number | null;
   onOpen: () => void;
-  onShare: () => void;
   onDismiss: () => void;
 }
 
@@ -125,14 +107,13 @@ function RegularAccessory({
   isTerminal,
   completedAt,
   onOpen,
-  onShare,
   onDismiss,
 }: RegularAccessoryProps) {
   const copy = getAccessoryCopy(status, isTerminal, completedAt);
   // Only treat this as a single-event capture when the batch was a
   // single-event capture to begin with. Partial-success multi-captures
   // have `events.length === 1` too, but the user needs the batch-level
-  // context, not the single-event Share shortcut.
+  // context — tap opens the batch screen rather than a single event.
   const singleEvent =
     isTerminal && status?.totalCount === 1 && status.events.length === 1
       ? status.events[0]
@@ -178,46 +159,25 @@ function RegularAccessory({
         </View>
       </Pressable>
 
-      <View style={styles.regularActions}>
-        {isTerminal && singleEvent ? (
-          <Pressable
-            onPress={onShare}
-            accessibilityRole="button"
-            accessibilityLabel="Share event"
-            hitSlop={6}
-            style={({ pressed }) => [
-              styles.actionButton,
-              pressed && { opacity: 0.5 },
-            ]}
-          >
-            <SymbolView
-              name="square.and.arrow.up"
-              size={18}
-              tintColor={BRAND}
-              resizeMode="scaleAspectFit"
-            />
-          </Pressable>
-        ) : null}
-        {isTerminal ? (
-          <Pressable
-            onPress={onDismiss}
-            accessibilityRole="button"
-            accessibilityLabel="Dismiss"
-            hitSlop={6}
-            style={({ pressed }) => [
-              styles.actionButton,
-              pressed && { opacity: 0.5 },
-            ]}
-          >
-            <SymbolView
-              name="xmark"
-              size={14}
-              tintColor={NEUTRAL_2}
-              resizeMode="scaleAspectFit"
-            />
-          </Pressable>
-        ) : null}
-      </View>
+      {isTerminal ? (
+        <Pressable
+          onPress={onDismiss}
+          accessibilityRole="button"
+          accessibilityLabel="Dismiss"
+          hitSlop={6}
+          style={({ pressed }) => [
+            styles.actionButton,
+            pressed && { opacity: 0.5 },
+          ]}
+        >
+          <SymbolView
+            name="xmark"
+            size={12}
+            tintColor={NEUTRAL_2}
+            resizeMode="scaleAspectFit"
+          />
+        </Pressable>
+      ) : null}
     </View>
   );
 }
@@ -445,52 +405,53 @@ function formatRelative(timestampMs: number): string {
   return `${hours}h ago`;
 }
 
+const LEADING_SIZE = 28;
+
 const styles = StyleSheet.create({
+  // iOS 26 provides the capsule background + vertical padding; our
+  // container only lays out the row. Avoid flex:1 / paddingVertical so
+  // the accessory sizes to its intrinsic content instead of stretching.
   regularContainer: {
-    flex: 1,
     flexDirection: "row",
     alignItems: "center",
-    paddingHorizontal: 8,
-    paddingVertical: 4,
+    paddingHorizontal: 6,
     gap: 8,
   },
   regularPressable: {
     flex: 1,
     flexDirection: "row",
     alignItems: "center",
-    gap: 10,
-    paddingRight: 4,
+    gap: 8,
+    // Allow the text column to shrink for ellipsis; without minWidth:0
+    // on the flex child, long labels push the dismiss button off-screen.
+    minWidth: 0,
   },
   regularTextColumn: {
     flex: 1,
+    minWidth: 0,
     justifyContent: "center",
   },
   regularTitle: {
-    fontSize: 14,
+    fontSize: 13,
     fontWeight: "600",
     color: "#0B0B0B",
   },
   regularSubtitle: {
-    fontSize: 12,
+    fontSize: 11,
     color: NEUTRAL_2,
     marginTop: 1,
   },
-  regularActions: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 4,
-  },
   actionButton: {
-    width: 32,
-    height: 32,
+    width: 28,
+    height: 28,
     alignItems: "center",
     justifyContent: "center",
-    borderRadius: 16,
+    borderRadius: 14,
   },
   leading: {
-    width: 36,
-    height: 36,
-    borderRadius: 10,
+    width: LEADING_SIZE,
+    height: LEADING_SIZE,
+    borderRadius: 8,
     alignItems: "center",
     justifyContent: "center",
     backgroundColor: "rgba(90,50,251,0.12)",
@@ -502,9 +463,9 @@ const styles = StyleSheet.create({
     backgroundColor: "#B3261E",
   },
   leadingImage: {
-    width: 36,
-    height: 36,
-    borderRadius: 10,
+    width: LEADING_SIZE,
+    height: LEADING_SIZE,
+    borderRadius: 8,
     backgroundColor: "#EEE",
   },
   inlineContainer: {
