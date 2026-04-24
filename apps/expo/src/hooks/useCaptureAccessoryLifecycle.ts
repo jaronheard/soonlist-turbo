@@ -4,19 +4,20 @@ import { useQuery } from "convex/react";
 import { api } from "@soonlist/backend/convex/_generated/api";
 
 import { SUPPORTS_LIQUID_GLASS } from "~/hooks/useLiquidGlass";
-import { useInFlightEventStore } from "~/store/useInFlightEventStore";
+import { useAppStore } from "~/store";
 
 // How long to keep a finished batch visible in the accessory before
 // auto-dismissing it. Long enough to tap in from another tab, short
 // enough that the accessory doesn't linger into the next session.
 const AUTO_DISMISS_MS = 5 * 60 * 1000;
 
-// Safety net for batches that never reach a terminal state — e.g. a
-// local preprocessing error leaves some images un-queued so the backend
-// progress can't advance to 100%. After this much wall-clock time from
-// start, we assume the batch is stuck and clear the accessory so it
-// doesn't sit on "Capturing…" indefinitely.
-const MAX_PROCESSING_MS = 10 * 60 * 1000;
+// Safety net for batches that never reach a terminal state because
+// local preprocessing failed before any image was queued (backend sees
+// 0 / totalCount and can't advance). We only apply this when the
+// backend shows ZERO progress — a healthy long-running batch will have
+// already registered some success/failure, so we trust the backend to
+// terminate on its own rather than force-dismissing.
+const NO_PROGRESS_STUCK_MS = 10 * 60 * 1000;
 
 /**
  * useCaptureAccessoryLifecycle
@@ -26,22 +27,22 @@ const MAX_PROCESSING_MS = 10 * 60 * 1000;
  *      "completed" or "failed" (so the accessory can flip from the
  *      "capturing…" UI to the "captured" UI).
  *   2. Auto-dismisses the accessory 5 minutes after completion.
- *   3. Force-dismisses stuck batches after MAX_PROCESSING_MS to recover
- *      from local preprocessing failures that leave the backend unable
- *      to reach a terminal state on its own.
+ *   3. Force-dismisses stuck batches (no backend progress after
+ *      NO_PROGRESS_STUCK_MS) to recover from local preprocessing
+ *      failures that leave the backend unable to reach a terminal state
+ *      on its own. Healthy long-running batches — any success/failure
+ *      registered — are left alone so we don't dismiss prematurely.
  *
  * Mounted once at the root, not inside the accessory itself — the
  * accessory renders two instances (regular + inline placements) and
  * anything stateful must live outside of it.
  */
 export function useCaptureAccessoryLifecycle() {
-  const accessoryBatchId = useInFlightEventStore((s) => s.accessoryBatchId);
-  const accessoryStartedAt = useInFlightEventStore((s) => s.accessoryStartedAt);
-  const accessoryCompletedAt = useInFlightEventStore(
-    (s) => s.accessoryCompletedAt,
-  );
-  const markCompleted = useInFlightEventStore((s) => s.markAccessoryCompleted);
-  const dismiss = useInFlightEventStore((s) => s.dismissAccessoryBatch);
+  const accessoryBatchId = useAppStore((s) => s.accessoryBatchId);
+  const accessoryStartedAt = useAppStore((s) => s.accessoryStartedAt);
+  const accessoryCompletedAt = useAppStore((s) => s.accessoryCompletedAt);
+  const markCompleted = useAppStore((s) => s.markAccessoryCompleted);
+  const dismiss = useAppStore((s) => s.dismissAccessoryBatch);
 
   // Defense in depth: the accessory only renders on iOS 26+, and
   // useCreateEvent already gates `setAccessoryBatch` on this flag, but
@@ -87,12 +88,16 @@ export function useCaptureAccessoryLifecycle() {
     };
   }, [accessoryBatchId, accessoryCompletedAt, dismiss]);
 
-  // Force-dismiss batches that have been "processing" too long. Covers
-  // the case where useCreateEvent threw before all images were queued
-  // (so the backend's progress can't reach 100%) — we never dismiss in
-  // those catch blocks to avoid wiping partial-success state, so this
-  // is the single safety net.
+  // Force-dismiss batches that the backend clearly can't finish: no
+  // progress (0 successes, 0 failures) after NO_PROGRESS_STUCK_MS. This
+  // is the recovery path when useCreateEvent threw before any image
+  // reached the backend. Batches with any registered progress are left
+  // alone — a large batch can legitimately take a long time, and we'd
+  // rather leave it than dismiss a healthy capture.
   const stuckTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const hasBackendProgress = batchStatus
+    ? batchStatus.successCount + batchStatus.failureCount > 0
+    : false;
   useEffect(() => {
     if (stuckTimerRef.current) {
       clearTimeout(stuckTimerRef.current);
@@ -101,7 +106,8 @@ export function useCaptureAccessoryLifecycle() {
     if (!accessoryBatchId || !accessoryStartedAt || accessoryCompletedAt) {
       return;
     }
-    const remaining = MAX_PROCESSING_MS - (Date.now() - accessoryStartedAt);
+    if (hasBackendProgress) return;
+    const remaining = NO_PROGRESS_STUCK_MS - (Date.now() - accessoryStartedAt);
     if (remaining <= 0) {
       dismiss();
       return;
@@ -115,5 +121,11 @@ export function useCaptureAccessoryLifecycle() {
         stuckTimerRef.current = null;
       }
     };
-  }, [accessoryBatchId, accessoryStartedAt, accessoryCompletedAt, dismiss]);
+  }, [
+    accessoryBatchId,
+    accessoryStartedAt,
+    accessoryCompletedAt,
+    hasBackendProgress,
+    dismiss,
+  ]);
 }

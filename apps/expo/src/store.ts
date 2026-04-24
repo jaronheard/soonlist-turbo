@@ -181,6 +181,15 @@ interface AppState {
   setMyListBadgeCount: (count: number) => void;
   communityBadgeCount: number;
   setCommunityBadgeCount: (count: number) => void;
+
+  // iOS 26 tab bar bottom accessory (capture mini-player).
+  // Ephemeral — excluded from persist.partialize.
+  accessoryBatchId: string | null;
+  accessoryStartedAt: number | null;
+  accessoryCompletedAt: number | null;
+  setAccessoryBatch: (batchId: string) => void;
+  markAccessoryCompleted: () => void;
+  dismissAccessoryBatch: () => void;
 }
 
 export const useAppStore = create<AppState>()(
@@ -411,6 +420,9 @@ export const useAppStore = create<AppState>()(
           pendingFollowUsername: null,
           myListBadgeCount: 0,
           communityBadgeCount: 0,
+          accessoryBatchId: null,
+          accessoryStartedAt: null,
+          accessoryCompletedAt: null,
         }),
 
       // Reset for logout - preserves onboarding state
@@ -463,6 +475,9 @@ export const useAppStore = create<AppState>()(
           pendingFollowUsername: state.pendingFollowUsername,
           myListBadgeCount: 0,
           communityBadgeCount: 0,
+          accessoryBatchId: null,
+          accessoryStartedAt: null,
+          accessoryCompletedAt: null,
         })),
 
       // Stable timestamp for query filtering
@@ -533,14 +548,47 @@ export const useAppStore = create<AppState>()(
       setMyListBadgeCount: (count) => set({ myListBadgeCount: count }),
       communityBadgeCount: 0,
       setCommunityBadgeCount: (count) => set({ communityBadgeCount: count }),
+
+      // iOS 26 tab bar bottom accessory (capture mini-player)
+      accessoryBatchId: null,
+      accessoryStartedAt: null,
+      accessoryCompletedAt: null,
+      setAccessoryBatch: (batchId) =>
+        set({
+          accessoryBatchId: batchId,
+          accessoryStartedAt: Date.now(),
+          accessoryCompletedAt: null,
+        }),
+      markAccessoryCompleted: () =>
+        set((state) =>
+          state.accessoryBatchId && !state.accessoryCompletedAt
+            ? { accessoryCompletedAt: Date.now() }
+            : state,
+        ),
+      dismissAccessoryBatch: () =>
+        set({
+          accessoryBatchId: null,
+          accessoryStartedAt: null,
+          accessoryCompletedAt: null,
+        }),
     }),
     {
       name: "app-storage",
       storage: createJSONStorage(() => AsyncStorage),
-      // Do not persist ephemeral flags like discoverAccessOverride
+      // Do not persist ephemeral flags (discoverAccessOverride, tab bar
+      // accessory capture state).
       partialize: (state) => {
-        // eslint-disable-next-line @typescript-eslint/no-unused-vars
-        const { discoverAccessOverride, ...rest } = state;
+        const {
+          // eslint-disable-next-line @typescript-eslint/no-unused-vars
+          discoverAccessOverride,
+          // eslint-disable-next-line @typescript-eslint/no-unused-vars
+          accessoryBatchId,
+          // eslint-disable-next-line @typescript-eslint/no-unused-vars
+          accessoryStartedAt,
+          // eslint-disable-next-line @typescript-eslint/no-unused-vars
+          accessoryCompletedAt,
+          ...rest
+        } = state;
         return rest;
       },
     },

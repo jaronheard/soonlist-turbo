@@ -16,7 +16,7 @@ import { useQuery } from "convex/react";
 
 import { api } from "@soonlist/backend/convex/_generated/api";
 
-import { useInFlightEventStore } from "~/store/useInFlightEventStore";
+import { useAppStore } from "~/store";
 import Config from "~/utils/config";
 import { logError } from "~/utils/errorLogging";
 import { hapticSelection, hapticSuccess } from "~/utils/feedback";
@@ -37,14 +37,14 @@ interface CaptureAccessoryContentProps {
  * this component are rendered simultaneously — one for the "regular"
  * placement (above the tab bar) and one for "inline" (next to the tab bar
  * when it's minimized). Local state would not be shared between them, so
- * all state lives in `useInFlightEventStore` and the Convex query below
+ * all state lives in `useAppStore` and the Convex query below
  * (deduped across both instances).
  */
 export function CaptureAccessoryContent({
   batchId,
 }: CaptureAccessoryContentProps) {
   const placement = NativeTabs.BottomAccessory.usePlacement();
-  const completedAt = useInFlightEventStore((s) => s.accessoryCompletedAt);
+  const completedAt = useAppStore((s) => s.accessoryCompletedAt);
 
   const status = useQuery(api.eventBatches.getBatchStatus, { batchId });
   const isTerminal =
@@ -86,7 +86,7 @@ export function CaptureAccessoryContent({
 
   const handleDismiss = useCallback(() => {
     void hapticSelection();
-    useInFlightEventStore.getState().dismissAccessoryBatch();
+    useAppStore.getState().dismissAccessoryBatch();
   }, []);
 
   if (placement === "inline") {

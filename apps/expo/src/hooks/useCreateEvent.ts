@@ -58,7 +58,7 @@ export function useCreateEvent() {
   const { setIsImageLoading, addWorkflowId } = useAppStore();
   const setIsCapturing = useInFlightEventStore((s) => s.setIsCapturing);
   const addPendingBatchId = useInFlightEventStore((s) => s.addPendingBatchId);
-  const setAccessoryBatch = useInFlightEventStore((s) => s.setAccessoryBatch);
+  const setAccessoryBatch = useAppStore((s) => s.setAccessoryBatch);
   const { hasNotificationPermission } = useOneSignal();
   const userTimezone = useUserTimezone();
 
