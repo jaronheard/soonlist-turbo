@@ -1259,6 +1259,9 @@ export async function followEvent(
         userId,
         eventId,
       });
+
+      const personalList = await getOrCreatePersonalList(ctx, userId);
+      await addEventToList(ctx, eventId, personalList.id, userId);
     }
   }
 
@@ -1294,6 +1297,9 @@ export async function unfollowEvent(
       if (isCreator) {
         return await getEventById(ctx, eventId);
       }
+
+      const personalList = await getOrCreatePersonalList(ctx, userId);
+      await removeEventFromList(ctx, eventId, personalList.id, userId);
 
       const listFollows = await ctx.db
         .query("listFollows")
