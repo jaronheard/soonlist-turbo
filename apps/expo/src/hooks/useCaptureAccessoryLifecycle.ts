@@ -1,3 +1,4 @@
+import type { AppStateStatus } from "react-native";
 import { useEffect, useRef, useState } from "react";
 import { AppState } from "react-native";
 import NetInfo from "@react-native-community/netinfo";
@@ -118,22 +119,41 @@ export function useCaptureAccessoryLifecycle() {
 
   // Convex subscriptions pause while the app is backgrounded or offline,
   // so `lastProgressAt` can appear stale through no fault of the batch.
-  // Give the subscription a fresh window whenever we regain an active
-  // foreground + online state — if the batch really is stuck, the timer
-  // will still fire once the app has been continuously active for
-  // NO_PROGRESS_STUCK_MS without new progress.
+  // Give the subscription a fresh window only when we've regained BOTH
+  // an active foreground state AND network connectivity — bumping on
+  // just one side would reset the timer while Convex is still paused.
+  // If the batch really is stuck, the timer will fire once we've been
+  // continuously active+online for NO_PROGRESS_STUCK_MS without new
+  // progress.
   useEffect(() => {
     if (!accessoryBatchId || accessoryCompletedAt) return;
-    const bumpTimer = () => {
-      if (useAppStore.getState().accessoryBatchId) {
+    let currentAppState: AppStateStatus = AppState.currentState;
+    let isConnected = true;
+    const maybeBumpTimer = () => {
+      if (
+        currentAppState === "active" &&
+        isConnected &&
+        useAppStore.getState().accessoryBatchId
+      ) {
         setLastProgressAt(Date.now());
       }
     };
+    // Seed connectivity from NetInfo so the first AppState change can
+    // make a decision without waiting for a network event.
+    void NetInfo.fetch()
+      .then((state) => {
+        isConnected = state.isConnected === true;
+      })
+      .catch(() => {
+        /* keep the optimistic default */
+      });
     const appStateSub = AppState.addEventListener("change", (state) => {
-      if (state === "active") bumpTimer();
+      currentAppState = state;
+      maybeBumpTimer();
     });
     const netUnsub = NetInfo.addEventListener((state) => {
-      if (state.isConnected) bumpTimer();
+      isConnected = state.isConnected === true;
+      maybeBumpTimer();
     });
     return () => {
       appStateSub.remove();
