@@ -7,6 +7,7 @@ import { api } from "@soonlist/backend/convex/_generated/api";
 
 import { useRevenueCat } from "~/providers/RevenueCatProvider";
 import { useAppStore } from "~/store";
+import { useInFlightEventStore } from "~/store/useInFlightEventStore";
 import { logError } from "~/utils/errorLogging";
 
 interface SignOutOptions {
@@ -51,6 +52,13 @@ export const useSignOut = () => {
         throw error;
       }
     }
+
+    // Clear in-flight capture state immediately after the Clerk token is
+    // revoked so Convex subscriptions (e.g. getBatchStatus via the tab bar
+    // accessory) stop firing under a stale identity before the rest of the
+    // cleanup runs.
+    useAppStore.getState().dismissAccessoryBatch();
+    useInFlightEventStore.getState().clearPendingBatchIds();
 
     // Step 3: Clean up local data and third-party sessions.
     // These should not require auth and can run concurrently.

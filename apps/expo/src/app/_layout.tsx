@@ -34,6 +34,7 @@ import { ForceUpdateScreen } from "~/components/ForceUpdateScreen";
 import { PostHogIdentityTracker } from "~/components/PostHogIdentityTracker";
 import { ToastProvider } from "~/components/Toast";
 import { useAppsFlyerDeepLink } from "~/hooks/useAppsFlyerDeepLink";
+import { useCaptureAccessoryLifecycle } from "~/hooks/useCaptureAccessoryLifecycle";
 import { useCaptureCompletionFeedback } from "~/hooks/useCaptureCompletionFeedback";
 import { useForceUpdate } from "~/hooks/useForceUpdate";
 import { useMediaPermissions } from "~/hooks/useMediaPermissions";
@@ -384,6 +385,7 @@ function RootLayoutContent() {
   useAppsFlyerDeepLink();
   usePendingFollow();
   useCaptureCompletionFeedback();
+  useCaptureAccessoryLifecycle();
   const ref = useNavigationContainerRef();
   const pathname = usePathname();
   const params = useGlobalSearchParams();
