@@ -1259,11 +1259,6 @@ export async function followEvent(
         userId,
         eventId,
       });
-
-      // Keep personal list membership in sync with follows so subscribers of
-      // this user's Soonlist see the same public events.
-      const personalList = await getOrCreatePersonalList(ctx, userId);
-      await addEventToList(ctx, eventId, personalList.id, userId);
     }
   }
 
@@ -1299,12 +1294,6 @@ export async function unfollowEvent(
       if (isCreator) {
         return await getEventById(ctx, eventId);
       }
-
-      // Personal list membership is source-of-truth for a user's Soonlist.
-      // Follow-created entries are not separately tagged from manually-added
-      // entries, so unfollow removes this personal-list link by design.
-      const personalList = await getOrCreatePersonalList(ctx, userId);
-      await removeEventFromList(ctx, eventId, personalList.id, userId);
 
       const listFollows = await ctx.db
         .query("listFollows")
@@ -1416,16 +1405,11 @@ export async function addEventToList(
     // paginate efficiently by the userFeeds visibility/hasEnded index.
     await addEventToListFeedInline(ctx, eventId, listId);
 
-    // Add event to followers' feeds in a separate transaction to avoid
-    // mutation limits for lists with many followers.
-    await ctx.scheduler.runAfter(
-      0,
-      internal.feedHelpers.addEventToListFollowersFeeds,
-      {
-        eventId,
-        listId,
-      },
-    );
+    // Add event to followers' feeds
+    await ctx.runMutation(internal.feedHelpers.addEventToListFollowersFeeds, {
+      eventId,
+      listId,
+    });
   }
 }
 
@@ -1490,10 +1474,8 @@ export async function removeEventFromList(
     // followers, mirroring the symmetric write in addEventToList.
     await removeEventFromListFeedInline(ctx, eventId, listId);
 
-    // Remove event from followers' feeds in a separate transaction to avoid
-    // mutation limits for lists with many followers.
-    await ctx.scheduler.runAfter(
-      0,
+    // Remove event from followers' feeds
+    await ctx.runMutation(
       internal.feedHelpers.removeEventFromListFollowersFeeds,
       {
         eventId,

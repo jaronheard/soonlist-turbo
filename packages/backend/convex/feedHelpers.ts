@@ -589,20 +589,6 @@ export const addEventToListFollowersFeeds = internalMutation({
     listId: v.string(),
   },
   handler: async (ctx, { eventId, listId }) => {
-    // If the event is no longer linked to this list (e.g. queued fanout from
-    // an earlier write that has since been reverted), skip fanout to avoid
-    // stale followedLists entries.
-    const currentMembership = await ctx.db
-      .query("eventToLists")
-      .withIndex("by_event_and_list", (q) =>
-        q.eq("eventId", eventId).eq("listId", listId),
-      )
-      .first();
-
-    if (!currentMembership) {
-      return;
-    }
-
     const event = await ctx.db
       .query("events")
       .withIndex("by_custom_id", (q) => q.eq("id", eventId))
@@ -657,19 +643,6 @@ export const removeEventFromListFollowersFeeds = internalMutation({
     listId: v.string(),
   },
   handler: async (ctx, { eventId, listId }) => {
-    // If this scheduled removal is stale and the event is currently linked
-    // to the list again, preserve the followedLists entries.
-    const currentMembership = await ctx.db
-      .query("eventToLists")
-      .withIndex("by_event_and_list", (q) =>
-        q.eq("eventId", eventId).eq("listId", listId),
-      )
-      .first();
-
-    if (currentMembership) {
-      return;
-    }
-
     const listFollows = await ctx.db
       .query("listFollows")
       .withIndex("by_list", (q) => q.eq("listId", listId))
