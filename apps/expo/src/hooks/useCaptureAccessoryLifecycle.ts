@@ -133,6 +133,13 @@ export function useCaptureAccessoryLifecycle() {
       if (
         currentAppState === "active" &&
         isConnected &&
+        // Only extend the deadline if we've already seen at least one
+        // backend response. Without this, the AppState/NetInfo handlers
+        // would seed lastProgressAt immediately and arm the stuck
+        // timeout before any getBatchStatus payload has arrived,
+        // defeating the `lastProgressAt === null` safeguard for
+        // loading/offline-recovery.
+        observedProgressRef.current !== null &&
         useAppStore.getState().accessoryBatchId
       ) {
         setLastProgressAt(Date.now());
