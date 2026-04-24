@@ -1300,9 +1300,9 @@ export async function unfollowEvent(
         return await getEventById(ctx, eventId);
       }
 
-      // Remove followed events from the user's personal list so list
-      // subscribers lose this source unless the event still exists in another
-      // followed list.
+      // Personal list membership is source-of-truth for a user's Soonlist.
+      // Follow-created entries are not separately tagged from manually-added
+      // entries, so unfollow removes this personal-list link by design.
       const personalList = await getOrCreatePersonalList(ctx, userId);
       await removeEventFromList(ctx, eventId, personalList.id, userId);
 

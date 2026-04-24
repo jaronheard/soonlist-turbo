@@ -79,6 +79,12 @@ export const backfillFollowedEventsToPersonalListsBatch = internalMutation({
 
     const nextCursor = result.isDone ? null : result.continueCursor;
 
+    if (!result.isDone && result.page.length === 0) {
+      throw new Error(
+        `backfillFollowedEventsToPersonalListsBatch: paginator returned an empty page at cursor ${cursor} before completion`,
+      );
+    }
+
     if (!result.isDone && nextCursor !== cursor) {
       await ctx.scheduler.runAfter(
         0,
@@ -90,7 +96,7 @@ export const backfillFollowedEventsToPersonalListsBatch = internalMutation({
         },
       );
     } else if (!result.isDone) {
-      console.error(
+      throw new Error(
         `backfillFollowedEventsToPersonalListsBatch: cursor stalled at ${cursor} after ${result.page.length} follows - aborting`,
       );
     }
