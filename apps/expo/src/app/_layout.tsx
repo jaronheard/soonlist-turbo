@@ -46,6 +46,7 @@ import Config from "~/utils/config";
 import { getUserTimeZone } from "~/utils/dates";
 import { logDebug, logError } from "~/utils/errorLogging";
 import { getAccessGroup } from "~/utils/getAccessGroup";
+import { HEADER_BLUR_EFFECT } from "~/utils/headerOptions";
 
 const styles = StyleSheet.create({
   container: {
@@ -210,7 +211,7 @@ const InitialLayout = () => {
     <Stack
       screenOptions={{
         headerTransparent: true,
-        headerBlurEffect: "none",
+        headerBlurEffect: HEADER_BLUR_EFFECT,
         headerTintColor: "#5A32FB",
         headerTitleStyle: {
           fontWeight: "bold",
