@@ -167,12 +167,20 @@ export function useCaptureAccessoryLifecycle() {
   // progress change, so a healthy batch that keeps advancing resets
   // it on every tick and is never dismissed.
   const stuckTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const isTerminalStatus =
+    batchStatus?.status === "completed" || batchStatus?.status === "failed";
   useEffect(() => {
     if (stuckTimerRef.current) {
       clearTimeout(stuckTimerRef.current);
       stuckTimerRef.current = null;
     }
     if (!accessoryBatchId || accessoryCompletedAt || !lastProgressAt) return;
+    // If the backend has already reported a terminal state, hand off to
+    // the completion effect instead of dismissing. Otherwise a response
+    // that arrives after a long idle (stale lastProgressAt) would fire
+    // the timer before markAccessoryCompleted runs, and the user would
+    // never see the captured accessory with its share/review actions.
+    if (isTerminalStatus) return;
     const remaining = NO_PROGRESS_STUCK_MS - (Date.now() - lastProgressAt);
     if (remaining <= 0) {
       dismiss();
@@ -187,5 +195,11 @@ export function useCaptureAccessoryLifecycle() {
         stuckTimerRef.current = null;
       }
     };
-  }, [accessoryBatchId, accessoryCompletedAt, lastProgressAt, dismiss]);
+  }, [
+    accessoryBatchId,
+    accessoryCompletedAt,
+    lastProgressAt,
+    isTerminalStatus,
+    dismiss,
+  ]);
 }
