@@ -1024,8 +1024,27 @@ export async function updateEvent(
       lists.filter((l) => l.value).map((l) => l.value),
     );
 
+    // System lists (e.g. each user's personal Soonlist) are managed by
+    // createEvent/followEvent/unfollowEvent and never appear in the client's
+    // `lists` payload. Exclude them from this reconciliation so editing an
+    // event doesn't silently remove it from the creator's or any follower's
+    // personal list.
+    const systemListIds = new Set<string>();
+    for (const listId of existingListIds) {
+      const list = await ctx.db
+        .query("lists")
+        .withIndex("by_custom_id", (q) => q.eq("id", listId))
+        .first();
+      if (list?.isSystemList) {
+        systemListIds.add(listId);
+      }
+    }
+
     // Delete existing list associations that are no longer in the new list
     for (const etl of existingEventToLists) {
+      if (systemListIds.has(etl.listId)) {
+        continue;
+      }
       if (!newListIds.has(etl.listId)) {
         await removeEventFromList(ctx, eventId, etl.listId, userId);
       }
