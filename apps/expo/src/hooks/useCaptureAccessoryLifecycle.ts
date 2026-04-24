@@ -1,4 +1,4 @@
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useQuery } from "convex/react";
 
 import { api } from "@soonlist/backend/convex/_generated/api";
@@ -11,12 +11,14 @@ import { useAppStore } from "~/store";
 // enough that the accessory doesn't linger into the next session.
 const AUTO_DISMISS_MS = 5 * 60 * 1000;
 
-// Safety net for batches that never reach a terminal state because
-// local preprocessing failed before any image was queued (backend sees
-// 0 / totalCount and can't advance). We only apply this when the
-// backend shows ZERO progress — a healthy long-running batch will have
-// already registered some success/failure, so we trust the backend to
-// terminate on its own rather than force-dismissing.
+// Safety net for batches whose backend progress stalls (never
+// advances to totalCount). Two real-world cases: (1) useCreateEvent
+// threw before any image reached the backend, so progress stays at
+// 0 / N forever; (2) Promise.all in createMultipleEvents rejected
+// part-way, so progress parks at M / N with M < N. We measure
+// staleness from the last observed progress change, so healthy
+// long-running captures (which keep advancing) are never dismissed
+// prematurely, but both stuck cases clear after the same deadline.
 const NO_PROGRESS_STUCK_MS = 10 * 60 * 1000;
 
 /**
@@ -27,11 +29,12 @@ const NO_PROGRESS_STUCK_MS = 10 * 60 * 1000;
  *      "completed" or "failed" (so the accessory can flip from the
  *      "capturing…" UI to the "captured" UI).
  *   2. Auto-dismisses the accessory 5 minutes after completion.
- *   3. Force-dismisses stuck batches (no backend progress after
+ *   3. Force-dismisses stuck batches (no backend progress change for
  *      NO_PROGRESS_STUCK_MS) to recover from local preprocessing
- *      failures that leave the backend unable to reach a terminal state
- *      on its own. Healthy long-running batches — any success/failure
- *      registered — are left alone so we don't dismiss prematurely.
+ *      failures that leave the backend unable to reach a terminal
+ *      state on its own. Tracks "time since last progress" — healthy
+ *      long-running batches keep advancing so they're never dismissed,
+ *      while both 0-of-N and partial-of-N stalls eventually clear.
  *
  * Mounted once at the root, not inside the accessory itself — the
  * accessory renders two instances (regular + inline placements) and
@@ -39,7 +42,6 @@ const NO_PROGRESS_STUCK_MS = 10 * 60 * 1000;
  */
 export function useCaptureAccessoryLifecycle() {
   const accessoryBatchId = useAppStore((s) => s.accessoryBatchId);
-  const accessoryStartedAt = useAppStore((s) => s.accessoryStartedAt);
   const accessoryCompletedAt = useAppStore((s) => s.accessoryCompletedAt);
   const markCompleted = useAppStore((s) => s.markAccessoryCompleted);
   const dismiss = useAppStore((s) => s.dismissAccessoryBatch);
@@ -88,34 +90,43 @@ export function useCaptureAccessoryLifecycle() {
     };
   }, [accessoryBatchId, accessoryCompletedAt, dismiss]);
 
-  // Force-dismiss batches that the backend clearly can't finish: no
-  // progress (0 successes, 0 failures) after NO_PROGRESS_STUCK_MS. This
-  // is the recovery path when useCreateEvent threw before any image
-  // reached the backend. Batches with any registered progress are left
-  // alone — a large batch can legitimately take a long time, and we'd
-  // rather leave it than dismiss a healthy capture.
+  // Track the last moment the backend reported a change in progress.
+  // `null` means "no response yet" — in that state we don't run the
+  // stuck timer (would dismiss a healthy batch whose subscription just
+  // hasn't warmed up). The first response (even 0/N) seeds the clock;
+  // subsequent progress changes reset it.
+  const [lastProgressAt, setLastProgressAt] = useState<number | null>(null);
+  const observedProgressRef = useRef<number | null>(null);
+
+  // Reset progress observation whenever we switch to a new batch.
+  useEffect(() => {
+    observedProgressRef.current = null;
+    setLastProgressAt(null);
+  }, [accessoryBatchId]);
+
+  const progressCount = batchStatus
+    ? batchStatus.successCount + batchStatus.failureCount
+    : null;
+  useEffect(() => {
+    if (progressCount === null) return;
+    if (observedProgressRef.current === progressCount) return;
+    observedProgressRef.current = progressCount;
+    setLastProgressAt(Date.now());
+  }, [progressCount]);
+
+  // Force-dismiss batches whose backend progress has gone stale.
+  // Covers both "never made it to the backend" and "Promise.all
+  // rejected partway" — the timer is measured from the last observed
+  // progress change, so a healthy batch that keeps advancing resets
+  // it on every tick and is never dismissed.
   const stuckTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-  // Tri-state:
-  //   undefined → getBatchStatus hasn't responded yet (loading / offline
-  //               / backgrounded) — don't advance the stuck timer,
-  //               otherwise we'd dismiss a healthy batch we just haven't
-  //               subscribed to yet.
-  //   false     → backend confirmed zero progress — run the timer.
-  //   true      → backend confirmed some progress — trust it to finish.
-  const backendProgressKnown: boolean | undefined = batchStatus
-    ? batchStatus.successCount + batchStatus.failureCount > 0
-    : undefined;
   useEffect(() => {
     if (stuckTimerRef.current) {
       clearTimeout(stuckTimerRef.current);
       stuckTimerRef.current = null;
     }
-    if (!accessoryBatchId || !accessoryStartedAt || accessoryCompletedAt) {
-      return;
-    }
-    // Only start the countdown once we've confirmed zero backend progress.
-    if (backendProgressKnown !== false) return;
-    const remaining = NO_PROGRESS_STUCK_MS - (Date.now() - accessoryStartedAt);
+    if (!accessoryBatchId || accessoryCompletedAt || !lastProgressAt) return;
+    const remaining = NO_PROGRESS_STUCK_MS - (Date.now() - lastProgressAt);
     if (remaining <= 0) {
       dismiss();
       return;
@@ -129,11 +140,5 @@ export function useCaptureAccessoryLifecycle() {
         stuckTimerRef.current = null;
       }
     };
-  }, [
-    accessoryBatchId,
-    accessoryStartedAt,
-    accessoryCompletedAt,
-    backendProgressKnown,
-    dismiss,
-  ]);
+  }, [accessoryBatchId, accessoryCompletedAt, lastProgressAt, dismiss]);
 }
