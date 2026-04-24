@@ -456,13 +456,9 @@ function MySoonlistRow({
     );
   }
 
-  const [singleSaver] = otherSavers;
-  const multipleSavers = otherSavers.length > 1;
+  // Reaching this branch implies otherSavers.length >= 1, so the row shows
+  // creator + 1+ savers (2+ people total) — always open the modal.
   const openFromSoonlists = () => setShowModal(true);
-  const onRowWithSaversAction =
-    multipleSavers || !singleSaver
-      ? openFromSoonlists
-      : () => navigateToUser(singleSaver, currentUserId);
 
   const capturerContent = (
     <>
@@ -491,7 +487,7 @@ function MySoonlistRow({
   const extraNameCount = Math.max(otherSavers.length - 1, 0);
   return (
     <>
-      <RowWrapper onRowPress={onRowWithSaversAction}>
+      <RowWrapper onRowPress={openFromSoonlists}>
         <RowText className="text-neutral-2">Captured by</RowText>
         <Pressable
           onPress={() => navigateToUser(creator, currentUserId)}
@@ -505,7 +501,7 @@ function MySoonlistRow({
         <AvatarStack
           users={stackUsers}
           size={avatarSize}
-          onPress={onRowWithSaversAction}
+          onPress={openFromSoonlists}
         />
         <NameList
           users={otherSavers}
@@ -513,7 +509,7 @@ function MySoonlistRow({
           maxNames={1}
           currentUserId={currentUserId}
           onOverflowPress={openFromSoonlists}
-          nameLinksEnabled={!multipleSavers}
+          nameLinksEnabled={false}
         />
       </RowWrapper>
       <SavedByModal
