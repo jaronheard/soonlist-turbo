@@ -6,6 +6,7 @@ import { useMutation } from "convex/react";
 import { api } from "@soonlist/backend/convex/_generated/api";
 
 import { DEFAULT_VISIBILITY } from "~/constants";
+import { SUPPORTS_LIQUID_GLASS } from "~/hooks/useLiquidGlass";
 import { useOneSignal } from "~/providers/OneSignalProvider";
 import { useAppStore, useUserTimezone } from "~/store";
 import { useInFlightEventStore } from "~/store/useInFlightEventStore";
@@ -58,6 +59,9 @@ export function useCreateEvent() {
   const setIsCapturing = useInFlightEventStore((s) => s.setIsCapturing);
   const addPendingBatchId = useInFlightEventStore((s) => s.addPendingBatchId);
   const setAccessoryBatch = useInFlightEventStore((s) => s.setAccessoryBatch);
+  const dismissAccessoryBatch = useInFlightEventStore(
+    (s) => s.dismissAccessoryBatch,
+  );
   const { hasNotificationPermission } = useOneSignal();
   const userTimezone = useUserTimezone();
 
@@ -129,8 +133,12 @@ export function useCreateEvent() {
             sendNotification,
           });
 
-          // Surface batch in the iOS 26 tab bar bottom accessory
-          setAccessoryBatch(batchId);
+          // Surface batch in the iOS 26 tab bar bottom accessory.
+          // Gated on SUPPORTS_LIQUID_GLASS so pre-iOS-26 sessions don't
+          // subscribe to getBatchStatus for an accessory that can't render.
+          if (SUPPORTS_LIQUID_GLASS) {
+            setAccessoryBatch(batchId);
+          }
 
           // 2. Optimize image and get base64
           const base64 = await optimizeImage(fileUri);
@@ -190,6 +198,13 @@ export function useCreateEvent() {
       } catch (error) {
         logError("Error processing event", error);
         void hapticError();
+        // The accessory only shows a Dismiss control once the batch is
+        // terminal; if we bail before even adding images, the batch would
+        // never complete on the backend and the accessory would be stuck.
+        // Clear it here so the UI can't get stuck.
+        if (SUPPORTS_LIQUID_GLASS) {
+          dismissAccessoryBatch();
+        }
         throw error; // Rethrow to trigger mutation's onError
       } finally {
         // Reset loading state for both routes
@@ -209,6 +224,7 @@ export function useCreateEvent() {
       hasNotificationPermission,
       addPendingBatchId,
       setAccessoryBatch,
+      dismissAccessoryBatch,
       userTimezone,
       addWorkflowId,
       eventFromUrl,
@@ -248,8 +264,12 @@ export function useCreateEvent() {
           sendNotification,
         });
 
-        // Surface batch in the iOS 26 tab bar bottom accessory
-        setAccessoryBatch(batchId);
+        // Surface batch in the iOS 26 tab bar bottom accessory.
+        // Gated on SUPPORTS_LIQUID_GLASS so pre-iOS-26 sessions don't
+        // subscribe to getBatchStatus for an accessory that can't render.
+        if (SUPPORTS_LIQUID_GLASS) {
+          setAccessoryBatch(batchId);
+        }
 
         // Step 2: Process and stream images as they're ready
         const imagePromises = tasks.map(async (task, index) => {
@@ -307,6 +327,12 @@ export function useCreateEvent() {
       } catch (error) {
         logError("Error creating events batch", error);
         void hapticError();
+        // Clear the accessory if we never got images queued: the backend
+        // won't transition a zero-image batch to a terminal state, so the
+        // accessory would otherwise stick on "Capturing…" forever.
+        if (SUPPORTS_LIQUID_GLASS) {
+          dismissAccessoryBatch();
+        }
         throw error;
       } finally {
         if (!suppressCapturing) {
@@ -322,6 +348,7 @@ export function useCreateEvent() {
       hasNotificationPermission,
       addPendingBatchId,
       setAccessoryBatch,
+      dismissAccessoryBatch,
       userTimezone,
       setIsCapturing,
       setIsImageLoading,
