@@ -95,9 +95,16 @@ export function useCaptureAccessoryLifecycle() {
   // alone — a large batch can legitimately take a long time, and we'd
   // rather leave it than dismiss a healthy capture.
   const stuckTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const hasBackendProgress = batchStatus
+  // Tri-state:
+  //   undefined → getBatchStatus hasn't responded yet (loading / offline
+  //               / backgrounded) — don't advance the stuck timer,
+  //               otherwise we'd dismiss a healthy batch we just haven't
+  //               subscribed to yet.
+  //   false     → backend confirmed zero progress — run the timer.
+  //   true      → backend confirmed some progress — trust it to finish.
+  const backendProgressKnown: boolean | undefined = batchStatus
     ? batchStatus.successCount + batchStatus.failureCount > 0
-    : false;
+    : undefined;
   useEffect(() => {
     if (stuckTimerRef.current) {
       clearTimeout(stuckTimerRef.current);
@@ -106,7 +113,8 @@ export function useCaptureAccessoryLifecycle() {
     if (!accessoryBatchId || !accessoryStartedAt || accessoryCompletedAt) {
       return;
     }
-    if (hasBackendProgress) return;
+    // Only start the countdown once we've confirmed zero backend progress.
+    if (backendProgressKnown !== false) return;
     const remaining = NO_PROGRESS_STUCK_MS - (Date.now() - accessoryStartedAt);
     if (remaining <= 0) {
       dismiss();
@@ -125,7 +133,7 @@ export function useCaptureAccessoryLifecycle() {
     accessoryBatchId,
     accessoryStartedAt,
     accessoryCompletedAt,
-    hasBackendProgress,
+    backendProgressKnown,
     dismiss,
   ]);
 }
