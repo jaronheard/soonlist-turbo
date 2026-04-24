@@ -35,6 +35,7 @@ import Config from "~/utils/config";
 import { logError } from "~/utils/errorLogging";
 import { toast } from "~/utils/feedback";
 import { eventMatchesFeedSegment } from "~/utils/feedSegment";
+import { HEADER_BLUR_EFFECT } from "~/utils/headerOptions";
 
 function formatMemberSince(createdAtIso: string): string {
   const d = new Date(createdAtIso);
@@ -377,7 +378,7 @@ export default function UserProfilePage() {
           title: screenTitle,
           headerLargeTitle: false,
           headerTransparent: true,
-          headerBlurEffect: "none",
+          headerBlurEffect: HEADER_BLUR_EFFECT,
           headerShadowVisible: false,
           headerTintColor: "#5A32FB",
           headerTitleStyle: {

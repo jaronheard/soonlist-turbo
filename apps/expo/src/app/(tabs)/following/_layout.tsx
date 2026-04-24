@@ -4,6 +4,7 @@ import { Stack } from "expo-router";
 
 import { CaptureOverlayButton } from "~/components/CaptureOverlayButton";
 import { ProfileMenu } from "~/components/ProfileMenu";
+import { HEADER_BLUR_EFFECT } from "~/utils/headerOptions";
 
 export default function FollowingLayout() {
   return (
@@ -16,7 +17,7 @@ export default function FollowingLayout() {
           headerTintColor: "#5A32FB",
           headerShadowVisible: false,
           headerTransparent: true,
-          headerBlurEffect: "none",
+          headerBlurEffect: HEADER_BLUR_EFFECT,
         }}
       >
         <Stack.Screen

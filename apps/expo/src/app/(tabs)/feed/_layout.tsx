@@ -5,6 +5,7 @@ import { Stack } from "expo-router";
 import { CaptureOverlayButton } from "~/components/CaptureOverlayButton";
 import { ProfileMenu } from "~/components/ProfileMenu";
 import { useShareMyList } from "~/hooks/useShareMyList";
+import { HEADER_BLUR_EFFECT } from "~/utils/headerOptions";
 
 export default function FeedLayout() {
   const { requestShare } = useShareMyList();
@@ -19,7 +20,7 @@ export default function FeedLayout() {
           headerTintColor: "#5A32FB",
           headerShadowVisible: false,
           headerTransparent: true,
-          headerBlurEffect: "none",
+          headerBlurEffect: HEADER_BLUR_EFFECT,
         }}
       >
         <Stack.Screen
