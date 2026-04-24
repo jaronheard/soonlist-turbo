@@ -33,6 +33,7 @@ import {
   PenSquare,
   ShareIcon,
 } from "~/components/icons";
+import { OverflowPill } from "~/components/OverflowPill";
 import { SavedByModal } from "~/components/SavedByModal";
 import { useAddEventFlow } from "~/hooks/useAddEventFlow";
 import { useEventActions } from "~/hooks/useEventActions";
@@ -258,6 +259,19 @@ export function UserEventListItem(props: UserEventListItemProps) {
     showCreator === "always" ||
     (showCreator === "otherUsers" && !isCurrentUser) ||
     (showCreator === "savedFromOthers" && isSavedFromOthersEligible);
+
+  const fallbackOverflowCount = additionalSourceCount ?? 0;
+  const hasListAttributionInFallback =
+    !!sourceListSlug || !!sourceListName || fallbackOverflowCount > 0;
+  const showListOnlyAttribution =
+    !shouldShowCreator && hasListAttributionInFallback;
+
+  // Modal wins when there are multiple list sources OR when there is no slug
+  // to navigate to; otherwise tap the row → open the single source list.
+  const onFallbackListAttributionRowPress =
+    fallbackOverflowCount > 0 || !sourceListSlug
+      ? () => setShowFallbackSavedByModal(true)
+      : () => router.push(`/list/${sourceListSlug}`);
 
   const isOwner = demoMode || isCurrentUser;
 
@@ -520,10 +534,14 @@ export function UserEventListItem(props: UserEventListItemProps) {
               lists={(event as { lists?: Doc<"lists">[] }).lists}
               variant={attributionVariant}
             />
-          ) : sourceListSlug ||
-            sourceListName ||
-            (additionalSourceCount ?? 0) > 0 ? (
-            <View className="mx-auto mt-1 flex-row items-center gap-1">
+          ) : showListOnlyAttribution ? (
+            <Pressable
+              onPress={onFallbackListAttributionRowPress}
+              className="mx-auto mt-1 w-full flex-row items-center justify-center gap-1 self-stretch"
+              accessibilityRole="button"
+              accessibilityLabel="View list attribution"
+              style={({ pressed }) => (pressed ? { opacity: 0.85 } : undefined)}
+            >
               <Text className="text-xs text-neutral-2">via</Text>
               {sourceListSlug ? (
                 <Pressable
@@ -551,19 +569,11 @@ export function UserEventListItem(props: UserEventListItemProps) {
                   ) : null}
                 </View>
               )}
-              {additionalSourceCount && additionalSourceCount > 0 ? (
-                <Pressable
-                  onPress={() => setShowFallbackSavedByModal(true)}
-                  hitSlop={{ top: 8, bottom: 8, left: 4, right: 4 }}
-                >
-                  <View className="rounded-full bg-interactive-3 px-1.5 py-0.5">
-                    <Text className="text-xs font-medium text-interactive-1">
-                      +{additionalSourceCount}
-                    </Text>
-                  </View>
-                </Pressable>
-              ) : null}
-            </View>
+              <OverflowPill
+                count={fallbackOverflowCount}
+                onPress={() => setShowFallbackSavedByModal(true)}
+              />
+            </Pressable>
           ) : null}
           <SavedByModal
             visible={showFallbackSavedByModal}

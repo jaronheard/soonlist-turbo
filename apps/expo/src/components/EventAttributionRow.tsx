@@ -58,15 +58,35 @@ function combineUsers(creator: UserForDisplay, savers: UserForDisplay[]) {
   return out;
 }
 
-function RowWrapper({ children }: { children: React.ReactNode }) {
+function RowWrapper({
+  children,
+  onRowPress,
+}: {
+  children: React.ReactNode;
+  /** Catches the full row width so taps do not pass through to the event card. */
+  onRowPress?: () => void;
+}) {
+  const inner = (
+    <View
+      className="w-full flex-row items-center"
+      style={{ minHeight: ROW_HEIGHT, columnGap: 7 }}
+    >
+      {children}
+    </View>
+  );
   return (
-    <View className="mt-0.5 px-3">
-      <View
-        className="flex-row items-center"
-        style={{ minHeight: ROW_HEIGHT, columnGap: 7 }}
-      >
-        {children}
-      </View>
+    <View className="mt-0.5 px-3" style={{ alignSelf: "stretch" }}>
+      {onRowPress ? (
+        <Pressable
+          onPress={onRowPress}
+          accessibilityRole="button"
+          style={({ pressed }) => (pressed ? { opacity: 0.85 } : undefined)}
+        >
+          {inner}
+        </Pressable>
+      ) : (
+        inner
+      )}
     </View>
   );
 }
@@ -193,12 +213,18 @@ function NameList({
   maxNames,
   currentUserId,
   onOverflowPress,
+  nameLinksEnabled = true,
 }: {
   users: UserForDisplay[];
   extraCount: number;
   maxNames: number;
   currentUserId?: string;
   onOverflowPress?: () => void;
+  /**
+   * When false, names are plain text so the row can open the From these
+   * Soonlists sheet instead of deep-linking to a profile.
+   */
+  nameLinksEnabled?: boolean;
 }) {
   const nameUsers = users.slice(0, maxNames);
   if (nameUsers.length === 0 && extraCount === 0) return null;
@@ -217,7 +243,11 @@ function NameList({
           {nameUsers.map((user, i) => (
             <Text
               key={user.id}
-              onPress={() => navigateToUser(user, currentUserId)}
+              onPress={
+                nameLinksEnabled
+                  ? () => navigateToUser(user, currentUserId)
+                  : undefined
+              }
             >
               {displayName(user)}
               {i < nameUsers.length - 1 ? ", " : ""}
@@ -380,7 +410,6 @@ function MySoonlistRow({
   const otherSavers = savers.filter(
     (s) => s.id !== creator.id && s.id !== currentUserId,
   );
-  const openModal = () => setShowModal(true);
 
   // Viewer captured alone: handoff says collapse the row entirely.
   if (isOwnEvent && otherSavers.length === 0) {
@@ -390,21 +419,29 @@ function MySoonlistRow({
   if (isOwnEvent) {
     const stackUsers = otherSavers.slice(0, 3);
     const extraNameCount = Math.max(otherSavers.length - 2, 0);
+    const [singleSaver] = otherSavers;
+    const multipleSavers = otherSavers.length > 1;
+    const openFromSoonlists = () => setShowModal(true);
+    const onRowAction =
+      multipleSavers || !singleSaver
+        ? openFromSoonlists
+        : () => navigateToUser(singleSaver, currentUserId);
     return (
       <>
-        <RowWrapper>
+        <RowWrapper onRowPress={onRowAction}>
           <RowText className="text-neutral-2">Also saved by</RowText>
           <AvatarStack
             users={stackUsers}
             size={avatarSize}
-            onPress={openModal}
+            onPress={onRowAction}
           />
           <NameList
             users={otherSavers}
             extraCount={extraNameCount}
             maxNames={2}
             currentUserId={currentUserId}
-            onOverflowPress={openModal}
+            onOverflowPress={openFromSoonlists}
+            nameLinksEnabled={!multipleSavers}
           />
         </RowWrapper>
         <SavedByModal
@@ -419,25 +456,33 @@ function MySoonlistRow({
     );
   }
 
-  const capturerBadge = (
-    <Pressable
-      onPress={() => navigateToUser(creator, currentUserId)}
-      hitSlop={HIT_SLOP}
-      className="flex-row items-center"
-      style={{ columnGap: 7, flexShrink: 1, minWidth: 0 }}
-    >
+  const [singleSaver] = otherSavers;
+  const multipleSavers = otherSavers.length > 1;
+  const openFromSoonlists = () => setShowModal(true);
+  const onRowWithSaversAction =
+    multipleSavers || !singleSaver
+      ? openFromSoonlists
+      : () => navigateToUser(singleSaver, currentUserId);
+
+  const capturerContent = (
+    <>
       <CapturerAvatar user={creator} size={avatarSize} />
       <RowText className="font-semibold text-black" style={{ flexShrink: 1 }}>
         {displayName(creator)}
       </RowText>
-    </Pressable>
+    </>
   );
 
   if (otherSavers.length === 0) {
     return (
-      <RowWrapper>
+      <RowWrapper onRowPress={() => navigateToUser(creator, currentUserId)}>
         <RowText className="text-neutral-2">Captured by</RowText>
-        {capturerBadge}
+        <View
+          className="flex-row items-center"
+          style={{ columnGap: 7, flexShrink: 1, minWidth: 0 }}
+        >
+          {capturerContent}
+        </View>
       </RowWrapper>
     );
   }
@@ -446,17 +491,29 @@ function MySoonlistRow({
   const extraNameCount = Math.max(otherSavers.length - 1, 0);
   return (
     <>
-      <RowWrapper>
+      <RowWrapper onRowPress={onRowWithSaversAction}>
         <RowText className="text-neutral-2">Captured by</RowText>
-        {capturerBadge}
+        <Pressable
+          onPress={() => navigateToUser(creator, currentUserId)}
+          hitSlop={HIT_SLOP}
+          className="flex-row items-center"
+          style={{ columnGap: 7, flexShrink: 1, minWidth: 0 }}
+        >
+          {capturerContent}
+        </Pressable>
         <RowText className="text-neutral-3">·</RowText>
-        <AvatarStack users={stackUsers} size={avatarSize} onPress={openModal} />
+        <AvatarStack
+          users={stackUsers}
+          size={avatarSize}
+          onPress={onRowWithSaversAction}
+        />
         <NameList
           users={otherSavers}
           extraCount={extraNameCount}
           maxNames={1}
           currentUserId={currentUserId}
-          onOverflowPress={openModal}
+          onOverflowPress={openFromSoonlists}
+          nameLinksEnabled={!multipleSavers}
         />
       </RowWrapper>
       <SavedByModal
@@ -493,30 +550,38 @@ function MySceneRow({
   const [showModal, setShowModal] = useState(false);
   const avatarSize = Math.round(iconSize * 1.25); // 20px at fontScale=1
   const listIconSize = Math.round(iconSize * 0.8125); // 13px at fontScale=1
-  const openModal = () => setShowModal(true);
 
   // Capturer first, then savers in order, dedup'd. Per the handoff the Scene
   // row shows no "+N" for extra savers — tapping the stack opens the modal.
-  const stackUsers = combineUsers(creator, savers).slice(0, 3);
+  const allPeople = combineUsers(creator, savers);
+  const stackUsers = allPeople.slice(0, 3);
   const remainingListsCount = additionalSourceCount ?? 0;
+  const openFromSoonlists = () => setShowModal(true);
+  const onRowAction =
+    allPeople.length > 1
+      ? openFromSoonlists
+      : () => navigateToUser(creator, currentUserId);
 
   return (
     <>
-      <RowWrapper>
+      <RowWrapper onRowPress={onRowAction}>
         <ListChip
           name={sourceListName}
           slug={sourceListSlug}
           size={listIconSize}
         />
         {remainingListsCount > 0 ? (
-          <OverflowPill count={remainingListsCount} onPress={openModal} />
+          <OverflowPill
+            count={remainingListsCount}
+            onPress={openFromSoonlists}
+          />
         ) : null}
         <RowText className="text-neutral-3">·</RowText>
         <AvatarStack
           users={stackUsers}
           size={avatarSize}
           capturerId={creator.id}
-          onPress={openModal}
+          onPress={onRowAction}
         />
       </RowWrapper>
       <SavedByModal
@@ -531,8 +596,8 @@ function MySceneRow({
   );
 }
 
-// Discover tab and List detail page. Not covered by the attribution-row
-// redesign; kept unchanged so those screens render as before.
+// Discover tab and List detail page. Includes full-width press capture so
+// background taps do not pass through to the event card.
 function PeoplePrimaryRow({
   creator,
   savers,
@@ -559,14 +624,37 @@ function PeoplePrimaryRow({
   const remainingUsersCount = allUsers.length - displayUsers.length;
   const remainingListsCount = additionalSourceCount ?? 0;
   const avatarSize = iconSize * 0.9;
-  const openModal = () => setShowModal(true);
+  const isMultiUser = allUsers.length > 1;
+  const openFromSoonlists = () => setShowModal(true);
 
   const hasAnyListInfo =
     !!sourceListSlug || !!sourceListName || remainingListsCount > 0;
 
+  const onRowPress = () => {
+    if (isOwnEvent) {
+      if (hasAnyListInfo) {
+        openFromSoonlists();
+      } else {
+        navigateToUser(creator, currentUserId);
+      }
+      return;
+    }
+    const [singleUser] = allUsers;
+    if (isMultiUser || !singleUser) {
+      openFromSoonlists();
+    } else {
+      navigateToUser(singleUser, currentUserId);
+    }
+  };
+
   return (
     <>
-      <View className="mx-auto mt-1 flex-row flex-wrap items-center justify-center gap-2">
+      <Pressable
+        onPress={onRowPress}
+        className="mx-auto mt-1 w-full flex-row flex-wrap items-center justify-center gap-2"
+        accessibilityRole="button"
+        style={({ pressed }) => (pressed ? { opacity: 0.9 } : undefined)}
+      >
         {isOwnEvent ? (
           <Pressable
             onPress={() => navigateToUser(creator, currentUserId)}
@@ -580,7 +668,11 @@ function PeoplePrimaryRow({
           displayUsers.map((user, index) => (
             <Pressable
               key={user.id}
-              onPress={() => navigateToUser(user, currentUserId)}
+              onPress={() =>
+                isMultiUser
+                  ? openFromSoonlists()
+                  : navigateToUser(user, currentUserId)
+              }
               hitSlop={HIT_SLOP}
               className="flex-row items-center gap-1"
             >
@@ -595,7 +687,10 @@ function PeoplePrimaryRow({
           ))
         )}
         {!isOwnEvent && remainingUsersCount > 0 && (
-          <OverflowPill count={remainingUsersCount} onPress={openModal} />
+          <OverflowPill
+            count={remainingUsersCount}
+            onPress={openFromSoonlists}
+          />
         )}
         {hasAnyListInfo && (
           <>
@@ -604,11 +699,14 @@ function PeoplePrimaryRow({
             </Text>
             <ListChipLegacy name={sourceListName} slug={sourceListSlug} />
             {remainingListsCount > 0 && (
-              <OverflowPill count={remainingListsCount} onPress={openModal} />
+              <OverflowPill
+                count={remainingListsCount}
+                onPress={openFromSoonlists}
+              />
             )}
           </>
         )}
-      </View>
+      </Pressable>
       <SavedByModal
         visible={showModal}
         onClose={() => setShowModal(false)}
