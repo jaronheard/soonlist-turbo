@@ -32,6 +32,7 @@ export const backfillFollowedEventsToPersonalListsBatch = internalMutation({
 
     let linked = 0;
     const personalListIdsByUser = new Map<string, string>();
+    const missingUserIds = new Set<string>();
 
     for (const follow of result.page) {
       const event = await ctx.db
@@ -43,8 +44,22 @@ export const backfillFollowedEventsToPersonalListsBatch = internalMutation({
         continue;
       }
 
+      if (missingUserIds.has(follow.userId)) {
+        continue;
+      }
+
       let personalListId = personalListIdsByUser.get(follow.userId);
       if (!personalListId) {
+        const user = await ctx.db
+          .query("users")
+          .withIndex("by_custom_id", (q) => q.eq("id", follow.userId))
+          .first();
+
+        if (!user) {
+          missingUserIds.add(follow.userId);
+          continue;
+        }
+
         const personalList = await getOrCreatePersonalList(ctx, follow.userId);
         personalListId = personalList.id;
         personalListIdsByUser.set(follow.userId, personalListId);
