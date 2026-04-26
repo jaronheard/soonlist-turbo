@@ -11,6 +11,7 @@ import { api } from "@soonlist/backend/convex/_generated/api";
 
 import { UserProfileFlair } from "~/components/UserProfileFlair";
 import { useStableTimestamp } from "~/hooks/useStableQuery";
+import { buildDisplayImageUrl } from "~/lib/utils";
 
 interface PosterEvent {
   id: string;
@@ -123,13 +124,18 @@ export default function PostersPage() {
             <div key={event.id} className="group relative">
               <Link href={`/event/${event.id}`} className="block">
                 <div className="relative aspect-square overflow-hidden rounded-lg bg-interactive-3">
-                  <Image
-                    src={event.images[0]!}
-                    alt={event.name}
-                    fill
-                    className="object-cover object-top transition-transform duration-300 group-hover:scale-105"
-                    sizes="(max-width: 640px) 100vw, 50vw"
-                  />
+                  {event.images[0] && (
+                    <Image
+                      src={
+                        buildDisplayImageUrl(event.images[0]) ?? event.images[0]
+                      }
+                      alt={event.name}
+                      fill
+                      className="object-cover object-top transition-transform duration-300 group-hover:scale-105"
+                      sizes="(max-width: 640px) 100vw, 50vw"
+                      style={{ imageOrientation: "from-image" }}
+                    />
+                  )}
                   {/* Gradient overlay for text readability */}
                   <div className="absolute inset-x-0 bottom-0 h-1/3 bg-gradient-to-t from-black/70 to-transparent" />
                 </div>
