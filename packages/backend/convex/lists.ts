@@ -18,7 +18,7 @@ import {
 } from "./feedHelpers";
 import { enrichEventsAndFilterNulls } from "./model/events";
 import { getViewableListIds } from "./model/lists";
-import { generatePublicId } from "./utils";
+import { firstNameFromDisplayName, generatePublicId } from "./utils";
 
 type EnrichedEvent = Awaited<
   ReturnType<typeof enrichEventsAndFilterNulls>
@@ -171,13 +171,15 @@ export async function getOrCreatePersonalList(
     .first();
 
   const displayName = user?.displayName || user?.username || "User";
+  const nameForList =
+    firstNameFromDisplayName(user?.displayName) || user?.username || "User";
   const username = user?.username || "user";
   const listId = generatePublicId();
 
   const docId = await ctx.db.insert("lists", {
     id: listId,
     userId,
-    name: `${displayName}'s Soonlist`,
+    name: `${nameForList}'s Soonlist`,
     description: `${displayName}'s Soonlist`,
     visibility: "public",
     isSystemList: true,

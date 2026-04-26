@@ -30,6 +30,7 @@ import { Camera, User } from "~/components/icons";
 import ScenePreviewThreeUp from "~/components/ScenePreviewThreeUp";
 import { useStablePaginatedQuery } from "~/hooks/useStableQuery";
 import Config from "~/utils/config";
+import { firstNameFromDisplayName } from "~/utils/displayName";
 import { logError } from "~/utils/errorLogging";
 
 const INPUT_CLASSES = "rounded-xl bg-interactive-3 text-neutral-1";
@@ -53,7 +54,7 @@ export default function ShareSetupScreen() {
 
   const defaultListName =
     currentUser?.publicListName ||
-    `${currentUser?.displayName ?? user?.firstName ?? "My"}'s Soonlist`;
+    `${user?.firstName ?? firstNameFromDisplayName(currentUser?.displayName) ?? "My"}'s Soonlist`;
 
   const [listName, setListName] = useState(defaultListName);
   const [displayName, setDisplayName] = useState("");
@@ -75,7 +76,7 @@ export default function ShareSetupScreen() {
     seededRef.current = true;
     setListName(
       currentUser.publicListName ||
-        `${currentUser.displayName ?? user?.firstName ?? "My"}'s Soonlist`,
+        `${user?.firstName ?? firstNameFromDisplayName(currentUser.displayName) ?? "My"}'s Soonlist`,
     );
     setDisplayName(currentUser.displayName ?? "");
     setLinks({
