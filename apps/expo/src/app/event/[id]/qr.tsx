@@ -31,7 +31,7 @@ export default function QRModal() {
             source={{ uri: eventImage }}
             className="absolute h-full w-full"
             resizeMode="cover"
-            blurRadius={20}
+            blurRadius={10}
           />
           <View className="absolute inset-0 bg-black/30" />
         </View>
