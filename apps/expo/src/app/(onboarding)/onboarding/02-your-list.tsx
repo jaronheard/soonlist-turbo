@@ -137,7 +137,7 @@ export default function YourListScreen() {
   return (
     <QuestionContainer
       question="Meet your Soonlist"
-      subtitle="All in one place. Share with just a link."
+      subtitle="All your events in one shareable list."
       currentStep={2}
       totalSteps={totalSteps}
     >
@@ -150,15 +150,18 @@ export default function YourListScreen() {
           }}
         >
           {/* Share hint */}
-          <View className="flex-row items-center justify-between bg-interactive-2 px-4 py-2">
+          <View className="flex-row items-center justify-between bg-interactive-2 px-3 py-2">
             <Text className="text-sm font-semibold text-interactive-1">
               soonlist.com/you
             </Text>
-            <SymbolView
-              name="square.and.arrow.up"
-              size={16}
-              tintColor="#5A32FB"
-            />
+            <View className="flex-row items-center gap-1.5 rounded-full bg-interactive-1 px-3 py-1.5">
+              <SymbolView
+                name="square.and.arrow.up"
+                size={14}
+                tintColor="#FFFFFF"
+              />
+              <Text className="text-xs font-bold text-white">Share</Text>
+            </View>
           </View>
           <View style={{ marginLeft: -6, marginRight: 6 }} className="flex-1">
             <UserEventsList
