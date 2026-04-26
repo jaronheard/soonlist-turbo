@@ -11,7 +11,7 @@ import { useAppStore, useUserTimezone } from "~/store";
 import { useInFlightEventStore } from "~/store/useInFlightEventStore";
 import { logError } from "~/utils/errorLogging";
 import { hapticError } from "~/utils/feedback";
-import { normalizeImageOrientation } from "~/utils/images";
+import { getOrientationActions } from "~/utils/images";
 
 // Generate a simple batch ID without external dependencies
 function generateBatchId(): string {
@@ -20,6 +20,9 @@ function generateBatchId(): string {
 
 interface CreateEventOptions {
   imageUri?: string;
+  // EXIF Orientation tag (1-8) of the source image, when known. Baked into
+  // pixels during the resize/encode pass so WEBP output isn't sideways.
+  imageOrientation?: number;
   userId: string;
   username: string;
   sendNotification?: boolean;
@@ -29,20 +32,17 @@ interface CreateEventOptions {
   linkPreview?: string;
 }
 
-// Optimize image off the main JS thread and return a base64 string.
-// `orientation` is the source's EXIF Orientation tag (1-8); when provided
-// and non-trivial it is baked into the pixels here, since WEBP encoding
-// drops the EXIF tag without applying it.
+// Optimize image off the main JS thread and return a base64 string. Any EXIF
+// rotation is chained into the same `manipulateAsync` call so the orientation
+// is baked in during the WEBP encode (which would otherwise drop the tag).
 async function optimizeImage(
   uri: string,
   orientation?: number,
 ): Promise<string> {
   try {
-    // Resize & compress on the native thread and get base64 in a single step
-    const sourceUri = await normalizeImageOrientation(uri, orientation);
     const { base64 } = await ImageManipulator.manipulateAsync(
-      sourceUri,
-      [{ resize: { width: 640 } }],
+      uri,
+      [...getOrientationActions(orientation), { resize: { width: 640 } }],
       {
         compress: 0.5,
         format: ImageManipulator.SaveFormat.WEBP,
@@ -80,6 +80,7 @@ export function useCreateEvent() {
     async (options: CreateEventOptions): Promise<string> => {
       const {
         imageUri,
+        imageOrientation,
         userId,
         username,
         sendNotification = true,
@@ -101,7 +102,7 @@ export function useCreateEvent() {
 
           // Convert photo library URI to file URI if needed
           let fileUri = imageUri;
-          let assetOrientation: number | undefined;
+          let orientation = imageOrientation;
           if (imageUri.startsWith("ph://")) {
             const assetId = imageUri.replace("ph://", "");
             if (!assetId) {
@@ -114,7 +115,7 @@ export function useCreateEvent() {
               );
             }
             fileUri = asset.localUri;
-            assetOrientation = asset.orientation;
+            orientation = orientation ?? asset.orientation;
           }
 
           // Validate image URI
@@ -139,7 +140,7 @@ export function useCreateEvent() {
           });
 
           // 2. Optimize image and get base64
-          const base64 = await optimizeImage(fileUri, assetOrientation);
+          const base64 = await optimizeImage(fileUri, orientation);
 
           // 3. Add the image to the batch
           await addImagesToBatch({
@@ -261,7 +262,7 @@ export function useCreateEvent() {
 
           // Convert photo library URI to file URI if needed
           let fileUri = task.imageUri;
-          let assetOrientation: number | undefined;
+          let orientation = task.imageOrientation;
           if (task.imageUri.startsWith("ph://")) {
             const assetId = task.imageUri.replace("ph://", "");
             if (!assetId) {
@@ -274,7 +275,7 @@ export function useCreateEvent() {
               );
             }
             fileUri = asset.localUri;
-            assetOrientation = asset.orientation;
+            orientation = orientation ?? asset.orientation;
           }
 
           // Validate image URI
@@ -283,7 +284,7 @@ export function useCreateEvent() {
           }
 
           // Optimize image and get base64
-          const base64 = await optimizeImage(fileUri, assetOrientation);
+          const base64 = await optimizeImage(fileUri, orientation);
 
           // Immediately send this image to the backend
           const image = {

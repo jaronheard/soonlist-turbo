@@ -14,7 +14,12 @@ export type ImageSource = ImageRequireSource | RemoteImageSource;
 // Maps an EXIF Orientation tag (1-8) to the manipulation actions needed to
 // produce an upright image with the orientation baked into the pixels.
 // See: http://sylvana.net/jpegcrop/exif_orientation.html
-function getOrientationActions(
+//
+// Chain these into the same `manipulateAsync` call as your resize/encode so
+// the rotation is applied during the same pass — WEBP/JPEG output drops the
+// EXIF tag without honoring it, so an un-rotated re-encode would leave the
+// image visually sideways.
+export function getOrientationActions(
   orientation: number | undefined,
 ): ImageManipulator.Action[] {
   switch (orientation) {
@@ -35,25 +40,6 @@ function getOrientationActions(
     default:
       return [];
   }
-}
-
-// Re-encodes an image so that any EXIF orientation is baked into the pixels.
-// Some downstream pipelines (e.g. WEBP encoding) drop the EXIF tag without
-// honoring it, which leaves photos visually rotated. Call this at picker
-// boundaries before passing URIs to the rest of the app.
-export async function normalizeImageOrientation(
-  uri: string,
-  orientation: number | undefined,
-): Promise<string> {
-  const actions = getOrientationActions(orientation);
-  if (actions.length === 0) {
-    return uri;
-  }
-  const result = await ImageManipulator.manipulateAsync(uri, actions, {
-    compress: 1,
-    format: ImageManipulator.SaveFormat.JPEG,
-  });
-  return result.uri;
 }
 
 // Reads the EXIF Orientation value from an `expo-image-picker` asset's exif

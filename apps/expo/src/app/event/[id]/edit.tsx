@@ -40,7 +40,7 @@ import { PlatformSelectNative } from "~/components/PlatformSelectNative";
 import { TimezoneSelectNative } from "~/components/TimezoneSelectNative";
 import { DEFAULT_VISIBILITY } from "~/constants";
 import { hapticSuccess, toast } from "~/utils/feedback";
-import { getExifOrientation, normalizeImageOrientation } from "~/utils/images";
+import { getExifOrientation, getOrientationActions } from "~/utils/images";
 import { normalizeUrlForStorage } from "~/utils/links";
 import { getPlanStatusFromUser } from "~/utils/plan";
 import { logError } from "../../../utils/errorLogging";
@@ -182,11 +182,14 @@ export default function EditEventScreen() {
     }
   }, [eventQuery, reset, setSelectedImage]);
 
-  const uploadImage = async (localUri: string): Promise<string> => {
+  const uploadImage = async (
+    localUri: string,
+    orientationHint?: number,
+  ): Promise<string> => {
     setIsUploadingImage(true);
     try {
       let fileUri = localUri;
-      let assetOrientation: number | undefined;
+      let orientation = orientationHint;
       if (localUri.startsWith("ph://")) {
         const assetId = localUri.replace("ph://", "");
         if (!assetId) {
@@ -197,7 +200,7 @@ export default function EditEventScreen() {
           throw new Error("Could not get local URI for photo library asset");
         }
         fileUri = asset.localUri;
-        assetOrientation = asset.orientation;
+        orientation = orientation ?? asset.orientation;
       }
 
       if (!fileUri.startsWith("file://")) {
@@ -206,13 +209,12 @@ export default function EditEventScreen() {
 
       let manipulatedImage;
       try {
-        const sourceUri = await normalizeImageOrientation(
-          fileUri,
-          assetOrientation,
-        );
         manipulatedImage = await ImageManipulator.manipulateAsync(
-          sourceUri,
-          [{ resize: { width: 1284, height: undefined } }],
+          fileUri,
+          [
+            ...getOrientationActions(orientation),
+            { resize: { width: 1284, height: undefined } },
+          ],
           { compress: 0.8, format: ImageManipulator.SaveFormat.JPEG },
         );
       } catch (error) {
@@ -291,14 +293,12 @@ export default function EditEventScreen() {
         result.assets[0]?.uri
       ) {
         const asset = result.assets[0];
-        const localUri = await normalizeImageOrientation(
-          asset.uri,
-          getExifOrientation(asset.exif),
-        );
+        const localUri = asset.uri;
+        const orientation = getExifOrientation(asset.exif);
         setSelectedImage(localUri);
 
         try {
-          const remoteUrl = await uploadImage(localUri);
+          const remoteUrl = await uploadImage(localUri, orientation);
           setUploadedImageUrl(remoteUrl);
           void hapticSuccess();
         } catch (error) {
