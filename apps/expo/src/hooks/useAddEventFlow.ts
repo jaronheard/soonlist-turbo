@@ -7,6 +7,7 @@ import { useCreateEvent } from "~/hooks/useCreateEvent";
 import { useInFlightEventStore } from "~/store/useInFlightEventStore";
 import { logError } from "~/utils/errorLogging";
 import { toast } from "~/utils/feedback";
+import { getExifOrientation, normalizeImageOrientation } from "~/utils/images";
 
 /**
  * Hook to manage the flow of adding new events via the image picker.
@@ -34,6 +35,7 @@ export function useAddEventFlow() {
         quality: 0.8,
         allowsMultipleSelection: true,
         selectionLimit: 20, // iOS‑only; we also enforce in JS
+        exif: true,
       });
 
       if (!result.canceled && result.assets.length) {
@@ -55,9 +57,18 @@ export function useAddEventFlow() {
         const assets = result.assets.slice(0, 20);
         await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
 
+        const normalizedAssets = await Promise.all(
+          assets.map(async (asset) => ({
+            uri: await normalizeImageOrientation(
+              asset.uri,
+              getExifOrientation(asset.exif),
+            ),
+          })),
+        );
+
         try {
           await createMultipleEvents(
-            assets.map((asset) => ({
+            normalizedAssets.map((asset) => ({
               imageUri: asset.uri,
               userId,
               username,

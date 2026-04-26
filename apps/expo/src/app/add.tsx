@@ -17,6 +17,7 @@ import { useKeyboardHeight } from "~/hooks/useKeyboardHeight";
 import { useOneSignal } from "~/providers/OneSignalProvider";
 import { useAppStore } from "~/store";
 import { toast } from "~/utils/feedback";
+import { getExifOrientation, normalizeImageOrientation } from "~/utils/images";
 import { logError } from "../utils/errorLogging";
 
 export default function AddEventModal() {
@@ -70,9 +71,15 @@ export default function AddEventModal() {
     const result = await ImagePicker.launchImageLibraryAsync({
       mediaTypes: ImagePicker.MediaTypeOptions.Images,
       quality: 0.8,
+      exif: true,
     });
     if (!result.canceled && result.assets[0]) {
-      handleImagePreview(result.assets[0].uri);
+      const asset = result.assets[0];
+      const normalizedUri = await normalizeImageOrientation(
+        asset.uri,
+        getExifOrientation(asset.exif),
+      );
+      handleImagePreview(normalizedUri);
     }
   }, [handleImagePreview]);
 
@@ -86,9 +93,15 @@ export default function AddEventModal() {
     const result = await ImagePicker.launchCameraAsync({
       mediaTypes: ImagePicker.MediaTypeOptions.Images,
       quality: 0.8,
+      exif: true,
     });
     if (!result.canceled && result.assets[0]) {
-      handleImagePreview(result.assets[0].uri);
+      const asset = result.assets[0];
+      const normalizedUri = await normalizeImageOrientation(
+        asset.uri,
+        getExifOrientation(asset.exif),
+      );
+      handleImagePreview(normalizedUri);
     }
   }, [handleImagePreview]);
 
