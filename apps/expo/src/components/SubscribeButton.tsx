@@ -28,7 +28,13 @@ export function SubscribeButton({
   return (
     <TouchableOpacity
       onPress={() => {
-        void hapticMedium();
+        // On the unsubscribe path we fire a synchronous Medium haptic since
+        // no follow-up success haptic is queued. On the subscribe path the
+        // parent handler's resolved-promise fires hapticSuccess instead, so
+        // we stay silent here to avoid a double-buzz.
+        if (isSubscribed) {
+          void hapticMedium();
+        }
         onPress();
       }}
       activeOpacity={0.7}
