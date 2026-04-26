@@ -97,8 +97,6 @@ export default function ShareSetupScreen() {
   const pickAvatar = useCallback(async () => {
     const result = await ImagePicker.launchImageLibraryAsync({
       mediaTypes: ImagePicker.MediaTypeOptions.Images,
-      allowsEditing: true,
-      aspect: [1, 1],
       quality: 0.1,
       base64: true,
     });
