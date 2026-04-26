@@ -361,6 +361,11 @@ export const getFollowedListsFeed = query({
 // Authoritative count for the My Scene tab badge. Paginated feed queries
 // undercount past initialNumItems and can leak entries from a just-
 // unfollowed list while the cache invalidates.
+//
+// `hasEnded` is batch-corrected by cron every 15 min, so the aggregate can
+// briefly include entries whose events have actually ended. Subtract those
+// to keep the badge consistent with what the feed renders (the feed
+// re-filters by `eventEndTime` client-side via `eventMatchesFeedSegment`).
 export const getFollowedListsFeedUpcomingCount = query({
   args: {},
   returns: v.number(),
@@ -368,13 +373,31 @@ export const getFollowedListsFeedUpcomingCount = query({
     const userId = await getUserId(ctx);
     if (!userId) return 0;
 
-    return userFeedsAggregate.count(ctx, {
-      namespace: `followedLists_${userId}`,
+    const feedId = `followedLists_${userId}`;
+    const now = Date.now();
+
+    const total = await userFeedsAggregate.count(ctx, {
+      namespace: feedId,
       bounds: {
         lower: { key: 0, inclusive: true },
         upper: { key: 0, inclusive: true },
       },
     });
+
+    // Bounded scan: only entries that have started but are still flagged
+    // upcoming can have actually ended. Entries with future startTime
+    // can't be stale-ended.
+    const startedButFlaggedUpcoming = await ctx.db
+      .query("userFeeds")
+      .withIndex("by_feed_hasEnded_startTime", (q) =>
+        q.eq("feedId", feedId).eq("hasEnded", false).lte("eventStartTime", now),
+      )
+      .collect();
+    const staleEnded = startedButFlaggedUpcoming.filter(
+      (e) => e.eventEndTime < now,
+    ).length;
+
+    return total - staleEnded;
   },
 });
 
