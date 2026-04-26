@@ -33,7 +33,7 @@ export default function QRModal() {
             resizeMode="cover"
             blurRadius={10}
           />
-          <View className="absolute inset-0 bg-black/30" />
+          <View className="absolute inset-0 bg-interactive-1/20" />
         </View>
       )}
 
