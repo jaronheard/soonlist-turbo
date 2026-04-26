@@ -4,6 +4,7 @@ import { atcb_action } from "add-to-calendar-button-react";
 import { CalendarPlus } from "lucide-react";
 
 import type { ATCBActionEventConfig } from "@soonlist/cal/types";
+import { isEventInPast } from "@soonlist/cal";
 import { Button } from "@soonlist/ui/button";
 
 import { env } from "~/env";
@@ -21,10 +22,22 @@ export function CalendarButton(props: CalendarButtonProps) {
   const eventForCalendar = { ...props.event };
   const displayName =
     props.userDisplayName || (props.username ? `@${props.username}` : "");
+  const baseUrl = env.NEXT_PUBLIC_VERCEL_PROJECT_PRODUCTION_URL;
+  const eventIsPast = isEventInPast(
+    props.event.endDate,
+    props.event.endTime,
+    props.event.timeZone,
+  );
+  const linkUrl =
+    props.username && props.id
+      ? eventIsPast
+        ? `${baseUrl}/event/${props.id}`
+        : `${baseUrl}/${props.username}/upcoming`
+      : baseUrl;
   const additionalText =
     props.username && props.id
-      ? `Captured by [url]${env.NEXT_PUBLIC_VERCEL_PROJECT_PRODUCTION_URL}/${props.username}/events|${displayName}[/url] on [url]${env.NEXT_PUBLIC_VERCEL_PROJECT_PRODUCTION_URL}/event/${props.id}|Soonlist[/url]`
-      : `Captured on [url]${env.NEXT_PUBLIC_VERCEL_PROJECT_PRODUCTION_URL}|Soonlist[/url]`;
+      ? `Captured by ${displayName} on [url]${linkUrl}|Soonlist[/url]`
+      : `Captured on [url]${linkUrl}|Soonlist[/url]`;
   eventForCalendar.description = `${props.event.description}[br][br]${additionalText}`;
   eventForCalendar.options = [
     "Apple",

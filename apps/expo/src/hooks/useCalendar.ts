@@ -6,6 +6,7 @@ import { Temporal } from "@js-temporal/polyfill";
 
 import type { api } from "@soonlist/backend/convex/_generated/api";
 import type { AddToCalendarButtonPropsRestricted } from "@soonlist/cal/types";
+import { isEventInPast } from "@soonlist/cal";
 
 import type { CalendarAppInfo } from "~/utils/calendarAppDetection";
 import { usePreferredCalendarApp, useSetPreferredCalendarApp } from "~/store";
@@ -109,17 +110,25 @@ export function useCalendar() {
 
       const calendarEvent = event.event as AddToCalendarButtonPropsRestricted;
 
-      // Build enriched description (used for Google Calendar as well)
+      // For upcoming events, link to the curator's Soonlist; for past events,
+      // link to the event page since the curator's upcoming list won't have it.
       const baseUrlForDesc = Config.apiBaseUrl;
-      const eventUrlForDesc =
+      const eventIsPast = isEventInPast(
+        calendarEvent.endDate,
+        calendarEvent.endTime,
+        calendarEvent.timeZone,
+      );
+      const linkUrlForDesc =
         event.userName && event.id && baseUrlForDesc
-          ? `${baseUrlForDesc}/event/${event.id}`
+          ? eventIsPast
+            ? `${baseUrlForDesc}/event/${event.id}`
+            : `${baseUrlForDesc}/${event.userName}/upcoming`
           : baseUrlForDesc;
       const displayNameForDesc =
         event.user?.displayName || (event.userName ? `@${event.userName}` : "");
       const additionalTextForDesc =
         event.userName && event.id && baseUrlForDesc
-          ? `Captured by ${displayNameForDesc} on Soonlist. \nFull details: ${eventUrlForDesc}`
+          ? `Captured by ${displayNameForDesc} on Soonlist. \nFull details: ${linkUrlForDesc}`
           : baseUrlForDesc
             ? `Captured on Soonlist\n(${baseUrlForDesc})`
             : "Captured on Soonlist";
@@ -239,14 +248,20 @@ export function useCalendar() {
         throw new Error("EXPO_PUBLIC_API_BASE_URL is not defined");
       }
 
-      const eventUrl =
+      const eventPageUrl =
         event.userName && event.id ? `${baseUrl}/event/${event.id}` : baseUrl;
+      const linkUrl =
+        event.userName && event.id
+          ? eventIsPast
+            ? eventPageUrl
+            : `${baseUrl}/${event.userName}/upcoming`
+          : baseUrl;
 
       const displayName =
         event.user?.displayName || (event.userName ? `@${event.userName}` : "");
       const additionalText =
         event.userName && event.id
-          ? `Captured by ${displayName} on Soonlist. \nFull details: ${eventUrl}`
+          ? `Captured by ${displayName} on Soonlist. \nFull details: ${linkUrl}`
           : `Captured on Soonlist\n(${baseUrl})`;
 
       const fullDescription = `${calendarEvent.description}\n\n${additionalText}`;
@@ -258,7 +273,7 @@ export function useCalendar() {
         location: calendarEvent.location,
         notes: fullDescription,
         timeZone: eventTimezone,
-        url: eventUrl, // iOS only, but included for platforms that support it
+        url: eventPageUrl, // iOS only, but included for platforms that support it
       };
 
       const result = await Calendar.createEventInCalendarAsync(eventDetails);

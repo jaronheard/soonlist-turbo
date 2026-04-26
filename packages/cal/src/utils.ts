@@ -218,6 +218,35 @@ export function getDateInfoUTC(dateString: string): DateInfo | null {
   return { month, monthName, day, year, dayOfWeek, hour, minute };
 }
 
+export function isEventInPast(
+  endDate?: string,
+  endTime?: string,
+  timeZone?: string,
+): boolean {
+  if (!endDate) return false;
+  try {
+    const datePattern = /^\d{4}-\d{2}-\d{2}$/;
+    if (!datePattern.test(endDate)) return false;
+
+    let timeString = endTime ?? "";
+    const timePattern = /^([01]?[0-9]|2[0-3]):[0-5][0-9](:[0-5][0-9])?$/;
+    if (!timePattern.test(timeString)) {
+      timeString = "23:59:59";
+    } else if (timeString.length === 5) {
+      timeString = `${timeString}:00`;
+    }
+
+    const tz =
+      timeZone && timeZone !== "unknown" ? timeZone : Temporal.Now.timeZoneId();
+    const endZdt = Temporal.ZonedDateTime.from(
+      `${endDate}T${timeString}[${tz}]`,
+    );
+    return Temporal.Now.instant().epochMilliseconds > endZdt.epochMilliseconds;
+  } catch {
+    return false;
+  }
+}
+
 export function endsNextDayBeforeMorning(
   startDateInfo: DateInfo | null,
   endDateInfo: DateInfo | null,
