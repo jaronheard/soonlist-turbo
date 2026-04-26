@@ -1,4 +1,4 @@
-import React, { useCallback, useMemo, useState } from "react";
+import React, { useCallback, useMemo, useRef, useState } from "react";
 import { ActivityIndicator, Platform, Share, Text, View } from "react-native";
 import { Stack, useLocalSearchParams, useRouter } from "expo-router";
 import { useConvexAuth, useMutation, useQuery } from "convex/react";
@@ -119,12 +119,16 @@ export default function ListDetailScreen() {
 
   const isOwnList = listData?.userId === currentUser?.id;
 
+  const isMutatingRef = useRef(false);
+
   const handleToggleFollow = useCallback(() => {
     if (!listData) return;
     if (!isAuthenticated) {
       router.push("/(auth)/sign-in");
       return;
     }
+    if (isMutatingRef.current) return;
+    isMutatingRef.current = true;
     const wasFollowing = isFollowing;
     const run = wasFollowing ? unfollowListMutation : followListMutation;
     run({ listId: listData.id })
@@ -138,6 +142,9 @@ export default function ListDetailScreen() {
         toast.error(
           wasFollowing ? "Failed to unsubscribe" : "Failed to subscribe",
         );
+      })
+      .finally(() => {
+        isMutatingRef.current = false;
       });
   }, [
     listData,

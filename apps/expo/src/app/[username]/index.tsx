@@ -1,5 +1,5 @@
 import type { FunctionReturnType } from "convex/server";
-import React, { useCallback, useMemo, useState } from "react";
+import React, { useCallback, useMemo, useRef, useState } from "react";
 import {
   ActivityIndicator,
   Linking,
@@ -290,12 +290,16 @@ export default function UserProfilePage() {
     return fromList || fromUser || fallback;
   }, [targetUser, personalList]);
 
+  const isMutatingRef = useRef(false);
+
   const handleFollowListPress = useCallback(() => {
     if (!personalList) return;
     if (!isAuthenticated) {
       router.push("/(auth)/sign-in");
       return;
     }
+    if (isMutatingRef.current) return;
+    isMutatingRef.current = true;
     const wasFollowing = isFollowingPersonalList;
     const run = wasFollowing ? unfollowListMutation : followListMutation;
     run({ listId: personalList.id })
@@ -307,6 +311,9 @@ export default function UserProfilePage() {
       .catch((error: unknown) => {
         logError("Toggle follow personal list", error);
         toast.error("Couldn't update subscription");
+      })
+      .finally(() => {
+        isMutatingRef.current = false;
       });
   }, [
     personalList,
