@@ -230,12 +230,20 @@ function MyFeedContent() {
     singleContributingList,
   ]);
 
+  // Stable paginated results lag args changes by one tick: when switching
+  // segments, the previous segment's rows are still in `groupedEvents` but
+  // `enrichedEvents` filters them all out, briefly leaving an empty list.
+  // Treat that exact shape as "still loading" so the spinner wins over the
+  // empty state until the new segment's data lands.
+  const hasStaleSegmentData =
+    groupedEvents.length > 0 && enrichedEvents.length === 0;
+
   return (
     <UserEventsList
       groupedEvents={enrichedEvents}
       onEndReached={handleLoadMore}
       isFetchingNextPage={status === "LoadingMore"}
-      listBodyLoading={listBodyLoading}
+      listBodyLoading={listBodyLoading || hasStaleSegmentData}
       showCreator="savedFromOthers"
       showSourceStickers
       savedEventIds={savedEventIds}

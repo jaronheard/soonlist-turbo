@@ -277,7 +277,15 @@ function FollowingFeedContent() {
         events={enrichedEvents}
         onEndReached={handleLoadMore}
         isFetchingNextPage={status === "LoadingMore"}
-        listBodyLoading={listBodyLoading}
+        listBodyLoading={
+          listBodyLoading ||
+          // Stable paginated results lag args changes by one tick: when
+          // switching segments, the previous segment's rows are still in
+          // `events` but `enrichedEvents` filters them all out. Treat that
+          // exact shape as "still loading" so the spinner wins over the
+          // empty state until the new segment's data lands.
+          (events.length > 0 && enrichedEvents.length === 0)
+        }
         showCreator="always"
         primaryAction="save"
         showSourceStickers
