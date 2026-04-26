@@ -170,7 +170,6 @@ export async function getOrCreatePersonalList(
     .withIndex("by_custom_id", (q) => q.eq("id", userId))
     .first();
 
-  const displayName = user?.displayName || user?.username || "User";
   const nameForList =
     firstNameFromDisplayName(user?.displayName) || user?.username || "User";
   const username = user?.username || "user";
@@ -180,7 +179,7 @@ export async function getOrCreatePersonalList(
     id: listId,
     userId,
     name: `${nameForList}'s Soonlist`,
-    description: `${displayName}'s Soonlist`,
+    description: `${nameForList}'s Soonlist`,
     visibility: "public",
     isSystemList: true,
     systemListType: "personal",

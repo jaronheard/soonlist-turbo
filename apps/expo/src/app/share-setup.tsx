@@ -54,7 +54,7 @@ export default function ShareSetupScreen() {
 
   const defaultListName =
     currentUser?.publicListName ||
-    `${user?.firstName ?? firstNameFromDisplayName(currentUser?.displayName) ?? "My"}'s Soonlist`;
+    `${firstNameFromDisplayName(currentUser?.displayName) ?? user?.firstName ?? "My"}'s Soonlist`;
 
   const [listName, setListName] = useState(defaultListName);
   const [displayName, setDisplayName] = useState("");
@@ -76,7 +76,7 @@ export default function ShareSetupScreen() {
     seededRef.current = true;
     setListName(
       currentUser.publicListName ||
-        `${user?.firstName ?? firstNameFromDisplayName(currentUser.displayName) ?? "My"}'s Soonlist`,
+        `${firstNameFromDisplayName(currentUser.displayName) ?? user?.firstName ?? "My"}'s Soonlist`,
     );
     setDisplayName(currentUser.displayName ?? "");
     setLinks({
