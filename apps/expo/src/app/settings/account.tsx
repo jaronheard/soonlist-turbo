@@ -340,26 +340,26 @@ export default function AccountScreen() {
     }
   }, []);
 
-  const handleSubscriptionPress = useCallback(() => {
+  const handleProPlanPress = useCallback(() => {
     if (!user) return;
     const hasUnlimited =
       customerInfo?.entitlements.active.unlimited?.isActive ?? false;
-    const stripeSubscription =
+    const isStripePlan =
       customerInfo?.originalPurchaseDate &&
       new Date(customerInfo.originalPurchaseDate) <= new Date(2025, 2, 7);
 
-    if (hasUnlimited && !stripeSubscription) {
+    if (hasUnlimited && !isStripePlan) {
       void Linking.openURL("itms-apps://apps.apple.com/account/subscriptions");
       return;
     }
-    if (hasUnlimited && stripeSubscription) {
+    if (hasUnlimited && isStripePlan) {
       void Linking.openURL("https://www.soonlist.com/account/plans");
       return;
     }
     void showProPaywallIfNeeded();
   }, [user, customerInfo, showProPaywallIfNeeded]);
 
-  const subscriptionValue = (() => {
+  const planValue = (() => {
     const hasUnlimited =
       customerInfo?.entitlements.active.unlimited?.isActive ?? false;
     return hasUnlimited ? "Pro" : "Free plan";
@@ -567,8 +567,8 @@ export default function AccountScreen() {
             icon={Sparkles}
             iconBg={TILE_COLORS.purple}
             label="Upgrade to Pro"
-            value={subscriptionValue}
-            onPress={handleSubscriptionPress}
+            value={planValue}
+            onPress={handleProPlanPress}
           />
           <SettingsRow
             icon={HelpCircle}
