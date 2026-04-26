@@ -1,37 +1,19 @@
 export const OG_IMAGE_SIZE = { width: 1200, height: 630 } as const;
 
-const BYTESCALE_ACCOUNT_ID = "12a1yek";
-const BYTESCALE_HOST = "upcdn.io";
-// Matches `/{accountId}/(raw|image)/{rest…}` — accepting both unprocessed
-// `raw/` URLs and already-transformed `image/` URLs that may carry user crop
-// params. Anything that doesn't match falls through unchanged.
-const BYTESCALE_PATH_RE = new RegExp(
-  `^/${BYTESCALE_ACCOUNT_ID}/(raw|image)(/.+)$`,
-);
+const BYTESCALE_PATH_RE = /^\/12a1yek\/(raw|image)(\/.+)$/;
 
-interface TransformOptions {
-  width?: number;
-  height?: number;
-  quality?: number;
-  fit?: "crop" | "max" | "shrink";
-}
-
-// Satori (used by `next/og`) and several social crawlers (Slack, LinkedIn,
-// Discord, older Twitter) don't reliably render WebP. Bytescale serves WebP
-// by default, so route renderable Bytescale URLs through `/image/` with
-// `f=jpg`. Returns the original URL untouched if it isn't a Bytescale URL
-// on our account — we don't want to rewrite arbitrary external URLs into
-// bogus `/{accountId}/image/…` paths that would 404.
+// Force JPEG output for OG image consumers. Several social crawlers (Slack,
+// LinkedIn, Discord, older Twitter) and satori (`next/og`) don't reliably
+// render WebP, which is what Bytescale serves by default. Returns the URL
+// untouched if it isn't a Bytescale URL on our account.
 //
-// When the source is already an `/image/` URL (e.g. an event image saved
-// from our in-app cropper, with `crop-x` / `crop-y` query params) those
-// params are preserved so the rich preview honors the user's crop. Any
-// dimensions the caller passes override the existing values; `f=jpg` always
-// wins. Pass no opts to keep the user's crop and dimensions and only force
-// the JPEG codec.
+// Existing query params on already-transformed `/image/` URLs are inherited
+// so the user's source crop (`crop-x/y/w/h` set by the in-app cropper)
+// survives. The output dimensions and codec are then overridden, since
+// those are determined by where this URL is rendered, not by the editor.
 export function rewriteBytescaleToJpeg(
   url: string,
-  opts: TransformOptions = {},
+  { width, height }: { width: number; height: number },
 ): string {
   let parsed: URL;
   try {
@@ -39,30 +21,21 @@ export function rewriteBytescaleToJpeg(
   } catch {
     return url;
   }
-  if (parsed.hostname !== BYTESCALE_HOST) return url;
-  const match = BYTESCALE_PATH_RE.exec(parsed.pathname);
-  const mode = match?.[1];
-  const filePath = match?.[2];
-  if (!mode || !filePath) return url;
-  const isAlreadyTransformed = mode === "image";
-
-  const params = isAlreadyTransformed
-    ? new URLSearchParams(parsed.searchParams)
-    : new URLSearchParams();
-  if (opts.width !== undefined) params.set("w", String(opts.width));
-  if (opts.height !== undefined) params.set("h", String(opts.height));
-  if (opts.fit !== undefined) params.set("fit", opts.fit);
-  if (opts.quality !== undefined) params.set("q", String(opts.quality));
-  if (!params.has("q")) params.set("q", "82");
-  if (
-    !params.has("fit") &&
-    (opts.width !== undefined || opts.height !== undefined)
-  ) {
-    params.set("fit", "crop");
-  }
+  const match =
+    parsed.hostname === "upcdn.io"
+      ? BYTESCALE_PATH_RE.exec(parsed.pathname)
+      : null;
+  if (!match) return url;
+  const params =
+    match[1] === "image"
+      ? new URLSearchParams(parsed.searchParams)
+      : new URLSearchParams();
+  params.set("w", String(width));
+  params.set("h", String(height));
+  params.set("fit", "crop");
+  params.set("q", "82");
   params.set("f", "jpg");
-
-  return `https://${BYTESCALE_HOST}/${BYTESCALE_ACCOUNT_ID}/image${filePath}?${params.toString()}`;
+  return `https://upcdn.io/12a1yek/image${match[2]}?${params.toString()}`;
 }
 
 // @vercel/og (satori) only understands TTF/OTF/WOFF — *not* WOFF2. Spoofing
@@ -70,11 +43,11 @@ export function rewriteBytescaleToJpeg(
 // The CSS contains multiple @font-face blocks (devanagari, latin-ext, latin,
 // …); we target the `/* latin */` marker so we always fetch Latin glyphs.
 //
-// One AbortController is shared across both fetches so the *whole* font
-// load is capped at FONT_FETCH_TIMEOUT_MS. Independent timeouts on each
-// fetch would have a worst case of 2× the budget when the CSS just barely
-// succeeds and the binary then stalls — pushing the route toward Next's
-// request timeout when combined with a slow Convex query.
+// One AbortController spans both fetches so the whole font load is capped
+// at FONT_FETCH_TIMEOUT_MS. Without a timeout, a stalled Google Fonts
+// response blocks the OG route until Next's request timeout and returns
+// an error to the crawler instead of an image — that was the dominant
+// source of inconsistent rich previews for lists.
 const FONT_FETCH_TIMEOUT_MS = 4000;
 
 export async function loadGoogleFont(

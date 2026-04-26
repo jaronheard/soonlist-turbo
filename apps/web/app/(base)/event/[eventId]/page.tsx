@@ -41,12 +41,9 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 
     const eventData = event.event as AddToCalendarButtonPropsRestricted;
     const rawEventImage = eventData.images?.[0];
-    // Bytescale serves WebP by default, but several social crawlers (Slack,
-    // LinkedIn, Discord, older Twitter) render WebP inconsistently. Force
-    // JPEG at OG dimensions so the rich preview is the same everywhere.
-    // Falls back to the branded default when the event has no image so
-    // crawlers always receive `summary_large_image` instead of degrading to
-    // a no-image card.
+    // Force JPEG so crawlers that mishandle Bytescale's default WebP still
+    // render a preview; fall back to the branded default when the event
+    // has no image so the Twitter card stays `summary_large_image`.
     const ogImageUrl = rawEventImage
       ? rewriteBytescaleToJpeg(rawEventImage, OG_IMAGE_SIZE)
       : FALLBACK_OG_IMAGE;
