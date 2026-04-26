@@ -1,5 +1,5 @@
 import type { FunctionReturnType } from "convex/server";
-import React, { useCallback, useMemo, useRef, useState } from "react";
+import React, { useCallback, useMemo, useState } from "react";
 import {
   ActivityIndicator,
   Linking,
@@ -33,7 +33,7 @@ import { useLoadMoreHandler } from "~/hooks/useUpcomingFeed";
 import { useStableTimestamp } from "~/store";
 import Config from "~/utils/config";
 import { logError } from "~/utils/errorLogging";
-import { hapticSuccess, toast } from "~/utils/feedback";
+import { toast } from "~/utils/feedback";
 import { eventMatchesFeedSegment } from "~/utils/feedSegment";
 import { HEADER_BLUR_EFFECT } from "~/utils/headerOptions";
 
@@ -290,31 +290,19 @@ export default function UserProfilePage() {
     return fromList || fromUser || fallback;
   }, [targetUser, personalList]);
 
-  const isMutatingRef = useRef(false);
-
   const handleFollowListPress = useCallback(() => {
     if (!personalList) return;
     if (!isAuthenticated) {
       router.push("/(auth)/sign-in");
       return;
     }
-    if (isMutatingRef.current) return;
-    isMutatingRef.current = true;
-    const wasFollowing = isFollowingPersonalList;
-    const run = wasFollowing ? unfollowListMutation : followListMutation;
-    run({ listId: personalList.id })
-      .then(() => {
-        if (!wasFollowing) {
-          void hapticSuccess();
-        }
-      })
-      .catch((error: unknown) => {
-        logError("Toggle follow personal list", error);
-        toast.error("Couldn't update subscription");
-      })
-      .finally(() => {
-        isMutatingRef.current = false;
-      });
+    const run = isFollowingPersonalList
+      ? unfollowListMutation
+      : followListMutation;
+    run({ listId: personalList.id }).catch((error: unknown) => {
+      logError("Toggle follow personal list", error);
+      toast.error("Couldn't update subscription");
+    });
   }, [
     personalList,
     isAuthenticated,

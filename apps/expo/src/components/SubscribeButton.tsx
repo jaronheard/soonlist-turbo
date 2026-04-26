@@ -2,7 +2,7 @@ import React from "react";
 import { Text, TouchableOpacity } from "react-native";
 
 import { Check, PlusIcon } from "~/components/icons";
-import { hapticMedium } from "~/utils/feedback";
+import { hapticMedium, hapticSuccess } from "~/utils/feedback";
 
 interface SubscribeButtonProps {
   isSubscribed: boolean;
@@ -28,13 +28,7 @@ export function SubscribeButton({
   return (
     <TouchableOpacity
       onPress={() => {
-        // On the unsubscribe path we fire a synchronous Medium haptic since
-        // no follow-up success haptic is queued. On the subscribe path the
-        // parent handler's resolved-promise fires hapticSuccess instead, so
-        // we stay silent here to avoid a double-buzz.
-        if (isSubscribed) {
-          void hapticMedium();
-        }
+        void (isSubscribed ? hapticMedium() : hapticSuccess());
         onPress();
       }}
       activeOpacity={0.7}

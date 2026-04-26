@@ -1,4 +1,4 @@
-import React, { useCallback, useMemo, useRef, useState } from "react";
+import React, { useCallback, useMemo, useState } from "react";
 import { ActivityIndicator, Platform, Share, Text, View } from "react-native";
 import { Stack, useLocalSearchParams, useRouter } from "expo-router";
 import { useConvexAuth, useMutation, useQuery } from "convex/react";
@@ -19,7 +19,7 @@ import {
 import { useStableTimestamp } from "~/store";
 import Config from "~/utils/config";
 import { logError } from "~/utils/errorLogging";
-import { hapticSuccess, toast } from "~/utils/feedback";
+import { toast } from "~/utils/feedback";
 import { eventMatchesFeedSegment } from "~/utils/feedSegment";
 
 export default function ListDetailScreen() {
@@ -119,33 +119,19 @@ export default function ListDetailScreen() {
 
   const isOwnList = listData?.userId === currentUser?.id;
 
-  const isMutatingRef = useRef(false);
-
   const handleToggleFollow = useCallback(() => {
     if (!listData) return;
     if (!isAuthenticated) {
       router.push("/(auth)/sign-in");
       return;
     }
-    if (isMutatingRef.current) return;
-    isMutatingRef.current = true;
-    const wasFollowing = isFollowing;
-    const run = wasFollowing ? unfollowListMutation : followListMutation;
-    run({ listId: listData.id })
-      .then(() => {
-        if (!wasFollowing) {
-          void hapticSuccess();
-        }
-      })
-      .catch((error: unknown) => {
-        logError("Error toggling list follow", error);
-        toast.error(
-          wasFollowing ? "Failed to unsubscribe" : "Failed to subscribe",
-        );
-      })
-      .finally(() => {
-        isMutatingRef.current = false;
-      });
+    const run = isFollowing ? unfollowListMutation : followListMutation;
+    run({ listId: listData.id }).catch((error: unknown) => {
+      logError("Error toggling list follow", error);
+      toast.error(
+        isFollowing ? "Failed to unsubscribe" : "Failed to subscribe",
+      );
+    });
   }, [
     listData,
     isAuthenticated,

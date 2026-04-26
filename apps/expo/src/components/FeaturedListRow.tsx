@@ -13,7 +13,6 @@ import { SubscribeButton } from "~/components/SubscribeButton";
 import { useStablePaginatedQuery } from "~/hooks/useStableQuery";
 import { useStableTimestamp } from "~/store";
 import { logError } from "~/utils/errorLogging";
-import { hapticSuccess } from "~/utils/feedback";
 
 interface FeaturedListRowProps {
   username: string;
@@ -106,19 +105,13 @@ export function FeaturedListRow({
   const handleToggleSubscribe = useCallback(() => {
     if (!personalList || isSelf || isMutatingRef.current) return;
     isMutatingRef.current = true;
-    const wasSubscribed = isSubscribed;
-    const promise = wasSubscribed
+    const promise = isSubscribed
       ? unfollowListMutation({ listId: personalList.id })
       : followListMutation({ listId: personalList.id });
     promise
-      .then(() => {
-        if (!wasSubscribed) {
-          void hapticSuccess();
-        }
-      })
       .catch((error) => {
         logError(
-          wasSubscribed
+          isSubscribed
             ? "Error unsubscribing from featured list"
             : "Error subscribing to featured list",
           error,
