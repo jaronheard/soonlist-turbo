@@ -240,6 +240,18 @@ function FollowingFeedContent() {
     handleShareList,
   ]);
 
+  // Stable paginated results lag args changes by one tick: when switching
+  // segments, the previous segment's rows are still in `events` but
+  // `enrichedEvents` filters them all out, briefly leaving an empty list.
+  // Treat that exact shape as "still loading" so the spinner wins over the
+  // empty state until the new segment's data lands. Gate on
+  // `LoadingFirstPage` so a stale `stableTimestamp` (refreshes every 15 min)
+  // can't keep the spinner up after the query has settled.
+  const hasStaleSegmentData =
+    status === "LoadingFirstPage" &&
+    events.length > 0 &&
+    enrichedEvents.length === 0;
+
   // Second branch avoids a one-frame flash before the latch effect commits.
   const showEmptyState =
     emptyStateMode === "show" ||
@@ -277,15 +289,7 @@ function FollowingFeedContent() {
         events={enrichedEvents}
         onEndReached={handleLoadMore}
         isFetchingNextPage={status === "LoadingMore"}
-        listBodyLoading={
-          listBodyLoading ||
-          // Stable paginated results lag args changes by one tick: when
-          // switching segments, the previous segment's rows are still in
-          // `events` but `enrichedEvents` filters them all out. Treat that
-          // exact shape as "still loading" so the spinner wins over the
-          // empty state until the new segment's data lands.
-          (events.length > 0 && enrichedEvents.length === 0)
-        }
+        listBodyLoading={listBodyLoading || hasStaleSegmentData}
         showCreator="always"
         primaryAction="save"
         showSourceStickers
