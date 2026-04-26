@@ -218,15 +218,18 @@ export function getDateInfoUTC(dateString: string): DateInfo | null {
   return { month, monthName, day, year, dayOfWeek, hour, minute };
 }
 
+// Returns true when the event has ended. When the end date is missing, we
+// default to true so callers fall back to the canonical event-page URL rather
+// than a curator's upcoming list that won't include the event.
 export function isEventInPast(
   endDate?: string,
   endTime?: string,
   timeZone?: string,
 ): boolean {
-  if (!endDate) return false;
+  if (!endDate) return true;
   try {
     const datePattern = /^\d{4}-\d{2}-\d{2}$/;
-    if (!datePattern.test(endDate)) return false;
+    if (!datePattern.test(endDate)) return true;
 
     let timeString = endTime ?? "";
     const timePattern = /^([01]?[0-9]|2[0-3]):[0-5][0-9](:[0-5][0-9])?$/;
@@ -243,7 +246,7 @@ export function isEventInPast(
     );
     return Temporal.Now.instant().epochMilliseconds > endZdt.epochMilliseconds;
   } catch {
-    return false;
+    return true;
   }
 }
 
