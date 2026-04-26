@@ -6,7 +6,7 @@ import React, {
   useState,
 } from "react";
 import { Share, Text, TouchableOpacity, View } from "react-native";
-import { Redirect } from "expo-router";
+import { Redirect, useFocusEffect } from "expo-router";
 import { SymbolView } from "expo-symbols";
 import { useUser } from "@clerk/clerk-expo";
 import {
@@ -88,6 +88,25 @@ function FollowingFeedContent() {
   const handleExitEmptyState = useCallback(() => {
     setEmptyStateMode("dismissed");
   }, []);
+
+  // Read latest values from refs inside useFocusEffect so the callback only
+  // fires on actual focus events, not on state changes while focused. This
+  // preserves the sticky-while-on-tab behavior — subscribing from inside the
+  // empty state keeps it visible so users can pick more lists in one flow —
+  // while still auto-dismissing when the user leaves the tab and returns
+  // (a clear signal they're done picking and want to see their feed, no
+  // extra "View My Scene" tap required).
+  const hasFollowingsRef = useRef(hasFollowings);
+  hasFollowingsRef.current = hasFollowings;
+  const emptyStateModeRef = useRef(emptyStateMode);
+  emptyStateModeRef.current = emptyStateMode;
+  useFocusEffect(
+    useCallback(() => {
+      if (hasFollowingsRef.current && emptyStateModeRef.current === "show") {
+        setEmptyStateMode("dismissed");
+      }
+    }, []),
+  );
 
   // Memoize query args
   const queryArgs = useMemo(() => {
@@ -240,6 +259,18 @@ function FollowingFeedContent() {
     handleShareList,
   ]);
 
+  // Stable paginated results lag args changes by one tick: when switching
+  // segments, the previous segment's rows are still in `events` but
+  // `enrichedEvents` filters them all out, briefly leaving an empty list.
+  // Treat that exact shape as "still loading" so the spinner wins over the
+  // empty state until the new segment's data lands. Gate on
+  // `LoadingFirstPage` so a stale `stableTimestamp` (refreshes every 15 min)
+  // can't keep the spinner up after the query has settled.
+  const hasStaleSegmentData =
+    status === "LoadingFirstPage" &&
+    events.length > 0 &&
+    enrichedEvents.length === 0;
+
   // Second branch avoids a one-frame flash before the latch effect commits.
   const showEmptyState =
     emptyStateMode === "show" ||
@@ -277,7 +308,7 @@ function FollowingFeedContent() {
         events={enrichedEvents}
         onEndReached={handleLoadMore}
         isFetchingNextPage={status === "LoadingMore"}
-        listBodyLoading={listBodyLoading}
+        listBodyLoading={listBodyLoading || hasStaleSegmentData}
         showCreator="always"
         primaryAction="save"
         showSourceStickers

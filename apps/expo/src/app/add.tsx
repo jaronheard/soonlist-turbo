@@ -10,8 +10,6 @@ import type { ImageSource } from "~/utils/images";
 import { CaptureEventButton } from "~/components/CaptureEventButton";
 import { EventPreview } from "~/components/EventPreview";
 import { NewEventHeader } from "~/components/NewEventHeader";
-import { PhotoAccessPrompt } from "~/components/PhotoAccessPrompt";
-import { PhotoGrid } from "~/components/PhotoGrid";
 import { useCreateEvent } from "~/hooks/useCreateEvent";
 import { useKeyboardHeight } from "~/hooks/useKeyboardHeight";
 import { useOneSignal } from "~/providers/OneSignalProvider";
@@ -33,9 +31,6 @@ export default function AddEventModal() {
     resetAddEventState,
     setIsOptionSelected,
     setActiveInput,
-    recentPhotos,
-    hasMediaPermission,
-    hasFullPhotoAccess,
   } = useAppStore();
 
   const handleTextChange = useCallback(
@@ -69,24 +64,6 @@ export default function AddEventModal() {
 
   const handleMorePhotosPress = useCallback(async () => {
     const result = await ImagePicker.launchImageLibraryAsync({
-      mediaTypes: ImagePicker.MediaTypeOptions.Images,
-      quality: 0.8,
-      exif: true,
-    });
-    if (!result.canceled && result.assets[0]) {
-      const asset = result.assets[0];
-      handleImagePreview(asset.uri, getExifOrientation(asset.exif));
-    }
-  }, [handleImagePreview]);
-
-  const handleCameraCapture = useCallback(async () => {
-    const { status } = await ImagePicker.requestCameraPermissionsAsync();
-    if (status !== ImagePicker.PermissionStatus.GRANTED) {
-      toast.error("Camera permission required", "Enable in Settings");
-      return;
-    }
-
-    const result = await ImagePicker.launchCameraAsync({
       mediaTypes: ImagePicker.MediaTypeOptions.Images,
       quality: 0.8,
       exif: true,
@@ -181,41 +158,21 @@ export default function AddEventModal() {
 
       <View className="h-full flex-1 overflow-hidden rounded-t-3xl bg-interactive-1">
         <View className="flex-1">
-          {!hasMediaPermission ? (
-            <PhotoAccessPrompt />
-          ) : (
-            <View className="flex-1">
-              <View className="px-4 pt-2">
-                <EventPreview
-                  containerClassName="rounded-xl overflow-hidden"
-                  imagePreview={imagePreview}
-                  linkPreview={linkPreview}
-                  input={input}
-                  handleTextChange={handleTextChange}
-                  clearPreview={handleClearPreview}
-                  clearText={() => setInput("", "add")}
-                  activeInput={activeInput}
-                  isImageLoading={isImageLoading}
-                  handleMorePhotos={handleMorePhotosPress}
-                  previewContainerStyle="square"
-                />
-              </View>
-
-              {activeInput !== "describe" && (
-                <View className="h-full flex-1 px-4">
-                  <PhotoGrid
-                    hasMediaPermission={hasMediaPermission}
-                    hasFullPhotoAccess={hasFullPhotoAccess}
-                    recentPhotos={recentPhotos}
-                    onPhotoSelect={handleImagePreview}
-                    onCameraPress={handleCameraCapture}
-                    onMorePhotos={handleMorePhotosPress}
-                    selectedUri={imagePreview}
-                  />
-                </View>
-              )}
-            </View>
-          )}
+          <View className="px-4 pt-2">
+            <EventPreview
+              containerClassName="rounded-xl overflow-hidden"
+              imagePreview={imagePreview}
+              linkPreview={linkPreview}
+              input={input}
+              handleTextChange={handleTextChange}
+              clearPreview={handleClearPreview}
+              clearText={() => setInput("", "add")}
+              activeInput={activeInput}
+              isImageLoading={isImageLoading}
+              handleMorePhotos={handleMorePhotosPress}
+              previewContainerStyle="square"
+            />
+          </View>
         </View>
 
         <Animated.View className="px-4" style={keyboardStyle}>

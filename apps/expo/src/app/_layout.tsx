@@ -36,7 +36,6 @@ import { ToastProvider } from "~/components/Toast";
 import { useAppsFlyerDeepLink } from "~/hooks/useAppsFlyerDeepLink";
 import { useCaptureCompletionFeedback } from "~/hooks/useCaptureCompletionFeedback";
 import { useForceUpdate } from "~/hooks/useForceUpdate";
-import { useMediaPermissions } from "~/hooks/useMediaPermissions";
 import { useOTAUpdates } from "~/hooks/useOTAUpdates";
 import { usePendingFollow } from "~/hooks/usePendingFollow";
 import { useQuickActions } from "~/hooks/useQuickActions";
@@ -379,7 +378,6 @@ const InitialLayout = () => {
 };
 
 function RootLayoutContent() {
-  useMediaPermissions();
   useQuickActions();
   useAppsFlyerDeepLink();
   usePendingFollow();

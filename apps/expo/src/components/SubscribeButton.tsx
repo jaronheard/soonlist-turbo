@@ -2,7 +2,7 @@ import React from "react";
 import { Text, TouchableOpacity } from "react-native";
 
 import { Check, PlusIcon } from "~/components/icons";
-import { hapticLight } from "~/utils/feedback";
+import { hapticMedium, hapticSuccess } from "~/utils/feedback";
 
 interface SubscribeButtonProps {
   isSubscribed: boolean;
@@ -28,7 +28,7 @@ export function SubscribeButton({
   return (
     <TouchableOpacity
       onPress={() => {
-        void hapticLight();
+        void (isSubscribed ? hapticMedium() : hapticSuccess());
         onPress();
       }}
       activeOpacity={0.85}

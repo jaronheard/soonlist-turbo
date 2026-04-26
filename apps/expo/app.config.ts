@@ -70,9 +70,6 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
       {
         ios: {
           deploymentTarget: "15.1",
-          infoPlist: {
-            PHPhotoLibraryPreventAutomaticLimitedAccessAlert: true,
-          },
         },
       },
     ],
@@ -95,7 +92,7 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
     [
       "expo-image-picker",
       {
-        photosPermission: "The app accesses photos you select to add events.",
+        photosPermission: false,
       },
     ],
     [
@@ -114,14 +111,6 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
     ["expo-apple-authentication"],
     ["expo-localization"],
     ["expo-video"],
-    [
-      "expo-media-library",
-      {
-        photosPermission: "Allow $(PRODUCT_NAME) to access your photos.",
-        savePhotosPermission: "Allow $(PRODUCT_NAME) to save photos.",
-        isAccessMediaLocationEnabled: true,
-      },
-    ],
     ["expo-router"],
     [
       "expo-splash-screen",

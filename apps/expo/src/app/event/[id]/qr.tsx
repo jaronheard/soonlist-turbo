@@ -1,5 +1,6 @@
-import { Image, Text, TouchableOpacity, View } from "react-native";
+import { Text, TouchableOpacity, View } from "react-native";
 import QRCode from "react-native-qrcode-svg";
+import { Image as ExpoImage } from "expo-image";
 import { router, useLocalSearchParams } from "expo-router";
 import { useQuery } from "convex/react";
 
@@ -9,6 +10,11 @@ import { api } from "@soonlist/backend/convex/_generated/api";
 import { X } from "~/components/icons";
 import { Logo } from "~/components/Logo";
 import Config from "~/utils/config";
+
+function appendImageParams(url: string, params: string) {
+  const sep = url.includes("?") ? "&" : "?";
+  return `${url}${sep}${params}`;
+}
 
 export default function QRModal() {
   const { id } = useLocalSearchParams<{ id: string }>();
@@ -20,25 +26,28 @@ export default function QRModal() {
   // eslint-disable-next-line @typescript-eslint/consistent-type-assertions
   const eventData = event.event as AddToCalendarButtonProps;
   const qrValue = `${Config.apiBaseUrl}/event/${id}`;
-  const eventImage = eventData.images?.[0];
+  const eventImage = eventData.images?.[3];
+  const backgroundUri = eventImage
+    ? appendImageParams(eventImage, "max-w=1284&fit=contain&f=webp&q=80")
+    : null;
+  const thumbnailUri = eventImage
+    ? appendImageParams(eventImage, "w=160&h=160&fit=cover&f=webp&q=80")
+    : null;
 
   return (
     <View className="flex-1 bg-interactive-3">
-      {/* Background Image Container */}
-      {eventImage && (
+      {backgroundUri && (
         <View className="absolute inset-0 h-full w-full overflow-hidden">
-          <Image
-            source={{ uri: eventImage }}
-            style={{
-              width: "100%",
-              height: "100%",
-              position: "absolute",
-              opacity: 0.9,
-            }}
-            resizeMode="cover"
+          <ExpoImage
+            source={{ uri: backgroundUri }}
+            placeholder={thumbnailUri ? { uri: thumbnailUri } : undefined}
+            placeholderContentFit="cover"
+            style={{ width: "100%", height: "100%", position: "absolute" }}
+            contentFit="cover"
+            cachePolicy="memory-disk"
             blurRadius={10}
           />
-          <View className="absolute inset-0 bg-interactive-3/90" />
+          <View className="absolute inset-0 bg-interactive-1/20" />
         </View>
       )}
 

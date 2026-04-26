@@ -110,8 +110,6 @@ export default function ProfileEditScreen() {
     try {
       const result = await ImagePicker.launchImageLibraryAsync({
         mediaTypes: ImagePicker.MediaTypeOptions.Images,
-        allowsEditing: true,
-        aspect: [1, 1],
         quality: 0.1,
         base64: true,
       });
