@@ -32,6 +32,7 @@ import { useStablePaginatedQuery } from "~/hooks/useStableQuery";
 import { useLoadMoreHandler } from "~/hooks/useUpcomingFeed";
 import { useStableTimestamp } from "~/store";
 import Config from "~/utils/config";
+import { firstNameFromDisplayName } from "~/utils/displayName";
 import { logError } from "~/utils/errorLogging";
 import { toast } from "~/utils/feedback";
 import { eventMatchesFeedSegment } from "~/utils/feedSegment";
@@ -286,7 +287,7 @@ export default function UserProfilePage() {
     if (!targetUser) return "";
     const fromList = personalList?.name?.trim();
     const fromUser = targetUser.publicListName?.trim();
-    const fallback = `${targetUser.displayName?.trim() || targetUser.username}'s Soonlist`;
+    const fallback = `${firstNameFromDisplayName(targetUser.displayName) || targetUser.username}'s Soonlist`;
     return fromList || fromUser || fallback;
   }, [targetUser, personalList]);
 
