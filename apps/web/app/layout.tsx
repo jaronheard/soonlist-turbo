@@ -40,7 +40,10 @@ export const metadata: Metadata = {
     type: "website",
     images: [
       {
-        url: "https://upcdn.io/12a1yek/raw/uploads/Soonlist/soonlist-meta.webp",
+        // Routed through Bytescale's /image/ processor with `f=jpg` because
+        // several social crawlers (Slack, LinkedIn, Discord, older Twitter)
+        // render WebP inconsistently. The source asset is a .webp upload.
+        url: "https://upcdn.io/12a1yek/image/uploads/Soonlist/soonlist-meta.webp?w=1200&h=630&fit=crop&f=jpg&q=82",
         width: 1200,
         height: 630,
       },

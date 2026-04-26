@@ -4,7 +4,13 @@ import type { AddToCalendarButtonPropsRestricted } from "@soonlist/cal/types";
 import { api } from "@soonlist/backend/convex/_generated/api";
 
 import { getAuthenticatedConvex } from "~/lib/convex-server";
+import { OG_IMAGE_SIZE, rewriteBytescaleToJpeg } from "~/lib/og-image";
 import EventPageClient from "./EventPageClient";
+
+// Branded fallback served by `app/api/og/route.tsx`. Used when an event has
+// no image so crawlers always get *some* OG image instead of falling back
+// to a `summary` (no-image) Twitter card or no preview at all.
+const FALLBACK_OG_IMAGE = "/api/og";
 
 interface Props {
   params: Promise<{
@@ -34,7 +40,16 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     }
 
     const eventData = event.event as AddToCalendarButtonPropsRestricted;
-    const eventImage = eventData.images?.[0];
+    const rawEventImage = eventData.images?.[0];
+    // Bytescale serves WebP by default, but several social crawlers (Slack,
+    // LinkedIn, Discord, older Twitter) render WebP inconsistently. Force
+    // JPEG at OG dimensions so the rich preview is the same everywhere.
+    // Falls back to the branded default when the event has no image so
+    // crawlers always receive `summary_large_image` instead of degrading to
+    // a no-image card.
+    const ogImageUrl = rawEventImage
+      ? rewriteBytescaleToJpeg(rawEventImage, OG_IMAGE_SIZE)
+      : FALLBACK_OG_IMAGE;
 
     // Generate Open Graph metadata with Smart App Banner for iOS
     return {
@@ -46,25 +61,23 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
         description:
           eventData.description || `Join ${eventData.name} on Soonlist`,
         type: "website",
-        images: eventImage
-          ? [
-              {
-                url: eventImage,
-                width: 1200,
-                height: 630,
-                alt: eventData.name || "Event image",
-              },
-            ]
-          : [],
+        images: [
+          {
+            url: ogImageUrl,
+            width: OG_IMAGE_SIZE.width,
+            height: OG_IMAGE_SIZE.height,
+            alt: eventData.name || "Event image",
+          },
+        ],
         locale: "en_US",
         siteName: "Soonlist",
       },
       twitter: {
-        card: eventImage ? "summary_large_image" : "summary",
+        card: "summary_large_image",
         title: eventData.name || "Event on Soonlist",
         description:
           eventData.description || `Join ${eventData.name} on Soonlist`,
-        images: eventImage ? [eventImage] : undefined,
+        images: [ogImageUrl],
       },
       // iOS Smart App Banner - prompts users to open in the Soonlist app
       other: {
