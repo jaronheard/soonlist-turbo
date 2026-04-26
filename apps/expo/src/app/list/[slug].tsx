@@ -19,7 +19,7 @@ import {
 import { useStableTimestamp } from "~/store";
 import Config from "~/utils/config";
 import { logError } from "~/utils/errorLogging";
-import { toast } from "~/utils/feedback";
+import { hapticSuccess, toast } from "~/utils/feedback";
 import { eventMatchesFeedSegment } from "~/utils/feedSegment";
 
 export default function ListDetailScreen() {
@@ -125,13 +125,20 @@ export default function ListDetailScreen() {
       router.push("/(auth)/sign-in");
       return;
     }
-    const run = isFollowing ? unfollowListMutation : followListMutation;
-    run({ listId: listData.id }).catch((error: unknown) => {
-      logError("Error toggling list follow", error);
-      toast.error(
-        isFollowing ? "Failed to unsubscribe" : "Failed to subscribe",
-      );
-    });
+    const wasFollowing = isFollowing;
+    const run = wasFollowing ? unfollowListMutation : followListMutation;
+    run({ listId: listData.id })
+      .then(() => {
+        if (!wasFollowing) {
+          void hapticSuccess();
+        }
+      })
+      .catch((error: unknown) => {
+        logError("Error toggling list follow", error);
+        toast.error(
+          wasFollowing ? "Failed to unsubscribe" : "Failed to subscribe",
+        );
+      });
   }, [
     listData,
     isAuthenticated,

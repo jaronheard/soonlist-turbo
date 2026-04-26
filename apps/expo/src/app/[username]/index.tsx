@@ -33,7 +33,7 @@ import { useLoadMoreHandler } from "~/hooks/useUpcomingFeed";
 import { useStableTimestamp } from "~/store";
 import Config from "~/utils/config";
 import { logError } from "~/utils/errorLogging";
-import { toast } from "~/utils/feedback";
+import { hapticSuccess, toast } from "~/utils/feedback";
 import { eventMatchesFeedSegment } from "~/utils/feedSegment";
 import { HEADER_BLUR_EFFECT } from "~/utils/headerOptions";
 
@@ -296,13 +296,18 @@ export default function UserProfilePage() {
       router.push("/(auth)/sign-in");
       return;
     }
-    const run = isFollowingPersonalList
-      ? unfollowListMutation
-      : followListMutation;
-    run({ listId: personalList.id }).catch((error: unknown) => {
-      logError("Toggle follow personal list", error);
-      toast.error("Couldn't update subscription");
-    });
+    const wasFollowing = isFollowingPersonalList;
+    const run = wasFollowing ? unfollowListMutation : followListMutation;
+    run({ listId: personalList.id })
+      .then(() => {
+        if (!wasFollowing) {
+          void hapticSuccess();
+        }
+      })
+      .catch((error: unknown) => {
+        logError("Toggle follow personal list", error);
+        toast.error("Couldn't update subscription");
+      });
   }, [
     personalList,
     isAuthenticated,
