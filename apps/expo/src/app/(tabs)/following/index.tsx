@@ -6,10 +6,9 @@ import React, {
   useState,
 } from "react";
 import { Share, Text, TouchableOpacity, View } from "react-native";
-import { Redirect } from "expo-router";
+import { Redirect, useFocusEffect } from "expo-router";
 import { SymbolView } from "expo-symbols";
 import { useUser } from "@clerk/clerk-expo";
-import { useFocusEffect } from "@react-navigation/native";
 import {
   Authenticated,
   AuthLoading,
