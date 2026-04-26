@@ -76,6 +76,7 @@ docs/brainstorms/
 .claude/launch.json
 .claude/.worktree-ports
 .claude/.worktree-ports.lock
+.claude/scheduled_tasks.lock
 
 # brainstorm mockups (local only)
 .superpowers/

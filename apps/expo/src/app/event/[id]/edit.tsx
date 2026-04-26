@@ -14,7 +14,6 @@ import * as FileSystem from "expo-file-system/legacy";
 import { Image as ExpoImage } from "expo-image";
 import * as ImageManipulator from "expo-image-manipulator";
 import * as ImagePicker from "expo-image-picker";
-import * as MediaLibrary from "expo-media-library";
 import { router, Stack, useLocalSearchParams } from "expo-router";
 import { useUser } from "@clerk/clerk-expo";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -184,22 +183,10 @@ export default function EditEventScreen() {
   const uploadImage = async (localUri: string): Promise<string> => {
     setIsUploadingImage(true);
     try {
-      let fileUri = localUri;
-      if (localUri.startsWith("ph://")) {
-        const assetId = localUri.replace("ph://", "");
-        if (!assetId) {
-          throw new Error("Invalid photo library asset ID");
-        }
-        const asset = await MediaLibrary.getAssetInfoAsync(assetId);
-        if (!asset.localUri) {
-          throw new Error("Could not get local URI for photo library asset");
-        }
-        fileUri = asset.localUri;
-      }
-
-      if (!fileUri.startsWith("file://")) {
+      if (!localUri.startsWith("file://")) {
         throw new Error("Invalid image URI format");
       }
+      const fileUri = localUri;
 
       let manipulatedImage;
       try {

@@ -1,7 +1,6 @@
 import type { ImageSource } from "expo-image";
 import { useCallback, useEffect, useState } from "react";
 
-import type { RecentPhoto } from "~/store";
 import { useAppStore } from "~/store";
 import { logMessage } from "../utils/errorLogging";
 
@@ -10,12 +9,11 @@ const VALID_IMAGE_REGEX = /^[\w.:\-_/]+\|\d+(\.\d+)?\|\d+(\.\d+)?$/;
 interface UseInitializeInputParams {
   text?: string;
   imageUri?: string;
-  recentPhotos: RecentPhoto[];
   route: "add" | "new";
 }
 
 export function useInitializeInput(
-  { text, imageUri, recentPhotos, route }: UseInitializeInputParams,
+  { text, imageUri, route }: UseInitializeInputParams,
   key?: string,
 ) {
   const [initialized, setInitialized] = useState(false);
@@ -25,7 +23,6 @@ export function useInitializeInput(
     setLinkPreview,
     setActiveInput,
     setIsOptionSelected,
-    hasMediaPermission,
   } = useAppStore();
 
   const handleImagePreview = useCallback(
@@ -118,19 +115,8 @@ export function useInitializeInput(
         }
       }
     } else {
-      if (hasMediaPermission) {
-        if (route === "add") {
-          setActiveInput("upload");
-          setIsOptionSelected(true);
-          const mostRecentPhoto = recentPhotos[0];
-          if (mostRecentPhoto?.uri) {
-            void handleImagePreview(mostRecentPhoto.uri);
-          }
-        }
-      } else {
-        if (route === "add") {
-          setIsOptionSelected(false);
-        }
+      if (route === "add") {
+        setIsOptionSelected(false);
       }
     }
 
@@ -141,13 +127,11 @@ export function useInitializeInput(
     handleImagePreview,
     handleLinkPreview,
     handleTextChange,
-    recentPhotos,
     setActiveInput,
     setImagePreview,
     setInput,
     setIsOptionSelected,
     setLinkPreview,
-    hasMediaPermission,
     initialized,
     route,
   ]);

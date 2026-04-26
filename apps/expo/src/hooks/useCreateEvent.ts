@@ -1,6 +1,5 @@
 import { useCallback } from "react";
 import * as ImageManipulator from "expo-image-manipulator";
-import * as MediaLibrary from "expo-media-library";
 import { useMutation } from "convex/react";
 
 import { api } from "@soonlist/backend/convex/_generated/api";
@@ -91,26 +90,10 @@ export function useCreateEvent() {
           setIsImageLoading(true, "add");
           setIsImageLoading(true, "new");
 
-          // Convert photo library URI to file URI if needed
-          let fileUri = imageUri;
-          if (imageUri.startsWith("ph://")) {
-            const assetId = imageUri.replace("ph://", "");
-            if (!assetId) {
-              throw new Error("Invalid photo library asset ID");
-            }
-            const asset = await MediaLibrary.getAssetInfoAsync(assetId);
-            if (!asset.localUri) {
-              throw new Error(
-                "Could not get local URI for photo library asset",
-              );
-            }
-            fileUri = asset.localUri;
-          }
-
-          // Validate image URI
-          if (!fileUri.startsWith("file://")) {
+          if (!imageUri.startsWith("file://")) {
             throw new Error("Invalid image URI format");
           }
+          const fileUri = imageUri;
 
           // Route single images through batch system for unified tracking
           const batchId = generateBatchId();
@@ -249,26 +232,10 @@ export function useCreateEvent() {
             throw new Error("No image URI provided");
           }
 
-          // Convert photo library URI to file URI if needed
-          let fileUri = task.imageUri;
-          if (task.imageUri.startsWith("ph://")) {
-            const assetId = task.imageUri.replace("ph://", "");
-            if (!assetId) {
-              throw new Error("Invalid photo library asset ID");
-            }
-            const asset = await MediaLibrary.getAssetInfoAsync(assetId);
-            if (!asset.localUri) {
-              throw new Error(
-                "Could not get local URI for photo library asset",
-              );
-            }
-            fileUri = asset.localUri;
-          }
-
-          // Validate image URI
-          if (!fileUri.startsWith("file://")) {
+          if (!task.imageUri.startsWith("file://")) {
             throw new Error("Invalid image URI format");
           }
+          const fileUri = task.imageUri;
 
           // Optimize image and get base64
           const base64 = await optimizeImage(fileUri);
