@@ -2,7 +2,7 @@ import React from "react";
 import { Text, TouchableOpacity } from "react-native";
 
 import { Check, PlusIcon } from "~/components/icons";
-import { hapticLight } from "~/utils/feedback";
+import { hapticMedium, hapticSuccess } from "~/utils/feedback";
 
 interface SubscribeButtonProps {
   isSubscribed: boolean;
@@ -19,31 +19,45 @@ export function SubscribeButton({
   size = "md",
   accessibilityLabel,
 }: SubscribeButtonProps) {
-  const containerSize = size === "sm" ? "px-3 py-1" : "px-4 py-1.5";
+  const containerSize = size === "sm" ? "px-3.5 py-1.5" : "px-5 py-2";
   const textSize = size === "sm" ? "text-xs" : "text-sm";
-  const iconSize = size === "sm" ? 12 : 14;
+  const iconSize = size === "sm" ? 14 : 16;
   const iconColor = isSubscribed ? "#5A32FB" : "#FFFFFF";
   const Icon = isSubscribed ? Check : PlusIcon;
 
   return (
     <TouchableOpacity
       onPress={() => {
-        void hapticLight();
+        if (isSubscribed) {
+          void hapticMedium();
+        } else {
+          void hapticSuccess();
+        }
         onPress();
       }}
-      activeOpacity={0.85}
+      activeOpacity={0.7}
       accessibilityRole="button"
       accessibilityLabel={
         accessibilityLabel ??
         (isSubscribed ? "Subscribed to list" : "Subscribe to list")
       }
-      className={`flex-row items-center gap-1 rounded-full ${containerSize} ${
+      style={
+        isSubscribed
+          ? undefined
+          : {
+              shadowColor: "#5A32FB",
+              shadowOffset: { width: 0, height: 2 },
+              shadowOpacity: 0.25,
+              shadowRadius: 4,
+            }
+      }
+      className={`flex-row items-center gap-1.5 rounded-full ${containerSize} ${
         isSubscribed ? "bg-interactive-2" : "bg-interactive-1"
       }`}
     >
-      <Icon size={iconSize} color={iconColor} strokeWidth={2.5} />
+      <Icon size={iconSize} color={iconColor} strokeWidth={2.75} />
       <Text
-        className={`${textSize} font-semibold ${
+        className={`${textSize} font-bold ${
           isSubscribed ? "text-interactive-1" : "text-white"
         }`}
       >
