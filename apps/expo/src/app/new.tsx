@@ -51,7 +51,6 @@ export default function NewShareScreen() {
     {
       text,
       imageUri,
-      recentPhotos: [], // We skip recent photos for share extension
       route: "new",
     },
     `${text || ""}-${imageUri || ""}`,

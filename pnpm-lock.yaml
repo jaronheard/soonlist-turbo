@@ -279,9 +279,6 @@ catalogs:
     expo-location:
       specifier: ~55.1.6
       version: 55.1.6
-    expo-media-library:
-      specifier: ~55.0.8
-      version: 55.0.8
     expo-notifications:
       specifier: ~55.0.9
       version: 55.0.9
@@ -708,9 +705,6 @@ importers:
       expo-location:
         specifier: 'catalog:'
         version: 55.1.6(expo@55.0.0-preview.12)
-      expo-media-library:
-        specifier: 'catalog:'
-        version: 55.0.8(expo@55.0.0-preview.12)(react-native@0.83.2(@babel/core@7.28.5)(@types/react@19.2.14)(bufferutil@4.1.0)(react@19.2.0)(utf-8-validate@5.0.10))
       expo-notifications:
         specifier: 'catalog:'
         version: 55.0.9(expo@55.0.0-preview.12)(react-native@0.83.2(@babel/core@7.28.5)(@types/react@19.2.14)(bufferutil@4.1.0)(react@19.2.0)(utf-8-validate@5.0.10))(react@19.2.0)(typescript@5.9.3)
@@ -6856,12 +6850,6 @@ packages:
     resolution: {integrity: sha512-1YAbEvr8qmYoWNQAgmcAjTYF8nJNjka/CkPM2WgHMW5NyfQ4qzaJIFGXxqhY9B8U5eP4cGc5R8/hJ8IL3pVVKg==}
     peerDependencies:
       expo: '*'
-
-  expo-media-library@55.0.8:
-    resolution: {integrity: sha512-XLc9Quk0ZaB10wkj/4NFwK+o1zjL+yEr7gCYoHsRfkcknvCXp7eR7/TI7S2fPgbxglzDXQS8y1WTa3uWJnRgaQ==}
-    peerDependencies:
-      expo: '*'
-      react-native: '*'
 
   expo-modules-autolinking@55.0.7:
     resolution: {integrity: sha512-SA2XKDWE7bVmr3j9EZs7gBnUdr9s2opk14TXHgm1piC46Pi99hBz8Zown66a5bEE5J7S9pW7/pBGb4SzhHOSrQ==}
@@ -17493,11 +17481,6 @@ snapshots:
     transitivePeerDependencies:
       - supports-color
       - typescript
-
-  expo-media-library@55.0.8(expo@55.0.0-preview.12)(react-native@0.83.2(@babel/core@7.28.5)(@types/react@19.2.14)(bufferutil@4.1.0)(react@19.2.0)(utf-8-validate@5.0.10)):
-    dependencies:
-      expo: 55.0.0-preview.12(@babel/core@7.28.5)(@expo/dom-webview@55.0.3)(@expo/metro-runtime@55.0.6)(bufferutil@4.1.0)(expo-router@55.0.0-preview.9)(react-dom@19.2.0(react@19.2.0))(react-native@0.83.2(@babel/core@7.28.5)(@types/react@19.2.14)(bufferutil@4.1.0)(react@19.2.0)(utf-8-validate@5.0.10))(react@19.2.0)(typescript@5.9.3)(utf-8-validate@5.0.10)
-      react-native: 0.83.2(@babel/core@7.28.5)(@types/react@19.2.14)(bufferutil@4.1.0)(react@19.2.0)(utf-8-validate@5.0.10)
 
   expo-modules-autolinking@55.0.7(typescript@5.9.3):
     dependencies:
