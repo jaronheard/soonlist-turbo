@@ -8,6 +8,8 @@ import Zoom from "yet-another-react-lightbox/plugins/zoom";
 
 import "yet-another-react-lightbox/styles.css";
 
+import { buildDisplayImageUrl } from "~/lib/utils";
+
 interface LightboxImageProps {
   src: string;
   alt: string;
@@ -30,6 +32,7 @@ export default function LightboxImage({
   sizes,
 }: LightboxImageProps) {
   const [open, setOpen] = useState(false);
+  const displaySrc = buildDisplayImageUrl(src) ?? src;
 
   return (
     <>
@@ -46,12 +49,13 @@ export default function LightboxImage({
         }}
       >
         <Image
-          src={src}
+          src={displaySrc}
           alt={alt}
           width={fill ? undefined : width}
           height={fill ? undefined : height}
           fill={fill}
           className={`object-cover object-top ${className}`}
+          style={{ imageOrientation: "from-image" }}
           priority={priority}
           sizes={sizes}
         />
@@ -66,7 +70,7 @@ export default function LightboxImage({
       <Lightbox
         open={open}
         close={() => setOpen(false)}
-        slides={[{ src }]}
+        slides={[{ src: displaySrc }]}
         plugins={[Zoom]}
         carousel={{ finite: true }}
         animation={{ fade: 300 }}

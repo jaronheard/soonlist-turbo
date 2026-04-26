@@ -74,6 +74,27 @@ export function extractFilePath(url: string) {
   return match ? match[0] : "";
 }
 
+const BYTESCALE_ACCOUNT_ID = "12a1yek";
+
+/**
+ * Convert a Bytescale URL to one served through the image processor, which
+ * auto-applies EXIF orientation. Pass-through for non-Bytescale URLs.
+ */
+export function buildDisplayImageUrl(
+  url: string | null | undefined,
+): string | null {
+  if (!url) return null;
+  if (!url.includes("upcdn.io")) return url;
+
+  const filePath = extractFilePath(url);
+  if (!filePath) return url;
+
+  // Already an image-processor URL — leave query params intact.
+  if (url.includes(`/${BYTESCALE_ACCOUNT_ID}/image/`)) return url;
+
+  return `https://upcdn.io/${BYTESCALE_ACCOUNT_ID}/image${filePath}`;
+}
+
 export function valueToOption(value: string): { value: string; label: string } {
   return { value, label: value };
 }
