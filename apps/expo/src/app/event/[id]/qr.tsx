@@ -1,5 +1,6 @@
-import { Image, Text, TouchableOpacity, View } from "react-native";
+import { Text, TouchableOpacity, View } from "react-native";
 import QRCode from "react-native-qrcode-svg";
+import { Image as ExpoImage } from "expo-image";
 import { router, useLocalSearchParams } from "expo-router";
 import { useQuery } from "convex/react";
 
@@ -20,17 +21,25 @@ export default function QRModal() {
   // eslint-disable-next-line @typescript-eslint/consistent-type-assertions
   const eventData = event.event as AddToCalendarButtonProps;
   const qrValue = `${Config.apiBaseUrl}/event/${id}`;
-  const eventImage = eventData.images?.[0];
+  const eventImage = eventData.images?.[3];
+  const backgroundUri = eventImage
+    ? `${eventImage}?max-w=1284&fit=contain&f=webp&q=80`
+    : null;
+  const thumbnailUri = eventImage
+    ? `${eventImage}?w=160&h=160&fit=cover&f=webp&q=80`
+    : null;
 
   return (
     <View className="flex-1 bg-interactive-3">
-      {/* Background Image Container */}
-      {eventImage && (
+      {backgroundUri && (
         <View className="absolute inset-0 h-full w-full overflow-hidden">
-          <Image
-            source={{ uri: eventImage }}
-            className="absolute h-full w-full"
-            resizeMode="cover"
+          <ExpoImage
+            source={{ uri: backgroundUri }}
+            placeholder={thumbnailUri ? { uri: thumbnailUri } : undefined}
+            placeholderContentFit="cover"
+            style={{ width: "100%", height: "100%", position: "absolute" }}
+            contentFit="cover"
+            cachePolicy="memory-disk"
             blurRadius={10}
           />
           <View className="absolute inset-0 bg-interactive-1/20" />
