@@ -137,7 +137,7 @@ export default function YourListScreen() {
   return (
     <QuestionContainer
       question="Meet your Soonlist"
-      subtitle="All your events in one shareable link."
+      subtitle="All your events in one shareable list."
       currentStep={2}
       totalSteps={totalSteps}
     >
