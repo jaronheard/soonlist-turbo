@@ -84,13 +84,21 @@ export function buildDisplayImageUrl(
   url: string | null | undefined,
 ): string | null {
   if (!url) return null;
-  if (!url.includes("upcdn.io")) return url;
+
+  let parsed: URL;
+  try {
+    parsed = new URL(url);
+  } catch {
+    return url;
+  }
+  if (parsed.hostname !== "upcdn.io") return url;
+  if (!parsed.pathname.startsWith(`/${BYTESCALE_ACCOUNT_ID}/`)) return url;
+
+  // Already an image-processor URL — leave query params intact.
+  if (parsed.pathname.startsWith(`/${BYTESCALE_ACCOUNT_ID}/image/`)) return url;
 
   const filePath = extractFilePath(url);
   if (!filePath) return url;
-
-  // Already an image-processor URL — leave query params intact.
-  if (url.includes(`/${BYTESCALE_ACCOUNT_ID}/image/`)) return url;
 
   return `https://upcdn.io/${BYTESCALE_ACCOUNT_ID}/image${filePath}`;
 }
