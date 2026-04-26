@@ -11,6 +11,11 @@ import { X } from "~/components/icons";
 import { Logo } from "~/components/Logo";
 import Config from "~/utils/config";
 
+function appendImageParams(url: string, params: string) {
+  const sep = url.includes("?") ? "&" : "?";
+  return `${url}${sep}${params}`;
+}
+
 export default function QRModal() {
   const { id } = useLocalSearchParams<{ id: string }>();
 
@@ -23,10 +28,10 @@ export default function QRModal() {
   const qrValue = `${Config.apiBaseUrl}/event/${id}`;
   const eventImage = eventData.images?.[3];
   const backgroundUri = eventImage
-    ? `${eventImage}?max-w=1284&fit=contain&f=webp&q=80`
+    ? appendImageParams(eventImage, "max-w=1284&fit=contain&f=webp&q=80")
     : null;
   const thumbnailUri = eventImage
-    ? `${eventImage}?w=160&h=160&fit=cover&f=webp&q=80`
+    ? appendImageParams(eventImage, "w=160&h=160&fit=cover&f=webp&q=80")
     : null;
 
   return (
