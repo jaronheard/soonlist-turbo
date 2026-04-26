@@ -362,10 +362,12 @@ export const getFollowedListsFeed = query({
 // undercount past initialNumItems and can leak entries from a just-
 // unfollowed list while the cache invalidates.
 //
-// `hasEnded` is batch-corrected by cron every 15 min, so the aggregate can
-// briefly include entries whose events have actually ended. Subtract those
-// to keep the badge consistent with what the feed renders (the feed
-// re-filters by `eventEndTime` client-side via `eventMatchesFeedSegment`).
+// The badge can briefly disagree with the rendered feed by up to ~15 min
+// because `hasEnded` is batch-corrected by a cron on the same cadence,
+// matching the client's stableTimestamp bucket. We deliberately do not
+// scan + correct here: that would diverge from the feed's own filter
+// (which uses stableTimestamp, not Date.now) and would pull an unbounded
+// set of "started but not yet flagged ended" entries.
 export const getFollowedListsFeedUpcomingCount = query({
   args: {},
   returns: v.number(),
@@ -373,31 +375,13 @@ export const getFollowedListsFeedUpcomingCount = query({
     const userId = await getUserId(ctx);
     if (!userId) return 0;
 
-    const feedId = `followedLists_${userId}`;
-    const now = Date.now();
-
-    const total = await userFeedsAggregate.count(ctx, {
-      namespace: feedId,
+    return userFeedsAggregate.count(ctx, {
+      namespace: `followedLists_${userId}`,
       bounds: {
         lower: { key: 0, inclusive: true },
         upper: { key: 0, inclusive: true },
       },
     });
-
-    // Bounded scan: only entries that have started but are still flagged
-    // upcoming can have actually ended. Entries with future startTime
-    // can't be stale-ended.
-    const startedButFlaggedUpcoming = await ctx.db
-      .query("userFeeds")
-      .withIndex("by_feed_hasEnded_startTime", (q) =>
-        q.eq("feedId", feedId).eq("hasEnded", false).lte("eventStartTime", now),
-      )
-      .collect();
-    const staleEnded = startedButFlaggedUpcoming.filter(
-      (e) => e.eventEndTime < now,
-    ).length;
-
-    return total - staleEnded;
   },
 });
 
