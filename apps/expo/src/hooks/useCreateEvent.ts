@@ -4,6 +4,7 @@ import { useMutation } from "convex/react";
 
 import { api } from "@soonlist/backend/convex/_generated/api";
 
+import type { ExifOrientation } from "~/utils/images";
 import { DEFAULT_VISIBILITY } from "~/constants";
 import { useOneSignal } from "~/providers/OneSignalProvider";
 import { useAppStore, useUserTimezone } from "~/store";
@@ -19,9 +20,7 @@ function generateBatchId(): string {
 
 interface CreateEventOptions {
   imageUri?: string;
-  // EXIF Orientation tag (1-8) of the source image, when known. Baked into
-  // pixels during the resize/encode pass so WEBP output isn't sideways.
-  imageOrientation?: number;
+  imageOrientation?: ExifOrientation;
   userId: string;
   username: string;
   sendNotification?: boolean;
@@ -31,12 +30,12 @@ interface CreateEventOptions {
   linkPreview?: string;
 }
 
-// Optimize image off the main JS thread and return a base64 string. Any EXIF
-// rotation is chained into the same `manipulateAsync` call so the orientation
-// is baked in during the WEBP encode (which would otherwise drop the tag).
+// Chains any EXIF rotation into the same manipulateAsync call as the resize.
+// WEBP output drops the EXIF Orientation tag without honoring it, so a
+// separate normalize pass would be needed otherwise.
 async function optimizeImage(
   uri: string,
-  orientation?: number,
+  orientation?: ExifOrientation,
 ): Promise<string> {
   try {
     const { base64 } = await ImageManipulator.manipulateAsync(

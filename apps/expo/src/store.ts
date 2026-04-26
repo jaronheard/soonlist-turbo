@@ -5,6 +5,7 @@ import { createJSONStorage, persist } from "zustand/middleware";
 
 import type { OnboardingData, OnboardingStep } from "~/types/onboarding";
 import type { CalendarApp } from "~/utils/calendarAppDetection";
+import type { ExifOrientation } from "~/utils/images";
 import { getUserTimeZone } from "./utils/dates";
 
 // Helper function to create a stable timestamp (rounded to 15-minute intervals)
@@ -50,10 +51,9 @@ function createStableTimestamp(): string {
 interface CommonEventInputState {
   input: string;
   imagePreview: string | null;
-  // EXIF Orientation tag (1-8) of the previewed image, when known. Plumbed
-  // through to the image-encode step so rotation can be baked in during the
-  // same `manipulateAsync` call as the resize, instead of an extra pass.
-  imagePreviewOrientation: number | null;
+  // Plumbed to optimizeImage so getOrientationActions can be chained into
+  // the resize pass — see apps/expo/src/utils/images.ts.
+  imagePreviewOrientation: ExifOrientation | null;
   linkPreview: string | null;
   isPublic: boolean;
   isImageLoading: boolean;
@@ -104,7 +104,7 @@ interface AppState {
   setImagePreview: (
     preview: string | null,
     route: "add" | "new",
-    orientation?: number | null,
+    orientation?: ExifOrientation | null,
   ) => void;
   setLinkPreview: (preview: string | null, route: "add" | "new") => void;
   setIsPublic: (isPublic: boolean, route: "add" | "new") => void;

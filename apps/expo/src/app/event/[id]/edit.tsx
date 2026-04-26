@@ -23,6 +23,7 @@ import { z } from "zod";
 
 import { api } from "@soonlist/backend/convex/_generated/api";
 
+import type { ExifOrientation } from "~/utils/images";
 import { Button } from "~/components/Button";
 import { DatePickerField, TimePickerField } from "~/components/date-picker";
 import {
@@ -183,7 +184,7 @@ export default function EditEventScreen() {
 
   const uploadImage = async (
     localUri: string,
-    orientationHint?: number,
+    orientationHint?: ExifOrientation,
   ): Promise<string> => {
     setIsUploadingImage(true);
     try {

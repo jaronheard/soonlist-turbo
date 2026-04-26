@@ -6,7 +6,7 @@ import * as ImagePicker from "expo-image-picker";
 import { router, Stack } from "expo-router";
 import { useUser } from "@clerk/clerk-expo";
 
-import type { ImageSource } from "~/utils/images";
+import type { ExifOrientation, ImageSource } from "~/utils/images";
 import { CaptureEventButton } from "~/components/CaptureEventButton";
 import { EventPreview } from "~/components/EventPreview";
 import { NewEventHeader } from "~/components/NewEventHeader";
@@ -48,7 +48,7 @@ export default function AddEventModal() {
   );
 
   const handleImagePreview = useCallback(
-    (uri: string | ImageSource, orientation?: number) => {
+    (uri: string | ImageSource, orientation?: ExifOrientation) => {
       const imageUri =
         typeof uri === "string"
           ? uri
