@@ -6,7 +6,7 @@ import React, {
   useState,
 } from "react";
 import { Share, Text, TouchableOpacity, View } from "react-native";
-import { Redirect } from "expo-router";
+import { Redirect, useFocusEffect } from "expo-router";
 import { SymbolView } from "expo-symbols";
 import { useUser } from "@clerk/clerk-expo";
 import {
@@ -88,6 +88,25 @@ function FollowingFeedContent() {
   const handleExitEmptyState = useCallback(() => {
     setEmptyStateMode("dismissed");
   }, []);
+
+  // Read latest values from refs inside useFocusEffect so the callback only
+  // fires on actual focus events, not on state changes while focused. This
+  // preserves the sticky-while-on-tab behavior — subscribing from inside the
+  // empty state keeps it visible so users can pick more lists in one flow —
+  // while still auto-dismissing when the user leaves the tab and returns
+  // (a clear signal they're done picking and want to see their feed, no
+  // extra "View My Scene" tap required).
+  const hasFollowingsRef = useRef(hasFollowings);
+  hasFollowingsRef.current = hasFollowings;
+  const emptyStateModeRef = useRef(emptyStateMode);
+  emptyStateModeRef.current = emptyStateMode;
+  useFocusEffect(
+    useCallback(() => {
+      if (hasFollowingsRef.current && emptyStateModeRef.current === "show") {
+        setEmptyStateMode("dismissed");
+      }
+    }, []),
+  );
 
   // Memoize query args
   const queryArgs = useMemo(() => {
