@@ -358,6 +358,26 @@ export const getFollowedListsFeed = query({
   },
 });
 
+// Authoritative count for the My Scene tab badge. Paginated feed queries
+// undercount past initialNumItems and can leak entries from a just-
+// unfollowed list while the cache invalidates.
+export const getFollowedListsFeedUpcomingCount = query({
+  args: {},
+  returns: v.number(),
+  handler: async (ctx) => {
+    const userId = await getUserId(ctx);
+    if (!userId) return 0;
+
+    return userFeedsAggregate.count(ctx, {
+      namespace: `followedLists_${userId}`,
+      bounds: {
+        lower: { key: 0, inclusive: true },
+        upper: { key: 0, inclusive: true },
+      },
+    });
+  },
+});
+
 // Helper query to get followed users feed (events from users you follow)
 export const getFollowedUsersFeed = query({
   args: {

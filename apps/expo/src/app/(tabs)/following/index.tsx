@@ -158,13 +158,19 @@ function FollowingFeedContent() {
       }));
   }, [events, stableTimestamp, selectedSegment]);
 
-  // Update tab badge count based on upcoming events
+  // Drive the tab badge from a server-side aggregate count. Paginated
+  // `enrichedEvents.length` undercounts past initialNumItems and stale
+  // entries from a just-unfollowed list linger in the pagination cache,
+  // so the badge drifts up after unfollow instead of down.
+  const upcomingCount = useQuery(
+    api.feeds.getFollowedListsFeedUpcomingCount,
+    {},
+  );
   const setCommunityBadgeCount = useAppStore((s) => s.setCommunityBadgeCount);
   useEffect(() => {
-    if (selectedSegment === "upcoming") {
-      setCommunityBadgeCount(enrichedEvents.length);
-    }
-  }, [enrichedEvents.length, selectedSegment, setCommunityBadgeCount]);
+    if (upcomingCount === undefined) return;
+    setCommunityBadgeCount(upcomingCount);
+  }, [upcomingCount, setCommunityBadgeCount]);
 
   const followedListCount = followedLists?.length ?? 0;
   const singleFollowedList =
