@@ -158,10 +158,9 @@ function FollowingFeedContent() {
       }));
   }, [events, stableTimestamp, selectedSegment]);
 
-  // Drive the tab badge from a server-side aggregate count. Paginated
-  // `enrichedEvents.length` undercounts past initialNumItems and stale
-  // entries from a just-unfollowed list linger in the pagination cache,
-  // so the badge drifts up after unfollow instead of down.
+  // Drive the badge from a dedicated count query, not the paginated feed.
+  // Paginated `enrichedEvents.length` is segment-locked and stale entries
+  // from a just-unfollowed list can linger in the cache.
   const upcomingCount = useQuery(
     api.feeds.getFollowedListsFeedUpcomingCount,
     {},

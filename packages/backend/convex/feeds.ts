@@ -358,30 +358,47 @@ export const getFollowedListsFeed = query({
   },
 });
 
-// Authoritative count for the My Scene tab badge. Paginated feed queries
-// undercount past initialNumItems and can leak entries from a just-
-// unfollowed list while the cache invalidates.
-//
-// The badge can briefly disagree with the rendered feed by up to ~15 min
-// because `hasEnded` is batch-corrected by a cron on the same cadence,
-// matching the client's stableTimestamp bucket. We deliberately do not
-// scan + correct here: that would diverge from the feed's own filter
-// (which uses stableTimestamp, not Date.now) and would pull an unbounded
-// set of "started but not yet flagged ended" entries.
+// Bounded upcoming count for the tab badges. Capped at BADGE_COUNT_CAP —
+// the badge is a glanceable hint, not a precise number, and capping keeps
+// the read cheap. `hasEnded` is the same flag the feed itself filters by
+// (cron-updated every 15 min), so the badge stays consistent with what
+// the feed renders.
+const BADGE_COUNT_CAP = 50;
+
+async function countUpcoming(
+  ctx: QueryCtx,
+  table: "userFeeds" | "userFeedGroups",
+  feedId: string,
+): Promise<number> {
+  const entries = await ctx.db
+    .query(table)
+    .withIndex("by_feed_hasEnded_startTime", (q) =>
+      q.eq("feedId", feedId).eq("hasEnded", false),
+    )
+    .take(BADGE_COUNT_CAP);
+  return entries.length;
+}
+
 export const getFollowedListsFeedUpcomingCount = query({
   args: {},
   returns: v.number(),
   handler: async (ctx) => {
     const userId = await getUserId(ctx);
     if (!userId) return 0;
+    return countUpcoming(ctx, "userFeeds", `followedLists_${userId}`);
+  },
+});
 
-    return userFeedsAggregate.count(ctx, {
-      namespace: `followedLists_${userId}`,
-      bounds: {
-        lower: { key: 0, inclusive: true },
-        upper: { key: 0, inclusive: true },
-      },
-    });
+// My Soonlist counts groups (matches what the feed actually renders —
+// duplicates collapse into one card, so counting raw events would
+// over-report relative to the visible list).
+export const getMyFeedUpcomingGroupCount = query({
+  args: {},
+  returns: v.number(),
+  handler: async (ctx) => {
+    const userId = await getUserId(ctx);
+    if (!userId) return 0;
+    return countUpcoming(ctx, "userFeedGroups", `user_${userId}`);
   },
 });
 

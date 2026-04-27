@@ -173,13 +173,18 @@ function MyFeedContent() {
     requestShare({ eventCount: upcomingCount });
   }, [posthog, requestShare, upcomingCount]);
 
-  // Update tab badge count based on upcoming events
+  // Drive the badge from a dedicated count query, not the paginated feed.
+  // Paginated `enrichedEvents.length` is segment-locked and stale entries
+  // can linger in the cache after a feed change.
+  const upcomingGroupCount = useQuery(
+    api.feeds.getMyFeedUpcomingGroupCount,
+    {},
+  );
   const setMyListBadgeCount = useAppStore((s) => s.setMyListBadgeCount);
   useEffect(() => {
-    if (selectedSegment === "upcoming") {
-      setMyListBadgeCount(enrichedEvents.length);
-    }
-  }, [enrichedEvents.length, selectedSegment, setMyListBadgeCount]);
+    if (upcomingGroupCount === undefined) return;
+    setMyListBadgeCount(upcomingGroupCount);
+  }, [upcomingGroupCount, setMyListBadgeCount]);
 
   const handleSegmentChange = useCallback(
     (segment: Segment) => {
