@@ -271,7 +271,7 @@ function FollowingFeedContent() {
   ]);
 
   // Stable paginated results lag args changes by one tick: when switching
-  // segments, the previous segment's rows are still in `events` but
+  // segments, the previous segment's rows are still in `groupedEvents` but
   // `enrichedEvents` filters them all out, briefly leaving an empty list.
   // Treat that exact shape as "still loading" so the spinner wins over the
   // empty state until the new segment's data lands. Gate on
@@ -279,7 +279,7 @@ function FollowingFeedContent() {
   // can't keep the spinner up after the query has settled.
   const hasStaleSegmentData =
     status === "LoadingFirstPage" &&
-    events.length > 0 &&
+    groupedEvents.length > 0 &&
     enrichedEvents.length === 0;
 
   // Second branch avoids a one-frame flash before the latch effect commits.
