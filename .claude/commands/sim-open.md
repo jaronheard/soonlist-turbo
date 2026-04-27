@@ -56,14 +56,21 @@ if ! dev_client_installed; then
   SOURCE_APP=$(find_installed_dev_client || true)
   SOURCE_APP=${SOURCE_APP:-$(find_built_dev_client || true)}
   if [[ -n "$SOURCE_APP" ]]; then
-    xcrun simctl install "$SIMULATOR_UDID" "$SOURCE_APP"
+    if ! xcrun simctl install "$SIMULATOR_UDID" "$SOURCE_APP"; then
+      echo "Found ${DEV_CLIENT_BUNDLE_ID} at ${SOURCE_APP}, but install failed." >&2
+      exit 1
+    fi
   fi
 fi
 
 if ! xcrun simctl openurl "$SIMULATOR_UDID" "exp+timetimecc://expo-development-client/?url=http://localhost:$METRO_PORT"; then
   echo "Could not open the Expo dev-client URL." >&2
-  echo "No installed or built ${DEV_CLIENT_BUNDLE_ID} app was found to install automatically." >&2
-  echo "Build the dev client for ${SIMULATOR_NAME:-$SIMULATOR_UDID}, then rerun /sim-open." >&2
+  if [[ -n "${SOURCE_APP:-}" ]]; then
+    echo "Installed ${DEV_CLIENT_BUNDLE_ID} from ${SOURCE_APP}, but the deep link still failed." >&2
+  else
+    echo "No installed or built ${DEV_CLIENT_BUNDLE_ID} app was found to install automatically." >&2
+    echo "Build the dev client for ${SIMULATOR_NAME:-$SIMULATOR_UDID}, then rerun /sim-open." >&2
+  fi
   exit 1
 fi
 

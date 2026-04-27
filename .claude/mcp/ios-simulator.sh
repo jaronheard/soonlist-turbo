@@ -3,7 +3,7 @@
 # called by the committed root .mcp.json, so Claude Code can discover the MCP
 # server before SessionStart hooks have generated worktree-local state.
 
-set -uo pipefail
+set -euo pipefail
 
 WORKTREE_ROOT=$(git rev-parse --show-toplevel 2>/dev/null || echo "")
 if [[ -n "$WORKTREE_ROOT" ]]; then
@@ -12,7 +12,7 @@ fi
 
 BOOTSTRAP_LOG="/tmp/$(basename "${WORKTREE_ROOT:-soonlist}")-mcp-bootstrap.log"
 if [[ -f .claude/worktree-bootstrap.sh ]]; then
-  WORKTREE_BOOTSTRAP_SKIP_INSTALL=1 bash .claude/worktree-bootstrap.sh >"$BOOTSTRAP_LOG" 2>&1 || true
+  WORKTREE_BOOTSTRAP_SKIP_INSTALL=1 bash .claude/worktree-bootstrap.sh >"$BOOTSTRAP_LOG" 2>&1
 fi
 
 if [[ -f .claude/.worktree-ports ]]; then
@@ -22,6 +22,9 @@ fi
 
 if [[ -n "${SIMULATOR_UDID:-}" ]]; then
   export IDB_UDID="$SIMULATOR_UDID"
+else
+  echo "ios-simulator MCP wrapper could not resolve SIMULATOR_UDID; see $BOOTSTRAP_LOG" >&2
+  exit 1
 fi
 
 export IOS_SIMULATOR_MCP_DEFAULT_OUTPUT_DIR=${IOS_SIMULATOR_MCP_DEFAULT_OUTPUT_DIR:-/tmp}
