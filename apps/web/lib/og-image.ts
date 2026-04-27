@@ -5,15 +5,14 @@ const BYTESCALE_PATH_RE = /^\/12a1yek\/(raw|image)(\/.+)$/;
 // Force JPEG output for OG image consumers. Several social crawlers (Slack,
 // LinkedIn, Discord, older Twitter) and satori (`next/og`) don't reliably
 // render WebP, which is what Bytescale serves by default. Returns the URL
-// untouched if it isn't a Bytescale URL on our account.
+// untouched if it isn't a Bytescale URL on our account so we never rewrite
+// arbitrary external URLs into bogus `/12a1yek/image/…` paths that 404.
 //
-// Pass dimensions to force exact size with `fit=crop` (used by the list
-// satori card where thumbnails need to be small + uniform). Omit them to
-// keep the source's native dimensions and only force the codec — that's
-// what event OG metadata wants, since declaring fixed 1200×630 against a
-// portrait poster was the bug we fixed. Upload paths already cap source
-// dimensions (Expo: 640 or 1284 wide), so re-capping at the OG layer is
-// redundant defense-in-depth that wasn't worth the API surface.
+// Pass `size` to force exact dimensions with `fit=crop`. Omit it to keep
+// the source's native dimensions — declaring fixed dimensions against a
+// portrait user upload caused intermittent rejection by Apple's
+// LinkPresentation, so OG metadata that doesn't control the source aspect
+// ratio should leave size off and let crawlers measure the actual bytes.
 //
 // Existing query params on already-transformed `/image/` URLs are inherited
 // so the user's source crop (`crop-x/y/w/h` set by the in-app cropper)
@@ -54,9 +53,8 @@ export function rewriteBytescaleToJpeg(
 //
 // One AbortController spans both fetches so the whole font load is capped
 // at FONT_FETCH_TIMEOUT_MS. Without a timeout, a stalled Google Fonts
-// response blocks the OG route until Next's request timeout and returns
-// an error to the crawler instead of an image — that was the dominant
-// source of inconsistent rich previews for lists.
+// response would block the OG route until Next's request timeout, returning
+// an error to the crawler instead of an image.
 const FONT_FETCH_TIMEOUT_MS = 4000;
 
 export async function loadGoogleFont(

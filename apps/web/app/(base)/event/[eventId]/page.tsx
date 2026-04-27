@@ -4,15 +4,15 @@ import type { AddToCalendarButtonPropsRestricted } from "@soonlist/cal/types";
 import { api } from "@soonlist/backend/convex/_generated/api";
 
 import { getAuthenticatedConvex } from "~/lib/convex-server";
-import { rewriteBytescaleToJpeg } from "~/lib/og-image";
+import { OG_IMAGE_SIZE, rewriteBytescaleToJpeg } from "~/lib/og-image";
 import EventPageClient from "./EventPageClient";
 
-// Branded card rendered by `app/api/og/route.tsx` at 1200×630. Used when an
-// event has no image so the rich preview stays `summary_large_image`.
+// Branded card rendered by `app/api/og/route.tsx` at OG_IMAGE_SIZE. Used
+// when an event has no image so the rich preview stays
+// `summary_large_image`.
 const FALLBACK_OG_IMAGE = {
   url: "/api/og",
-  width: 1200,
-  height: 630,
+  ...OG_IMAGE_SIZE,
 } as const;
 
 interface Props {
@@ -45,17 +45,12 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     const eventData = event.event as AddToCalendarButtonPropsRestricted;
     const rawEventImage = eventData.images?.[0];
 
-    // For user images: force JPEG (some crawlers and surfaces don't
-    // render Bytescale's default WebP reliably) but *don't* declare
-    // og:image:width/height. The previous code hardcoded 1200×630,
-    // but most event posters are portrait (e.g. 640×853) — a dimension
-    // mismatch that Apple's LinkPresentation and other strict crawlers
-    // can interpret as an invalid card and silently drop, producing
-    // the intermittent "sometimes the rich preview shows up, sometimes
-    // it doesn't" pattern for events shared via iMessage. Forcing JPEG
-    // without `w`/`h` preserves the source aspect ratio so the lie
-    // never reappears. For the branded fallback, we render at exactly
-    // 1200×630 so we *can* declare those dimensions honestly.
+    // User images: force JPEG (for crawlers that don't render WebP well)
+    // and omit og:image:width/height. We don't know the source's true
+    // dimensions, and declaring fixed ones against a portrait poster causes
+    // strict crawlers (notably Apple's LinkPresentation) to drop the card.
+    // The branded fallback ships at exactly OG_IMAGE_SIZE so it can declare
+    // dimensions honestly.
     const ogImage = rawEventImage
       ? {
           url: rewriteBytescaleToJpeg(rawEventImage),
