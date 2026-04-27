@@ -40,7 +40,9 @@ export const metadata: Metadata = {
     type: "website",
     images: [
       {
-        url: "https://upcdn.io/12a1yek/raw/uploads/Soonlist/soonlist-meta.webp",
+        // /image/?f=jpg because the source is .webp; not every crawler
+        // renders WebP reliably.
+        url: "https://upcdn.io/12a1yek/image/uploads/Soonlist/soonlist-meta.webp?w=1200&h=630&fit=crop&f=jpg&q=82",
         width: 1200,
         height: 630,
       },

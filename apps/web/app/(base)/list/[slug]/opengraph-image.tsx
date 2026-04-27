@@ -1,7 +1,6 @@
 /* eslint-disable @next/next/no-img-element -- next/image is not supported
 inside @vercel/og ImageResponse trees; raw <img> is required. */
 import { ImageResponse } from "next/og";
-import * as Bytescale from "@bytescale/sdk";
 
 import { api } from "@soonlist/backend/convex/_generated/api";
 
@@ -12,7 +11,11 @@ import {
   SOONLIST_MARK_VIEWBOX,
 } from "~/lib/brand-logo";
 import { getUnauthenticatedConvex } from "~/lib/convex-server";
-import { extractFilePath } from "~/lib/utils";
+import {
+  loadGoogleFont,
+  OG_IMAGE_SIZE,
+  rewriteBytescaleToJpeg,
+} from "~/lib/og-image";
 
 export const runtime = "nodejs";
 // Short TTL balances crawler-burst amortization against privacy: a list
@@ -22,7 +25,7 @@ export const runtime = "nodejs";
 export const revalidate = 300;
 
 export const alt = "Shared list on Soonlist";
-export const size = { width: 1200, height: 630 };
+export const size = OG_IMAGE_SIZE;
 export const contentType = "image/png";
 
 // Brand tokens (apps/web/styles/globals.css CSS vars) rendered as hex because
@@ -30,77 +33,6 @@ export const contentType = "image/png";
 const BRAND_INTERACTIVE = "#5A32FB"; // --interactive-1
 const ACCENT_YELLOW = "#FEEA9F"; // --accent-1
 const NEUTRAL_1 = "#34435F"; // --neutral-1
-
-const BYTESCALE_ACCOUNT_ID = "12a1yek";
-
-// @vercel/og (satori) only understands TTF/OTF/WOFF — *not* WOFF2. Spoofing an
-// older User-Agent makes Google Fonts return plain .ttf URLs in the CSS. The
-// CSS also contains multiple @font-face blocks (devanagari, latin-ext, latin,
-// …); we target the `/* latin */` marker so we always fetch Latin glyphs.
-async function loadFont(
-  family: string,
-  weight: number,
-): Promise<ArrayBuffer | null> {
-  try {
-    const urlFamily = family.replace(/ /g, "+");
-    const cssRes = await fetch(
-      `https://fonts.googleapis.com/css?family=${urlFamily}:${weight}&display=swap`,
-      {
-        headers: {
-          "User-Agent":
-            "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_9) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/41.0.2272.118 Safari/537.36",
-        },
-      },
-    );
-    if (!cssRes.ok) return null;
-    const css = await cssRes.text();
-    const latinBlockMatch = /\/\*\s*latin\s*\*\/[\s\S]*?url\(([^)]+)\)/.exec(
-      css,
-    );
-    const fallbackMatch = /url\(([^)]+)\)/.exec(css);
-    const fontUrl = latinBlockMatch?.[1] ?? fallbackMatch?.[1];
-    if (!fontUrl) return null;
-    const fontRes = await fetch(fontUrl);
-    if (!fontRes.ok) return null;
-    return await fontRes.arrayBuffer();
-  } catch (err) {
-    console.warn("[list/opengraph-image] font fetch failed", family, err);
-    return null;
-  }
-}
-
-// Satori can't decode WebP, which is what Bytescale (upcdn.io) returns by
-// default. Route through Bytescale's `/image/` processor with `f=jpg` so OG
-// crawlers receive a JPEG. Only applies when the source is a Bytescale URL
-// *on our account* — we don't want to rewrite arbitrary external URLs, nor
-// cross-account upcdn.io URLs, into bogus `/{BYTESCALE_ACCOUNT_ID}/image/…`
-// paths that would 404.
-function transformImage(url: string): string {
-  let parsed: URL;
-  try {
-    parsed = new URL(url);
-  } catch {
-    return url;
-  }
-  if (parsed.hostname !== "upcdn.io") return url;
-  if (!parsed.pathname.startsWith(`/${BYTESCALE_ACCOUNT_ID}/`)) return url;
-  const filePath = extractFilePath(url);
-  if (!filePath) return url;
-  return Bytescale.UrlBuilder.url({
-    accountId: BYTESCALE_ACCOUNT_ID,
-    filePath,
-    options: {
-      transformation: "image",
-      transformationParams: {
-        w: 360,
-        h: 640,
-        fit: "crop",
-        f: "jpg",
-        q: 82,
-      },
-    },
-  });
-}
 
 interface Props {
   params: Promise<{ slug: string }>;
@@ -126,9 +58,9 @@ export default async function OgImage({ params }: Props) {
 
   const { list, owner, upcomingEvents } = data;
   const [mediumFont, boldFont, kalamFont] = await Promise.all([
-    loadFont("IBM Plex Sans", 500),
-    loadFont("IBM Plex Sans", 700),
-    loadFont("Kalam", 700),
+    loadGoogleFont("IBM Plex Sans", 500),
+    loadGoogleFont("IBM Plex Sans", 700),
+    loadGoogleFont("Kalam", 700),
   ]);
 
   const fonts = [
@@ -261,7 +193,10 @@ export default async function OgImage({ params }: Props) {
           return (
             <img
               key={i}
-              src={transformImage(evt.image)}
+              src={rewriteBytescaleToJpeg(evt.image, {
+                width: 360,
+                height: 640,
+              })}
               width={layout.width}
               height={layout.height}
               alt=""
