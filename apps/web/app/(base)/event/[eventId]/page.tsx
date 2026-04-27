@@ -4,6 +4,7 @@ import type { AddToCalendarButtonPropsRestricted } from "@soonlist/cal/types";
 import { api } from "@soonlist/backend/convex/_generated/api";
 
 import { getAuthenticatedConvex } from "~/lib/convex-server";
+import { rewriteBytescaleToJpeg } from "~/lib/og-image";
 import EventPageClient from "./EventPageClient";
 
 // Branded card rendered by `app/api/og/route.tsx` at 1200×630. Used when an
@@ -42,19 +43,24 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     }
 
     const eventData = event.event as AddToCalendarButtonPropsRestricted;
-    const eventImage = eventData.images?.[0];
+    const rawEventImage = eventData.images?.[0];
 
-    // For user images: emit URL only, *no* og:image:width/height. The
-    // previous code hardcoded 1200×630, but most event posters are
-    // portrait (e.g. 640×853) — a dimension mismatch that Apple's
-    // LinkPresentation and other strict crawlers can interpret as an
-    // invalid card and silently drop, producing the intermittent
-    // "sometimes the rich preview shows up, sometimes it doesn't"
-    // pattern for events shared via iMessage. Letting crawlers infer
-    // from the actual bytes removes the lie. For the branded fallback,
-    // we render at exactly 1200×630 so we *can* declare honestly.
-    const ogImage = eventImage
-      ? { url: eventImage, alt: eventData.name || "Event image" }
+    // For user images: force JPEG (some crawlers and surfaces don't
+    // render Bytescale's default WebP reliably) but *don't* declare
+    // og:image:width/height. The previous code hardcoded 1200×630,
+    // but most event posters are portrait (e.g. 640×853) — a dimension
+    // mismatch that Apple's LinkPresentation and other strict crawlers
+    // can interpret as an invalid card and silently drop, producing
+    // the intermittent "sometimes the rich preview shows up, sometimes
+    // it doesn't" pattern for events shared via iMessage. Forcing JPEG
+    // without `w`/`h` preserves the source aspect ratio so the lie
+    // never reappears. For the branded fallback, we render at exactly
+    // 1200×630 so we *can* declare those dimensions honestly.
+    const ogImage = rawEventImage
+      ? {
+          url: rewriteBytescaleToJpeg(rawEventImage),
+          alt: eventData.name || "Event image",
+        }
       : FALLBACK_OG_IMAGE;
 
     return {

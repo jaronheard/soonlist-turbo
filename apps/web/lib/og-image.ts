@@ -7,13 +7,18 @@ const BYTESCALE_PATH_RE = /^\/12a1yek\/(raw|image)(\/.+)$/;
 // render WebP, which is what Bytescale serves by default. Returns the URL
 // untouched if it isn't a Bytescale URL on our account.
 //
+// Pass dimensions to render at a specific size (used by the list satori
+// card, where thumbnails need to be small + uniform). Omit dimensions to
+// keep the source's native dimensions and only force the codec — that's
+// what event OG metadata wants, since declaring fixed 1200×630 against a
+// portrait poster was the bug we just fixed.
+//
 // Existing query params on already-transformed `/image/` URLs are inherited
 // so the user's source crop (`crop-x/y/w/h` set by the in-app cropper)
-// survives. The output dimensions and codec are then overridden, since
-// those are determined by where this URL is rendered, not by the editor.
+// survives.
 export function rewriteBytescaleToJpeg(
   url: string,
-  { width, height }: { width: number; height: number },
+  size?: { width: number; height: number },
 ): string {
   let parsed: URL;
   try {
@@ -30,10 +35,12 @@ export function rewriteBytescaleToJpeg(
     match[1] === "image"
       ? new URLSearchParams(parsed.searchParams)
       : new URLSearchParams();
-  params.set("w", String(width));
-  params.set("h", String(height));
-  params.set("fit", "crop");
-  params.set("q", "82");
+  if (size) {
+    params.set("w", String(size.width));
+    params.set("h", String(size.height));
+    params.set("fit", "crop");
+  }
+  if (!params.has("q")) params.set("q", "82");
   params.set("f", "jpg");
   return `https://upcdn.io/12a1yek/image${match[2]}?${params.toString()}`;
 }
