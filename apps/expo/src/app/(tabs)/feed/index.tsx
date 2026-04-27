@@ -173,14 +173,6 @@ function MyFeedContent() {
     requestShare({ eventCount: upcomingCount });
   }, [posthog, requestShare, upcomingCount]);
 
-  // Update tab badge count based on upcoming events
-  const setMyListBadgeCount = useAppStore((s) => s.setMyListBadgeCount);
-  useEffect(() => {
-    if (selectedSegment === "upcoming") {
-      setMyListBadgeCount(enrichedEvents.length);
-    }
-  }, [enrichedEvents.length, selectedSegment, setMyListBadgeCount]);
-
   const handleSegmentChange = useCallback(
     (segment: Segment) => {
       markSegmentSwitchPending();

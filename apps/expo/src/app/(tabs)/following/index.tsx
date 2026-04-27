@@ -97,11 +97,11 @@ function FollowingFeedContent() {
   }, [selectedSegment]);
 
   const {
-    results: events,
+    results: groupedEvents,
     status,
     loadMore,
   } = useStablePaginatedQuery(
-    api.feeds.getFollowedListsFeed,
+    api.feeds.getFollowedListsFeedGrouped,
     hasFollowings ? queryArgs : "skip",
     {
       initialNumItems: 50,
@@ -144,27 +144,38 @@ function FollowingFeedContent() {
     [savedEventIdsQuery],
   );
 
+  // Mirror feed/index.tsx: queryGroupedFeed returns
+  // { event, similarEventsCount, sourceListId, sourceListName, sourceListSlug,
+  //   additionalSourceCount, similarityGroupId } per group. UserEventsList
+  // expects an array of { event, similarEvents }, with source-list attribution
+  // merged onto `event`.
   const enrichedEvents = useMemo(() => {
     const stableMs = new Date(stableTimestamp).getTime();
-    return events
-      .filter((event) =>
-        eventMatchesFeedSegment(event.endDateTime, selectedSegment, stableMs),
+    return groupedEvents
+      .filter((group) =>
+        eventMatchesFeedSegment(
+          group.event.endDateTime,
+          selectedSegment,
+          stableMs,
+        ),
       )
-      .map((event) => ({
-        ...event,
-        comments: [],
-        eventToLists: [],
-        lists: event.lists ?? [],
+      .map((group) => ({
+        event: {
+          ...group.event,
+          comments: [],
+          eventToLists: [],
+          lists: group.event.lists ?? [],
+          sourceListId: group.sourceListId,
+          sourceListName: group.sourceListName,
+          sourceListSlug: group.sourceListSlug,
+          additionalSourceCount: group.additionalSourceCount,
+        },
+        similarEvents: Array(group.similarEventsCount).fill({
+          event: null,
+          similarityDetails: null,
+        }),
       }));
-  }, [events, stableTimestamp, selectedSegment]);
-
-  // Update tab badge count based on upcoming events
-  const setCommunityBadgeCount = useAppStore((s) => s.setCommunityBadgeCount);
-  useEffect(() => {
-    if (selectedSegment === "upcoming") {
-      setCommunityBadgeCount(enrichedEvents.length);
-    }
-  }, [enrichedEvents.length, selectedSegment, setCommunityBadgeCount]);
+  }, [groupedEvents, stableTimestamp, selectedSegment]);
 
   const followedListCount = followedLists?.length ?? 0;
   const singleFollowedList =
@@ -274,7 +285,7 @@ function FollowingFeedContent() {
         onClose={() => setIsModalVisible(false)}
       />
       <UserEventsList
-        events={enrichedEvents}
+        groupedEvents={enrichedEvents}
         onEndReached={handleLoadMore}
         isFetchingNextPage={status === "LoadingMore"}
         listBodyLoading={listBodyLoading}

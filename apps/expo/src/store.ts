@@ -175,12 +175,6 @@ interface AppState {
   // Pending follow from deep link (used when user is not authenticated yet)
   pendingFollowUsername: string | null;
   setPendingFollowUsername: (username: string | null) => void;
-
-  // Tab badge counts
-  myListBadgeCount: number;
-  setMyListBadgeCount: (count: number) => void;
-  communityBadgeCount: number;
-  setCommunityBadgeCount: (count: number) => void;
 }
 
 export const useAppStore = create<AppState>()(
@@ -409,8 +403,6 @@ export const useAppStore = create<AppState>()(
           hasShownRatingPrompt: false,
           hasSeenShareListPrompt: false,
           pendingFollowUsername: null,
-          myListBadgeCount: 0,
-          communityBadgeCount: 0,
         }),
 
       // Reset for logout - preserves onboarding state
@@ -461,8 +453,6 @@ export const useAppStore = create<AppState>()(
           hasSeenShareListPrompt: false,
           // Keep pendingFollowUsername in case user is re-authenticating
           pendingFollowUsername: state.pendingFollowUsername,
-          myListBadgeCount: 0,
-          communityBadgeCount: 0,
         })),
 
       // Stable timestamp for query filtering
@@ -527,12 +517,6 @@ export const useAppStore = create<AppState>()(
       pendingFollowUsername: null,
       setPendingFollowUsername: (username) =>
         set({ pendingFollowUsername: username }),
-
-      // Tab badge counts
-      myListBadgeCount: 0,
-      setMyListBadgeCount: (count) => set({ myListBadgeCount: count }),
-      communityBadgeCount: 0,
-      setCommunityBadgeCount: (count) => set({ communityBadgeCount: count }),
     }),
     {
       name: "app-storage",
