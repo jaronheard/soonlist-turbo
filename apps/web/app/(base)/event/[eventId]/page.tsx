@@ -6,6 +6,14 @@ import { api } from "@soonlist/backend/convex/_generated/api";
 import { getAuthenticatedConvex } from "~/lib/convex-server";
 import EventPageClient from "./EventPageClient";
 
+// Branded card rendered by `app/api/og/route.tsx` at 1200×630. Used when an
+// event has no image so the rich preview stays `summary_large_image`.
+const FALLBACK_OG_IMAGE = {
+  url: "/api/og",
+  width: 1200,
+  height: 630,
+} as const;
+
 interface Props {
   params: Promise<{
     eventId: string;
@@ -36,16 +44,19 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     const eventData = event.event as AddToCalendarButtonPropsRestricted;
     const eventImage = eventData.images?.[0];
 
-    // Pass the user's image through as-is *without* declaring og:image:width
-    // or og:image:height. The previous code hardcoded 1200×630, but most
-    // event posters are portrait (e.g. 640×853) — a dimension mismatch that
-    // Apple's LinkPresentation and other strict crawlers can interpret as
-    // an invalid card and silently drop, producing the intermittent
-    // "sometimes the rich preview shows up, sometimes it doesn't" pattern
-    // for events shared via iMessage. Letting crawlers infer dimensions
-    // from the actual bytes removes the lie at the cost of inconsistent
-    // aspect ratios across previews — the right tradeoff until we either
-    // store true dimensions or render a server-side OG card per event.
+    // For user images: emit URL only, *no* og:image:width/height. The
+    // previous code hardcoded 1200×630, but most event posters are
+    // portrait (e.g. 640×853) — a dimension mismatch that Apple's
+    // LinkPresentation and other strict crawlers can interpret as an
+    // invalid card and silently drop, producing the intermittent
+    // "sometimes the rich preview shows up, sometimes it doesn't"
+    // pattern for events shared via iMessage. Letting crawlers infer
+    // from the actual bytes removes the lie. For the branded fallback,
+    // we render at exactly 1200×630 so we *can* declare honestly.
+    const ogImage = eventImage
+      ? { url: eventImage, alt: eventData.name || "Event image" }
+      : FALLBACK_OG_IMAGE;
+
     return {
       title: `${eventData.name} | Soonlist`,
       description:
@@ -55,18 +66,16 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
         description:
           eventData.description || `Join ${eventData.name} on Soonlist`,
         type: "website",
-        images: eventImage
-          ? [{ url: eventImage, alt: eventData.name || "Event image" }]
-          : [],
+        images: [ogImage],
         locale: "en_US",
         siteName: "Soonlist",
       },
       twitter: {
-        card: eventImage ? "summary_large_image" : "summary",
+        card: "summary_large_image",
         title: eventData.name || "Event on Soonlist",
         description:
           eventData.description || `Join ${eventData.name} on Soonlist`,
-        images: eventImage ? [eventImage] : undefined,
+        images: [ogImage.url],
       },
       // iOS Smart App Banner - prompts users to open in the Soonlist app
       other: {
