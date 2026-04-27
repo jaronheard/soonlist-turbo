@@ -188,6 +188,7 @@ catalog:
   "eslint-plugin-tailwindcss": ^3.14.0
   "eslint-plugin-react-compiler": 19.1.0-rc.1
   "expo-atlas": ^0.4.3
+  "expo-mcp": ^0.2.4
 
   # ESLint plugins
   "@next/eslint-plugin-next": ^14.2.0
