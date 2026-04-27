@@ -2,21 +2,14 @@ export const OG_IMAGE_SIZE = { width: 1200, height: 630 } as const;
 
 const BYTESCALE_PATH_RE = /^\/12a1yek\/(raw|image)(\/.+)$/;
 
-// Force JPEG output for OG image consumers. Several social crawlers (Slack,
-// LinkedIn, Discord, older Twitter) and satori (`next/og`) don't reliably
-// render WebP, which is what Bytescale serves by default. Returns the URL
-// untouched if it isn't a Bytescale URL on our account so we never rewrite
-// arbitrary external URLs into bogus `/12a1yek/image/…` paths that 404.
+// Force JPEG: satori (`next/og`) can't decode WebP, and several crawlers
+// (Slack, LinkedIn, Discord, older Twitter) render it inconsistently.
+// Non-Bytescale URLs pass through untouched.
 //
-// Pass `size` to force exact dimensions with `fit=crop`. Omit it to keep
-// the source's native dimensions — declaring fixed dimensions against a
-// portrait user upload caused intermittent rejection by Apple's
-// LinkPresentation, so OG metadata that doesn't control the source aspect
-// ratio should leave size off and let crawlers measure the actual bytes.
-//
-// Existing query params on already-transformed `/image/` URLs are inherited
-// so the user's source crop (`crop-x/y/w/h` set by the in-app cropper)
-// survives.
+// Omit `size` to preserve source dimensions — declaring a fixed size
+// against a portrait user upload caused intermittent rejection by Apple's
+// LinkPresentation. Existing `/image/` query params (e.g. `crop-x/y/w/h`
+// from the in-app cropper) are inherited.
 export function rewriteBytescaleToJpeg(
   url: string,
   size?: { width: number; height: number },
@@ -46,15 +39,11 @@ export function rewriteBytescaleToJpeg(
   return `https://upcdn.io/12a1yek/image${match[2]}?${params.toString()}`;
 }
 
-// @vercel/og (satori) only understands TTF/OTF/WOFF — *not* WOFF2. Spoofing
-// an older User-Agent makes Google Fonts return plain .ttf URLs in the CSS.
-// The CSS contains multiple @font-face blocks (devanagari, latin-ext, latin,
-// …); we target the `/* latin */` marker so we always fetch Latin glyphs.
-//
-// One AbortController spans both fetches so the whole font load is capped
-// at FONT_FETCH_TIMEOUT_MS. Without a timeout, a stalled Google Fonts
-// response would block the OG route until Next's request timeout, returning
-// an error to the crawler instead of an image.
+// satori only decodes TTF/OTF/WOFF, not WOFF2. The User-Agent spoof makes
+// Google Fonts return plain .ttf URLs; the regex targets the `/* latin */`
+// block so we always pick Latin glyphs across font families. One
+// AbortController spans both fetches so a stalled Google Fonts response
+// can't hang the whole OG route past FONT_FETCH_TIMEOUT_MS.
 const FONT_FETCH_TIMEOUT_MS = 4000;
 
 export async function loadGoogleFont(

@@ -7,9 +7,8 @@ import { getAuthenticatedConvex } from "~/lib/convex-server";
 import { OG_IMAGE_SIZE, rewriteBytescaleToJpeg } from "~/lib/og-image";
 import EventPageClient from "./EventPageClient";
 
-// Branded card rendered by `app/api/og/route.tsx` at OG_IMAGE_SIZE. Used
-// when an event has no image so the rich preview stays
-// `summary_large_image`.
+// `/api/og` renders at exactly OG_IMAGE_SIZE, so dimensions are honest.
+// Used when an event has no image, keeping the card summary_large_image.
 const FALLBACK_OG_IMAGE = {
   url: "/api/og",
   ...OG_IMAGE_SIZE,
@@ -45,12 +44,9 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     const eventData = event.event as AddToCalendarButtonPropsRestricted;
     const rawEventImage = eventData.images?.[0];
 
-    // User images: force JPEG (for crawlers that don't render WebP well)
-    // and omit og:image:width/height. We don't know the source's true
-    // dimensions, and declaring fixed ones against a portrait poster causes
+    // Omit og:image:width/height for user images: source dimensions are
+    // unknown, and declaring fixed ones against a portrait poster causes
     // strict crawlers (notably Apple's LinkPresentation) to drop the card.
-    // The branded fallback ships at exactly OG_IMAGE_SIZE so it can declare
-    // dimensions honestly.
     const ogImage = rawEventImage
       ? {
           url: rewriteBytescaleToJpeg(rawEventImage),
