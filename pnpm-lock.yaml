@@ -279,6 +279,9 @@ catalogs:
     expo-location:
       specifier: ~55.1.6
       version: 55.1.6
+    expo-mcp:
+      specifier: ^0.2.4
+      version: 0.2.4
     expo-notifications:
       specifier: ~55.0.9
       version: 55.0.9
@@ -866,7 +869,7 @@ importers:
         specifier: 'catalog:'
         version: 0.4.3(expo@55.0.0-preview.12)
       expo-mcp:
-        specifier: ^0.2.4
+        specifier: 'catalog:'
         version: 0.2.4(bufferutil@4.1.0)(utf-8-validate@5.0.10)
       prettier:
         specifier: 'catalog:'

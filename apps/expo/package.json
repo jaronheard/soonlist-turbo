@@ -131,7 +131,7 @@
     "eslint": "catalog:",
     "eslint-plugin-react-compiler": "catalog:",
     "expo-atlas": "catalog:",
-    "expo-mcp": "^0.2.4",
+    "expo-mcp": "catalog:",
     "prettier": "catalog:",
     "tailwindcss": "catalog:",
     "typescript": "catalog:"
