@@ -10,7 +10,7 @@ import {
   internalQuery,
   query,
 } from "./_generated/server";
-import { userFeedsAggregate } from "./aggregates";
+import { userFeedGroupsAggregate, userFeedsAggregate } from "./aggregates";
 import { getEventById } from "./model/events";
 import { getViewableListIds } from "./model/lists";
 
@@ -358,6 +358,69 @@ export const getFollowedListsFeed = query({
   },
 });
 
+// Helper query to get followed lists feed with grouped similar events.
+// Mirrors getMyFeedGrouped — both tabs now render from userFeedGroups so
+// duplicate/similar events collapse into a single card on both sides.
+export const getFollowedListsFeedGrouped = query({
+  args: {
+    paginationOpts: paginationOptsValidator,
+    filter: v.optional(v.union(v.literal("upcoming"), v.literal("past"))),
+  },
+  handler: async (ctx, { paginationOpts, filter = "upcoming" }) => {
+    const userId = await getUserId(ctx);
+    if (!userId) {
+      throw new ConvexError("Authentication required");
+    }
+
+    const feedId = `followedLists_${userId}`;
+
+    // Use the grouped query function
+    return queryGroupedFeed(ctx, feedId, paginationOpts, filter);
+  },
+});
+
+// Badge count: number of upcoming grouped cards in the user's personal feed
+// (My Soonlist tab). Backed by userFeedGroupsAggregate, so this matches what
+// getMyFeedGrouped will render — exact, O(log n), and never silently lies
+// past a take cap.
+export const getMyFeedGroupedBadgeCount = query({
+  args: {},
+  returns: v.number(),
+  handler: async (ctx) => {
+    const userId = await getUserId(ctx);
+    if (!userId) {
+      return 0;
+    }
+    return userFeedGroupsAggregate.count(ctx, {
+      namespace: `user_${userId}`,
+      bounds: {
+        lower: { key: 0, inclusive: true },
+        upper: { key: 0, inclusive: true },
+      },
+    });
+  },
+});
+
+// Badge count: number of upcoming grouped cards in the followed-lists feed
+// (My Scene tab). Symmetric with getMyFeedGroupedBadgeCount.
+export const getFollowedListsFeedGroupedBadgeCount = query({
+  args: {},
+  returns: v.number(),
+  handler: async (ctx) => {
+    const userId = await getUserId(ctx);
+    if (!userId) {
+      return 0;
+    }
+    return userFeedGroupsAggregate.count(ctx, {
+      namespace: `followedLists_${userId}`,
+      bounds: {
+        lower: { key: 0, inclusive: true },
+        upper: { key: 0, inclusive: true },
+      },
+    });
+  },
+});
+
 // Helper query to get followed users feed (events from users you follow)
 export const getFollowedUsersFeed = query({
   args: {
@@ -697,9 +760,12 @@ export const updateGroupedHasEndedFlagsBatch = internalMutation({
       const shouldHaveEnded = entry.eventEndTime < currentTime;
 
       if (entry.hasEnded !== shouldHaveEnded) {
+        const oldDoc = entry;
         await ctx.db.patch(entry._id, {
           hasEnded: shouldHaveEnded,
         });
+        const updatedDoc = (await ctx.db.get(entry._id))!;
+        await userFeedGroupsAggregate.replaceOrInsert(ctx, oldDoc, updatedDoc);
         updated++;
       }
     }

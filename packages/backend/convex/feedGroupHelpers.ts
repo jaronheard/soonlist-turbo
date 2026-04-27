@@ -2,6 +2,7 @@ import { v } from "convex/values";
 
 import type { MutationCtx } from "./_generated/server";
 import { internalMutation } from "./_generated/server";
+import { userFeedGroupsAggregate } from "./aggregates";
 import {
   getGroupMemberCount,
   selectPrimaryEventForFeed,
@@ -74,6 +75,8 @@ export async function upsertGroupedFeedEntryFromMembershipInternal(
 
   if (existingEntry) {
     // Update existing entry
+    const oldDoc = existingEntry;
+    const hasEndedChanged = oldDoc.hasEnded !== hasEnded;
     await ctx.db.patch(existingEntry._id, {
       primaryEventId: primaryEvent.id,
       eventStartTime,
@@ -82,9 +85,17 @@ export async function upsertGroupedFeedEntryFromMembershipInternal(
       hasEnded,
       similarEventsCount,
     });
+    // The aggregate is keyed on (feedId, hasEnded). Only re-index when the
+    // sort key actually flips — primaryEventId/eventStartTime/etc rotations
+    // are no-ops for the count and would otherwise cost an aggregate write
+    // per rotation. Mirrors the gating in fix2027FeedDates::migrateGroupsBatch.
+    if (hasEndedChanged) {
+      const updatedDoc = (await ctx.db.get(existingEntry._id))!;
+      await userFeedGroupsAggregate.replaceOrInsert(ctx, oldDoc, updatedDoc);
+    }
   } else {
     // Insert new entry
-    await ctx.db.insert("userFeedGroups", {
+    const newId = await ctx.db.insert("userFeedGroups", {
       feedId,
       similarityGroupId,
       primaryEventId: primaryEvent.id,
@@ -94,6 +105,12 @@ export async function upsertGroupedFeedEntryFromMembershipInternal(
       hasEnded,
       similarEventsCount,
     });
+    const insertedDoc = (await ctx.db.get(newId))!;
+    await userFeedGroupsAggregate.replaceOrInsert(
+      ctx,
+      insertedDoc,
+      insertedDoc,
+    );
   }
 }
 
@@ -114,6 +131,7 @@ export async function removeGroupedFeedEntryIfNoMembersInternal(
     .first();
 
   if (existingEntry) {
+    await userFeedGroupsAggregate.deleteIfExists(ctx, existingEntry);
     await ctx.db.delete(existingEntry._id);
   }
 }

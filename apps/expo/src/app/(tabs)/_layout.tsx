@@ -1,7 +1,9 @@
 import { NativeTabs } from "expo-router/unstable-native-tabs";
+import { useQuery } from "convex/react";
+
+import { api } from "@soonlist/backend/convex/_generated/api";
 
 import { SUPPORTS_LIQUID_GLASS } from "~/hooks/useLiquidGlass";
-import { useAppStore } from "~/store";
 
 // Export Expo Router's error boundary
 export { ErrorBoundary } from "expo-router";
@@ -11,8 +13,13 @@ export const unstable_settings = {
 };
 
 export default function TabsLayout() {
-  const myListBadgeCount = useAppStore((s) => s.myListBadgeCount);
-  const communityBadgeCount = useAppStore((s) => s.communityBadgeCount);
+  // The query result IS state — no useEffect → zustand → useStore loop. The
+  // count queries are backed by userFeedGroupsAggregate (O(log n)) and return
+  // 0 when unauthenticated, so they're safe to call here unconditionally.
+  // See https://react.dev/learn/you-might-not-need-an-effect.
+  const myListBadgeCount = useQuery(api.feeds.getMyFeedGroupedBadgeCount) ?? 0;
+  const communityBadgeCount =
+    useQuery(api.feeds.getFollowedListsFeedGroupedBadgeCount) ?? 0;
 
   return (
     <NativeTabs

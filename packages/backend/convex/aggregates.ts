@@ -75,6 +75,23 @@ export const userFeedsAggregate = new TableAggregate<{
 });
 
 /**
+ * Aggregate for user feed groups
+ * Used for: counting upcoming/past *grouped* cards in a user's feed (one row
+ * per similarity group, mirroring what the grouped feed query renders).
+ * Namespace: feedId - separate data per feed (user_${userId}, followedLists_${userId}, etc.)
+ * SortKey: hasEnded flag (0 for upcoming/false, 1 for past/true)
+ */
+export const userFeedGroupsAggregate = new TableAggregate<{
+  Namespace: string; // feedId
+  Key: number; // hasEnded flag as number (0 or 1)
+  DataModel: DataModel;
+  TableName: "userFeedGroups";
+}>(components.userFeedGroupsAggregate, {
+  namespace: (doc) => doc.feedId,
+  sortKey: (doc) => (doc.hasEnded ? 1 : 0),
+});
+
+/**
  * Aggregate for list follows
  * Used for: efficient follower counts per list
  * Namespace: listId - separate data per list

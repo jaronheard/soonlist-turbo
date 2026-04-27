@@ -2,6 +2,7 @@ import { Migrations } from "@convex-dev/migrations";
 
 import type { DataModel } from "../_generated/dataModel.js";
 import { components, internal } from "../_generated/api.js";
+import { userFeedGroupsAggregate } from "../aggregates.js";
 import { areEventsSimilar } from "../model/similarityHelpers.js";
 import { generatePublicId } from "../utils.js";
 
@@ -242,7 +243,7 @@ export const deriveUserFeedGroups = migrations.define({
       const similarEventsCount = Math.max(0, members.length - 1);
 
       // Insert the grouped entry
-      await ctx.db.insert("userFeedGroups", {
+      const newId = await ctx.db.insert("userFeedGroups", {
         feedId,
         similarityGroupId,
         primaryEventId: primaryEvent.id,
@@ -252,6 +253,12 @@ export const deriveUserFeedGroups = migrations.define({
         hasEnded,
         similarEventsCount,
       });
+      const insertedDoc = (await ctx.db.get(newId))!;
+      await userFeedGroupsAggregate.replaceOrInsert(
+        ctx,
+        insertedDoc,
+        insertedDoc,
+      );
 
       console.log(
         `Created grouped entry for feed ${feedId}, group ${similarityGroupId}`,

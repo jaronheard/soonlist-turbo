@@ -6,7 +6,7 @@ import {
   internalMutation,
   internalQuery,
 } from "../_generated/server";
-import { userFeedsAggregate } from "../aggregates";
+import { userFeedGroupsAggregate, userFeedsAggregate } from "../aggregates";
 
 /**
  * Migration to fix userFeeds and userFeedGroups entries that have incorrect 2027 timestamps.
@@ -147,7 +147,16 @@ export const migrateGroupsBatch = internalMutation({
         changes.hasEnded = correctHasEnded;
 
       if (Object.keys(changes).length > 0) {
+        const oldDoc = entry;
+        const updatedDoc = { ...oldDoc, ...changes };
         await ctx.db.patch(entry._id, changes);
+        if ("hasEnded" in changes) {
+          await userFeedGroupsAggregate.replaceOrInsert(
+            ctx,
+            oldDoc,
+            updatedDoc,
+          );
+        }
         updated++;
       }
     }
