@@ -72,7 +72,7 @@ docs/brainstorms/
 # claude code
 .claude/worktrees/
 .claude/settings.local.json
-# Generated per-worktree by .claude/hooks/worktree-init.sh; pins iOS Simulator MCP to that worktree's simulator
+# Generated per-worktree by .claude/worktree-bootstrap.sh; pins iOS Simulator MCP to that worktree's simulator
 .mcp.json
 # Generated per-worktree by .claude/hooks/worktree-init.sh; template is launch.json.example
 .claude/launch.json

@@ -21,15 +21,14 @@ if [[ -z "${SIMULATOR_UDID:-}" ]]; then
   exit 1
 fi
 
-IDB_PATH=$(command -v idb 2>/dev/null || true)
-IDB_PATH=${IDB_PATH:-/Users/jaronheard/.local/bin/idb}
+IDB_PATH=${IOS_SIMULATOR_MCP_IDB_PATH:-$(command -v idb 2>/dev/null || true)}
 
 printf 'worktree: %s\n' "$WORKTREE_PATH"
 printf 'simulator: %s (%s)\n' "${SIMULATOR_NAME:-unknown}" "$SIMULATOR_UDID"
 printf 'metro: http://localhost:%s\n' "${METRO_PORT:-unknown}"
-printf 'idb: %s\n' "$IDB_PATH"
+printf 'idb: %s\n' "${IDB_PATH:-not found}"
 
-test -x "$IDB_PATH" || { echo "idb is missing or not executable" >&2; exit 1; }
+[[ -n "$IDB_PATH" && -x "$IDB_PATH" ]] || { echo "idb is missing or not executable; install idb or set IOS_SIMULATOR_MCP_IDB_PATH" >&2; exit 1; }
 test -f .mcp.json || { echo ".mcp.json is missing; rerun bootstrap or restart Claude Code" >&2; exit 1; }
 xcrun simctl list devices available | grep -q "($SIMULATOR_UDID)" || { echo "Simulator UDID does not exist" >&2; exit 1; }
 xcrun simctl boot "$SIMULATOR_UDID" 2>/dev/null || true

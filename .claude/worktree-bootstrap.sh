@@ -147,7 +147,7 @@ sim_clone_source_udid() {
     xcrun simctl list devices booted 2>/dev/null
     simctl_list_available
   } | awk '
-    /iPhone 16e/ && match($0, /\([0-9A-F-]{36}\)/) {
+    /iPhone/ && match($0, /\([0-9A-F-]{36}\)/) {
       print substr($0, RSTART + 1, RLENGTH - 2)
       exit
     }
@@ -169,10 +169,12 @@ if simctl_list_available >/dev/null; then
         if [[ -n "$SIMULATOR_UDID" ]]; then
           echo "worktree-bootstrap: allocated simulator ${SIMULATOR_NAME} (${SIMULATOR_UDID})" >&2
         else
+          SIMULATOR_UDID=""
           echo "worktree-bootstrap: cloned ${SIMULATOR_NAME}, but could not resolve its UDID" >&2
         fi
       else
-        echo "worktree-bootstrap: no iPhone 16e simulator found to clone; skipping simulator allocation" >&2
+        SIMULATOR_UDID=""
+        echo "worktree-bootstrap: no iPhone simulator found to clone; skipping simulator allocation" >&2
       fi
     fi
   else
@@ -241,7 +243,11 @@ fi
 # above without relying on global MCP state.
 if [[ -n "$SIMULATOR_UDID" ]]; then
   IDB_PATH=${IOS_SIMULATOR_MCP_IDB_PATH:-$(command -v idb 2>/dev/null || true)}
-  IDB_PATH=${IDB_PATH:-/Users/jaronheard/.local/bin/idb}
+  IDB_PATH_LINE=""
+  if [[ -n "$IDB_PATH" ]]; then
+    IDB_PATH_LINE=",
+        \"IOS_SIMULATOR_MCP_IDB_PATH\": \"${IDB_PATH}\""
+  fi
   cat > .mcp.json <<EOF
 {
   "mcpServers": {
@@ -250,13 +256,14 @@ if [[ -n "$SIMULATOR_UDID" ]]; then
       "args": ["-y", "ios-simulator-mcp"],
       "env": {
         "IDB_UDID": "${SIMULATOR_UDID}",
-        "IOS_SIMULATOR_MCP_IDB_PATH": "${IDB_PATH}",
-        "IOS_SIMULATOR_MCP_DEFAULT_OUTPUT_DIR": "/tmp"
+        "IOS_SIMULATOR_MCP_DEFAULT_OUTPUT_DIR": "/tmp"${IDB_PATH_LINE}
       }
     }
   }
 }
 EOF
+else
+  rm -f .mcp.json
 fi
 
 # Install deps if missing
