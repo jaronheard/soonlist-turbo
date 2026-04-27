@@ -37,7 +37,19 @@ Expo Router provides typed file-based navigation.
 
 When you change a screen, verify it on the booted iOS Simulator (iPhone 16e) before reporting the task done — don't refuse with "I can't see the screen."
 
-The `expo-mcp` HTTP server is registered for this project in `~/.claude.json`. The local `expo-mcp` dev dependency (in `apps/expo`) plus `EXPO_UNSTABLE_MCP_SERVER=1` (already set by the `dev` and `dev:ios` scripts) makes Metro expose screenshot, tap, and view-inspection tools through that MCP. After (re)starting Metro, run `/mcp` in your Claude session to reconnect — Expo's recommendation, since the local capability set changes when the dev server restarts.
+How the chain works: the `expo-mcp` HTTP server (registered in your `~/.claude.json`) talks to a running Metro, which exposes screenshot, tap, and view-inspection tools because the `expo-mcp` dev dep is installed and the `dev` / `dev:ios` scripts set `EXPO_UNSTABLE_MCP_SERVER=1`. After (re)starting Metro, run `/mcp` in your Claude session to reconnect — Expo's recommendation, since the local capability set changes when the dev server restarts.
+
+### One-time setup (per developer / agent environment)
+
+`~/.claude.json` is per-user, so the MCP registration isn't checked into the repo. Run once from the project root you'll be working in:
+
+```sh
+claude mcp add --transport http --scope local expo-mcp https://mcp.expo.dev/mcp
+```
+
+Use `--scope user` instead if you want it registered once across every worktree/project on your machine. After registering, run `/mcp` in a Claude session to OAuth into Expo.
+
+### Per session
 
 1. **Make sure the dev stack is running.** Agent environments often start cold. The agent-friendly launch is two background processes from the repo root:
    - `pnpm dev:no-expo` — Convex/web/etc. via turbo (no TTY needed).
