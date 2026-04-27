@@ -25,7 +25,7 @@ import type { EventWithUser } from "./EventList";
 import { TimezoneContext } from "~/context/TimezoneContext";
 import { DEFAULT_TIMEZONE } from "~/lib/constants";
 import { getGoogleMapsUrl } from "~/lib/maps";
-import { cn, formatUrlForDisplay } from "~/lib/utils";
+import { buildDisplayImageUrl, cn, formatUrlForDisplay } from "~/lib/utils";
 import { CalendarButton } from "./CalendarButton";
 import { DeleteButton } from "./DeleteButton";
 import { EditButton } from "./EditButton";
@@ -878,7 +878,7 @@ export function EventListItem(props: EventListItemProps) {
           >
             {image ? (
               <Image
-                src={`${image}`}
+                src={buildDisplayImageUrl(image) ?? image}
                 alt=""
                 width={thumbWidth}
                 height={thumbHeight}
@@ -890,6 +890,7 @@ export function EventListItem(props: EventListItemProps) {
                   borderWidth: 3,
                   borderColor: "white",
                   objectPosition: "top",
+                  imageOrientation: "from-image",
                 }}
               />
             ) : (
@@ -1049,10 +1050,11 @@ export function EventListItem(props: EventListItemProps) {
           <div className="relative h-44 w-full grow">
             <Image
               className="rounded-t-xl object-cover"
-              src={image}
+              src={buildDisplayImageUrl(image) ?? image}
               alt=""
               fill
               sizes="(max-width: 640px) 100vw, (max-width: 768px) 50vw, 33vw"
+              style={{ imageOrientation: "from-image" }}
               priority
             />
           </div>

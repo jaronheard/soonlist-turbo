@@ -7,11 +7,6 @@ import type { OnboardingData, OnboardingStep } from "~/types/onboarding";
 import type { CalendarApp } from "~/utils/calendarAppDetection";
 import { getUserTimeZone } from "./utils/dates";
 
-export interface RecentPhoto {
-  id: string;
-  uri: string;
-}
-
 // Helper function to create a stable timestamp (rounded to 15-minute intervals)
 function createStableTimestamp(): string {
   const now = new Date();
@@ -126,13 +121,6 @@ interface AppState {
   setHasSeenOnboarding: (seen: boolean) => void;
   resetStore: () => void;
   resetForLogout: () => void;
-
-  // Media-related state & actions
-  recentPhotos: RecentPhoto[];
-  hasMediaPermission: boolean;
-  hasFullPhotoAccess: boolean;
-  setRecentPhotos: (photos: RecentPhoto[]) => void;
-  setHasMediaPermission: (hasPermission: boolean) => void;
 
   // User priority
   userPriority: string | null;
@@ -328,16 +316,6 @@ export const useAppStore = create<AppState>()(
           },
         })),
 
-      // Media-related state
-      recentPhotos: [],
-      hasMediaPermission: false,
-      hasFullPhotoAccess: false,
-
-      // Media-related actions
-      setRecentPhotos: (photos) => set({ recentPhotos: photos }),
-      setHasMediaPermission: (hasPermission) =>
-        set({ hasMediaPermission: hasPermission }),
-
       // User priority
       setUserPriority: (priority) => set({ userPriority: priority }),
 
@@ -385,9 +363,6 @@ export const useAppStore = create<AppState>()(
             isImageUploading: false,
             uploadedImageUrl: null,
           },
-          recentPhotos: [],
-          hasMediaPermission: false,
-          hasFullPhotoAccess: false,
           userPriority: null,
           userTimezone: getUserTimeZone(),
           hasShownTimezoneAlert: false,
@@ -433,9 +408,6 @@ export const useAppStore = create<AppState>()(
             isImageUploading: false,
             uploadedImageUrl: null,
           },
-          recentPhotos: [],
-          hasMediaPermission: false,
-          hasFullPhotoAccess: false,
           userPriority: null,
           userTimezone: getUserTimeZone(),
           hasShownTimezoneAlert: false,
@@ -532,9 +504,6 @@ export const useAppStore = create<AppState>()(
 );
 
 // Selector hooks for commonly used state
-export const useRecentPhotos = () => useAppStore((state) => state.recentPhotos);
-export const useHasMediaPermission = () =>
-  useAppStore((state) => state.hasMediaPermission);
 export const useUserTimezone = () => useAppStore((state) => state.userTimezone);
 
 // Stable timestamp selectors

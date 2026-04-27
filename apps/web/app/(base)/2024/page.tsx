@@ -7,6 +7,7 @@ import { currentUser } from "@clerk/nextjs/server";
 import { Button } from "@soonlist/ui/button";
 
 import { env } from "~/env";
+import { buildDisplayImageUrl } from "~/lib/utils";
 import EmojiGrid from "./_components/emojiGrid";
 import Section from "./_components/section";
 import WeeklyDistribution from "./_components/weeklyDistribution";
@@ -214,11 +215,14 @@ export default async function Page() {
                 {event.images[0] && (
                   <div className="relative h-24 w-24 flex-shrink-0 overflow-hidden rounded-md">
                     <Image
-                      src={event.images[0]}
+                      src={
+                        buildDisplayImageUrl(event.images[0]) ?? event.images[0]
+                      }
                       alt={event.event_name}
                       fill
                       sizes="(max-width: 768px) 96px, 96px"
                       className="absolute inset-0 object-cover"
+                      style={{ imageOrientation: "from-image" }}
                     />
                   </div>
                 )}

@@ -33,6 +33,7 @@ import {
   ShareIcon,
   Sparkles,
   Star,
+  User,
 } from "~/components/icons";
 import { SettingsGroup, SettingsRow } from "~/components/settings/SettingsList";
 import { useCalendar } from "~/hooks/useCalendar";
@@ -470,6 +471,13 @@ export default function AccountScreen() {
           header="YOUR PUBLIC PROFILE"
           footer="This is what people see when you share an event."
         >
+          <SettingsRow
+            icon={User}
+            iconBg={TILE_COLORS.gray}
+            label="Username"
+            value={maybeValue(user?.username)}
+            accessory={{ type: "none" }}
+          />
           <SettingsRow
             icon={PenSquare}
             iconBg={TILE_COLORS.purple}
