@@ -37,13 +37,23 @@ Expo Router provides typed file-based navigation.
 
 ```
 /start-dev
-/sim-screenshot
-Read the printed path
+/sim-open
+Use iOS Simulator MCP screenshot, ui_view, or ui_describe_all
 ```
 
-Each worktree gets a sim named `ws-<dir>`, cloned from your booted iPhone 16e on first run and deep-linked to that worktree's Metro. Multiple worktrees run independent sims in parallel — no shared MCP tunnel, no shared device. Clean up with `xcrun simctl delete ws-<dir>`.
+Each Claude worktree gets a dedicated simulator named `ws-<dir>` and a dedicated Metro port. The assignment is persisted in `.claude/.worktree-ports`:
 
-For testID-aware tapping the `expo-mcp` server is still available (single-client; needs `/mcp` to reconnect). Not needed for screenshots.
+```
+METRO_PORT=...
+SIMULATOR_NAME=...
+SIMULATOR_UDID=...
+```
+
+The worktree bootstrap also generates root `.mcp.json` so iOS Simulator MCP is pinned to that worktree's `SIMULATOR_UDID`. Use iOS Simulator MCP for screenshots, compressed views, accessibility reads, taps, typing, and swipes. `/sim-open` only boots the simulator and opens this worktree's Expo dev-client URL.
+
+Expo MCP is not the parallel-safe path for simulator automation. It can still be useful for single-client experiments, but screenshot and accessibility testing should use iOS Simulator MCP.
+
+If MCP tools are missing or stale after bootstrap, run `/mcp` reconnect or restart Claude Code from the worktree folder. To clean up a simulator, run `source .claude/.worktree-ports && xcrun simctl delete "$SIMULATOR_UDID"`, then rerun bootstrap or start a new session.
 
 ## Push Notifications
 
