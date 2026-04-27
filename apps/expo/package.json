@@ -7,8 +7,8 @@
     "clean": "git clean -xdf .cache .expo .turbo ios node_modules dist",
     "debug.eas": "open 'rndebugger://set-debugger-loc?host=localhost&port=8081'",
     "debug": "open 'rndebugger://set-debugger-loc?host=localhost&port=19000'",
-    "dev:ios": "pnpm with-env expo start --ios",
-    "dev": "pnpm with-env expo start --clear",
+    "dev:ios": "EXPO_UNSTABLE_MCP_SERVER=1 pnpm with-env expo start --ios",
+    "dev": "EXPO_UNSTABLE_MCP_SERVER=1 pnpm with-env expo start --clear",
     "dev:tunnel": "pnpm with-env expo start --tunnel --clear",
     "dev:prod": "pnpm with-env expo start --tunnel --no-dev --minify --clear",
     "test": "pnpm with-env maestro test .maestro/local/",
@@ -131,6 +131,7 @@
     "eslint": "catalog:",
     "eslint-plugin-react-compiler": "catalog:",
     "expo-atlas": "catalog:",
+    "expo-mcp": "^0.2.4",
     "prettier": "catalog:",
     "tailwindcss": "catalog:",
     "typescript": "catalog:"
