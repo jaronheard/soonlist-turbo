@@ -4,7 +4,7 @@ import type { AddToCalendarButtonPropsRestricted } from "@soonlist/cal/types";
 import { api } from "@soonlist/backend/convex/_generated/api";
 
 import { getAuthenticatedConvex } from "~/lib/convex-server";
-import { rewriteBytescaleToJpeg } from "~/lib/og-image";
+import { EVENT_OG_MAX_SIZE, rewriteBytescaleToJpeg } from "~/lib/og-image";
 import EventPageClient from "./EventPageClient";
 
 // Branded card rendered by `app/api/og/route.tsx` at 1200×630. Used when an
@@ -58,7 +58,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     // 1200×630 so we *can* declare those dimensions honestly.
     const ogImage = rawEventImage
       ? {
-          url: rewriteBytescaleToJpeg(rawEventImage),
+          url: rewriteBytescaleToJpeg(rawEventImage, EVENT_OG_MAX_SIZE),
           alt: eventData.name || "Event image",
         }
       : FALLBACK_OG_IMAGE;
