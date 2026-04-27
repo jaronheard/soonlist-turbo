@@ -19,7 +19,7 @@ WORKTREE_NAME=$(basename "$WORKTREE_ROOT")
 
 # Determine port assignment. On first run, allocate; on subsequent runs, reuse
 # the persisted ports from .claude/.worktree-ports so dev servers, .env.local,
-# launch.json, simulator assignment, and .mcp.json never drift out of sync.
+# launch.json, and simulator assignment never drift out of sync.
 MARKER=".claude/.worktree-ports"
 
 WEB_PORT=""
@@ -143,11 +143,8 @@ sim_udid_for_name() {
 }
 
 sim_clone_source_udid() {
-  {
-    xcrun simctl list devices booted 2>/dev/null
-    simctl_list_available
-  } | awk '
-    /iPhone/ && match($0, /\([0-9A-F-]{36}\)/) {
+  simctl_list_available | awk '
+    /iPhone/ && /\(Shutdown\)/ && match($0, /\([0-9A-F-]{36}\)/) {
       print substr($0, RSTART + 1, RLENGTH - 2)
       exit
     }
@@ -174,7 +171,7 @@ if simctl_list_available >/dev/null; then
         fi
       else
         SIMULATOR_UDID=""
-        echo "worktree-bootstrap: no iPhone simulator found to clone; skipping simulator allocation" >&2
+        echo "worktree-bootstrap: no shutdown iPhone simulator found to clone; skipping simulator allocation" >&2
       fi
     fi
   else
@@ -238,36 +235,8 @@ if [[ -f .claude/launch.json.example ]]; then
     .claude/launch.json.example > .claude/launch.json
 fi
 
-# Generate a worktree-local Claude Code MCP config. Sessions are launched from
-# the worktree root, so this pins iOS Simulator MCP to the simulator allocated
-# above without relying on global MCP state.
-if [[ -n "$SIMULATOR_UDID" ]]; then
-  IDB_PATH=${IOS_SIMULATOR_MCP_IDB_PATH:-$(command -v idb 2>/dev/null || true)}
-  IDB_PATH_LINE=""
-  if [[ -n "$IDB_PATH" ]]; then
-    IDB_PATH_LINE=",
-        \"IOS_SIMULATOR_MCP_IDB_PATH\": \"${IDB_PATH}\""
-  fi
-  cat > .mcp.json <<EOF
-{
-  "mcpServers": {
-    "ios-simulator": {
-      "command": "npx",
-      "args": ["-y", "ios-simulator-mcp"],
-      "env": {
-        "IDB_UDID": "${SIMULATOR_UDID}",
-        "IOS_SIMULATOR_MCP_DEFAULT_OUTPUT_DIR": "/tmp"${IDB_PATH_LINE}
-      }
-    }
-  }
-}
-EOF
-else
-  rm -f .mcp.json
-fi
-
 # Install deps if missing
-if [[ ! -d node_modules ]]; then
+if [[ ! -d node_modules && "${WORKTREE_BOOTSTRAP_SKIP_INSTALL:-0}" != "1" ]]; then
   echo "worktree-bootstrap: running pnpm install" >&2
   pnpm install >&2 || echo "worktree-bootstrap: pnpm install failed (non-fatal)" >&2
 fi
