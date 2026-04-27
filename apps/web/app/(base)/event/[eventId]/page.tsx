@@ -4,13 +4,7 @@ import type { AddToCalendarButtonPropsRestricted } from "@soonlist/cal/types";
 import { api } from "@soonlist/backend/convex/_generated/api";
 
 import { getAuthenticatedConvex } from "~/lib/convex-server";
-import { OG_IMAGE_SIZE, rewriteBytescaleToJpeg } from "~/lib/og-image";
 import EventPageClient from "./EventPageClient";
-
-// Branded fallback served by `app/api/og/route.tsx`. Used when an event has
-// no image so crawlers always get *some* OG image instead of falling back
-// to a `summary` (no-image) Twitter card or no preview at all.
-const FALLBACK_OG_IMAGE = "/api/og";
 
 interface Props {
   params: Promise<{
@@ -40,15 +34,18 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     }
 
     const eventData = event.event as AddToCalendarButtonPropsRestricted;
-    const rawEventImage = eventData.images?.[0];
-    // Force JPEG so crawlers that mishandle Bytescale's default WebP still
-    // render a preview; fall back to the branded default when the event
-    // has no image so the Twitter card stays `summary_large_image`.
-    const ogImageUrl = rawEventImage
-      ? rewriteBytescaleToJpeg(rawEventImage, OG_IMAGE_SIZE)
-      : FALLBACK_OG_IMAGE;
+    const eventImage = eventData.images?.[0];
 
-    // Generate Open Graph metadata with Smart App Banner for iOS
+    // Pass the user's image through as-is *without* declaring og:image:width
+    // or og:image:height. The previous code hardcoded 1200×630, but most
+    // event posters are portrait (e.g. 640×853) — a dimension mismatch that
+    // Apple's LinkPresentation and other strict crawlers can interpret as
+    // an invalid card and silently drop, producing the intermittent
+    // "sometimes the rich preview shows up, sometimes it doesn't" pattern
+    // for events shared via iMessage. Letting crawlers infer dimensions
+    // from the actual bytes removes the lie at the cost of inconsistent
+    // aspect ratios across previews — the right tradeoff until we either
+    // store true dimensions or render a server-side OG card per event.
     return {
       title: `${eventData.name} | Soonlist`,
       description:
@@ -58,23 +55,18 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
         description:
           eventData.description || `Join ${eventData.name} on Soonlist`,
         type: "website",
-        images: [
-          {
-            url: ogImageUrl,
-            width: OG_IMAGE_SIZE.width,
-            height: OG_IMAGE_SIZE.height,
-            alt: eventData.name || "Event image",
-          },
-        ],
+        images: eventImage
+          ? [{ url: eventImage, alt: eventData.name || "Event image" }]
+          : [],
         locale: "en_US",
         siteName: "Soonlist",
       },
       twitter: {
-        card: "summary_large_image",
+        card: eventImage ? "summary_large_image" : "summary",
         title: eventData.name || "Event on Soonlist",
         description:
           eventData.description || `Join ${eventData.name} on Soonlist`,
-        images: [ogImageUrl],
+        images: eventImage ? [eventImage] : undefined,
       },
       // iOS Smart App Banner - prompts users to open in the Soonlist app
       other: {
