@@ -39,13 +39,17 @@ When you change a screen, verify it on the booted iOS Simulator (iPhone 16e) bef
 
 The `expo-mcp` HTTP server is registered for this project in `~/.claude.json`. The local `expo-mcp` dev dependency (in `apps/expo`) plus `EXPO_UNSTABLE_MCP_SERVER=1` (already set by the `dev` and `dev:ios` scripts) makes Metro expose screenshot, tap, and view-inspection tools through that MCP. After (re)starting Metro, run `/mcp` in your Claude session to reconnect — Expo's recommendation, since the local capability set changes when the dev server restarts.
 
-1. **Make sure Metro is running.** Agent environments often start with no dev servers up; launch with `pnpm dev:expo` from the repo root if needed.
+1. **Make sure the dev stack is running.** Agent environments often start cold. The agent-friendly launch is two background processes from the repo root:
+   - `pnpm dev:no-expo` — Convex/web/etc. via turbo (no TTY needed).
+   - `pnpm dev:expo:ios` — Metro **plus** auto-launches the iOS simulator. This passes `--ios` to `expo start`, which is what avoids the interactive `i` keypress that the regular `pnpm dev:expo` would otherwise require — agents have no TTY to press keys in.
 2. **Find the Metro port for the environment you're working in.** Each worktree gets its own port pair from [`.claude/worktree-bootstrap.sh`](../../.claude/worktree-bootstrap.sh). Check `.claude/.worktree-ports` (`METRO_PORT=`), `.env.local` (`RCT_METRO_PORT=`), or the SessionStart hook's `metro: http://localhost:<port>` log line. The main checkout defaults to `8081`.
 3. Run `/mcp` to authenticate / reconnect.
 4. Screenshot the affected screen and confirm the change rendered.
 5. Exercise the golden path plus at least one edge case.
 
 If the MCP is genuinely unreachable (auth failed, no booted simulator, Metro down), say so explicitly rather than claiming success. Requires macOS host and Expo SDK ≥ 54.
+
+Humans normally launch `pnpm dev:expo` and press `i` themselves — that flow is unchanged. `pnpm dev:expo:ios` is the agent-only equivalent that skips the keypress.
 
 ## Push Notifications
 
