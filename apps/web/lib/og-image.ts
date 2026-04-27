@@ -7,21 +7,20 @@ const BYTESCALE_PATH_RE = /^\/12a1yek\/(raw|image)(\/.+)$/;
 // render WebP, which is what Bytescale serves by default. Returns the URL
 // untouched if it isn't a Bytescale URL on our account.
 //
-// `size` modes:
-//   - `{ width, height }` (default `fit: "crop"`): force exact dimensions,
-//     used by the list satori card where thumbnails need to be small and
-//     uniform.
-//   - `{ width, height, fit: "shrink" }`: cap dimensions, preserve aspect,
-//     never upscale. Used by event OG metadata so a 4000×3000 phone photo
-//     doesn't ship to crawlers at full size (iMessage timeouts), without
-//     re-introducing the dimension-mismatch bug from forcing 1200×630.
+// Pass dimensions to force exact size with `fit=crop` (used by the list
+// satori card where thumbnails need to be small + uniform). Omit them to
+// keep the source's native dimensions and only force the codec — that's
+// what event OG metadata wants, since declaring fixed 1200×630 against a
+// portrait poster was the bug we fixed. Upload paths already cap source
+// dimensions (Expo: 640 or 1284 wide), so re-capping at the OG layer is
+// redundant defense-in-depth that wasn't worth the API surface.
 //
 // Existing query params on already-transformed `/image/` URLs are inherited
 // so the user's source crop (`crop-x/y/w/h` set by the in-app cropper)
 // survives.
 export function rewriteBytescaleToJpeg(
   url: string,
-  size?: { width: number; height: number; fit?: "crop" | "shrink" },
+  size?: { width: number; height: number },
 ): string {
   let parsed: URL;
   try {
@@ -41,21 +40,12 @@ export function rewriteBytescaleToJpeg(
   if (size) {
     params.set("w", String(size.width));
     params.set("h", String(size.height));
-    params.set("fit", size.fit ?? "crop");
+    params.set("fit", "crop");
   }
   if (!params.has("q")) params.set("q", "82");
   params.set("f", "jpg");
   return `https://upcdn.io/12a1yek/image${match[2]}?${params.toString()}`;
 }
-
-// Cap longest side at 1200px for event OG images: large enough that all
-// social surfaces render comfortably (Twitter recommends 1200×675), small
-// enough that even a 4000×3000 phone upload ships at <500KB JPEG.
-export const EVENT_OG_MAX_SIZE = {
-  width: 1200,
-  height: 1200,
-  fit: "shrink",
-} as const;
 
 // @vercel/og (satori) only understands TTF/OTF/WOFF — *not* WOFF2. Spoofing
 // an older User-Agent makes Google Fonts return plain .ttf URLs in the CSS.
