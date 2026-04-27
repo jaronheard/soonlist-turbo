@@ -39,7 +39,7 @@ When you change a screen, verify it on the booted iOS Simulator (iPhone 16e) bef
 
 The `expo-mcp` HTTP server is registered for this project in `~/.claude.json`. The local `expo-mcp` dev dependency (in `apps/expo`) plus `EXPO_UNSTABLE_MCP_SERVER=1` (already set by the `dev` and `dev:ios` scripts) makes Metro expose screenshot, tap, and view-inspection tools through that MCP. After (re)starting Metro, run `/mcp` in your Claude session to reconnect — Expo's recommendation, since the local capability set changes when the dev server restarts.
 
-1. `pnpm dev:expo` from the repo root (Metro at `http://localhost:8154`).
+1. `pnpm dev:expo` from the repo root (Metro defaults to port 8081; check the Metro log line if overridden).
 2. Run `/mcp` to authenticate / reconnect.
 3. Screenshot the affected screen and confirm the change rendered.
 4. Exercise the golden path plus at least one edge case.
