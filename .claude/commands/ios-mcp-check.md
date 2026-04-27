@@ -29,12 +29,12 @@ printf 'metro: http://localhost:%s\n' "${METRO_PORT:-unknown}"
 printf 'idb: %s\n' "${IDB_PATH:-not found}"
 
 [[ -n "$IDB_PATH" && -x "$IDB_PATH" ]] || { echo "idb is missing or not executable; install idb or set IOS_SIMULATOR_MCP_IDB_PATH" >&2; exit 1; }
-test -f .mcp.json || { echo ".mcp.json is missing; rerun bootstrap or restart Claude Code" >&2; exit 1; }
+test -f .mcp.json || { echo ".mcp.json is missing; the committed MCP wrapper config is required" >&2; exit 1; }
 xcrun simctl list devices available | grep -q "($SIMULATOR_UDID)" || { echo "Simulator UDID does not exist" >&2; exit 1; }
 xcrun simctl boot "$SIMULATOR_UDID" 2>/dev/null || true
 
 echo "Shell prerequisites passed."
-echo "If iOS Simulator MCP tools are not available yet, run /mcp reconnect or restart Claude Code from this worktree."
+echo "If iOS Simulator MCP tools are not available in an already-running session, restart Claude Code from this worktree."
 ```
 
 Then verify the MCP server itself:
