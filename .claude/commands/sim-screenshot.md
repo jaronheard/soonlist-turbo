@@ -1,10 +1,10 @@
 ---
-name: sim-open
+name: sim-screenshot
 allowed-tools: Bash
-description: Open this worktree's Expo dev-client URL in the shared iOS sim
+description: Screenshot this worktree in the shared iOS sim
 ---
 
-Acquire the shared simulator lock, boot the shared iPhone simulator, and deep-link it to this worktree's Metro server. Run after `/start-dev`.
+Acquire the shared simulator lock, open this worktree's Expo dev-client URL, and save a screenshot. Run after `/start-dev`.
 
 ```bash
 WORKTREE_PATH=$(git rev-parse --show-toplevel)
@@ -28,7 +28,7 @@ if [[ -z "${METRO_PORT:-}" ]]; then
   exit 1
 fi
 
-sim_lock_acquire sim-open || exit 1
+sim_lock_acquire sim-screenshot || exit 1
 
 SIMULATOR_TARGET_UDID=$(sim_lock_target_udid)
 if [[ -z "$SIMULATOR_TARGET_UDID" ]]; then
@@ -38,7 +38,9 @@ fi
 
 xcrun simctl boot "$SIMULATOR_TARGET_UDID" 2>/dev/null || true
 xcrun simctl openurl "$SIMULATOR_TARGET_UDID" "exp+timetimecc://expo-development-client/?url=http://localhost:$METRO_PORT"
+sleep 5
 
-echo "Opened shared simulator $SIMULATOR_TARGET_UDID on Metro http://localhost:$METRO_PORT"
-echo "Simulator lock released."
+OUT="/tmp/$(basename "$WORKTREE_PATH")-sim-$(date +%s).png"
+xcrun simctl io "$SIMULATOR_TARGET_UDID" screenshot "$OUT"
+echo "$OUT"
 ```

@@ -1,7 +1,0 @@
-{
-  "mcpServers": {
-    "ios-simulator": {
-      "command": "./.claude/mcp/ios-simulator.sh"
-    }
-  }
-}

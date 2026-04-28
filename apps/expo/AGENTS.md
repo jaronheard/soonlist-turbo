@@ -38,24 +38,21 @@ Expo Router provides typed file-based navigation.
 ```
 /start-dev
 /sim-open
-Use iOS Simulator MCP screenshot, ui_view, or ui_describe_all
+/sim-screenshot
+Read the printed path
 ```
 
-Each Claude worktree gets a dedicated simulator named `ws-<dir>` and a dedicated Metro port. The assignment is persisted in `.claude/.worktree-ports`:
+Each Claude worktree gets a dedicated Metro port. The assignment is persisted in `.claude/.worktree-ports`:
 
 ```
 METRO_PORT=...
-SIMULATOR_NAME=...
-SIMULATOR_UDID=...
 ```
 
-The committed root `.mcp.json` starts `.claude/mcp/ios-simulator.sh`, which runs bootstrap silently, reads `.claude/.worktree-ports`, and pins iOS Simulator MCP to that worktree's `SIMULATOR_UDID`. Use iOS Simulator MCP for screenshots, compressed views, accessibility reads, taps, typing, and swipes. `/sim-open` only boots the simulator and opens this worktree's Expo dev-client URL.
+Simulator testing is intentionally serialized. Commands that touch the iOS Simulator acquire a shared lock at the main checkout's `.claude/.simulator.lock`, then release it when they finish. If another agent is using the simulator, wait and retry later; `/sim-lock-status` shows the current lock holder.
 
-Fresh simulator clones must have the Soonlist Expo dev client installed before `/sim-open` deep links can resolve. `/sim-open` first tries to install `com.soonlist.app.dev` from another simulator that already has it, then from a local `apps/expo/ios/**/*.app` build artifact. If none exists and `/sim-open` fails with LaunchServices `-10814`, build the dev client for that simulator, then rerun `/sim-open`.
+`/sim-open` and `/sim-screenshot` use the first booted iPhone simulator, or the first available iPhone simulator if none is booted. Set `SIMULATOR_UDID` before running a command to force a specific shared simulator.
 
-Expo MCP is not the parallel-safe path for simulator automation. It can still be useful for single-client experiments, but screenshot and accessibility testing should use iOS Simulator MCP.
-
-If MCP tools are missing in a session that was already running before this config existed, restart Claude Code from the worktree folder. To clean up a simulator, run `source .claude/.worktree-ports && xcrun simctl delete "$SIMULATOR_UDID"`, then rerun bootstrap or start a new session.
+Expo MCP and iOS Simulator MCP are not the parallel-safe path here unless the caller also holds the simulator lock. Prefer `/sim-screenshot` for screenshot verification.
 
 ## Push Notifications
 
