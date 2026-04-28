@@ -7,6 +7,7 @@ import { useCreateEvent } from "~/hooks/useCreateEvent";
 import { useInFlightEventStore } from "~/store/useInFlightEventStore";
 import { logError } from "~/utils/errorLogging";
 import { toast } from "~/utils/feedback";
+import { getExifOrientation } from "~/utils/images";
 
 /**
  * Hook to manage the flow of adding new events via the image picker.
@@ -34,6 +35,7 @@ export function useAddEventFlow() {
         quality: 0.8,
         allowsMultipleSelection: true,
         selectionLimit: 20, // iOS‑only; we also enforce in JS
+        exif: true,
       });
 
       if (!result.canceled && result.assets.length) {
@@ -59,6 +61,7 @@ export function useAddEventFlow() {
           await createMultipleEvents(
             assets.map((asset) => ({
               imageUri: asset.uri,
+              imageOrientation: getExifOrientation(asset.exif),
               userId,
               username,
             })),

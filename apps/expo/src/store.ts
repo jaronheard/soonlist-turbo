@@ -5,6 +5,7 @@ import { createJSONStorage, persist } from "zustand/middleware";
 
 import type { OnboardingData, OnboardingStep } from "~/types/onboarding";
 import type { CalendarApp } from "~/utils/calendarAppDetection";
+import type { ExifOrientation } from "~/utils/images";
 import { getUserTimeZone } from "./utils/dates";
 
 // Helper function to create a stable timestamp (rounded to 15-minute intervals)
@@ -50,6 +51,9 @@ function createStableTimestamp(): string {
 interface CommonEventInputState {
   input: string;
   imagePreview: string | null;
+  // Plumbed to optimizeImage so getOrientationActions can be chained into
+  // the resize pass — see apps/expo/src/utils/images.ts.
+  imagePreviewOrientation: ExifOrientation | null;
   linkPreview: string | null;
   isPublic: boolean;
   isImageLoading: boolean;
@@ -97,7 +101,11 @@ interface AppState {
 
   // Event input actions
   setInput: (input: string, route: "add" | "new") => void;
-  setImagePreview: (preview: string | null, route: "add" | "new") => void;
+  setImagePreview: (
+    preview: string | null,
+    route: "add" | "new",
+    orientation?: ExifOrientation | null,
+  ) => void;
   setLinkPreview: (preview: string | null, route: "add" | "new") => void;
   setIsPublic: (isPublic: boolean, route: "add" | "new") => void;
   setIsImageLoading: (isLoading: boolean, route: "add" | "new") => void;
@@ -195,6 +203,7 @@ export const useAppStore = create<AppState>()(
       addEventState: {
         input: "",
         imagePreview: null,
+        imagePreviewOrientation: null,
         linkPreview: null,
         isPublic: false,
         isImageLoading: false,
@@ -206,6 +215,7 @@ export const useAppStore = create<AppState>()(
       newEventState: {
         input: "",
         imagePreview: null,
+        imagePreviewOrientation: null,
         linkPreview: null,
         isPublic: false,
         isImageLoading: false,
@@ -221,11 +231,12 @@ export const useAppStore = create<AppState>()(
             input,
           },
         })),
-      setImagePreview: (preview, route) =>
+      setImagePreview: (preview, route, orientation = null) =>
         set((state) => ({
           [route === "add" ? "addEventState" : "newEventState"]: {
             ...(route === "add" ? state.addEventState : state.newEventState),
             imagePreview: preview,
+            imagePreviewOrientation: preview === null ? null : orientation,
           },
         })),
       setLinkPreview: (preview, route) =>
@@ -278,6 +289,7 @@ export const useAppStore = create<AppState>()(
           addEventState: {
             input: "",
             imagePreview: null,
+            imagePreviewOrientation: null,
             linkPreview: null,
             isPublic: false,
             isImageLoading: false,
@@ -292,6 +304,7 @@ export const useAppStore = create<AppState>()(
           newEventState: {
             input: "",
             imagePreview: null,
+            imagePreviewOrientation: null,
             linkPreview: null,
             isPublic: false,
             isImageLoading: false,
@@ -346,6 +359,7 @@ export const useAppStore = create<AppState>()(
           addEventState: {
             input: "",
             imagePreview: null,
+            imagePreviewOrientation: null,
             linkPreview: null,
             isPublic: false,
             isImageLoading: false,
@@ -357,6 +371,7 @@ export const useAppStore = create<AppState>()(
           newEventState: {
             input: "",
             imagePreview: null,
+            imagePreviewOrientation: null,
             linkPreview: null,
             isPublic: false,
             isImageLoading: false,
@@ -391,6 +406,7 @@ export const useAppStore = create<AppState>()(
           addEventState: {
             input: "",
             imagePreview: null,
+            imagePreviewOrientation: null,
             linkPreview: null,
             isPublic: false,
             isImageLoading: false,
@@ -402,6 +418,7 @@ export const useAppStore = create<AppState>()(
           newEventState: {
             input: "",
             imagePreview: null,
+            imagePreviewOrientation: null,
             linkPreview: null,
             isPublic: false,
             isImageLoading: false,

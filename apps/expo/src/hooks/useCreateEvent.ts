@@ -4,12 +4,14 @@ import { useMutation } from "convex/react";
 
 import { api } from "@soonlist/backend/convex/_generated/api";
 
+import type { ExifOrientation } from "~/utils/images";
 import { DEFAULT_VISIBILITY } from "~/constants";
 import { useOneSignal } from "~/providers/OneSignalProvider";
 import { useAppStore, useUserTimezone } from "~/store";
 import { useInFlightEventStore } from "~/store/useInFlightEventStore";
 import { logError } from "~/utils/errorLogging";
 import { hapticError } from "~/utils/feedback";
+import { getOrientationActions } from "~/utils/images";
 
 // Generate a simple batch ID without external dependencies
 function generateBatchId(): string {
@@ -18,6 +20,7 @@ function generateBatchId(): string {
 
 interface CreateEventOptions {
   imageUri?: string;
+  imageOrientation?: ExifOrientation;
   userId: string;
   username: string;
   sendNotification?: boolean;
@@ -27,13 +30,17 @@ interface CreateEventOptions {
   linkPreview?: string;
 }
 
-// Optimize image off the main JS thread and return a base64 string
-async function optimizeImage(uri: string): Promise<string> {
+// Chains any EXIF rotation into the same manipulateAsync call as the resize.
+// WEBP output drops the EXIF Orientation tag without honoring it, so a
+// separate normalize pass would be needed otherwise.
+async function optimizeImage(
+  uri: string,
+  orientation?: ExifOrientation,
+): Promise<string> {
   try {
-    // Resize & compress on the native thread and get base64 in a single step
     const { base64 } = await ImageManipulator.manipulateAsync(
       uri,
-      [{ resize: { width: 640 } }],
+      [...getOrientationActions(orientation), { resize: { width: 640 } }],
       {
         compress: 0.5,
         format: ImageManipulator.SaveFormat.WEBP,
@@ -71,6 +78,7 @@ export function useCreateEvent() {
     async (options: CreateEventOptions): Promise<string> => {
       const {
         imageUri,
+        imageOrientation,
         userId,
         username,
         sendNotification = true,
@@ -112,7 +120,7 @@ export function useCreateEvent() {
           });
 
           // 2. Optimize image and get base64
-          const base64 = await optimizeImage(fileUri);
+          const base64 = await optimizeImage(fileUri, imageOrientation);
 
           // 3. Add the image to the batch
           await addImagesToBatch({
@@ -238,7 +246,7 @@ export function useCreateEvent() {
           const fileUri = task.imageUri;
 
           // Optimize image and get base64
-          const base64 = await optimizeImage(fileUri);
+          const base64 = await optimizeImage(fileUri, task.imageOrientation);
 
           // Immediately send this image to the backend
           const image = {

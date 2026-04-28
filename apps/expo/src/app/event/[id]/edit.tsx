@@ -23,6 +23,7 @@ import { z } from "zod";
 
 import { api } from "@soonlist/backend/convex/_generated/api";
 
+import type { ExifOrientation } from "~/utils/images";
 import { Button } from "~/components/Button";
 import { DatePickerField, TimePickerField } from "~/components/date-picker";
 import {
@@ -39,6 +40,7 @@ import { PlatformSelectNative } from "~/components/PlatformSelectNative";
 import { TimezoneSelectNative } from "~/components/TimezoneSelectNative";
 import { DEFAULT_VISIBILITY } from "~/constants";
 import { hapticSuccess, toast } from "~/utils/feedback";
+import { getExifOrientation, getOrientationActions } from "~/utils/images";
 import { normalizeUrlForStorage } from "~/utils/links";
 import { getPlanStatusFromUser } from "~/utils/plan";
 import { logError } from "../../../utils/errorLogging";
@@ -180,7 +182,10 @@ export default function EditEventScreen() {
     }
   }, [eventQuery, reset, setSelectedImage]);
 
-  const uploadImage = async (localUri: string): Promise<string> => {
+  const uploadImage = async (
+    localUri: string,
+    orientationHint?: ExifOrientation,
+  ): Promise<string> => {
     setIsUploadingImage(true);
     try {
       if (!localUri.startsWith("file://")) {
@@ -192,7 +197,10 @@ export default function EditEventScreen() {
       try {
         manipulatedImage = await ImageManipulator.manipulateAsync(
           fileUri,
-          [{ resize: { width: 1284, height: undefined } }],
+          [
+            ...getOrientationActions(orientationHint),
+            { resize: { width: 1284, height: undefined } },
+          ],
           { compress: 0.8, format: ImageManipulator.SaveFormat.JPEG },
         );
       } catch (error) {
@@ -261,6 +269,7 @@ export default function EditEventScreen() {
       const result = await ImagePicker.launchImageLibraryAsync({
         mediaTypes: ImagePicker.MediaTypeOptions.Images,
         allowsEditing: false,
+        exif: true,
       });
 
       if (
@@ -269,11 +278,13 @@ export default function EditEventScreen() {
         result.assets.length > 0 &&
         result.assets[0]?.uri
       ) {
-        const localUri = result.assets[0].uri;
+        const asset = result.assets[0];
+        const localUri = asset.uri;
+        const orientation = getExifOrientation(asset.exif);
         setSelectedImage(localUri);
 
         try {
-          const remoteUrl = await uploadImage(localUri);
+          const remoteUrl = await uploadImage(localUri, orientation);
           setUploadedImageUrl(remoteUrl);
           void hapticSuccess();
         } catch (error) {

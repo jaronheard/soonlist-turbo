@@ -6,7 +6,7 @@ import * as ImagePicker from "expo-image-picker";
 import { router, Stack } from "expo-router";
 import { useUser } from "@clerk/clerk-expo";
 
-import type { ImageSource } from "~/utils/images";
+import type { ExifOrientation, ImageSource } from "~/utils/images";
 import { CaptureEventButton } from "~/components/CaptureEventButton";
 import { EventPreview } from "~/components/EventPreview";
 import { NewEventHeader } from "~/components/NewEventHeader";
@@ -15,6 +15,7 @@ import { useKeyboardHeight } from "~/hooks/useKeyboardHeight";
 import { useOneSignal } from "~/providers/OneSignalProvider";
 import { useAppStore } from "~/store";
 import { toast } from "~/utils/feedback";
+import { getExifOrientation } from "~/utils/images";
 import { logError } from "../utils/errorLogging";
 
 export default function AddEventModal() {
@@ -47,14 +48,14 @@ export default function AddEventModal() {
   );
 
   const handleImagePreview = useCallback(
-    (uri: string | ImageSource) => {
+    (uri: string | ImageSource, orientation?: ExifOrientation) => {
       const imageUri =
         typeof uri === "string"
           ? uri
           : typeof uri === "number"
             ? String(uri)
             : uri.uri;
-      setImagePreview(imageUri, "add");
+      setImagePreview(imageUri, "add", orientation ?? null);
       const filename = imageUri.split("/").pop() || "";
       setInput(filename, "add");
     },
@@ -65,9 +66,11 @@ export default function AddEventModal() {
     const result = await ImagePicker.launchImageLibraryAsync({
       mediaTypes: ImagePicker.MediaTypeOptions.Images,
       quality: 0.8,
+      exif: true,
     });
     if (!result.canceled && result.assets[0]) {
-      handleImagePreview(result.assets[0].uri);
+      const asset = result.assets[0];
+      handleImagePreview(asset.uri, getExifOrientation(asset.exif));
     }
   }, [handleImagePreview]);
 
@@ -76,7 +79,8 @@ export default function AddEventModal() {
   }, [resetAddEventState]);
 
   const handleCreateEvent = async () => {
-    const { input, imagePreview, linkPreview } = addEventState;
+    const { input, imagePreview, imagePreviewOrientation, linkPreview } =
+      addEventState;
     if (!input.trim() && !imagePreview && !linkPreview) return;
     if (!user?.id || !user.username) return;
 
@@ -85,6 +89,7 @@ export default function AddEventModal() {
       rawText: input,
       linkPreview: linkPreview ?? undefined,
       imageUri: imagePreview ?? undefined,
+      imageOrientation: imagePreviewOrientation ?? undefined,
       userId: user.id,
       username: user.username,
     };
