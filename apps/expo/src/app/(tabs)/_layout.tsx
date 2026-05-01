@@ -181,9 +181,9 @@ export default function TabsLayout() {
           <NativeTabs.Trigger.Badge hidden />
         )}
       </NativeTabs.Trigger>
-      {/* Search-role tab opens the add flow and still navigates normally. */}
+      {/* Search-role tab: blank Add screen + photo capture on press. */}
       <NativeTabs.Trigger
-        name="discover"
+        name="add"
         role="search"
         listeners={{
           tabPress: () => {
@@ -193,7 +193,7 @@ export default function TabsLayout() {
           },
         }}
       >
-        <NativeTabs.Trigger.Label>Discover</NativeTabs.Trigger.Label>
+        <NativeTabs.Trigger.Label>Add</NativeTabs.Trigger.Label>
         <NativeTabs.Trigger.Icon
           sf={{ default: "plus.circle", selected: "plus.circle.fill" }}
         />
