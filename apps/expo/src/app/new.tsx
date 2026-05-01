@@ -17,7 +17,7 @@ import { logError } from "../utils/errorLogging";
 
 /**
  * This screen is specifically for share-extension usage:
- * - It's simpler than add.tsx
+ * - Simpler than the in-app add flows (photo-first capture lives on tabs).
  * - No photo grid.
  * - Takes `text` or `imageUri` from the deep link or store's `intentParams`.
  */

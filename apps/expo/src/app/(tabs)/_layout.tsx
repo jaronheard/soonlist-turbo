@@ -1,9 +1,21 @@
+import { useEffect } from "react";
+import {
+  ActivityIndicator,
+  Pressable,
+  StyleSheet,
+  Text,
+  View,
+} from "react-native";
+import { router } from "expo-router";
 import { NativeTabs } from "expo-router/unstable-native-tabs";
 import { useQuery } from "convex/react";
 
 import { api } from "@soonlist/backend/convex/_generated/api";
 
+import { useAddEventFlow } from "~/hooks/useAddEventFlow";
 import { SUPPORTS_LIQUID_GLASS } from "~/hooks/useLiquidGlass";
+import { useNetworkStatus } from "~/hooks/useNetworkStatus";
+import { useInFlightEventStore } from "~/store/useInFlightEventStore";
 
 // Export Expo Router's error boundary
 export { ErrorBoundary } from "expo-router";
@@ -12,7 +24,63 @@ export const unstable_settings = {
   initialRouteName: "feed",
 };
 
+interface CaptureAccessoryProps {
+  isCapturing: boolean;
+  title: string;
+  subtitle: string;
+  actionLabel?: string;
+  onPress?: () => void;
+}
+
+function CaptureAccessory({
+  isCapturing,
+  title,
+  subtitle,
+  actionLabel,
+  onPress,
+}: CaptureAccessoryProps) {
+  const placement = NativeTabs.BottomAccessory.usePlacement();
+
+  if (placement === "inline") {
+    return (
+      <Pressable
+        onPress={onPress}
+        disabled={!onPress}
+        style={styles.inlinePlayer}
+      >
+        {isCapturing ? (
+          <ActivityIndicator color="#5A32FB" size="small" />
+        ) : (
+          <Text style={styles.inlinePlayerText}>Captured</Text>
+        )}
+      </Pressable>
+    );
+  }
+
+  return (
+    <View style={styles.regularPlayer}>
+      <View style={styles.accessoryText}>
+        <Text style={styles.accessoryTitle}>{title}</Text>
+        <Text style={styles.accessorySubtitle}>{subtitle}</Text>
+      </View>
+      {isCapturing ? (
+        <ActivityIndicator color="#5A32FB" />
+      ) : actionLabel && onPress ? (
+        <Pressable onPress={onPress} style={styles.accessoryAction}>
+          <Text style={styles.accessoryActionText}>{actionLabel}</Text>
+        </Pressable>
+      ) : null}
+    </View>
+  );
+}
+
 export default function TabsLayout() {
+  const isCapturing = useInFlightEventStore((s) => s.isCapturing);
+  const activeBatchId = useInFlightEventStore((s) => s.activeBatchId);
+  const setActiveBatchId = useInFlightEventStore((s) => s.setActiveBatchId);
+  const isOnline = useNetworkStatus();
+  const { triggerAddEventFlow } = useAddEventFlow();
+
   // The query result IS state — no useEffect → zustand → useStore loop. The
   // count queries are backed by userFeedGroupsAggregate (O(log n)) and return
   // 0 when unauthenticated, so they're safe to call here unconditionally.
@@ -20,6 +88,53 @@ export default function TabsLayout() {
   const myListBadgeCount = useQuery(api.feeds.getMyFeedGroupedBadgeCount) ?? 0;
   const communityBadgeCount =
     useQuery(api.feeds.getFollowedListsFeedGroupedBadgeCount) ?? 0;
+  const batchStatus = useQuery(
+    api.eventBatches.getBatchStatus,
+    activeBatchId ? { batchId: activeBatchId } : "skip",
+  );
+
+  const isBatchComplete =
+    batchStatus?.status === "completed" || batchStatus?.status === "failed";
+  const showCaptureAccessory = isCapturing || Boolean(activeBatchId);
+  const accessoryTitle = isCapturing
+    ? "Capturing event"
+    : !batchStatus
+      ? "Creating event"
+      : batchStatus.status === "failed"
+        ? "Event capture failed"
+        : isBatchComplete
+          ? "New event captured"
+          : "Creating event";
+  const accessorySubtitle = isCapturing
+    ? "Preparing your selected photos..."
+    : batchStatus
+      ? `${batchStatus.successCount} of ${batchStatus.totalCount} ready`
+      : "Processing your event...";
+  const accessoryActionLabel =
+    isBatchComplete && batchStatus && batchStatus.successCount > 0
+      ? "View"
+      : undefined;
+
+  useEffect(() => {
+    if (!isBatchComplete) return;
+
+    const timeout = setTimeout(() => {
+      setActiveBatchId(null);
+    }, 5000);
+
+    return () => clearTimeout(timeout);
+  }, [isBatchComplete, setActiveBatchId]);
+
+  const handleAccessoryPress = () => {
+    if (!batchStatus || !activeBatchId || !batchStatus.successCount) return;
+
+    if (batchStatus.totalCount === 1 && batchStatus.firstEventId) {
+      void router.navigate(`/event/${batchStatus.firstEventId}`);
+      return;
+    }
+
+    void router.navigate(`/batch/${activeBatchId}`);
+  };
 
   return (
     <NativeTabs
@@ -29,6 +144,17 @@ export default function TabsLayout() {
         : {})}
       blurEffect="systemChromeMaterialLight" /* interactive-1 */
     >
+      {showCaptureAccessory ? (
+        <NativeTabs.BottomAccessory>
+          <CaptureAccessory
+            isCapturing={isCapturing || !isBatchComplete}
+            title={accessoryTitle}
+            subtitle={accessorySubtitle}
+            actionLabel={accessoryActionLabel}
+            onPress={accessoryActionLabel ? handleAccessoryPress : undefined}
+          />
+        </NativeTabs.BottomAccessory>
+      ) : null}
       <NativeTabs.Trigger name="feed">
         <NativeTabs.Trigger.Label>My Soonlist</NativeTabs.Trigger.Label>
         <NativeTabs.Trigger.Icon
@@ -55,13 +181,62 @@ export default function TabsLayout() {
           <NativeTabs.Trigger.Badge hidden />
         )}
       </NativeTabs.Trigger>
-      {/* Discover tab hidden */}
-      <NativeTabs.Trigger name="discover" hidden>
-        <NativeTabs.Trigger.Label hidden />
+      {/* Search-role tab: blank Add screen + photo capture on press. */}
+      <NativeTabs.Trigger
+        name="add"
+        role="search"
+        listeners={{
+          tabPress: () => {
+            if (!isOnline || isCapturing) return;
+
+            void triggerAddEventFlow();
+          },
+        }}
+      >
+        <NativeTabs.Trigger.Label>Add</NativeTabs.Trigger.Label>
         <NativeTabs.Trigger.Icon
-          sf={{ default: "binoculars", selected: "binoculars.fill" }}
+          sf={{ default: "plus.circle", selected: "plus.circle.fill" }}
         />
       </NativeTabs.Trigger>
     </NativeTabs>
   );
 }
+
+const styles = StyleSheet.create({
+  inlinePlayer: {
+    padding: 8,
+  },
+  inlinePlayerText: {
+    color: "#5A32FB",
+    fontWeight: "700",
+  },
+  regularPlayer: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    padding: 16,
+  },
+  accessoryText: {
+    flex: 1,
+    gap: 2,
+  },
+  accessoryTitle: {
+    color: "#1F1A3D",
+    fontSize: 15,
+    fontWeight: "700",
+  },
+  accessorySubtitle: {
+    color: "#5F5A7A",
+    fontSize: 13,
+  },
+  accessoryAction: {
+    borderRadius: 999,
+    backgroundColor: "#5A32FB",
+    paddingHorizontal: 14,
+    paddingVertical: 8,
+  },
+  accessoryActionText: {
+    color: "#FFFFFF",
+    fontWeight: "700",
+  },
+});
