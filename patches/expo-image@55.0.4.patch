@@ -1,0 +1,51 @@
+diff --git a/ios/BlurhashLoader.swift b/ios/BlurhashLoader.swift
+index 56fde80..4ca614e 100644
+--- a/ios/BlurhashLoader.swift
++++ b/ios/BlurhashLoader.swift
+@@ -1,4 +1,4 @@
+-import SDWebImage
++@preconcurrency import SDWebImage
+ import ExpoModulesCore
+ 
+ class BlurhashLoader: NSObject, SDImageLoader {
+@@ -31,14 +31,15 @@ class BlurhashLoader: NSObject, SDImageLoader {
+     let blurhash = url.pathComponents[1]
+     let size = CGSize(width: source.width, height: source.height)
+ 
++    nonisolated(unsafe) let block = completedBlock
+     DispatchQueue.global(qos: .userInitiated).async {
+       if let image = image(fromBlurhash: blurhash, size: size) {
+         DispatchQueue.main.async {
+-          completedBlock?(UIImage(cgImage: image), nil, nil, true)
++          block?(UIImage(cgImage: image), nil, nil, true)
+         }
+       } else {
+         let error = makeNSError(description: "Unable to generate an image from the given blurhash")
+-        completedBlock?(nil, nil, error, false)
++        block?(nil, nil, error, false)
+       }
+     }
+     return nil
+diff --git a/ios/ThumbhashLoader.swift b/ios/ThumbhashLoader.swift
+index 2aa6fdf..28d8728 100644
+--- a/ios/ThumbhashLoader.swift
++++ b/ios/ThumbhashLoader.swift
+@@ -1,4 +1,4 @@
+-import SDWebImage
++@preconcurrency import SDWebImage
+ import ExpoModulesCore
+ 
+ class ThumbhashLoader: NSObject, SDImageLoader {
+@@ -37,10 +37,11 @@ class ThumbhashLoader: NSObject, SDImageLoader {
+       return nil
+     }
+ 
++    nonisolated(unsafe) let block = completedBlock
+     DispatchQueue.global(qos: .userInitiated).async {
+       let image = image(fromThumbhash: thumbhashData)
+       DispatchQueue.main.async {
+-        completedBlock?(image, nil, nil, true)
++        block?(image, nil, nil, true)
+       }
+     }
+     return nil
