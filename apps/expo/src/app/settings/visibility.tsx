@@ -27,13 +27,13 @@ const OPTIONS: VisibilityOption[] = [
   {
     value: "public",
     label: "Public",
-    description: "Events appear on your public Soonlist by default.",
+    description: "Shown on your public Soonlist.",
     icon: Globe,
   },
   {
     value: "private",
     label: "Private",
-    description: "Events are only visible to you by default.",
+    description: "Hidden unless you share it.",
     icon: EyeOff,
   },
 ];
