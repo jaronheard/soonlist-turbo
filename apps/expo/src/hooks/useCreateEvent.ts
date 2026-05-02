@@ -4,9 +4,12 @@ import { useMutation } from "convex/react";
 
 import { api } from "@soonlist/backend/convex/_generated/api";
 
-import { DEFAULT_VISIBILITY } from "~/constants";
 import { useOneSignal } from "~/providers/OneSignalProvider";
-import { useAppStore, useUserTimezone } from "~/store";
+import {
+  useAppStore,
+  useDefaultEventVisibility,
+  useUserTimezone,
+} from "~/store";
 import { useInFlightEventStore } from "~/store/useInFlightEventStore";
 import { logError } from "~/utils/errorLogging";
 import { hapticError } from "~/utils/feedback";
@@ -58,6 +61,7 @@ export function useCreateEvent() {
   const addPendingBatchId = useInFlightEventStore((s) => s.addPendingBatchId);
   const { hasNotificationPermission } = useOneSignal();
   const userTimezone = useUserTimezone();
+  const defaultVisibility = useDefaultEventVisibility();
 
   // Batch mutations for all image events (single and multiple)
   const createEventBatch = useMutation(api.ai.createEventBatch);
@@ -107,7 +111,7 @@ export function useCreateEvent() {
             username,
             lists: [],
             timezone: userTimezone,
-            visibility: DEFAULT_VISIBILITY,
+            visibility: defaultVisibility,
             sendNotification,
           });
 
@@ -137,7 +141,7 @@ export function useCreateEvent() {
             username,
             lists: [],
             timezone: userTimezone,
-            visibility: DEFAULT_VISIBILITY,
+            visibility: defaultVisibility,
             sendNotification,
           });
 
@@ -155,7 +159,7 @@ export function useCreateEvent() {
             username,
             lists: [],
             timezone: userTimezone,
-            visibility: DEFAULT_VISIBILITY,
+            visibility: defaultVisibility,
             sendNotification,
           });
 
@@ -188,6 +192,7 @@ export function useCreateEvent() {
       hasNotificationPermission,
       addPendingBatchId,
       userTimezone,
+      defaultVisibility,
       addWorkflowId,
       eventFromUrl,
       eventFromText,
@@ -222,7 +227,7 @@ export function useCreateEvent() {
           username,
           lists: [],
           timezone: userTimezone,
-          visibility: "private",
+          visibility: defaultVisibility,
           sendNotification,
         });
 
@@ -281,6 +286,7 @@ export function useCreateEvent() {
       hasNotificationPermission,
       addPendingBatchId,
       userTimezone,
+      defaultVisibility,
       setIsCapturing,
       setIsImageLoading,
     ],

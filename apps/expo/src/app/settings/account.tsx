@@ -11,6 +11,7 @@ import {
   View,
 } from "react-native";
 import * as Application from "expo-application";
+import * as Clipboard from "expo-clipboard";
 import { Redirect, router } from "expo-router";
 import * as StoreReview from "expo-store-review";
 import { useUser } from "@clerk/clerk-expo";
@@ -23,7 +24,9 @@ import {
   Bell,
   Calendar as CalendarIcon,
   Clock,
+  Copy,
   Eye,
+  Globe,
   HelpCircle,
   Instagram,
   Link as LinkIcon,
@@ -42,9 +45,11 @@ import { useSignOut } from "~/hooks/useSignOut";
 import { useRevenueCat } from "~/providers/RevenueCatProvider";
 import {
   useAppStore,
+  useDefaultEventVisibility,
   usePreferredCalendarApp,
   useSetPreferredCalendarApp,
 } from "~/store";
+import Config from "~/utils/config";
 import { hapticSuccess, toast } from "~/utils/feedback";
 import { logError } from "../../utils/errorLogging";
 import { getPlanStatusFromUser } from "../../utils/plan";
@@ -69,13 +74,17 @@ const TILE_COLORS = {
 function Hero({
   avatarUrl,
   displayName,
-  handle,
+  shareHost,
+  username,
+  onCopyLink,
   emoji,
   onEdit,
 }: {
   avatarUrl?: string;
   displayName: string;
-  handle: string;
+  shareHost: string;
+  username: string;
+  onCopyLink: () => void;
   emoji: string | null;
   onEdit: () => void;
 }) {
@@ -145,35 +154,67 @@ function Hero({
       >
         {displayName}
       </Text>
-      <Text
-        style={{
-          fontSize: 14,
-          color: INK_2,
-          marginTop: -2,
-        }}
-      >
-        {handle}
-      </Text>
+
+      {username ? (
+        <Pressable
+          onPress={onCopyLink}
+          accessibilityRole="button"
+          accessibilityLabel={`Copy ${shareHost}/${username} to clipboard`}
+          style={({ pressed }) => ({
+            marginTop: 8,
+            borderRadius: 999,
+            backgroundColor: "#FFFFFF",
+            shadowColor: "#162135",
+            shadowOpacity: 0.06,
+            shadowRadius: 2,
+            shadowOffset: { width: 0, height: 1 },
+            opacity: pressed ? 0.7 : 1,
+          })}
+        >
+          <View
+            style={{
+              height: 32,
+              paddingHorizontal: 14,
+              flexDirection: "row",
+              alignItems: "center",
+            }}
+          >
+            <Text
+              style={{
+                fontSize: 14,
+                color: INK_2,
+              }}
+              numberOfLines={1}
+            >
+              {shareHost}/
+              <Text style={{ fontWeight: "700", color: INK_0 }}>
+                {username}
+              </Text>
+            </Text>
+            <Copy
+              size={14}
+              color={INK_2}
+              strokeWidth={2}
+              style={{ marginLeft: 8 }}
+            />
+          </View>
+        </Pressable>
+      ) : null}
 
       <Pressable
         onPress={onEdit}
         accessibilityRole="button"
         accessibilityLabel="Edit profile"
         style={({ pressed }) => ({
-          marginTop: 14,
+          marginTop: 12,
           borderRadius: 999,
-          backgroundColor: "#FFFFFF",
-          shadowColor: "#162135",
-          shadowOpacity: 0.06,
-          shadowRadius: 2,
-          shadowOffset: { width: 0, height: 1 },
           opacity: pressed ? 0.7 : 1,
         })}
       >
         <View
           style={{
-            height: 34,
-            paddingHorizontal: 16,
+            height: 28,
+            paddingHorizontal: 4,
             flexDirection: "row",
             alignItems: "center",
           }}
@@ -210,6 +251,7 @@ export default function AccountScreen() {
   const userTimezone = useAppStore((s) => s.userTimezone);
   const preferredCalendarApp = usePreferredCalendarApp();
   const setPreferredCalendarApp = useSetPreferredCalendarApp();
+  const defaultEventVisibility = useDefaultEventVisibility();
   const { calendarApps } = useCalendar();
 
   const resetOnboardingMutation = useMutation(api.users.resetOnboarding);
@@ -224,11 +266,39 @@ export default function AccountScreen() {
 
   const displayName =
     userData?.displayName || user?.username || user?.firstName || "Your name";
-  const handle = user?.username ? `@${user.username}` : "";
+  const username = user?.username ?? "";
   const emoji = userData?.emoji ?? null;
+
+  const shareHost = React.useMemo(() => {
+    try {
+      const { hostname } = new URL(Config.apiBaseUrl);
+      return hostname.replace(/^www\./, "");
+    } catch {
+      return "soonlist.com";
+    }
+  }, []);
 
   const handleOpenEdit = useCallback(() => {
     router.navigate("/settings/profile-edit");
+  }, []);
+
+  const handleCopyShareLink = useCallback(() => {
+    if (!username) return;
+    const url = `${Config.apiBaseUrl}/${username}`;
+    void (async () => {
+      try {
+        await Clipboard.setStringAsync(url);
+        void hapticSuccess();
+        toast.success("Link copied");
+      } catch (error) {
+        logError("Error copying share link", error);
+        toast.error("Failed to copy link");
+      }
+    })();
+  }, [username]);
+
+  const handleOpenVisibility = useCallback(() => {
+    router.navigate("/settings/visibility");
   }, []);
 
   const handleTogglePublicList = useCallback(
@@ -460,12 +530,27 @@ export default function AccountScreen() {
         <Hero
           avatarUrl={user?.imageUrl ?? undefined}
           displayName={displayName}
-          handle={handle}
+          shareHost={shareHost}
+          username={username}
+          onCopyLink={handleCopyShareLink}
           emoji={emoji}
           onEdit={handleOpenEdit}
         />
 
         <View style={{ height: 14 }} />
+
+        <SettingsGroup
+          header="EVENT DEFAULTS"
+          footer="Edit any event to override."
+        >
+          <SettingsRow
+            icon={Globe}
+            iconBg={TILE_COLORS.purple}
+            label="Visibility"
+            value={defaultEventVisibility === "public" ? "Public" : "Private"}
+            onPress={handleOpenVisibility}
+          />
+        </SettingsGroup>
 
         <SettingsGroup
           header="YOUR PUBLIC PROFILE"
