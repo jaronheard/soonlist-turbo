@@ -590,6 +590,7 @@ export const createEventBatch = mutation({
       userId: args.userId,
       totalCount: args.totalCount ?? args.images.length,
       timezone: args.timezone,
+      visibility: args.visibility,
     });
 
     // Only schedule processing if we have images
@@ -716,7 +717,7 @@ export const processAdditionalBatchImages = internalAction({
               timezone: timezone,
               comment: undefined,
               lists: [],
-              visibility: "private" as const,
+              visibility: batch.visibility,
               userId: args.userId,
               username: batch.username ?? args.userId,
               batchId: args.batchId,

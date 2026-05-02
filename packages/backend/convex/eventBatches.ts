@@ -27,6 +27,7 @@ export const createBatch = internalMutation({
     userId: v.string(),
     totalCount: v.number(),
     timezone: v.string(),
+    visibility: v.optional(v.union(v.literal("public"), v.literal("private"))),
   },
   handler: async (ctx, args) => {
     // Validate timezone
@@ -51,6 +52,7 @@ export const createBatch = internalMutation({
       userId: args.userId,
       username: user?.username,
       timezone: args.timezone,
+      visibility: args.visibility,
       totalCount: args.totalCount,
       successCount: 0,
       failureCount: 0,
@@ -143,7 +145,7 @@ export const getBatchInfo = internalQuery({
       ...batch,
       comment: undefined, // Events don't store comments
       lists: [], // Events don't store lists directly
-      visibility: DEFAULT_VISIBILITY, // Private by default,
+      visibility: batch.visibility ?? DEFAULT_VISIBILITY,
     };
   },
 });

@@ -294,6 +294,7 @@ export default defineSchema({
     userId: v.string(),
     username: v.optional(v.string()),
     timezone: v.optional(v.string()), // User's timezone for proper event processing
+    visibility: v.optional(v.union(v.literal("public"), v.literal("private"))),
     totalCount: v.number(),
     successCount: v.number(),
     failureCount: v.number(),

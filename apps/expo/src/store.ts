@@ -3,8 +3,10 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import { create } from "zustand";
 import { createJSONStorage, persist } from "zustand/middleware";
 
+import type { EventVisibility } from "~/constants";
 import type { OnboardingData, OnboardingStep } from "~/types/onboarding";
 import type { CalendarApp } from "~/utils/calendarAppDetection";
+import { DEFAULT_VISIBILITY } from "~/constants";
 import { getUserTimeZone } from "./utils/dates";
 
 // Helper function to create a stable timestamp (rounded to 15-minute intervals)
@@ -77,6 +79,10 @@ interface AppState {
   // Calendar preferences
   preferredCalendarApp: CalendarApp | null;
   setPreferredCalendarApp: (app: CalendarApp | null) => void;
+
+  // Event default preferences
+  defaultEventVisibility: EventVisibility;
+  setDefaultEventVisibility: (visibility: EventVisibility) => void;
 
   // Stable timestamp for query filtering
   stableTimestamp: string;
@@ -177,6 +183,11 @@ export const useAppStore = create<AppState>()(
       // Calendar preferences
       preferredCalendarApp: null,
       setPreferredCalendarApp: (app) => set({ preferredCalendarApp: app }),
+
+      // Event default preferences
+      defaultEventVisibility: DEFAULT_VISIBILITY,
+      setDefaultEventVisibility: (visibility) =>
+        set({ defaultEventVisibility: visibility }),
 
       // No ephemeral discover flag; UI listens to Clerk user metadata
 
@@ -341,6 +352,7 @@ export const useAppStore = create<AppState>()(
           filter: "upcoming",
           intentParams: null,
           preferredCalendarApp: null,
+          defaultEventVisibility: DEFAULT_VISIBILITY,
           // Ensure discover override never persists across global reset
           discoverAccessOverride: false,
           addEventState: {
@@ -386,6 +398,9 @@ export const useAppStore = create<AppState>()(
           filter: "upcoming",
           intentParams: null,
           preferredCalendarApp: null,
+          // Preserve so the v0→v1 migration's "private" pin (and any
+          // explicit user choice) survives sign-out/sign-in.
+          defaultEventVisibility: state.defaultEventVisibility,
           // Ensure discover override never persists across logout
           discoverAccessOverride: false,
           addEventState: {
@@ -492,12 +507,31 @@ export const useAppStore = create<AppState>()(
     }),
     {
       name: "app-storage",
+      version: 1,
       storage: createJSONStorage(() => AsyncStorage),
       // Do not persist ephemeral flags like discoverAccessOverride
       partialize: (state) => {
         // eslint-disable-next-line @typescript-eslint/no-unused-vars
         const { discoverAccessOverride, ...rest } = state;
         return rest;
+      },
+      // v0 → v1: existing installs predate the EVENT_DEFAULTS picker, so we
+      // pin them to the legacy "private" default. Only truly-new installs
+      // (no persisted state) fall through to the initial value, which is now
+      // "public".
+      migrate: (persistedState, version) => {
+        if (
+          version < 1 &&
+          persistedState &&
+          typeof persistedState === "object" &&
+          !("defaultEventVisibility" in persistedState)
+        ) {
+          return {
+            ...(persistedState as Record<string, unknown>),
+            defaultEventVisibility: "private",
+          } as AppState;
+        }
+        return persistedState as AppState;
       },
     },
   ),
@@ -587,6 +621,12 @@ export const usePreferredCalendarApp = () =>
   useAppStore((state) => state.preferredCalendarApp);
 export const useSetPreferredCalendarApp = () =>
   useAppStore((state) => state.setPreferredCalendarApp);
+
+// Event default visibility selectors
+export const useDefaultEventVisibility = () =>
+  useAppStore((state) => state.defaultEventVisibility);
+export const useSetDefaultEventVisibility = () =>
+  useAppStore((state) => state.setDefaultEventVisibility);
 
 // Pending follow selectors (for deferred deep link follow intent)
 export const usePendingFollowUsername = () =>

@@ -364,6 +364,18 @@ const InitialLayout = () => {
             headerBackTitle: "Account",
           }}
         />
+        <Stack.Screen
+          name="settings/visibility"
+          options={{
+            title: "Default Visibility",
+            headerShown: true,
+            headerTransparent: false,
+            headerBackground: undefined,
+            headerStyle: { backgroundColor: "#F4F1FF" },
+            headerTintColor: "#5A32FB",
+            headerBackTitle: "Account",
+          }}
+        />
       </Stack.Protected>
     </Stack>
   );
