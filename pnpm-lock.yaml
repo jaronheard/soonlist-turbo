@@ -538,6 +538,9 @@ patchedDependencies:
   expo-image@55.0.4:
     hash: pcfypqa7anoowhooob3vt5vkya
     path: patches/expo-image@55.0.4.patch
+  expo-router@55.0.0-preview.9:
+    hash: zpcazocq35yduzedtuzjooy2e4
+    path: patches/expo-router@55.0.0-preview.9.patch
   react-native-screens@4.23.0:
     hash: vgrbnoqebgr5lt7fusry6557pm
     path: patches/react-native-screens@4.23.0.patch
@@ -719,7 +722,7 @@ importers:
         version: 6.0.0(expo@55.0.0-preview.12)
       expo-router:
         specifier: 'catalog:'
-        version: 55.0.0-preview.9(3grgokyjmwv2tg2m6bfyzwtpva)
+        version: 55.0.0-preview.9(patch_hash=zpcazocq35yduzedtuzjooy2e4)(3grgokyjmwv2tg2m6bfyzwtpva)
       expo-secure-store:
         specifier: 'catalog:'
         version: 55.0.7(expo@55.0.0-preview.12)
@@ -12619,7 +12622,7 @@ snapshots:
       ws: 8.19.0(bufferutil@4.1.0)(utf-8-validate@5.0.10)
       zod: 3.25.76
     optionalDependencies:
-      expo-router: 55.0.0-preview.9(3grgokyjmwv2tg2m6bfyzwtpva)
+      expo-router: 55.0.0-preview.9(patch_hash=zpcazocq35yduzedtuzjooy2e4)(3grgokyjmwv2tg2m6bfyzwtpva)
       react-native: 0.83.2(@babel/core@7.28.5)(@types/react@19.2.14)(bufferutil@4.1.0)(react@19.2.0)(utf-8-validate@5.0.10)
     transitivePeerDependencies:
       - '@expo/dom-webview'
@@ -12967,7 +12970,7 @@ snapshots:
       react: 19.2.0
     optionalDependencies:
       '@expo/metro-runtime': 55.0.6(@expo/dom-webview@55.0.3)(expo@55.0.0-preview.12)(react-dom@19.2.0(react@19.2.0))(react-native@0.83.2(@babel/core@7.28.5)(@types/react@19.2.14)(bufferutil@4.1.0)(react@19.2.0)(utf-8-validate@5.0.10))(react@19.2.0)
-      expo-router: 55.0.0-preview.9(3grgokyjmwv2tg2m6bfyzwtpva)
+      expo-router: 55.0.0-preview.9(patch_hash=zpcazocq35yduzedtuzjooy2e4)(3grgokyjmwv2tg2m6bfyzwtpva)
       react-dom: 19.2.0(react@19.2.0)
     transitivePeerDependencies:
       - supports-color
@@ -17788,7 +17791,7 @@ snapshots:
       schema-utils: 4.3.3
       sf-symbols-typescript: 2.2.0
 
-  expo-router@55.0.0-preview.9(3grgokyjmwv2tg2m6bfyzwtpva):
+  expo-router@55.0.0-preview.9(patch_hash=zpcazocq35yduzedtuzjooy2e4)(3grgokyjmwv2tg2m6bfyzwtpva):
     dependencies:
       '@expo/log-box': 55.0.7(@expo/dom-webview@55.0.3)(expo@55.0.0-preview.12)(react-native@0.83.2(@babel/core@7.28.5)(@types/react@19.2.14)(bufferutil@4.1.0)(react@19.2.0)(utf-8-validate@5.0.10))(react@19.2.0)
       '@expo/metro-runtime': 55.0.6(@expo/dom-webview@55.0.3)(expo@55.0.0-preview.12)(react-dom@19.2.0(react@19.2.0))(react-native@0.83.2(@babel/core@7.28.5)(@types/react@19.2.14)(bufferutil@4.1.0)(react@19.2.0)(utf-8-validate@5.0.10))(react@19.2.0)

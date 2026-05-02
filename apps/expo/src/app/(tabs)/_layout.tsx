@@ -185,6 +185,8 @@ export default function TabsLayout() {
       <NativeTabs.Trigger
         name="add"
         role="search"
+        // @ts-expect-error -- preventNavigation comes from our react-native-screens patch; not yet in published .d.ts
+        unstable_nativeProps={{ preventNavigation: true }}
         listeners={{
           tabPress: () => {
             if (!isOnline || isCapturing) return;
