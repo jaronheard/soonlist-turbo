@@ -1,11 +1,13 @@
-import { useEffect } from "react";
+import { useCallback, useEffect, useRef } from "react";
 import {
   ActivityIndicator,
+  Platform,
   Pressable,
   StyleSheet,
   Text,
   View,
 } from "react-native";
+import * as Haptics from "expo-haptics";
 import { router } from "expo-router";
 import { NativeTabs } from "expo-router/unstable-native-tabs";
 import { useQuery } from "convex/react";
@@ -24,9 +26,17 @@ export const unstable_settings = {
   initialRouteName: "feed",
 };
 
+const INLINE_LABEL_SIZE = 15;
+/** `neutral-2` from Tailwind/CSS vars (`apps/expo/src/styles.css` - 98 116 150). */
+const NEUTRAL_2 = "#627496";
+/** `interactive-1` from Tailwind/CSS vars (`apps/expo/src/styles.css` - 90 50 251). */
+const INTERACTIVE_1 = "#5A32FB";
+
 interface CaptureAccessoryProps {
   isCapturing: boolean;
   title: string;
+  /** Short left label when the accessory is minimized (compact tab placement). */
+  inlineLeadingLabel: string;
   actionLabel?: string;
   onPress?: () => void;
 }
@@ -34,6 +44,7 @@ interface CaptureAccessoryProps {
 function CaptureAccessory({
   isCapturing,
   title,
+  inlineLeadingLabel,
   actionLabel,
   onPress,
 }: CaptureAccessoryProps) {
@@ -41,40 +52,91 @@ function CaptureAccessory({
 
   if (placement === "inline") {
     return (
-      <Pressable
-        onPress={onPress}
-        disabled={!onPress}
-        style={styles.inlinePlayer}
-      >
-        {isCapturing ? (
-          <ActivityIndicator color="#5A32FB" size="small" />
-        ) : (
-          <Text style={styles.inlinePlayerText}>Captured</Text>
-        )}
-      </Pressable>
+      <View style={styles.inlinePlayer}>
+        <Text style={styles.inlineAccessoryTitle} numberOfLines={1}>
+          {inlineLeadingLabel}
+        </Text>
+        {isCapturing || (actionLabel && onPress) ? (
+          <View style={styles.inlineTrailing}>
+            {isCapturing ? (
+              <ActivityIndicator color={NEUTRAL_2} size="small" />
+            ) : (
+              <Pressable
+                onPress={onPress}
+                accessibilityRole="button"
+                hitSlop={6}
+                style={styles.accessoryActionPressable}
+              >
+                <Text style={styles.inlineAccessoryAction}>{actionLabel}</Text>
+              </Pressable>
+            )}
+          </View>
+        ) : null}
+      </View>
     );
   }
 
   return (
     <View style={styles.regularPlayer}>
       <Text style={styles.accessoryTitle}>{title}</Text>
-      {isCapturing ? (
-        <ActivityIndicator color="#5A32FB" />
-      ) : actionLabel && onPress ? (
-        <Pressable onPress={onPress} style={styles.accessoryAction}>
-          <Text style={styles.accessoryActionText}>{actionLabel}</Text>
-        </Pressable>
+      {isCapturing || (actionLabel && onPress) ? (
+        <View style={styles.regularTrailing}>
+          {isCapturing ? (
+            <ActivityIndicator color={NEUTRAL_2} />
+          ) : (
+            <Pressable
+              onPress={onPress}
+              accessibilityRole="button"
+              hitSlop={8}
+              style={styles.accessoryActionPressable}
+            >
+              <Text style={styles.accessoryAction}>{actionLabel}</Text>
+            </Pressable>
+          )}
+        </View>
       ) : null}
     </View>
   );
 }
 
 export default function TabsLayout() {
+  const hapticIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const previousBatchStatusRef = useRef<string | undefined>(undefined);
+
   const isCapturing = useInFlightEventStore((s) => s.isCapturing);
   const activeBatchId = useInFlightEventStore((s) => s.activeBatchId);
   const setActiveBatchId = useInFlightEventStore((s) => s.setActiveBatchId);
   const isOnline = useNetworkStatus();
   const { triggerAddEventFlow } = useAddEventFlow();
+
+  const stopCapturingHaptics = useCallback(() => {
+    if (hapticIntervalRef.current) {
+      clearInterval(hapticIntervalRef.current);
+      hapticIntervalRef.current = null;
+    }
+  }, []);
+
+  const startCapturingHaptics = useCallback(() => {
+    if (hapticIntervalRef.current) return;
+
+    let step = 0;
+    const styles = [
+      Haptics.ImpactFeedbackStyle.Light,
+      Haptics.ImpactFeedbackStyle.Light,
+      Haptics.ImpactFeedbackStyle.Medium,
+      Haptics.ImpactFeedbackStyle.Medium,
+      Haptics.ImpactFeedbackStyle.Heavy,
+      Haptics.ImpactFeedbackStyle.Heavy,
+    ];
+
+    hapticIntervalRef.current = setInterval(() => {
+      const style = styles[Math.min(step, styles.length - 1)];
+      if (style !== undefined) {
+        void Haptics.impactAsync(style);
+      }
+      step++;
+    }, 250);
+  }, []);
 
   // The query result IS state — no useEffect → zustand → useStore loop. The
   // count queries are backed by userFeedGroupsAggregate (O(log n)) and return
@@ -91,19 +153,72 @@ export default function TabsLayout() {
   const isBatchComplete =
     batchStatus?.status === "completed" || batchStatus?.status === "failed";
   const showCaptureAccessory = isCapturing || Boolean(activeBatchId);
+  const isMultipleEventBatch = (batchStatus?.totalCount ?? 0) > 1;
   const accessoryTitle = isCapturing
-    ? "Capturing event"
+    ? "Capturing events"
     : !batchStatus
-      ? "Creating event"
+      ? "Capturing events"
       : batchStatus.status === "failed"
-        ? "Event capture failed"
+        ? "Capture failed"
         : isBatchComplete
-          ? "New event captured"
-          : "Creating event";
+          ? isMultipleEventBatch
+            ? "Events captured"
+            : "New event captured"
+          : "Capturing events";
+
+  /** Compact/minimized accessory: mirrors large layout - short left copy, spinner or View trailing. */
+  const inlineLeadingLabel = isCapturing
+    ? "Capturing..."
+    : !batchStatus
+      ? "Capturing..."
+      : batchStatus.status === "failed"
+        ? "failed"
+        : isBatchComplete
+          ? "Captured"
+          : "Capturing...";
   const accessoryActionLabel =
-    isBatchComplete && batchStatus && batchStatus.successCount > 0
+    batchStatus?.status === "completed" && batchStatus.successCount > 0
       ? "View"
       : undefined;
+
+  useEffect(() => {
+    return () => stopCapturingHaptics();
+  }, [stopCapturingHaptics]);
+
+  useEffect(() => {
+    if (showCaptureAccessory && !isBatchComplete) {
+      startCapturingHaptics();
+      return;
+    }
+
+    stopCapturingHaptics();
+  }, [
+    isBatchComplete,
+    showCaptureAccessory,
+    startCapturingHaptics,
+    stopCapturingHaptics,
+  ]);
+
+  useEffect(() => {
+    const previousStatus = previousBatchStatusRef.current;
+    const currentStatus = batchStatus?.status;
+
+    previousBatchStatusRef.current = currentStatus;
+
+    if (previousStatus === currentStatus) return;
+
+    if (currentStatus === "completed") {
+      stopCapturingHaptics();
+      void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy);
+      setTimeout(
+        () =>
+          void Haptics.notificationAsync(
+            Haptics.NotificationFeedbackType.Success,
+          ),
+        100,
+      );
+    }
+  }, [batchStatus?.status, stopCapturingHaptics]);
 
   useEffect(() => {
     if (!isBatchComplete) return;
@@ -117,6 +232,8 @@ export default function TabsLayout() {
 
   const handleAccessoryPress = () => {
     if (!batchStatus || !activeBatchId || !batchStatus.successCount) return;
+
+    void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
 
     if (batchStatus.totalCount === 1 && batchStatus.firstEventId) {
       void router.navigate(`/event/${batchStatus.firstEventId}`);
@@ -139,6 +256,7 @@ export default function TabsLayout() {
           <CaptureAccessory
             isCapturing={isCapturing || !isBatchComplete}
             title={accessoryTitle}
+            inlineLeadingLabel={inlineLeadingLabel}
             actionLabel={accessoryActionLabel}
             onPress={accessoryActionLabel ? handleAccessoryPress : undefined}
           />
@@ -195,36 +313,82 @@ export default function TabsLayout() {
 
 const styles = StyleSheet.create({
   inlinePlayer: {
-    padding: 8,
+    flex: 1,
+    alignSelf: "stretch",
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    paddingVertical: 6,
+    paddingHorizontal: 12,
   },
-  inlinePlayerText: {
-    color: "#5A32FB",
+  inlineAccessoryTitle: {
+    flex: 1,
+    flexShrink: 1,
+    color: NEUTRAL_2,
+    fontSize: INLINE_LABEL_SIZE,
     fontWeight: "700",
+    marginRight: 8,
+    ...(Platform.OS === "android"
+      ? { includeFontPadding: false }
+      : ({
+          paddingVertical: 1,
+        } as const)),
+  },
+  inlineTrailing: {
+    minHeight: INLINE_LABEL_SIZE + (Platform.OS === "ios" ? 8 : 6),
+    justifyContent: "center",
+    alignItems: "flex-end",
+  },
+  inlineAccessoryAction: {
+    color: INTERACTIVE_1,
+    fontSize: INLINE_LABEL_SIZE,
+    fontWeight: "700",
+    ...(Platform.OS === "ios"
+      ? ({ paddingVertical: 1 } as const)
+      : { includeFontPadding: false }),
   },
   regularPlayer: {
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
     paddingHorizontal: 16,
-    gap: 12,
+    // Extra slack at bottom - UITabBar bottomAccessory content tends to clip the last px of descenders.
+    paddingTop: 12,
+    paddingBottom: Platform.select({ ios: 18, default: 14 }),
+  },
+  /**
+   * Fixed-height trailing column so spinner vs "View" share the same cross-axis geometry.
+   * Otherwise the success-only row measures shorter and flexbox re-centers the title differently.
+   */
+  regularTrailing: {
+    minHeight: 28,
+    justifyContent: "center",
+    alignItems: "flex-end",
   },
   accessoryTitle: {
     flex: 1,
-    color: "#1F1A3D",
+    flexShrink: 1,
+    color: NEUTRAL_2,
     fontSize: 15,
     fontWeight: "700",
+    marginRight: 12,
+    // Let RN derive line metrics from the font; fixed lineHeight + bold SF was clipping in the accessory.
+    ...(Platform.OS === "android"
+      ? { includeFontPadding: false }
+      : ({
+          /** iOS: ~1 px breathing room inside the label for the tab accessory slot. */
+          paddingVertical: 1,
+        } as const)),
   },
-  accessoryAction: {
-    borderRadius: 16,
-    backgroundColor: "#5A32FB",
-    paddingHorizontal: 16,
-    minHeight: 32,
-    alignItems: "center",
+  accessoryActionPressable: {
     justifyContent: "center",
   },
-  accessoryActionText: {
-    color: "#FFFFFF",
-    fontWeight: "600",
+  accessoryAction: {
+    color: INTERACTIVE_1,
     fontSize: 15,
+    fontWeight: "700",
+    ...(Platform.OS === "ios"
+      ? ({ paddingVertical: 1 } as const)
+      : { includeFontPadding: false }),
   },
 });
