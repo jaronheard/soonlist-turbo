@@ -398,7 +398,9 @@ export const useAppStore = create<AppState>()(
           filter: "upcoming",
           intentParams: null,
           preferredCalendarApp: null,
-          defaultEventVisibility: DEFAULT_VISIBILITY,
+          // Preserve so the v0→v1 migration's "private" pin (and any
+          // explicit user choice) survives sign-out/sign-in.
+          defaultEventVisibility: state.defaultEventVisibility,
           // Ensure discover override never persists across logout
           discoverAccessOverride: false,
           addEventState: {
