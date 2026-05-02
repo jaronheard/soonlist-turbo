@@ -505,12 +505,31 @@ export const useAppStore = create<AppState>()(
     }),
     {
       name: "app-storage",
+      version: 1,
       storage: createJSONStorage(() => AsyncStorage),
       // Do not persist ephemeral flags like discoverAccessOverride
       partialize: (state) => {
         // eslint-disable-next-line @typescript-eslint/no-unused-vars
         const { discoverAccessOverride, ...rest } = state;
         return rest;
+      },
+      // v0 → v1: existing installs predate the EVENT_DEFAULTS picker, so we
+      // pin them to the legacy "private" default. Only truly-new installs
+      // (no persisted state) fall through to the initial value, which is now
+      // "public".
+      migrate: (persistedState, version) => {
+        if (
+          version < 1 &&
+          persistedState &&
+          typeof persistedState === "object" &&
+          !("defaultEventVisibility" in persistedState)
+        ) {
+          return {
+            ...(persistedState as Record<string, unknown>),
+            defaultEventVisibility: "private",
+          } as AppState;
+        }
+        return persistedState as AppState;
       },
     },
   ),
