@@ -100,7 +100,6 @@ function CaptureAccessory({
 }
 
 export default function TabsLayout() {
-  const hapticIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const previousBatchStatusRef = useRef<string | undefined>(undefined);
 
   const isCapturing = useInFlightEventStore((s) => s.isCapturing);
@@ -108,35 +107,6 @@ export default function TabsLayout() {
   const setActiveBatchId = useInFlightEventStore((s) => s.setActiveBatchId);
   const isOnline = useNetworkStatus();
   const { triggerAddEventFlow } = useAddEventFlow();
-
-  const stopCapturingHaptics = useCallback(() => {
-    if (hapticIntervalRef.current) {
-      clearInterval(hapticIntervalRef.current);
-      hapticIntervalRef.current = null;
-    }
-  }, []);
-
-  const startCapturingHaptics = useCallback(() => {
-    if (hapticIntervalRef.current) return;
-
-    let step = 0;
-    const styles = [
-      Haptics.ImpactFeedbackStyle.Light,
-      Haptics.ImpactFeedbackStyle.Light,
-      Haptics.ImpactFeedbackStyle.Medium,
-      Haptics.ImpactFeedbackStyle.Medium,
-      Haptics.ImpactFeedbackStyle.Heavy,
-      Haptics.ImpactFeedbackStyle.Heavy,
-    ];
-
-    hapticIntervalRef.current = setInterval(() => {
-      const style = styles[Math.min(step, styles.length - 1)];
-      if (style !== undefined) {
-        void Haptics.impactAsync(style);
-      }
-      step++;
-    }, 250);
-  }, []);
 
   // The query result IS state — no useEffect → zustand → useStore loop. The
   // count queries are backed by userFeedGroupsAggregate (O(log n)) and return
@@ -182,24 +152,6 @@ export default function TabsLayout() {
       : undefined;
 
   useEffect(() => {
-    return () => stopCapturingHaptics();
-  }, [stopCapturingHaptics]);
-
-  useEffect(() => {
-    if (showCaptureAccessory && !isBatchComplete) {
-      startCapturingHaptics();
-      return;
-    }
-
-    stopCapturingHaptics();
-  }, [
-    isBatchComplete,
-    showCaptureAccessory,
-    startCapturingHaptics,
-    stopCapturingHaptics,
-  ]);
-
-  useEffect(() => {
     const previousStatus = previousBatchStatusRef.current;
     const currentStatus = batchStatus?.status;
 
@@ -208,17 +160,9 @@ export default function TabsLayout() {
     if (previousStatus === currentStatus) return;
 
     if (currentStatus === "completed") {
-      stopCapturingHaptics();
-      void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy);
-      setTimeout(
-        () =>
-          void Haptics.notificationAsync(
-            Haptics.NotificationFeedbackType.Success,
-          ),
-        100,
-      );
+      void Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
     }
-  }, [batchStatus?.status, stopCapturingHaptics]);
+  }, [batchStatus?.status]);
 
   useEffect(() => {
     if (!isBatchComplete) return;
@@ -242,6 +186,12 @@ export default function TabsLayout() {
 
     void router.navigate(`/batch/${activeBatchId}`);
   };
+
+  const handleAddTabPress = useCallback(() => {
+    if (!isOnline || isCapturing) return;
+
+    void triggerAddEventFlow();
+  }, [isCapturing, isOnline, triggerAddEventFlow]);
 
   return (
     <NativeTabs
@@ -295,11 +245,7 @@ export default function TabsLayout() {
         // @ts-expect-error -- preventNavigation comes from our react-native-screens patch; not yet in published .d.ts
         unstable_nativeProps={{ preventNavigation: true }}
         listeners={{
-          tabPress: () => {
-            if (!isOnline || isCapturing) return;
-
-            void triggerAddEventFlow();
-          },
+          tabPress: handleAddTabPress,
         }}
       >
         <NativeTabs.Trigger.Label>Add</NativeTabs.Trigger.Label>
@@ -348,13 +294,12 @@ const styles = StyleSheet.create({
       : { includeFontPadding: false }),
   },
   regularPlayer: {
+    flex: 1,
+    alignSelf: "stretch",
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
     paddingHorizontal: 16,
-    // Extra slack at bottom - UITabBar bottomAccessory content tends to clip the last px of descenders.
-    paddingTop: 12,
-    paddingBottom: Platform.select({ ios: 18, default: 14 }),
   },
   /**
    * Fixed-height trailing column so spinner vs "View" share the same cross-axis geometry.

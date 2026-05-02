@@ -27,8 +27,6 @@ export function useAddEventFlow() {
     // Set capturing state first, before any async work — eliminates dead zone
     setIsCapturing(true);
 
-    void Haptics.selectionAsync();
-
     try {
       const result = await ImagePicker.launchImageLibraryAsync({
         mediaTypes: ["images"],
@@ -54,7 +52,7 @@ export function useAddEventFlow() {
         }
 
         const assets = result.assets.slice(0, 20);
-        await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+        await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
 
         try {
           const batchId = await createMultipleEvents(
