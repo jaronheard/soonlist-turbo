@@ -27,7 +27,6 @@ export const unstable_settings = {
 interface CaptureAccessoryProps {
   isCapturing: boolean;
   title: string;
-  subtitle: string;
   actionLabel?: string;
   onPress?: () => void;
 }
@@ -35,7 +34,6 @@ interface CaptureAccessoryProps {
 function CaptureAccessory({
   isCapturing,
   title,
-  subtitle,
   actionLabel,
   onPress,
 }: CaptureAccessoryProps) {
@@ -59,10 +57,7 @@ function CaptureAccessory({
 
   return (
     <View style={styles.regularPlayer}>
-      <View style={styles.accessoryText}>
-        <Text style={styles.accessoryTitle}>{title}</Text>
-        <Text style={styles.accessorySubtitle}>{subtitle}</Text>
-      </View>
+      <Text style={styles.accessoryTitle}>{title}</Text>
       {isCapturing ? (
         <ActivityIndicator color="#5A32FB" />
       ) : actionLabel && onPress ? (
@@ -105,11 +100,6 @@ export default function TabsLayout() {
         : isBatchComplete
           ? "New event captured"
           : "Creating event";
-  const accessorySubtitle = isCapturing
-    ? "Preparing your selected photos..."
-    : batchStatus
-      ? `${batchStatus.successCount} of ${batchStatus.totalCount} ready`
-      : "Processing your event...";
   const accessoryActionLabel =
     isBatchComplete && batchStatus && batchStatus.successCount > 0
       ? "View"
@@ -149,7 +139,6 @@ export default function TabsLayout() {
           <CaptureAccessory
             isCapturing={isCapturing || !isBatchComplete}
             title={accessoryTitle}
-            subtitle={accessorySubtitle}
             actionLabel={accessoryActionLabel}
             onPress={accessoryActionLabel ? handleAccessoryPress : undefined}
           />
@@ -218,18 +207,11 @@ const styles = StyleSheet.create({
     justifyContent: "space-between",
     padding: 16,
   },
-  accessoryText: {
-    flex: 1,
-    gap: 2,
-  },
   accessoryTitle: {
+    flex: 1,
     color: "#1F1A3D",
     fontSize: 15,
     fontWeight: "700",
-  },
-  accessorySubtitle: {
-    color: "#5F5A7A",
-    fontSize: 13,
   },
   accessoryAction: {
     borderRadius: 999,
