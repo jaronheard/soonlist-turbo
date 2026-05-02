@@ -6,7 +6,7 @@
 export const DEFAULT_TIMEZONE = "America/Los_Angeles";
 
 // Default visibility setting for new events
-export const DEFAULT_VISIBILITY = "private" as const;
+export const DEFAULT_VISIBILITY = "public" as const;
 
 export type EventVisibility = "public" | "private";
 
