@@ -34,6 +34,7 @@ import {
   ShareIcon,
 } from "~/components/icons";
 import { OverflowPill } from "~/components/OverflowPill";
+import { PrivateVisibilityBadge } from "~/components/PrivateVisibilityBadge";
 import { SavedByModal } from "~/components/SavedByModal";
 import { useAddEventFlow } from "~/hooks/useAddEventFlow";
 import { useEventActions } from "~/hooks/useEventActions";
@@ -274,6 +275,7 @@ export function UserEventListItem(props: UserEventListItemProps) {
       : () => router.push(`/list/${sourceListSlug}`);
 
   const isOwner = demoMode || isCurrentUser;
+  const isPrivate = event.visibility === "private";
 
   // Get emoji and background color based on event type/category
   const { emoji, bgColor } = getEventEmoji(event);
@@ -377,12 +379,14 @@ export function UserEventListItem(props: UserEventListItemProps) {
                 </Text>
               </View>
               {isOwner && !ActionButton && similarEventsCount ? (
-                <View className="flex-row items-center gap-1 opacity-60">
-                  <View className="flex-row items-center gap-0.5 rounded-full bg-neutral-4/70 px-1 py-0.5">
-                    <Copy size={iconSize * 0.7} color="#627496" />
-                    <Text className="text-xs text-neutral-2">
-                      {similarEventsCount}
-                    </Text>
+                <View className="flex-row items-center gap-1">
+                  <View className="flex-row items-center gap-1 opacity-60">
+                    <View className="flex-row items-center gap-0.5 rounded-full bg-neutral-4/70 px-1 py-0.5">
+                      <Copy size={iconSize * 0.7} color="#627496" />
+                      <Text className="text-xs text-neutral-2">
+                        {similarEventsCount}
+                      </Text>
+                    </View>
                   </View>
                 </View>
               ) : null}
@@ -515,6 +519,7 @@ export function UserEventListItem(props: UserEventListItemProps) {
                   </EventMenu>
                 </>
               )}
+              {isPrivate ? <PrivateVisibilityBadge /> : null}
             </View>
           </View>
           {shouldShowCreator ? (
