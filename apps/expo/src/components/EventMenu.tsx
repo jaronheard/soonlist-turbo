@@ -148,7 +148,7 @@ export function EventMenu({
 
       if (showDiscover) {
         items.push({
-          title: event.visibility === "public" ? "Make Private" : "Make Public",
+          title: event.visibility === "public" ? "Make private" : "Make public",
           lucideIcon: event.visibility === "public" ? EyeOff : Globe2,
           systemIcon: event.visibility === "public" ? "eye.slash" : "globe",
         });
@@ -196,7 +196,7 @@ export function EventMenu({
       case "Add to calendar":
         void handleAddToCal();
         break;
-      case "Make Private":
+      case "Make private":
       case "Make public": {
         const newVisibility =
           event.visibility === "public" ? "private" : "public";
