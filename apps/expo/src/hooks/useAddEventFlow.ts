@@ -18,6 +18,7 @@ export function useAddEventFlow() {
   const { user } = useUser();
   const { createMultipleEvents } = useCreateEvent();
   const setIsCapturing = useInFlightEventStore((s) => s.setIsCapturing);
+  const setActiveBatchId = useInFlightEventStore((s) => s.setActiveBatchId);
 
   const triggerAddEventFlow = useCallback(async () => {
     // Early guard: prevent concurrent captures using fresh store read
@@ -25,8 +26,6 @@ export function useAddEventFlow() {
 
     // Set capturing state first, before any async work — eliminates dead zone
     setIsCapturing(true);
-
-    void Haptics.selectionAsync();
 
     try {
       const result = await ImagePicker.launchImageLibraryAsync({
@@ -53,10 +52,10 @@ export function useAddEventFlow() {
         }
 
         const assets = result.assets.slice(0, 20);
-        await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+        await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
 
         try {
-          await createMultipleEvents(
+          const batchId = await createMultipleEvents(
             assets.map((asset) => ({
               imageUri: asset.uri,
               userId,
@@ -64,6 +63,10 @@ export function useAddEventFlow() {
             })),
             { suppressCapturing: true },
           );
+          if (batchId) {
+            setActiveBatchId(batchId);
+          }
+          return batchId;
         } catch (err) {
           logError("Failed to create events", err, { userId, username });
           toast.error("Failed to add events", "Please try again");
@@ -78,7 +81,7 @@ export function useAddEventFlow() {
       toast.error("Failed to open photo picker", "Please try again");
       setIsCapturing(false);
     }
-  }, [user, createMultipleEvents, setIsCapturing]);
+  }, [user, createMultipleEvents, setActiveBatchId, setIsCapturing]);
 
   return { triggerAddEventFlow };
 }
