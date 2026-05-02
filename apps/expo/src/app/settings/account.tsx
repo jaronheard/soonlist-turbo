@@ -39,6 +39,7 @@ import {
   User,
 } from "~/components/icons";
 import { SettingsGroup, SettingsRow } from "~/components/settings/SettingsList";
+import { useToast } from "~/components/Toast";
 import { useCalendar } from "~/hooks/useCalendar";
 import { useShareMyList } from "~/hooks/useShareMyList";
 import { useSignOut } from "~/hooks/useSignOut";
@@ -93,7 +94,7 @@ function Hero({
       style={{
         backgroundColor: PURPLE_WASH,
         paddingTop: 4,
-        paddingBottom: 28,
+        paddingBottom: 14,
         paddingHorizontal: 20,
         alignItems: "center",
       }}
@@ -186,10 +187,7 @@ function Hero({
               }}
               numberOfLines={1}
             >
-              {shareHost}/
-              <Text style={{ fontWeight: "700", color: INK_0 }}>
-                {username}
-              </Text>
+              {shareHost}/{username}
             </Text>
             <Copy
               size={14}
@@ -242,6 +240,7 @@ export default function AccountScreen() {
   const { customerInfo, showProPaywallIfNeeded } = useRevenueCat();
   const signOut = useSignOut();
   const { requestShare } = useShareMyList();
+  const inAppToast = useToast();
 
   const userData = useQuery(
     api.users.getByUsername,
@@ -289,13 +288,13 @@ export default function AccountScreen() {
       try {
         await Clipboard.setStringAsync(url);
         void hapticSuccess();
-        toast.success("Link copied");
+        inAppToast.show({ message: "Link copied" });
       } catch (error) {
         logError("Error copying share link", error);
         toast.error("Failed to copy link");
       }
     })();
-  }, [username]);
+  }, [username, inAppToast]);
 
   const handleOpenVisibility = useCallback(() => {
     router.navigate("/settings/visibility");
@@ -537,7 +536,7 @@ export default function AccountScreen() {
           onEdit={handleOpenEdit}
         />
 
-        <View style={{ height: 14 }} />
+        <View style={{ height: 7 }} />
 
         <SettingsGroup
           header="EVENT DEFAULTS"
