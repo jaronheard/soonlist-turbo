@@ -327,14 +327,6 @@ const InitialLayout = () => {
             headerShown: true,
           }}
         />
-        {/* REGULAR ADD ROUTE */}
-        <Stack.Screen
-          name="add"
-          options={{
-            presentation: "modal",
-            headerShown: true,
-          }}
-        />
         <Stack.Screen
           name="settings/account"
           options={{

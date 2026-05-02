@@ -3,6 +3,9 @@ import { create } from "zustand";
 interface InFlightEventState {
   isCapturing: boolean;
   setIsCapturing: (isCapturing: boolean) => void;
+  activeBatchId: string | null;
+  setActiveBatchId: (batchId: string | null) => void;
+  clearActiveBatchIdIfCurrent: (batchId: string) => void;
   // Track pending batch IDs for non-notification users to show completion feedback
   pendingBatchIds: string[];
   addPendingBatchId: (batchId: string) => void;
@@ -13,6 +16,12 @@ interface InFlightEventState {
 export const useInFlightEventStore = create<InFlightEventState>((set) => ({
   isCapturing: false,
   setIsCapturing: (isCapturing) => set({ isCapturing }),
+  activeBatchId: null,
+  setActiveBatchId: (activeBatchId) => set({ activeBatchId }),
+  clearActiveBatchIdIfCurrent: (batchId) =>
+    set((state) =>
+      state.activeBatchId === batchId ? { activeBatchId: null } : state,
+    ),
   pendingBatchIds: [],
   addPendingBatchId: (batchId) =>
     set((state) => ({

@@ -1,0 +1,36 @@
+diff --git a/build/native-tabs/NativeBottomTabsNavigator.js b/build/native-tabs/NativeBottomTabsNavigator.js
+index 3eab9ad..359603f 100644
+--- a/build/native-tabs/NativeBottomTabsNavigator.js
++++ b/build/native-tabs/NativeBottomTabsNavigator.js
+@@ -100,7 +100,7 @@ function NativeTabsNavigator({ children, backBehavior = defaultBackBehavior, lab
+         }
+     }
+     const focusedIndex = visibleFocusedTabIndex >= 0 ? visibleFocusedTabIndex : 0;
+-    const onTabChange = (0, react_1.useCallback)((tabKey) => {
++    const onTabChange = (0, react_1.useCallback)((tabKey, prevented) => {
+         const descriptor = descriptors[tabKey];
+         const route = descriptor.route;
+         navigation.emit({
+@@ -110,6 +110,7 @@ function NativeTabsNavigator({ children, backBehavior = defaultBackBehavior, lab
+                 __internalTabsType: 'native',
+             },
+         });
++        if (prevented) return;
+         navigation.dispatch({
+             type: 'JUMP_TO',
+             target: state.key,
+diff --git a/build/native-tabs/NativeTabsView.js b/build/native-tabs/NativeTabsView.js
+index 14822ae..3e3e83f 100644
+--- a/build/native-tabs/NativeTabsView.js
++++ b/build/native-tabs/NativeTabsView.js
+@@ -99,8 +99,8 @@ function NativeTabsView(props) {
+     // #region iOS props
+     tabBarTintColor={props?.tintColor} tabBarMinimizeBehavior={minimizeBehavior} tabBarControllerMode={tabBarControllerMode} bottomAccessory={bottomAccessoryFn} tabBarHidden={props.hidden} 
+     // #endregion
+-    onNativeFocusChange={({ nativeEvent: { tabKey } }) => {
+-            props.onTabChange(tabKey);
++    onNativeFocusChange={({ nativeEvent: { tabKey, prevented } }) => {
++            props.onTabChange(tabKey, prevented);
+         }}>
+       {children}
+     </TabsHostWrapper>);

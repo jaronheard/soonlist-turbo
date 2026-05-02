@@ -1,5 +1,5 @@
 diff --git a/ios/RNSScreenStackHeaderConfig.h b/ios/RNSScreenStackHeaderConfig.h
-index d5ea95f556a55ad2bd68626fc0f653c2d9bc24d4..5937586bd123d6896e17fb898c589a3d3a7fc4d5 100644
+index d5ea95f..5937586 100644
 --- a/ios/RNSScreenStackHeaderConfig.h
 +++ b/ios/RNSScreenStackHeaderConfig.h
 @@ -47,6 +47,7 @@ NS_ASSUME_NONNULL_BEGIN
@@ -11,7 +11,7 @@ index d5ea95f556a55ad2bd68626fc0f653c2d9bc24d4..5937586bd123d6896e17fb898c589a3d
  @property (nonatomic, retain) NSNumber *largeTitleFontSize;
  @property (nonatomic, retain) NSString *largeTitleFontWeight;
 diff --git a/ios/RNSScreenStackHeaderConfig.mm b/ios/RNSScreenStackHeaderConfig.mm
-index 3270127a09a05af656566009ee6c4437590bb435..86617647ad4fc7706bd6cacea451608f83f53343 100644
+index 3270127..1e471c4 100644
 --- a/ios/RNSScreenStackHeaderConfig.mm
 +++ b/ios/RNSScreenStackHeaderConfig.mm
 @@ -591,8 +591,20 @@ RNS_IGNORE_SUPER_CALL_END
@@ -53,8 +53,183 @@ index 3270127a09a05af656566009ee6c4437590bb435..86617647ad4fc7706bd6cacea451608f
  RCT_EXPORT_VIEW_PROPERTY(largeTitleFontFamily, NSString)
  RCT_EXPORT_VIEW_PROPERTY(largeTitleFontSize, NSNumber)
  RCT_EXPORT_VIEW_PROPERTY(largeTitleFontWeight, NSString)
+diff --git a/ios/bottom-tabs/host/RNSBottomTabsHostComponentView.h b/ios/bottom-tabs/host/RNSBottomTabsHostComponentView.h
+index b0f65b8..0504b5f 100644
+--- a/ios/bottom-tabs/host/RNSBottomTabsHostComponentView.h
++++ b/ios/bottom-tabs/host/RNSBottomTabsHostComponentView.h
+@@ -75,7 +75,8 @@ NS_ASSUME_NONNULL_BEGIN
+ - (nonnull RNSBottomTabsHostEventEmitter *)reactEventEmitter;
+ 
+ - (BOOL)emitOnNativeFocusChangeRequestSelectedTabScreen:(nonnull RNSBottomTabsScreenComponentView *)tabScreen
+-                repeatedSelectionHandledBySpecialEffect:(BOOL)repeatedSelectionHandledBySpecialEffect;
++                repeatedSelectionHandledBySpecialEffect:(BOOL)repeatedSelectionHandledBySpecialEffect
++                                              prevented:(BOOL)prevented;
+ 
+ #if !RCT_NEW_ARCH_ENABLED
+ #pragma mark - LEGACY Event blocks
+diff --git a/ios/bottom-tabs/host/RNSBottomTabsHostComponentView.mm b/ios/bottom-tabs/host/RNSBottomTabsHostComponentView.mm
+index fc6257e..00c18be 100644
+--- a/ios/bottom-tabs/host/RNSBottomTabsHostComponentView.mm
++++ b/ios/bottom-tabs/host/RNSBottomTabsHostComponentView.mm
+@@ -268,11 +268,13 @@ namespace react = facebook::react;
+ 
+ - (BOOL)emitOnNativeFocusChangeRequestSelectedTabScreen:(nonnull RNSBottomTabsScreenComponentView *)tabScreen
+                 repeatedSelectionHandledBySpecialEffect:(BOOL)repeatedSelectionHandledBySpecialEffect
++                                              prevented:(BOOL)prevented
+ {
+   return [_reactEventEmitter
+       emitOnNativeFocusChange:OnNativeFocusChangePayload{
+                                   .tabKey = tabScreen.tabKey,
+-                                  .repeatedSelectionHandledBySpecialEffect = repeatedSelectionHandledBySpecialEffect}];
++                                  .repeatedSelectionHandledBySpecialEffect = repeatedSelectionHandledBySpecialEffect,
++                                  .prevented = prevented}];
+ }
+ 
+ #pragma mark - RCTComponentViewProtocol
+diff --git a/ios/bottom-tabs/host/RNSBottomTabsHostEventEmitter.h b/ios/bottom-tabs/host/RNSBottomTabsHostEventEmitter.h
+index 09da2b0..339d4ae 100644
+--- a/ios/bottom-tabs/host/RNSBottomTabsHostEventEmitter.h
++++ b/ios/bottom-tabs/host/RNSBottomTabsHostEventEmitter.h
+@@ -19,11 +19,13 @@ NS_ASSUME_NONNULL_BEGIN
+ struct OnNativeFocusChangePayload {
+   NSString *_Nonnull tabKey;
+   BOOL repeatedSelectionHandledBySpecialEffect;
++  BOOL prevented;
+ };
+ #else
+ typedef struct {
+   NSString *_Nonnull tabKey;
+   BOOL repeatedSelectionHandledBySpecialEffect;
++  BOOL prevented;
+ } OnNativeFocusChangePayload;
+ #endif
+ 
+diff --git a/ios/bottom-tabs/host/RNSBottomTabsHostEventEmitter.mm b/ios/bottom-tabs/host/RNSBottomTabsHostEventEmitter.mm
+index 484ab0d..79d17c8 100644
+--- a/ios/bottom-tabs/host/RNSBottomTabsHostEventEmitter.mm
++++ b/ios/bottom-tabs/host/RNSBottomTabsHostEventEmitter.mm
+@@ -40,7 +40,8 @@ namespace react = facebook::react;
+     _reactEventEmitter->onNativeFocusChange(
+         {.tabKey = RCTStringFromNSString(payload.tabKey),
+          .repeatedSelectionHandledBySpecialEffect =
+-             static_cast<bool>(payload.repeatedSelectionHandledBySpecialEffect)});
++             static_cast<bool>(payload.repeatedSelectionHandledBySpecialEffect),
++         .prevented = static_cast<bool>(payload.prevented)});
+     return YES;
+   } else {
+     RCTLogWarn(@"[RNScreens] Skipped OnNativeFocusChange event emission due to nullish emitter");
+@@ -50,7 +51,8 @@ namespace react = facebook::react;
+   if (self.onNativeFocusChange) {
+     self.onNativeFocusChange(@{
+       @"tabKey" : payload.tabKey,
+-      @"repeatedSelectionHandledBySpecialEffect" : @(payload.repeatedSelectionHandledBySpecialEffect)
++      @"repeatedSelectionHandledBySpecialEffect" : @(payload.repeatedSelectionHandledBySpecialEffect),
++      @"prevented" : @(payload.prevented)
+     });
+     return YES;
+   } else {
+diff --git a/ios/bottom-tabs/host/RNSTabBarControllerDelegate.mm b/ios/bottom-tabs/host/RNSTabBarControllerDelegate.mm
+index 71713b3..2767149 100644
+--- a/ios/bottom-tabs/host/RNSTabBarControllerDelegate.mm
++++ b/ios/bottom-tabs/host/RNSTabBarControllerDelegate.mm
+@@ -38,14 +38,17 @@
+   BOOL repeatedSelection = [tabBarCtrl selectedViewController] == tabScreenCtrl;
+   BOOL repeatedSelectionHandledBySpecialEffect =
+       repeatedSelection ? [tabScreenCtrl tabScreenSelectedRepeatedly] : false;
++  BOOL preventNavigation = tabScreenCtrl.tabScreenComponentView.preventNavigation;
+ 
+   [tabBarCtrl.tabsHostComponentView
+       emitOnNativeFocusChangeRequestSelectedTabScreen:tabScreenCtrl.tabScreenComponentView
+-              repeatedSelectionHandledBySpecialEffect:repeatedSelectionHandledBySpecialEffect];
++              repeatedSelectionHandledBySpecialEffect:repeatedSelectionHandledBySpecialEffect
++                                            prevented:preventNavigation];
+ 
+   // On repeated selection we return false to prevent native *pop to root* effect that works only starting from iOS 26
+   // and interferes with our implementation (which is necessary for controlled tabs).
+-  return repeatedSelection ? false : ![self shouldPreventNativeTabChangeWithinTabBarController:tabBarCtrl];
++  return repeatedSelection ? false
++                           : ![self shouldPreventNativeTabChangeWithinTabBarController:tabBarCtrl] && !preventNavigation;
+ }
+ 
+ - (void)tabBarController:(UITabBarController *)tabBarController
+diff --git a/ios/bottom-tabs/screen/RNSBottomTabsScreenComponentView.h b/ios/bottom-tabs/screen/RNSBottomTabsScreenComponentView.h
+index 6725bd9..f0d0bdd 100644
+--- a/ios/bottom-tabs/screen/RNSBottomTabsScreenComponentView.h
++++ b/ios/bottom-tabs/screen/RNSBottomTabsScreenComponentView.h
+@@ -63,6 +63,7 @@ NS_ASSUME_NONNULL_BEGIN
+ @property (nonatomic) BOOL isSelectedScreen;
+ @property (nonatomic, nullable) NSString *tabKey;
+ @property (nonatomic, nullable) NSString *badgeValue;
++@property (nonatomic) BOOL preventNavigation;
+ 
+ @property (nonatomic, nullable) NSString *tabBarItemTestID;
+ @property (nonatomic, nullable) NSString *tabBarItemAccessibilityLabel;
+diff --git a/ios/bottom-tabs/screen/RNSBottomTabsScreenComponentView.mm b/ios/bottom-tabs/screen/RNSBottomTabsScreenComponentView.mm
+index 3da4fc4..45e7cf5 100644
+--- a/ios/bottom-tabs/screen/RNSBottomTabsScreenComponentView.mm
++++ b/ios/bottom-tabs/screen/RNSBottomTabsScreenComponentView.mm
+@@ -77,6 +77,7 @@ namespace react = facebook::react;
+ {
+   _isSelectedScreen = NO;
+   _badgeValue = nil;
++  _preventNavigation = NO;
+   _title = nil;
+   _isTitleUndefined = YES;
+   _orientation = RNSOrientationInherit;
+@@ -287,6 +288,10 @@ RNS_IGNORE_SUPER_CALL_END
+     tabBarItemNeedsUpdate = YES;
+   }
+ 
++  if (newComponentProps.preventNavigation != oldComponentProps.preventNavigation) {
++    _preventNavigation = newComponentProps.preventNavigation;
++  }
++
+   if (newComponentProps.tabBarItemTestID != oldComponentProps.tabBarItemTestID) {
+     _tabItemTestID = RCTNSStringFromStringNilIfEmpty(newComponentProps.tabBarItemTestID);
+     _tabBarItemNeedsA11yUpdate = YES;
+diff --git a/ios/bottom-tabs/screen/RNSBottomTabsScreenComponentViewManager.mm b/ios/bottom-tabs/screen/RNSBottomTabsScreenComponentViewManager.mm
+index b41ac39..f47fde3 100644
+--- a/ios/bottom-tabs/screen/RNSBottomTabsScreenComponentViewManager.mm
++++ b/ios/bottom-tabs/screen/RNSBottomTabsScreenComponentViewManager.mm
+@@ -18,6 +18,7 @@ RCT_EXPORT_MODULE(RNSBottomTabsScreenManager)
+ }
+ 
+ RCT_EXPORT_VIEW_PROPERTY(tabKey, NSString);
++RCT_EXPORT_VIEW_PROPERTY(preventNavigation, BOOL);
+ 
+ RCT_REMAP_VIEW_PROPERTY(isFocused, isSelectedScreen, BOOL);
+ RCT_EXPORT_VIEW_PROPERTY(title, NSString);
+diff --git a/src/components/tabs/TabsHost.types.ts b/src/components/tabs/TabsHost.types.ts
+index b4acf60..425badb 100644
+--- a/src/components/tabs/TabsHost.types.ts
++++ b/src/components/tabs/TabsHost.types.ts
+@@ -14,6 +14,7 @@ export type TabAccessoryComponentFactory = (
+ export type NativeFocusChangeEvent = {
+   tabKey: string;
+   repeatedSelectionHandledBySpecialEffect: boolean;
++  prevented: boolean;
+ };
+ 
+ // Android-specific
+diff --git a/src/components/tabs/TabsScreen.types.ts b/src/components/tabs/TabsScreen.types.ts
+index 3fba9df..f132d7a 100644
+--- a/src/components/tabs/TabsScreen.types.ts
++++ b/src/components/tabs/TabsScreen.types.ts
+@@ -278,6 +278,12 @@ export interface TabsScreenProps {
+    * @platform android, ios
+    */
+   tabKey: string;
++  /**
++   * @summary Emits focus change event but prevents native tab selection.
++   *
++   * @platform ios
++   */
++  preventNavigation?: boolean;
+   // #endregion
+ 
+   // #region General
 diff --git a/src/fabric/ScreenStackHeaderConfigNativeComponent.ts b/src/fabric/ScreenStackHeaderConfigNativeComponent.ts
-index fcbb2683cb438fe433edc7b3261041c75776d479..21ff24ec23b2ee8f7dac217a438564eb3595f948 100644
+index fcbb268..21ff24e 100644
 --- a/src/fabric/ScreenStackHeaderConfigNativeComponent.ts
 +++ b/src/fabric/ScreenStackHeaderConfigNativeComponent.ts
 @@ -53,6 +53,7 @@ export interface NativeProps extends ViewProps {
@@ -65,3 +240,27 @@ index fcbb2683cb438fe433edc7b3261041c75776d479..21ff24ec23b2ee8f7dac217a438564eb
    largeTitleFontFamily?: string;
    largeTitleFontSize?: CT.Int32;
    largeTitleFontWeight?: string;
+diff --git a/src/fabric/bottom-tabs/BottomTabsNativeComponent.ts b/src/fabric/bottom-tabs/BottomTabsNativeComponent.ts
+index 45181b6..968311e 100644
+--- a/src/fabric/bottom-tabs/BottomTabsNativeComponent.ts
++++ b/src/fabric/bottom-tabs/BottomTabsNativeComponent.ts
+@@ -13,6 +13,7 @@ import type { CodegenTypes as CT, ColorValue, ViewProps } from 'react-native';
+ type NativeFocusChangeEvent = {
+   tabKey: string;
+   repeatedSelectionHandledBySpecialEffect: boolean;
++  prevented: boolean;
+ };
+ 
+ type TabBarItemLabelVisibilityMode =
+diff --git a/src/fabric/bottom-tabs/BottomTabsScreenNativeComponent.ts b/src/fabric/bottom-tabs/BottomTabsScreenNativeComponent.ts
+index 857fa9c..2390211 100644
+--- a/src/fabric/bottom-tabs/BottomTabsScreenNativeComponent.ts
++++ b/src/fabric/bottom-tabs/BottomTabsScreenNativeComponent.ts
+@@ -118,6 +118,7 @@ export interface NativeProps extends ViewProps {
+   // Control
+   isFocused?: boolean;
+   tabKey: string;
++  preventNavigation?: boolean;
+ 
+   // General
+   title?: string | undefined | null;
