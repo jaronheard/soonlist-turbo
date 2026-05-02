@@ -104,7 +104,9 @@ export default function TabsLayout() {
 
   const isCapturing = useInFlightEventStore((s) => s.isCapturing);
   const activeBatchId = useInFlightEventStore((s) => s.activeBatchId);
-  const setActiveBatchId = useInFlightEventStore((s) => s.setActiveBatchId);
+  const clearActiveBatchIdIfCurrent = useInFlightEventStore(
+    (s) => s.clearActiveBatchIdIfCurrent,
+  );
   const isOnline = useNetworkStatus();
   const { triggerAddEventFlow } = useAddEventFlow();
 
@@ -165,14 +167,14 @@ export default function TabsLayout() {
   }, [batchStatus?.status]);
 
   useEffect(() => {
-    if (!isBatchComplete) return;
+    if (!isBatchComplete || !activeBatchId) return;
 
     const timeout = setTimeout(() => {
-      setActiveBatchId(null);
+      clearActiveBatchIdIfCurrent(activeBatchId);
     }, 5000);
 
     return () => clearTimeout(timeout);
-  }, [isBatchComplete, setActiveBatchId]);
+  }, [activeBatchId, clearActiveBatchIdIfCurrent, isBatchComplete]);
 
   const handleAccessoryPress = () => {
     if (!batchStatus || !activeBatchId || !batchStatus.successCount) return;
