@@ -148,7 +148,7 @@ export function EventMenu({
 
       if (showDiscover) {
         items.push({
-          title: event.visibility === "public" ? "Make Private" : "Make public",
+          title: event.visibility === "public" ? "Make Private" : "Make Public",
           lucideIcon: event.visibility === "public" ? EyeOff : Globe2,
           systemIcon: event.visibility === "public" ? "eye.slash" : "globe",
         });
