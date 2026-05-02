@@ -31,6 +31,7 @@ export default function EventCard(props: {
   deleteButton?: React.ReactNode;
   onAddToCalendar?: () => void;
   eventMetadata?: EventMetadata;
+  visibilityBadge?: React.ReactNode;
 }) {
   const {
     eventImage,
@@ -52,6 +53,7 @@ export default function EventCard(props: {
     deleteButton,
     onAddToCalendar,
     eventMetadata,
+    visibilityBadge,
   } = props;
 
   const displayName = userDisplayName || (userName ? userName : "");
@@ -135,20 +137,25 @@ export default function EventCard(props: {
               )}
 
               {/* Location */}
-              {eventLocation.trim() && getGoogleMapsUrl(eventLocation) && (
-                <a
-                  href={getGoogleMapsUrl(eventLocation)}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="group flex items-center justify-start gap-2 text-lg font-medium leading-none text-interactive-1 transition-colors hover:underline"
-                  aria-label={`Open ${eventLocation} in maps`}
-                >
-                  <MapPinned
-                    className="size-4 flex-shrink-0 text-interactive-1"
-                    aria-hidden="true"
-                  />
-                  <span className="min-w-0">{eventLocation}</span>
-                </a>
+              {(eventLocation.trim() || visibilityBadge) && (
+                <div className="flex flex-wrap items-center gap-2">
+                  {eventLocation.trim() && getGoogleMapsUrl(eventLocation) && (
+                    <a
+                      href={getGoogleMapsUrl(eventLocation)}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="group flex items-center justify-start gap-2 text-lg font-medium leading-none text-interactive-1 transition-colors hover:underline"
+                      aria-label={`Open ${eventLocation} in maps`}
+                    >
+                      <MapPinned
+                        className="size-4 flex-shrink-0 text-interactive-1"
+                        aria-hidden="true"
+                      />
+                      <span className="min-w-0">{eventLocation}</span>
+                    </a>
+                  )}
+                  {visibilityBadge}
+                </div>
               )}
             </div>
 

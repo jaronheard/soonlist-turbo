@@ -37,7 +37,6 @@ import { HeaderLogo } from "~/components/HeaderLogo";
 import {
   CalendarPlus,
   EyeOff,
-  Globe2,
   Heart,
   Instagram,
   MapPinned,
@@ -57,7 +56,6 @@ import { AF_EVENTS, trackAFEvent } from "~/utils/appsflyerEvents";
 import { formatEventDateRange } from "~/utils/dates";
 import { getEventCache } from "~/utils/eventCache";
 import { eventFollowsToSavers } from "~/utils/eventFollows";
-import { getPlanStatusFromUser } from "~/utils/plan";
 import { formatUrlForDisplay } from "../../../utils/links";
 
 // Helper to get platform URL for mentions
@@ -126,9 +124,6 @@ function EventDetail({ id }: { id: string }) {
   const insets = useSafeAreaInsets();
   const { user: currentUser } = useUser();
   const navigation = useNavigation();
-  const showDiscover = currentUser
-    ? getPlanStatusFromUser(currentUser).showDiscover
-    : false;
 
   // Check if we can go back in the navigation stack
   const canGoBack = navigation.canGoBack();
@@ -423,10 +418,9 @@ function EventDetail({ id }: { id: string }) {
             </Text>
           </View>
 
-          {/* Meta rows (venue + visibility) */}
-          {(eventData.location || (showDiscover && isCurrentUserEvent)) && (
-            <View className="mt-4 flex flex-col gap-2">
-              {/* Location link */}
+          {/* Meta rows */}
+          {(eventData.location || event.visibility === "private") && (
+            <View className="mt-4 flex-col gap-3">
               {eventData.location && (
                 <Link
                   href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(
@@ -444,23 +438,12 @@ function EventDetail({ id }: { id: string }) {
                   </Pressable>
                 </Link>
               )}
-
-              {/* Visibility (owner-only info). Attribution now lives in the
-                  "From these Soonlists" section below. */}
-              {showDiscover && isCurrentUserEvent && (
-                <View className="flex-row items-center gap-2">
-                  {event.visibility === "public" ? (
-                    <Globe2 size={16} color="#627496" />
-                  ) : (
-                    <EyeOff size={16} color="#627496" />
-                  )}
-                  <Text className="text-sm text-neutral-2">
-                    {event.visibility === "public"
-                      ? "Discoverable"
-                      : "Not discoverable"}
-                  </Text>
+              {event.visibility === "private" ? (
+                <View className="flex-row items-center">
+                  <EyeOff size={16} color="#627496" />
+                  <Text className="ml-1 text-neutral-2">Private</Text>
                 </View>
-              )}
+              ) : null}
             </View>
           )}
 

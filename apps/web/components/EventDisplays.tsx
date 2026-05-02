@@ -5,7 +5,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { useUser } from "@clerk/nextjs";
 import { atcb_action } from "add-to-calendar-button-react";
-import { Copy, Earth, EyeOff, Instagram, MapPin } from "lucide-react";
+import { Copy, Instagram, MapPin } from "lucide-react";
 
 import type { DateInfo, EventMetadata, SimilarityDetails } from "@soonlist/cal";
 import type {
@@ -32,6 +32,7 @@ import { EditButton } from "./EditButton";
 import EventCard from "./EventCard";
 import { FollowEventButton } from "./FollowButtons";
 import { buildDefaultUrl } from "./ImageUpload";
+import { PrivateVisibilityBadge } from "./PrivateVisibilityBadge";
 import { SaveButton } from "./SaveButton";
 import { ShareButton } from "./ShareButton";
 import { UserAvatarMini } from "./UserAvatarMini";
@@ -279,6 +280,7 @@ function EventDetailsCard({
   timezone,
   location,
   description,
+  visibility,
   noLinks = false,
 }: {
   id: string;
@@ -291,6 +293,7 @@ function EventDetailsCard({
   timezone: string;
   description?: string;
   location?: string;
+  visibility: "public" | "private";
   noLinks?: boolean;
 }) {
   const { timezone: userTimezone } = useContext(TimezoneContext);
@@ -363,7 +366,7 @@ function EventDetailsCard({
             {name}
           </Link>
         )}
-        <div className="flex-start flex gap-2 pr-12 text-lg font-medium leading-none">
+        <div className="flex-start flex flex-wrap gap-2 pr-12 text-lg font-medium leading-none">
           {location && (
             <>
               {noLinks ? (
@@ -382,6 +385,7 @@ function EventDetailsCard({
               )}
             </>
           )}
+          {visibility === "private" ? <PrivateVisibilityBadge /> : null}
         </div>
       </div>
     </div>
@@ -462,11 +466,6 @@ function EventDetails({
   return (
     <div className="relative">
       <div className="mb-2 flex items-center">
-        {visibility === "private" ? (
-          <EyeOff className="mr-2 size-4 text-neutral-2" />
-        ) : (
-          <Earth className="mr-2 size-4 text-neutral-2" />
-        )}
         <DateAndTimeDisplay
           endDateInfo={endDateInfo}
           endTime={endTime}
@@ -490,7 +489,7 @@ function EventDetails({
         >
           {name}
         </Link>
-        <div className="text-xs">
+        <div className="flex flex-wrap items-center gap-2 text-xs">
           {location && (
             <Link
               href={getGoogleMapsUrl(location)}
@@ -500,6 +499,7 @@ function EventDetails({
               <span className="inline">{location}</span>
             </Link>
           )}
+          {visibility === "private" ? <PrivateVisibilityBadge /> : null}
         </div>
 
         {/* TODO: 
@@ -628,8 +628,8 @@ function EventActionButtons({
           </Link>
         )}
         {visibility === "private" && (
-          <div className="text-lg font-medium leading-none text-neutral-1">
-            <EyeOff className="mr-2 inline size-4" /> Not discoverable
+          <div>
+            <PrivateVisibilityBadge className="text-sm" />
           </div>
         )}
         <Link
@@ -677,6 +677,7 @@ export function EventListItem(props: EventListItemProps) {
   const isFollowing = !!eventFollows.find(
     (item) => item.userId === clerkUser?.id,
   );
+  const isPrivate = visibility === "private";
   const image =
     event.images?.[3] ||
     (filePath ? buildDefaultUrl(props.filePath || "") : undefined);
@@ -928,18 +929,26 @@ export function EventListItem(props: EventListItemProps) {
               <div className="flex items-center gap-1">
                 <p className="text-xs font-medium text-neutral-2">{dateText}</p>
               </div>
-              {isOwner &&
+              {isPrivate ||
+              (isOwner &&
                 props.similarEvents &&
-                props.similarEvents.length > 0 && (
-                  <div className="flex items-center gap-1 opacity-60">
-                    <div className="flex items-center gap-1 rounded-full bg-neutral-4/70 px-2 py-0.5">
-                      <Copy className="size-3.5" />
-                      <span className="text-xs text-neutral-2">
-                        {props.similarEvents.length}
-                      </span>
-                    </div>
-                  </div>
-                )}
+                props.similarEvents.length > 0) ? (
+                <div className="flex items-center gap-1">
+                  {isPrivate ? <PrivateVisibilityBadge /> : null}
+                  {isOwner &&
+                    props.similarEvents &&
+                    props.similarEvents.length > 0 && (
+                      <div className="flex items-center gap-1 opacity-60">
+                        <div className="flex items-center gap-1 rounded-full bg-neutral-4/70 px-2 py-0.5">
+                          <Copy className="size-3.5" />
+                          <span className="text-xs text-neutral-2">
+                            {props.similarEvents.length}
+                          </span>
+                        </div>
+                      </div>
+                    )}
+                </div>
+              ) : null}
             </div>
 
             <h3 className="mb-1 truncate text-base font-bold text-neutral-1">
@@ -1086,6 +1095,7 @@ export function EventListItem(props: EventListItemProps) {
                 timezone={event.timeZone || DEFAULT_TIMEZONE}
                 location={event.location}
                 description={event.description}
+                visibility={visibility}
                 noLinks={true}
               />
             )}
@@ -1448,6 +1458,9 @@ export function EventPage(props: EventPageProps) {
       eventImage={image || null}
       onAddToCalendar={handleAddToCalendar}
       eventMetadata={props.eventMetadata}
+      visibilityBadge={
+        props.visibility === "private" ? <PrivateVisibilityBadge /> : null
+      }
       calendarButton={
         <CalendarButton
           event={event as ATCBActionEventConfig}
