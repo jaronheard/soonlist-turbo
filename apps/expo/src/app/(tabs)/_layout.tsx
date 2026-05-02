@@ -205,7 +205,8 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
-    padding: 16,
+    paddingHorizontal: 16,
+    gap: 12,
   },
   accessoryTitle: {
     flex: 1,
@@ -214,13 +215,16 @@ const styles = StyleSheet.create({
     fontWeight: "700",
   },
   accessoryAction: {
-    borderRadius: 999,
+    borderRadius: 16,
     backgroundColor: "#5A32FB",
-    paddingHorizontal: 14,
-    paddingVertical: 8,
+    paddingHorizontal: 16,
+    minHeight: 32,
+    alignItems: "center",
+    justifyContent: "center",
   },
   accessoryActionText: {
     color: "#FFFFFF",
-    fontWeight: "700",
+    fontWeight: "600",
+    fontSize: 15,
   },
 });
