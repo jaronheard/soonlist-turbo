@@ -722,6 +722,33 @@ const ScreenshotCta = ({
   );
 };
 
+interface DiscoverSoonlistsCtaProps {
+  onPress: () => void;
+}
+
+const DiscoverSoonlistsCta = ({ onPress }: DiscoverSoonlistsCtaProps) => {
+  const { fontScale } = useWindowDimensions();
+
+  return (
+    <View className="mb-6 items-center py-4">
+      <TouchableOpacity
+        className="flex-row items-center justify-center gap-1.5 rounded-full bg-interactive-2 px-4 py-3"
+        onPress={onPress}
+        activeOpacity={0.7}
+        accessibilityRole="button"
+        accessibilityLabel="See other Soonlists"
+      >
+        <Text
+          className="text-center font-semibold text-neutral-1"
+          style={{ fontSize: 14 * fontScale }}
+        >
+          See other Soonlists →
+        </Text>
+      </TouchableOpacity>
+    </View>
+  );
+};
+
 const GhostEventCard = ({ index }: { index: number }) => {
   const { fontScale } = useWindowDimensions();
 
@@ -966,6 +993,8 @@ interface UserEventsListProps {
   attributionVariant?: EventAttributionVariant;
   upcomingEventCount?: number;
   onSharePress?: () => void;
+  footerCta?: "screenshot" | "discoverSoonlists";
+  onDiscoverSoonlists?: () => void;
 }
 
 export default function UserEventsList(props: UserEventsListProps) {
@@ -988,6 +1017,8 @@ export default function UserEventsList(props: UserEventsListProps) {
     attributionVariant,
     upcomingEventCount = 0,
     onSharePress,
+    footerCta = "screenshot",
+    onDiscoverSoonlists,
   } = props;
   const { user } = useUser();
   // Use pre-grouped events if provided, otherwise collapse client-side
@@ -1066,10 +1097,16 @@ export default function UserEventsList(props: UserEventsListProps) {
           </View>
         ) : null}
         {showSourceStickers ? (
-          <ScreenshotCta
-            upcomingEventCount={upcomingEventCount}
-            onSharePress={onSharePress ?? (() => undefined)}
-          />
+          footerCta === "discoverSoonlists" ? (
+            <DiscoverSoonlistsCta
+              onPress={onDiscoverSoonlists ?? (() => undefined)}
+            />
+          ) : (
+            <ScreenshotCta
+              upcomingEventCount={upcomingEventCount}
+              onSharePress={onSharePress ?? (() => undefined)}
+            />
+          )
         ) : null}
       </>
     );

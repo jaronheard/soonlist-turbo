@@ -325,13 +325,15 @@ export function ReferralEmptyState({
 
           {hasFollowings ? (
             <View className="mt-6 items-center">
-              <Text className="mb-1 text-sm text-neutral-2">
-                {followedEventCount === 1
-                  ? "1 event added to My Scene"
-                  : `${followedEventCount}${
-                      hasMoreFollowedEvents ? "+" : ""
-                    } events added to My Scene`}
-              </Text>
+              {followedEventCount > 0 ? (
+                <Text className="mb-1 text-sm text-neutral-2">
+                  {followedEventCount === 1
+                    ? "1 event added to My Scene"
+                    : `${followedEventCount}${
+                        hasMoreFollowedEvents ? "+" : ""
+                      } events added to My Scene`}
+                </Text>
+              ) : null}
               <TouchableOpacity
                 onPress={onExitToFeed}
                 activeOpacity={0.7}

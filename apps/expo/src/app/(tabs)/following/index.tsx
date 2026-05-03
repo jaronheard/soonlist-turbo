@@ -5,7 +5,7 @@ import React, {
   useRef,
   useState,
 } from "react";
-import { Share, Text, TouchableOpacity, View } from "react-native";
+import { Text, TouchableOpacity, View } from "react-native";
 import { Redirect, useFocusEffect } from "expo-router";
 import { SymbolView } from "expo-symbols";
 import { useUser } from "@clerk/clerk-expo";
@@ -19,6 +19,7 @@ import {
 import { api } from "@soonlist/backend/convex/_generated/api";
 
 import { DefaultEmptyState } from "~/components/DefaultEmptyState";
+import { DiscoverSoonlistsModal } from "~/components/DiscoverSoonlistsModal";
 import { FollowedListsModal } from "~/components/FollowedListsModal";
 import { MatchAuthLoadingSurface } from "~/components/MatchAuthLoadingSurface";
 import { ReferralEmptyState } from "~/components/ReferralEmptyState";
@@ -27,7 +28,6 @@ import UserEventsList from "~/components/UserEventsList";
 import { useStableFeedListBodyLoading } from "~/hooks/useStableFeedListBodyLoading";
 import { useStablePaginatedQuery } from "~/hooks/useStableQuery";
 import { useAppStore, useStableTimestamp } from "~/store";
-import { logError } from "~/utils/errorLogging";
 import { eventMatchesFeedSegment } from "~/utils/feedSegment";
 
 type Segment = "upcoming" | "past";
@@ -36,6 +36,7 @@ function FollowingFeedContent() {
   const { user } = useUser();
   const [selectedSegment, setSelectedSegment] = useState<Segment>("upcoming");
   const [isModalVisible, setIsModalVisible] = useState(false);
+  const [isDiscoverModalVisible, setIsDiscoverModalVisible] = useState(false);
   const stableTimestamp = useStableTimestamp();
 
   const pendingFollowUsername = useAppStore(
@@ -197,25 +198,6 @@ function FollowingFeedContent() {
   }, [groupedEvents, stableTimestamp, selectedSegment]);
 
   const followedListCount = followedLists?.length ?? 0;
-  const singleFollowedList =
-    followedListCount === 1 ? followedLists?.[0] : null;
-
-  const handleShareList = useCallback(
-    async (listName: string, listSlug?: string) => {
-      const shareUrl = listSlug
-        ? `https://soonlist.com/list/${listSlug}`
-        : "https://soonlist.com";
-      try {
-        await Share.share({
-          message: `Check out ${listName} on Soonlist`,
-          url: shareUrl,
-        });
-      } catch (error) {
-        logError("Error sharing list", error);
-      }
-    },
-    [],
-  );
 
   const HeaderComponent = useCallback(() => {
     return (
@@ -228,16 +210,7 @@ function FollowingFeedContent() {
         </Text>
         {followedListCount > 0 && (
           <TouchableOpacity
-            onPress={() => {
-              if (singleFollowedList) {
-                void handleShareList(
-                  singleFollowedList.name,
-                  singleFollowedList.slug ?? undefined,
-                );
-              } else {
-                setIsModalVisible(true);
-              }
-            }}
+            onPress={() => setIsModalVisible(true)}
             activeOpacity={0.7}
             className="mb-2"
             style={{ paddingLeft: 6 }}
@@ -247,8 +220,8 @@ function FollowingFeedContent() {
               <SymbolView name="list.bullet" size={14} tintColor="#5A32FB" />
               <Text className="text-sm font-semibold text-interactive-1">
                 {" "}
-                {singleFollowedList
-                  ? singleFollowedList.name
+                {followedListCount === 1
+                  ? "1 list"
                   : `${followedListCount} lists`}
               </Text>
             </View>
@@ -262,13 +235,7 @@ function FollowingFeedContent() {
         </View>
       </View>
     );
-  }, [
-    selectedSegment,
-    handleSegmentChange,
-    followedListCount,
-    singleFollowedList,
-    handleShareList,
-  ]);
+  }, [selectedSegment, handleSegmentChange, followedListCount]);
 
   // Stable paginated results lag args changes by one tick: when switching
   // segments, the previous segment's rows are still in `groupedEvents` but
@@ -315,6 +282,10 @@ function FollowingFeedContent() {
         visible={isModalVisible}
         onClose={() => setIsModalVisible(false)}
       />
+      <DiscoverSoonlistsModal
+        visible={isDiscoverModalVisible}
+        onClose={() => setIsDiscoverModalVisible(false)}
+      />
       <UserEventsList
         groupedEvents={enrichedEvents}
         onEndReached={handleLoadMore}
@@ -327,6 +298,8 @@ function FollowingFeedContent() {
         source="following"
         HeaderComponent={HeaderComponent}
         attributionVariant="list-primary"
+        footerCta="discoverSoonlists"
+        onDiscoverSoonlists={() => setIsDiscoverModalVisible(true)}
       />
     </>
   );
