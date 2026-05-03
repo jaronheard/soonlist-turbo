@@ -26,12 +26,10 @@ import { api } from "@soonlist/backend/convex/_generated/api";
 import { Button } from "~/components/Button";
 import { DatePickerField, TimePickerField } from "~/components/date-picker";
 import {
-  Check,
-  EyeOff,
-  Globe2,
-  Image as ImageIcon,
-  X,
-} from "~/components/icons";
+  HeaderCloseButton,
+  HeaderIconButton,
+} from "~/components/HeaderIconButton";
+import { Check, EyeOff, Globe2, Image as ImageIcon } from "~/components/icons";
 import ImageUploadSpinner from "~/components/ImageUploadSpinner";
 import { InputTags } from "~/components/InputTags";
 import LoadingSpinner from "~/components/LoadingSpinner";
@@ -423,25 +421,16 @@ export default function EditEventScreen() {
                 selectedImage === originalImage) ||
               !isValid;
             return (
-              <TouchableOpacity
+              <HeaderIconButton
+                accessibilityLabel="Save event"
                 onPress={() => void handleSubmit(onSubmit)()}
                 disabled={isDisabled}
-                activeOpacity={0.6}
-                style={{ opacity: isDisabled ? 0.4 : 1 }}
               >
-                <View className="rounded-full p-1">
-                  <Check size={20} color="#5A32FB" strokeWidth={2.5} />
-                </View>
-              </TouchableOpacity>
+                <Check size={18} color="#5A32FB" strokeWidth={2.5} />
+              </HeaderIconButton>
             );
           },
-          headerLeft: () => (
-            <TouchableOpacity onPress={() => router.back()} activeOpacity={0.6}>
-              <View className="rounded-full p-1">
-                <X size={20} color="#5A32FB" strokeWidth={2.5} />
-              </View>
-            </TouchableOpacity>
-          ),
+          headerLeft: () => <HeaderCloseButton />,
         }}
       />
       <KeyboardAvoidingView

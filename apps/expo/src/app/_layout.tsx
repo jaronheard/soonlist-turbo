@@ -31,6 +31,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 
 import AuthAndTokenSync from "~/components/AuthAndTokenSync";
 import { ForceUpdateScreen } from "~/components/ForceUpdateScreen";
+import { HeaderCloseButton } from "~/components/HeaderIconButton";
 import { PostHogIdentityTracker } from "~/components/PostHogIdentityTracker";
 import { ToastProvider } from "~/components/Toast";
 import { useAppsFlyerDeepLink } from "~/hooks/useAppsFlyerDeepLink";
@@ -262,6 +263,7 @@ const InitialLayout = () => {
             presentation: "modal",
             title: "Event Details",
             headerShown: true,
+            headerLeft: () => <HeaderCloseButton />,
           }}
         />
         <Stack.Screen
@@ -270,6 +272,7 @@ const InitialLayout = () => {
             presentation: "modal",
             title: "List Details",
             headerShown: true,
+            headerLeft: () => <HeaderCloseButton />,
           }}
         />
         <Stack.Screen
@@ -278,6 +281,7 @@ const InitialLayout = () => {
             presentation: "modal",
             title: "",
             headerShown: true,
+            headerLeft: () => <HeaderCloseButton />,
           }}
         />
         <Stack.Screen
@@ -296,6 +300,7 @@ const InitialLayout = () => {
             headerStyle: { backgroundColor: "#FFFFFF" },
             headerTintColor: "#5A32FB",
             headerShadowVisible: false,
+            headerLeft: () => <HeaderCloseButton />,
           }}
         />
         <Stack.Screen
@@ -307,6 +312,7 @@ const InitialLayout = () => {
             headerStyle: { backgroundColor: "#FFFFFF" },
             headerTintColor: "#5A32FB",
             headerShadowVisible: false,
+            headerLeft: () => <HeaderCloseButton />,
           }}
         />
         <Stack.Screen
@@ -318,6 +324,7 @@ const InitialLayout = () => {
             headerStyle: { backgroundColor: "#F4F1FF" },
             headerTintColor: "#5A32FB",
             headerShadowVisible: false,
+            headerLeft: () => <HeaderCloseButton />,
           }}
         />
         <Stack.Screen

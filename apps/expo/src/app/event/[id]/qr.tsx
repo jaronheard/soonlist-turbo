@@ -1,13 +1,14 @@
-import { Text, TouchableOpacity, View } from "react-native";
+import { Text, View } from "react-native";
 import QRCode from "react-native-qrcode-svg";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Image as ExpoImage } from "expo-image";
-import { router, useLocalSearchParams } from "expo-router";
+import { useLocalSearchParams } from "expo-router";
 import { useQuery } from "convex/react";
 
 import type { AddToCalendarButtonProps } from "@soonlist/cal/types";
 import { api } from "@soonlist/backend/convex/_generated/api";
 
-import { X } from "~/components/icons";
+import { HeaderCloseButton } from "~/components/HeaderIconButton";
 import { Logo } from "~/components/Logo";
 import Config from "~/utils/config";
 
@@ -17,6 +18,7 @@ function appendImageParams(url: string, params: string) {
 }
 
 export default function QRModal() {
+  const insets = useSafeAreaInsets();
   const { id } = useLocalSearchParams<{ id: string }>();
 
   const event = useQuery(api.events.get, { eventId: id });
@@ -52,14 +54,9 @@ export default function QRModal() {
       )}
 
       <View className="flex-1 items-center justify-center p-4">
-        <TouchableOpacity
-          className="absolute right-4 top-12 z-10 rounded-full bg-interactive-1 p-2"
-          onPress={() =>
-            router.canGoBack() ? router.back() : router.navigate("/feed")
-          }
-        >
-          <X size={24} color="white" />
-        </TouchableOpacity>
+        <View className="absolute left-4 z-10" style={{ top: insets.top + 8 }}>
+          <HeaderCloseButton />
+        </View>
 
         <View className="items-center rounded-3xl bg-white/95 p-8 shadow-sm">
           <View>
