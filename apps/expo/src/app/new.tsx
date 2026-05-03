@@ -1,12 +1,12 @@
 import React, { useCallback, useEffect, useState } from "react";
-import { InteractionManager, Pressable, View } from "react-native";
+import { InteractionManager, View } from "react-native";
 import Animated from "react-native-reanimated";
 import { router, Stack, useLocalSearchParams } from "expo-router";
 import { useUser } from "@clerk/clerk-expo";
 
 import { CaptureEventButton } from "~/components/CaptureEventButton";
 import { EventPreview } from "~/components/EventPreview";
-import { X } from "~/components/icons";
+import { HeaderCloseButton } from "~/components/HeaderIconButton";
 import { NewEventHeader } from "~/components/NewEventHeader";
 import { useCreateEvent } from "~/hooks/useCreateEvent";
 import { useInitializeInput } from "~/hooks/useInitializeInput";
@@ -142,13 +142,8 @@ export default function NewShareScreen() {
               handleDescribePress={() => setActiveInput("describe")}
             />
           ),
-          headerRight: () => (
-            <Pressable
-              onPress={() => router.back()}
-              className="rounded-full bg-transparent py-4"
-            >
-              <X size={24} color="#fff" />
-            </Pressable>
+          headerLeft: ({ tintColor }) => (
+            <HeaderCloseButton tintColor={tintColor} />
           ),
         }}
       />

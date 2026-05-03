@@ -16,13 +16,7 @@ import {
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Image as ExpoImage } from "expo-image";
-import {
-  Link,
-  router,
-  Stack,
-  useLocalSearchParams,
-  useNavigation,
-} from "expo-router";
+import { Link, router, Stack, useLocalSearchParams } from "expo-router";
 import { useUser } from "@clerk/clerk-expo";
 import { useQuery } from "convex/react";
 
@@ -33,7 +27,10 @@ import { getTimezoneAbbreviation } from "@soonlist/cal";
 
 import { AttributionGrid } from "~/components/AttributionGrid";
 import { EventMenu } from "~/components/EventMenu";
-import { HeaderLogo } from "~/components/HeaderLogo";
+import {
+  HeaderCloseButton,
+  HeaderIconButton,
+} from "~/components/HeaderIconButton";
 import {
   CalendarPlus,
   EyeOff,
@@ -94,23 +91,6 @@ function getPlatformUrl(
   }
 }
 
-// Sized to match Apple's observed iOS 26 Liquid Glass nav-bar buttons
-// (Mail, Safari, Music): ~36pt visible capsule, ~18pt SF Symbol, ≥44pt hit
-// area via hitSlop. Apple has not published exact point values; these match
-// stock-app appearance per design research.
-const headerButtonStyle = {
-  width: 36,
-  height: 36,
-  borderRadius: 18,
-  alignItems: "center" as const,
-  justifyContent: "center" as const,
-  backgroundColor: "#FFFFFF",
-  shadowColor: "#000",
-  shadowOffset: { width: 0, height: 1 },
-  shadowOpacity: 0.06,
-  shadowRadius: 2,
-};
-
 export default function Page() {
   const { id } = useLocalSearchParams<{ id: string }>();
 
@@ -123,10 +103,6 @@ function EventDetail({ id }: { id: string }) {
   const { width } = Dimensions.get("window");
   const insets = useSafeAreaInsets();
   const { user: currentUser } = useUser();
-  const navigation = useNavigation();
-
-  // Check if we can go back in the navigation stack
-  const canGoBack = navigation.canGoBack();
 
   // Store the aspect ratio for the main event image
   const [imageAspectRatio, setImageAspectRatio] = useState<number | null>(null);
@@ -221,14 +197,6 @@ function EventDetail({ id }: { id: string }) {
     return `${eventImage}?w=160&h=160&fit=cover&f=webp&q=80`;
   }, [event?.event?.images]);
 
-  // Build the header-left UI if we can't go back
-  const HeaderLeft = useCallback(() => {
-    if (!canGoBack) {
-      return <HeaderLogo />;
-    }
-    return null;
-  }, [canGoBack]);
-
   // Build the header-right UI if we have data
   const HeaderRight = useCallback(() => {
     if (!event) return null;
@@ -237,15 +205,12 @@ function EventDetail({ id }: { id: string }) {
 
     return (
       <View className="flex-row items-center gap-4">
-        <TouchableOpacity
-          onPress={() => void openShareSheet("event_detail")}
+        <HeaderIconButton
           accessibilityLabel="Share event"
-          accessibilityRole="button"
-          hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
-          style={headerButtonStyle}
+          onPress={() => void openShareSheet("event_detail")}
         >
           <ShareIcon size={18} color="#5A32FB" />
-        </TouchableOpacity>
+        </HeaderIconButton>
         <EventMenu
           event={event}
           isOwner={isOwner}
@@ -254,15 +219,9 @@ function EventDetail({ id }: { id: string }) {
           onDelete={handleDeleteAndRedirect}
           iconColor="#5A32FB"
         >
-          <TouchableOpacity
-            activeOpacity={0.6}
-            accessibilityLabel="Event menu"
-            accessibilityRole="button"
-            hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
-            style={headerButtonStyle}
-          >
+          <HeaderIconButton accessibilityLabel="Event menu">
             <MoreVertical size={18} color="#5A32FB" />
-          </TouchableOpacity>
+          </HeaderIconButton>
         </EventMenu>
       </View>
     );
@@ -384,7 +343,9 @@ function EventDetail({ id }: { id: string }) {
       <Stack.Screen
         options={{
           headerRight: HeaderRight,
-          headerLeft: !canGoBack ? HeaderLeft : undefined,
+          headerLeft: ({ tintColor }) => (
+            <HeaderCloseButton tintColor={tintColor} />
+          ),
           headerTransparent: true,
           headerTintColor: "#5A32FB",
           headerTitleStyle: { color: "#5A32FB" },
