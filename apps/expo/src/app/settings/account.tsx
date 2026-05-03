@@ -246,7 +246,15 @@ export default function AccountScreen() {
     api.users.getByUsername,
     user?.username ? { userName: user.username } : "skip",
   );
+  const userRoles =
+    user?.unsafeMetadata && typeof user.unsafeMetadata === "object"
+      ? (user.unsafeMetadata as Record<string, unknown>).roles
+      : undefined;
+  const isAdmin = Array.isArray(userRoles) && userRoles.includes("admin");
   const resetOnboardingStore = useAppStore((s) => s.resetOnboarding);
+  const setPendingFollowUsername = useAppStore(
+    (s) => s.setPendingFollowUsername,
+  );
   const userTimezone = useAppStore((s) => s.userTimezone);
   const preferredCalendarApp = usePreferredCalendarApp();
   const setPreferredCalendarApp = useSetPreferredCalendarApp();
@@ -485,6 +493,44 @@ export default function AccountScreen() {
     );
   }, [resetOnboardingMutation, resetOnboardingStore, user?.id, signOut]);
 
+  const handleTestFollowFlow = useCallback(() => {
+    Alert.prompt(
+      "Test Follow Flow",
+      "Enter a username to follow. This will reset onboarding and sign you out so you can re-enter the flow as a new user.",
+      [
+        { text: "Cancel", style: "cancel" },
+        {
+          text: "Start",
+          onPress: (input?: string) => {
+            const username = (input ?? "").trim() || "jaronheard";
+            void (async () => {
+              try {
+                setPendingFollowUsername(username);
+                if (user?.id) {
+                  await resetOnboardingMutation({ userId: user.id });
+                }
+                resetOnboardingStore();
+                await signOut();
+                void hapticSuccess();
+              } catch (error) {
+                logError("Error starting test follow flow", error);
+                toast.error("Failed to start test follow flow");
+              }
+            })();
+          },
+        },
+      ],
+      "plain-text",
+      "jaronheard",
+    );
+  }, [
+    setPendingFollowUsername,
+    resetOnboardingMutation,
+    resetOnboardingStore,
+    user?.id,
+    signOut,
+  ]);
+
   const handleDeleteAccount = useCallback(() => {
     Alert.alert(
       "Delete Account",
@@ -676,14 +722,28 @@ export default function AccountScreen() {
           />
         </SettingsGroup>
 
-        {__DEV__ ? (
-          <SettingsGroup>
+        {__DEV__ || isAdmin ? (
+          <SettingsGroup header="DEVELOPER">
             <SettingsRow
-              icon={PenSquare}
-              iconBg={TILE_COLORS.gray}
-              label="Workflow failure tests"
-              onPress={() => router.navigate("/settings/workflow-test")}
+              icon={User}
+              iconBg={TILE_COLORS.purple}
+              label="Test follow flow"
+              onPress={handleTestFollowFlow}
             />
+            <SettingsRow
+              label="Restart onboarding"
+              tint="ink-1"
+              accessory={{ type: "none" }}
+              onPress={handleRestartOnboarding}
+            />
+            {__DEV__ ? (
+              <SettingsRow
+                icon={PenSquare}
+                iconBg={TILE_COLORS.gray}
+                label="Workflow failure tests"
+                onPress={() => router.navigate("/settings/workflow-test")}
+              />
+            ) : null}
           </SettingsGroup>
         ) : null}
 
@@ -693,12 +753,6 @@ export default function AccountScreen() {
             tint="purple"
             accessory={{ type: "none" }}
             onPress={handleSignOut}
-          />
-          <SettingsRow
-            label="Restart onboarding"
-            tint="ink-1"
-            accessory={{ type: "none" }}
-            onPress={handleRestartOnboarding}
           />
           <SettingsRow
             label="Delete account"
