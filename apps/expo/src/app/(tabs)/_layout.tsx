@@ -252,6 +252,7 @@ export default function TabsLayout() {
       >
         <NativeTabs.Trigger.Label>Add</NativeTabs.Trigger.Label>
         <NativeTabs.Trigger.Icon
+          // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-require-imports
           src={require("~/assets/tabs/add.png")}
           renderingMode="original"
         />
