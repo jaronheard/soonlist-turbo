@@ -343,7 +343,9 @@ function EventDetail({ id }: { id: string }) {
       <Stack.Screen
         options={{
           headerRight: HeaderRight,
-          headerLeft: () => <HeaderCloseButton />,
+          headerLeft: ({ tintColor }) => (
+            <HeaderCloseButton tintColor={tintColor} />
+          ),
           headerTransparent: true,
           headerTintColor: "#5A32FB",
           headerTitleStyle: { color: "#5A32FB" },

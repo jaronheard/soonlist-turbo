@@ -430,7 +430,9 @@ export default function EditEventScreen() {
               </HeaderIconButton>
             );
           },
-          headerLeft: () => <HeaderCloseButton />,
+          headerLeft: ({ tintColor }) => (
+            <HeaderCloseButton tintColor={tintColor} />
+          ),
         }}
       />
       <KeyboardAvoidingView

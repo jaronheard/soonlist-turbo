@@ -142,7 +142,9 @@ export default function NewShareScreen() {
               handleDescribePress={() => setActiveInput("describe")}
             />
           ),
-          headerLeft: () => <HeaderCloseButton />,
+          headerLeft: ({ tintColor }) => (
+            <HeaderCloseButton tintColor={tintColor} />
+          ),
         }}
       />
 

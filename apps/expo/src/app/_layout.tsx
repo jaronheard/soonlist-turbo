@@ -263,7 +263,9 @@ const InitialLayout = () => {
             presentation: "modal",
             title: "Event Details",
             headerShown: true,
-            headerLeft: () => <HeaderCloseButton />,
+            headerLeft: ({ tintColor }) => (
+              <HeaderCloseButton tintColor={tintColor} />
+            ),
           }}
         />
         <Stack.Screen
@@ -272,7 +274,9 @@ const InitialLayout = () => {
             presentation: "modal",
             title: "List Details",
             headerShown: true,
-            headerLeft: () => <HeaderCloseButton />,
+            headerLeft: ({ tintColor }) => (
+              <HeaderCloseButton tintColor={tintColor} />
+            ),
           }}
         />
         <Stack.Screen
@@ -281,7 +285,9 @@ const InitialLayout = () => {
             presentation: "modal",
             title: "",
             headerShown: true,
-            headerLeft: () => <HeaderCloseButton />,
+            headerLeft: ({ tintColor }) => (
+              <HeaderCloseButton tintColor={tintColor} />
+            ),
           }}
         />
         <Stack.Screen
@@ -300,7 +306,9 @@ const InitialLayout = () => {
             headerStyle: { backgroundColor: "#FFFFFF" },
             headerTintColor: "#5A32FB",
             headerShadowVisible: false,
-            headerLeft: () => <HeaderCloseButton />,
+            headerLeft: ({ tintColor }) => (
+              <HeaderCloseButton tintColor={tintColor} />
+            ),
           }}
         />
         <Stack.Screen
@@ -312,7 +320,9 @@ const InitialLayout = () => {
             headerStyle: { backgroundColor: "#FFFFFF" },
             headerTintColor: "#5A32FB",
             headerShadowVisible: false,
-            headerLeft: () => <HeaderCloseButton />,
+            headerLeft: ({ tintColor }) => (
+              <HeaderCloseButton tintColor={tintColor} />
+            ),
           }}
         />
         <Stack.Screen
@@ -324,7 +334,9 @@ const InitialLayout = () => {
             headerStyle: { backgroundColor: "#F4F1FF" },
             headerTintColor: "#5A32FB",
             headerShadowVisible: false,
-            headerLeft: () => <HeaderCloseButton />,
+            headerLeft: ({ tintColor }) => (
+              <HeaderCloseButton tintColor={tintColor} />
+            ),
           }}
         />
         <Stack.Screen

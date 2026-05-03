@@ -55,7 +55,7 @@ export default function QRModal() {
 
       <View className="flex-1 items-center justify-center p-4">
         <View className="absolute left-4 z-10" style={{ top: insets.top + 8 }}>
-          <HeaderCloseButton />
+          <HeaderCloseButton tintColor="#fff" />
         </View>
 
         <View className="items-center rounded-3xl bg-white/95 p-8 shadow-sm">

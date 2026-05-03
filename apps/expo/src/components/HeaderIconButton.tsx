@@ -57,13 +57,16 @@ export function HeaderIconButton({
 }
 
 interface HeaderCloseButtonProps {
+  // Accept undefined so callers can forward React Navigation's
+  // `headerLeft: ({ tintColor }) => ...` arg directly. When unset, falls
+  // back to the screen's `headerTintColor` value (purple by default).
   tintColor?: string;
   fallbackHref?: Href;
   accessibilityLabel?: string;
 }
 
 export function HeaderCloseButton({
-  tintColor = "#5A32FB",
+  tintColor,
   fallbackHref = "/feed",
   accessibilityLabel = "Close",
 }: HeaderCloseButtonProps) {
@@ -80,7 +83,7 @@ export function HeaderCloseButton({
       accessibilityLabel={accessibilityLabel}
       onPress={handlePress}
     >
-      <X size={18} color={tintColor} strokeWidth={2.5} />
+      <X size={18} color={tintColor ?? "#5A32FB"} strokeWidth={2.5} />
     </HeaderIconButton>
   );
 }
