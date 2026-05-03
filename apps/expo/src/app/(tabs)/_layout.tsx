@@ -252,7 +252,8 @@ export default function TabsLayout() {
       >
         <NativeTabs.Trigger.Label>Add</NativeTabs.Trigger.Label>
         <NativeTabs.Trigger.Icon
-          sf={{ default: "plus.circle", selected: "plus.circle.fill" }}
+          src={require("~/assets/tabs/add.png")}
+          renderingMode="original"
         />
       </NativeTabs.Trigger>
     </NativeTabs>
