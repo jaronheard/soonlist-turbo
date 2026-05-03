@@ -247,8 +247,8 @@ export default function AccountScreen() {
     user?.username ? { userName: user.username } : "skip",
   );
   const userRoles =
-    user?.unsafeMetadata && typeof user.unsafeMetadata === "object"
-      ? (user.unsafeMetadata as Record<string, unknown>).roles
+    user?.publicMetadata && typeof user.publicMetadata === "object"
+      ? (user.publicMetadata as Record<string, unknown>).roles
       : undefined;
   const isAdmin = Array.isArray(userRoles) && userRoles.includes("admin");
   const resetOnboardingStore = useAppStore((s) => s.resetOnboarding);
