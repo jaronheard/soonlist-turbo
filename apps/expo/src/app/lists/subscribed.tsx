@@ -2,8 +2,6 @@ import React, { useCallback } from "react";
 import {
   ActivityIndicator,
   FlatList,
-  Platform,
-  Share,
   Text,
   TouchableOpacity,
   View,
@@ -15,9 +13,8 @@ import { useMutation, useQuery } from "convex/react";
 import type { Doc } from "@soonlist/backend/convex/_generated/dataModel";
 import { api } from "@soonlist/backend/convex/_generated/api";
 
-import { List, ShareIcon } from "~/components/icons";
+import { List } from "~/components/icons";
 import { SubscribeButton } from "~/components/SubscribeButton";
-import Config from "~/utils/config";
 import { logError } from "~/utils/errorLogging";
 import { toast } from "~/utils/feedback";
 
@@ -44,24 +41,6 @@ export default function SubscribedListsScreen() {
       });
     },
     [unfollowListMutation],
-  );
-
-  const handleShareList = useCallback(
-    async (listName: string, listSlug?: string) => {
-      const shareUrl = listSlug
-        ? `${Config.apiBaseUrl}/list/${listSlug}`
-        : Config.apiBaseUrl;
-      try {
-        await Share.share(
-          Platform.OS === "ios"
-            ? { url: shareUrl }
-            : { message: `Check out ${listName} on Soonlist: ${shareUrl}` },
-        );
-      } catch (error) {
-        logError("Error sharing list", error);
-      }
-    },
-    [],
   );
 
   const handleListPress = useCallback((list: Doc<"lists">) => {
@@ -123,19 +102,7 @@ export default function SubscribedListsScreen() {
                     </View>
                   </TouchableOpacity>
 
-                  <TouchableOpacity
-                    onPress={() =>
-                      void handleShareList(list.name, list.slug ?? undefined)
-                    }
-                    className="ml-2 rounded-full p-2"
-                    activeOpacity={0.7}
-                    accessibilityLabel={`Share ${list.name}`}
-                    hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
-                  >
-                    <ShareIcon size={18} color="#5A32FB" />
-                  </TouchableOpacity>
-
-                  <View className="ml-1">
+                  <View className="ml-2">
                     <SubscribeButton
                       isSubscribed={true}
                       onPress={() => handleUnfollow(list.id)}

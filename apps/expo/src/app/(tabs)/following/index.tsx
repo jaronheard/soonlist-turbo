@@ -205,23 +205,37 @@ function FollowingFeedContent() {
           Events from Soonlists I subscribe to
         </Text>
         {followedListCount > 0 && (
-          <TouchableOpacity
-            onPress={() => router.push("/lists/subscribed")}
-            activeOpacity={0.7}
-            className="mb-2"
-            style={{ paddingLeft: 6 }}
+          <View
+            className="mb-2 flex-row items-center"
+            style={{ paddingLeft: 6, columnGap: 10 }}
           >
-            <View className="flex-row items-center">
-              <Text className="text-sm text-neutral-2">Includes: </Text>
-              <SymbolView name="list.bullet" size={14} tintColor="#5A32FB" />
-              <Text className="text-sm font-semibold text-interactive-1">
-                {" "}
-                {followedListCount === 1
-                  ? "1 list"
-                  : `${followedListCount} lists`}
+            <TouchableOpacity
+              onPress={() => router.push("/lists/subscribed")}
+              activeOpacity={0.7}
+            >
+              <View className="flex-row items-center">
+                <Text className="text-sm text-neutral-2">Includes: </Text>
+                <SymbolView name="list.bullet" size={14} tintColor="#5A32FB" />
+                <Text className="text-sm font-semibold text-interactive-1">
+                  {" "}
+                  {followedListCount === 1
+                    ? "1 list"
+                    : `${followedListCount} lists`}
+                </Text>
+              </View>
+            </TouchableOpacity>
+            <TouchableOpacity
+              onPress={() => router.push("/lists/discover")}
+              activeOpacity={0.7}
+              accessibilityRole="button"
+              accessibilityLabel="Find more Soonlists"
+              className="rounded-full bg-interactive-2 px-2.5 py-1"
+            >
+              <Text className="text-xs font-semibold text-neutral-1">
+                Find more →
               </Text>
-            </View>
-          </TouchableOpacity>
+            </TouchableOpacity>
+          </View>
         )}
         <View style={{ width: 260 }}>
           <UpcomingPastSegmentedControl
