@@ -48,33 +48,9 @@ function createStableTimestamp(): string {
  * ```
  */
 
-// Common event input state shared between add and new routes
-interface CommonEventInputState {
-  input: string;
-  imagePreview: string | null;
-  linkPreview: string | null;
-  isPublic: boolean;
-  isImageLoading: boolean;
-  isImageUploading: boolean;
-  uploadedImageUrl: string | null;
-}
-
-// State specific to the /add route
-interface AddEventInputState extends CommonEventInputState {
-  isOptionSelected: boolean;
-  activeInput: "camera" | "upload" | "url" | "describe" | null;
-}
-
-// State specific to the /new route (share extension)
-type NewEventInputState = CommonEventInputState;
-
 interface AppState {
   filter: "upcoming" | "past";
-  intentParams: { text?: string; imageUri?: string } | null;
   setFilter: (filter: "upcoming" | "past") => void;
-  setIntentParams: (
-    params: { text?: string; imageUri?: string } | null,
-  ) => void;
 
   // Calendar preferences
   preferredCalendarApp: CalendarApp | null;
@@ -96,30 +72,7 @@ interface AppState {
   setUserTimezone: (timezone: string) => void;
   setHasShownTimezoneAlert: (hasShown: boolean) => void;
 
-  // Event input state for /add route
-  addEventState: AddEventInputState;
-  // Event input state for /new route (share extension)
-  newEventState: NewEventInputState;
-
-  // Event input actions
-  setInput: (input: string, route: "add" | "new") => void;
-  setImagePreview: (preview: string | null, route: "add" | "new") => void;
-  setLinkPreview: (preview: string | null, route: "add" | "new") => void;
-  setIsPublic: (isPublic: boolean, route: "add" | "new") => void;
-  setIsImageLoading: (isLoading: boolean, route: "add" | "new") => void;
-  setIsImageUploading: (isUploading: boolean, route: "add" | "new") => void;
-  setUploadedImageUrl: (url: string | null, route: "add" | "new") => void;
-
-  resetIntentParams: () => void;
   resetOnboarding: () => void;
-  resetAddEventState: () => void;
-  resetNewEventState: () => void;
-
-  // Add-specific actions
-  setIsOptionSelected: (isSelected: boolean) => void;
-  setActiveInput: (
-    input: "camera" | "upload" | "url" | "describe" | null,
-  ) => void;
 
   hasCompletedOnboarding: boolean;
   setHasCompletedOnboarding: (status: boolean) => void;
@@ -175,7 +128,6 @@ export const useAppStore = create<AppState>()(
   persist(
     (set, get) => ({
       filter: "upcoming",
-      intentParams: null,
       userPriority: null,
       userTimezone: getUserTimeZone(),
       hasShownTimezoneAlert: false,
@@ -197,86 +149,11 @@ export const useAppStore = create<AppState>()(
         set((s) => ({ ...s, discoverAccessOverride: enabled })),
 
       setFilter: (filter) => set({ filter }),
-      setIntentParams: (params) => set({ intentParams: params }),
       setUserTimezone: (timezone) => set({ userTimezone: timezone }),
       setHasShownTimezoneAlert: (hasShown) =>
         set({ hasShownTimezoneAlert: hasShown }),
 
-      // Initialize event input state for both routes
-      addEventState: {
-        input: "",
-        imagePreview: null,
-        linkPreview: null,
-        isPublic: false,
-        isImageLoading: false,
-        isImageUploading: false,
-        uploadedImageUrl: null,
-        isOptionSelected: false,
-        activeInput: null,
-      },
-      newEventState: {
-        input: "",
-        imagePreview: null,
-        linkPreview: null,
-        isPublic: false,
-        isImageLoading: false,
-        isImageUploading: false,
-        uploadedImageUrl: null,
-      },
-
-      // Event input actions
-      setInput: (input, route) =>
-        set((state) => ({
-          [route === "add" ? "addEventState" : "newEventState"]: {
-            ...(route === "add" ? state.addEventState : state.newEventState),
-            input,
-          },
-        })),
-      setImagePreview: (preview, route) =>
-        set((state) => ({
-          [route === "add" ? "addEventState" : "newEventState"]: {
-            ...(route === "add" ? state.addEventState : state.newEventState),
-            imagePreview: preview,
-          },
-        })),
-      setLinkPreview: (preview, route) =>
-        set((state) => ({
-          [route === "add" ? "addEventState" : "newEventState"]: {
-            ...(route === "add" ? state.addEventState : state.newEventState),
-            linkPreview: preview,
-          },
-        })),
-      setIsPublic: (isPublic, route) =>
-        set((state) => ({
-          [route === "add" ? "addEventState" : "newEventState"]: {
-            ...(route === "add" ? state.addEventState : state.newEventState),
-            isPublic,
-          },
-        })),
-      setIsImageLoading: (isLoading, route) =>
-        set((state) => ({
-          [route === "add" ? "addEventState" : "newEventState"]: {
-            ...(route === "add" ? state.addEventState : state.newEventState),
-            isImageLoading: isLoading,
-          },
-        })),
-      setIsImageUploading: (isUploading, route) =>
-        set((state) => ({
-          [route === "add" ? "addEventState" : "newEventState"]: {
-            ...(route === "add" ? state.addEventState : state.newEventState),
-            isImageUploading: isUploading,
-          },
-        })),
-      setUploadedImageUrl: (url, route) =>
-        set((state) => ({
-          [route === "add" ? "addEventState" : "newEventState"]: {
-            ...(route === "add" ? state.addEventState : state.newEventState),
-            uploadedImageUrl: url,
-          },
-        })),
-
       // Reset functions
-      resetIntentParams: () => set({ intentParams: null }),
       resetOnboarding: () =>
         set({
           hasCompletedOnboarding: false,
@@ -284,48 +161,6 @@ export const useAppStore = create<AppState>()(
           onboardingData: {},
           currentOnboardingStep: null,
         }),
-      resetAddEventState: () =>
-        set({
-          addEventState: {
-            input: "",
-            imagePreview: null,
-            linkPreview: null,
-            isPublic: false,
-            isImageLoading: false,
-            isImageUploading: false,
-            uploadedImageUrl: null,
-            isOptionSelected: false,
-            activeInput: null,
-          },
-        }),
-      resetNewEventState: () =>
-        set({
-          newEventState: {
-            input: "",
-            imagePreview: null,
-            linkPreview: null,
-            isPublic: false,
-            isImageLoading: false,
-            isImageUploading: false,
-            uploadedImageUrl: null,
-          },
-        }),
-
-      // Add-specific actions
-      setIsOptionSelected: (isSelected) =>
-        set((state) => ({
-          addEventState: {
-            ...state.addEventState,
-            isOptionSelected: isSelected,
-          },
-        })),
-      setActiveInput: (input) =>
-        set((state) => ({
-          addEventState: {
-            ...state.addEventState,
-            activeInput: input,
-          },
-        })),
 
       // User priority
       setUserPriority: (priority) => set({ userPriority: priority }),
@@ -350,31 +185,10 @@ export const useAppStore = create<AppState>()(
       resetStore: () =>
         set({
           filter: "upcoming",
-          intentParams: null,
           preferredCalendarApp: null,
           defaultEventVisibility: DEFAULT_VISIBILITY,
           // Ensure discover override never persists across global reset
           discoverAccessOverride: false,
-          addEventState: {
-            input: "",
-            imagePreview: null,
-            linkPreview: null,
-            isPublic: false,
-            isImageLoading: false,
-            isImageUploading: false,
-            uploadedImageUrl: null,
-            isOptionSelected: false,
-            activeInput: null,
-          },
-          newEventState: {
-            input: "",
-            imagePreview: null,
-            linkPreview: null,
-            isPublic: false,
-            isImageLoading: false,
-            isImageUploading: false,
-            uploadedImageUrl: null,
-          },
           userPriority: null,
           userTimezone: getUserTimeZone(),
           hasShownTimezoneAlert: false,
@@ -396,33 +210,12 @@ export const useAppStore = create<AppState>()(
       resetForLogout: () =>
         set((state) => ({
           filter: "upcoming",
-          intentParams: null,
           preferredCalendarApp: null,
           // Preserve so the v0→v1 migration's "private" pin (and any
           // explicit user choice) survives sign-out/sign-in.
           defaultEventVisibility: state.defaultEventVisibility,
           // Ensure discover override never persists across logout
           discoverAccessOverride: false,
-          addEventState: {
-            input: "",
-            imagePreview: null,
-            linkPreview: null,
-            isPublic: false,
-            isImageLoading: false,
-            isImageUploading: false,
-            uploadedImageUrl: null,
-            isOptionSelected: false,
-            activeInput: null,
-          },
-          newEventState: {
-            input: "",
-            imagePreview: null,
-            linkPreview: null,
-            isPublic: false,
-            isImageLoading: false,
-            isImageUploading: false,
-            uploadedImageUrl: null,
-          },
           userPriority: null,
           userTimezone: getUserTimeZone(),
           hasShownTimezoneAlert: false,
