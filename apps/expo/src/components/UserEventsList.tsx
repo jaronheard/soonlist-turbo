@@ -1,6 +1,6 @@
 import type { FunctionReturnType } from "convex/server";
 import type { ViewStyle } from "react-native";
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useEffect, useMemo } from "react";
 import {
   ActivityIndicator,
   FlatList,
@@ -35,7 +35,6 @@ import {
 } from "~/components/icons";
 import { OverflowPill } from "~/components/OverflowPill";
 import { PrivateVisibilityBadge } from "~/components/PrivateVisibilityBadge";
-import { SavedByModal } from "~/components/SavedByModal";
 import { useAddEventFlow } from "~/hooks/useAddEventFlow";
 import { useEventActions } from "~/hooks/useEventActions";
 import { SHARE_PROMPT_THRESHOLD } from "~/hooks/useShareListPrompt";
@@ -180,8 +179,6 @@ export function UserEventListItem(props: UserEventListItemProps) {
 
   const { user: currentUser } = useUser();
   const eventUser = event.user;
-  const [showFallbackSavedByModal, setShowFallbackSavedByModal] =
-    useState(false);
 
   // Prefetch the full-size image for the detail screen so it loads instantly
   useEffect(() => {
@@ -271,7 +268,7 @@ export function UserEventListItem(props: UserEventListItemProps) {
   // to navigate to; otherwise tap the row → open the single source list.
   const onFallbackListAttributionRowPress =
     fallbackOverflowCount > 0 || !sourceListSlug
-      ? () => setShowFallbackSavedByModal(true)
+      ? () => router.push(`/event/${id}/saved-by`)
       : () => router.push(`/list/${sourceListSlug}`);
 
   const isOwner = demoMode || isCurrentUser;
@@ -524,6 +521,7 @@ export function UserEventListItem(props: UserEventListItemProps) {
           </View>
           {shouldShowCreator ? (
             <EventAttributionRow
+              eventId={id}
               creator={{
                 id: eventUser.id,
                 username: eventUser.username,
@@ -576,23 +574,10 @@ export function UserEventListItem(props: UserEventListItemProps) {
               )}
               <OverflowPill
                 count={fallbackOverflowCount}
-                onPress={() => setShowFallbackSavedByModal(true)}
+                onPress={() => router.push(`/event/${id}/saved-by`)}
               />
             </Pressable>
           ) : null}
-          <SavedByModal
-            visible={showFallbackSavedByModal}
-            onClose={() => setShowFallbackSavedByModal(false)}
-            creator={{
-              id: eventUser.id,
-              username: eventUser.username,
-              displayName: eventUser.displayName,
-              userImage: eventUser.userImage,
-            }}
-            savers={[]}
-            lists={(event as { lists?: Doc<"lists">[] }).lists ?? []}
-            currentUserId={currentUser?.id}
-          />
           <View className="absolute left-0 right-0 top-0 z-20 flex flex-row items-center justify-center space-x-2">
             {isRecent && (
               <View
@@ -717,6 +702,33 @@ const ScreenshotCta = ({
             </Text>
           </>
         )}
+      </TouchableOpacity>
+    </View>
+  );
+};
+
+interface DiscoverSoonlistsCtaProps {
+  onPress: () => void;
+}
+
+const DiscoverSoonlistsCta = ({ onPress }: DiscoverSoonlistsCtaProps) => {
+  const { fontScale } = useWindowDimensions();
+
+  return (
+    <View className="mb-6 items-center py-4">
+      <TouchableOpacity
+        className="flex-row items-center justify-center gap-1.5 rounded-full bg-interactive-2 px-4 py-3"
+        onPress={onPress}
+        activeOpacity={0.7}
+        accessibilityRole="button"
+        accessibilityLabel="See other Soonlists"
+      >
+        <Text
+          className="text-center font-semibold text-neutral-1"
+          style={{ fontSize: 14 * fontScale }}
+        >
+          See other Soonlists →
+        </Text>
       </TouchableOpacity>
     </View>
   );
@@ -966,6 +978,8 @@ interface UserEventsListProps {
   attributionVariant?: EventAttributionVariant;
   upcomingEventCount?: number;
   onSharePress?: () => void;
+  footerCta?: "screenshot" | "discoverSoonlists";
+  onDiscoverSoonlists?: () => void;
 }
 
 export default function UserEventsList(props: UserEventsListProps) {
@@ -988,6 +1002,8 @@ export default function UserEventsList(props: UserEventsListProps) {
     attributionVariant,
     upcomingEventCount = 0,
     onSharePress,
+    footerCta = "screenshot",
+    onDiscoverSoonlists,
   } = props;
   const { user } = useUser();
   // Use pre-grouped events if provided, otherwise collapse client-side
@@ -1066,10 +1082,16 @@ export default function UserEventsList(props: UserEventsListProps) {
           </View>
         ) : null}
         {showSourceStickers ? (
-          <ScreenshotCta
-            upcomingEventCount={upcomingEventCount}
-            onSharePress={onSharePress ?? (() => undefined)}
-          />
+          footerCta === "discoverSoonlists" ? (
+            <DiscoverSoonlistsCta
+              onPress={onDiscoverSoonlists ?? (() => undefined)}
+            />
+          ) : (
+            <ScreenshotCta
+              upcomingEventCount={upcomingEventCount}
+              onSharePress={onSharePress ?? (() => undefined)}
+            />
+          )
         ) : null}
       </>
     );

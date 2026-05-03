@@ -5,8 +5,8 @@ import React, {
   useRef,
   useState,
 } from "react";
-import { Share, Text, TouchableOpacity, View } from "react-native";
-import { Redirect, useFocusEffect } from "expo-router";
+import { Text, TouchableOpacity, View } from "react-native";
+import { Redirect, router, useFocusEffect } from "expo-router";
 import { SymbolView } from "expo-symbols";
 import { useUser } from "@clerk/clerk-expo";
 import {
@@ -19,7 +19,6 @@ import {
 import { api } from "@soonlist/backend/convex/_generated/api";
 
 import { DefaultEmptyState } from "~/components/DefaultEmptyState";
-import { FollowedListsModal } from "~/components/FollowedListsModal";
 import { MatchAuthLoadingSurface } from "~/components/MatchAuthLoadingSurface";
 import { ReferralEmptyState } from "~/components/ReferralEmptyState";
 import { UpcomingPastSegmentedControl } from "~/components/UpcomingPastSegmentedControl";
@@ -27,7 +26,6 @@ import UserEventsList from "~/components/UserEventsList";
 import { useStableFeedListBodyLoading } from "~/hooks/useStableFeedListBodyLoading";
 import { useStablePaginatedQuery } from "~/hooks/useStableQuery";
 import { useAppStore, useStableTimestamp } from "~/store";
-import { logError } from "~/utils/errorLogging";
 import { eventMatchesFeedSegment } from "~/utils/feedSegment";
 
 type Segment = "upcoming" | "past";
@@ -35,7 +33,6 @@ type Segment = "upcoming" | "past";
 function FollowingFeedContent() {
   const { user } = useUser();
   const [selectedSegment, setSelectedSegment] = useState<Segment>("upcoming");
-  const [isModalVisible, setIsModalVisible] = useState(false);
   const stableTimestamp = useStableTimestamp();
 
   const pendingFollowUsername = useAppStore(
@@ -197,25 +194,6 @@ function FollowingFeedContent() {
   }, [groupedEvents, stableTimestamp, selectedSegment]);
 
   const followedListCount = followedLists?.length ?? 0;
-  const singleFollowedList =
-    followedListCount === 1 ? followedLists?.[0] : null;
-
-  const handleShareList = useCallback(
-    async (listName: string, listSlug?: string) => {
-      const shareUrl = listSlug
-        ? `https://soonlist.com/list/${listSlug}`
-        : "https://soonlist.com";
-      try {
-        await Share.share({
-          message: `Check out ${listName} on Soonlist`,
-          url: shareUrl,
-        });
-      } catch (error) {
-        logError("Error sharing list", error);
-      }
-    },
-    [],
-  );
 
   const HeaderComponent = useCallback(() => {
     return (
@@ -227,32 +205,37 @@ function FollowingFeedContent() {
           Events from Soonlists I subscribe to
         </Text>
         {followedListCount > 0 && (
-          <TouchableOpacity
-            onPress={() => {
-              if (singleFollowedList) {
-                void handleShareList(
-                  singleFollowedList.name,
-                  singleFollowedList.slug ?? undefined,
-                );
-              } else {
-                setIsModalVisible(true);
-              }
-            }}
-            activeOpacity={0.7}
-            className="mb-2"
-            style={{ paddingLeft: 6 }}
+          <View
+            className="mb-2 flex-row items-center"
+            style={{ paddingLeft: 6, columnGap: 10 }}
           >
-            <View className="flex-row items-center">
-              <Text className="text-sm text-neutral-2">Includes: </Text>
-              <SymbolView name="list.bullet" size={14} tintColor="#5A32FB" />
-              <Text className="text-sm font-semibold text-interactive-1">
-                {" "}
-                {singleFollowedList
-                  ? singleFollowedList.name
-                  : `${followedListCount} lists`}
+            <TouchableOpacity
+              onPress={() => router.push("/lists/subscribed")}
+              activeOpacity={0.7}
+            >
+              <View className="flex-row items-center">
+                <Text className="text-sm text-neutral-2">Includes: </Text>
+                <SymbolView name="list.bullet" size={14} tintColor="#5A32FB" />
+                <Text className="text-sm font-semibold text-interactive-1">
+                  {" "}
+                  {followedListCount === 1
+                    ? "1 list"
+                    : `${followedListCount} lists`}
+                </Text>
+              </View>
+            </TouchableOpacity>
+            <TouchableOpacity
+              onPress={() => router.push("/lists/discover")}
+              activeOpacity={0.7}
+              accessibilityRole="button"
+              accessibilityLabel="Find more Soonlists"
+              className="rounded-full bg-interactive-2 px-2.5 py-1"
+            >
+              <Text className="text-xs font-semibold text-neutral-1">
+                Find more →
               </Text>
-            </View>
-          </TouchableOpacity>
+            </TouchableOpacity>
+          </View>
         )}
         <View style={{ width: 260 }}>
           <UpcomingPastSegmentedControl
@@ -262,13 +245,7 @@ function FollowingFeedContent() {
         </View>
       </View>
     );
-  }, [
-    selectedSegment,
-    handleSegmentChange,
-    followedListCount,
-    singleFollowedList,
-    handleShareList,
-  ]);
+  }, [selectedSegment, handleSegmentChange, followedListCount]);
 
   // Stable paginated results lag args changes by one tick: when switching
   // segments, the previous segment's rows are still in `groupedEvents` but
@@ -310,25 +287,21 @@ function FollowingFeedContent() {
   }
 
   return (
-    <>
-      <FollowedListsModal
-        visible={isModalVisible}
-        onClose={() => setIsModalVisible(false)}
-      />
-      <UserEventsList
-        groupedEvents={enrichedEvents}
-        onEndReached={handleLoadMore}
-        isFetchingNextPage={status === "LoadingMore"}
-        listBodyLoading={listBodyLoading || hasStaleSegmentData}
-        showCreator="always"
-        primaryAction="save"
-        showSourceStickers
-        savedEventIds={savedEventIds}
-        source="following"
-        HeaderComponent={HeaderComponent}
-        attributionVariant="list-primary"
-      />
-    </>
+    <UserEventsList
+      groupedEvents={enrichedEvents}
+      onEndReached={handleLoadMore}
+      isFetchingNextPage={status === "LoadingMore"}
+      listBodyLoading={listBodyLoading || hasStaleSegmentData}
+      showCreator="always"
+      primaryAction="save"
+      showSourceStickers
+      savedEventIds={savedEventIds}
+      source="following"
+      HeaderComponent={HeaderComponent}
+      attributionVariant="list-primary"
+      footerCta="discoverSoonlists"
+      onDiscoverSoonlists={() => router.push("/lists/discover")}
+    />
   );
 }
 

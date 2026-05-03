@@ -288,6 +288,39 @@ const InitialLayout = () => {
           }}
         />
         <Stack.Screen
+          name="event/[id]/saved-by"
+          options={{
+            presentation: "modal",
+            title: "From these Soonlists",
+            headerShown: true,
+            headerStyle: { backgroundColor: "#FFFFFF" },
+            headerTintColor: "#5A32FB",
+            headerShadowVisible: false,
+          }}
+        />
+        <Stack.Screen
+          name="lists/subscribed"
+          options={{
+            presentation: "modal",
+            title: "Subscribed lists",
+            headerShown: true,
+            headerStyle: { backgroundColor: "#FFFFFF" },
+            headerTintColor: "#5A32FB",
+            headerShadowVisible: false,
+          }}
+        />
+        <Stack.Screen
+          name="lists/discover"
+          options={{
+            presentation: "modal",
+            title: "Discover Soonlists",
+            headerShown: true,
+            headerStyle: { backgroundColor: "#F4F1FF" },
+            headerTintColor: "#5A32FB",
+            headerShadowVisible: false,
+          }}
+        />
+        <Stack.Screen
           name="share-setup"
           options={{
             presentation: "formSheet",

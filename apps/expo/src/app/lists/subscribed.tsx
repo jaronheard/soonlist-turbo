@@ -2,36 +2,23 @@ import React, { useCallback } from "react";
 import {
   ActivityIndicator,
   FlatList,
-  Modal,
-  Platform,
-  Share,
   Text,
   TouchableOpacity,
   View,
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { router } from "expo-router";
+import { router, Stack } from "expo-router";
 import { useMutation, useQuery } from "convex/react";
 
 import type { Doc } from "@soonlist/backend/convex/_generated/dataModel";
 import { api } from "@soonlist/backend/convex/_generated/api";
 
-import { List, ShareIcon } from "~/components/icons";
-import { SheetHeader } from "~/components/SheetHeader";
+import { List } from "~/components/icons";
 import { SubscribeButton } from "~/components/SubscribeButton";
-import Config from "~/utils/config";
 import { logError } from "~/utils/errorLogging";
 import { toast } from "~/utils/feedback";
 
-interface FollowedListsModalProps {
-  visible: boolean;
-  onClose: () => void;
-}
-
-export function FollowedListsModal({
-  visible,
-  onClose,
-}: FollowedListsModalProps) {
+export default function SubscribedListsScreen() {
   const insets = useSafeAreaInsets();
   const followedLists = useQuery(api.lists.getFollowedLists);
   const unfollowListMutation = useMutation(
@@ -56,53 +43,16 @@ export function FollowedListsModal({
     [unfollowListMutation],
   );
 
-  const handleShareList = useCallback(
-    async (listName: string, listSlug?: string) => {
-      const shareUrl = listSlug
-        ? `${Config.apiBaseUrl}/list/${listSlug}`
-        : Config.apiBaseUrl;
-      try {
-        await Share.share(
-          Platform.OS === "ios"
-            ? { url: shareUrl }
-            : { message: `Check out ${listName} on Soonlist: ${shareUrl}` },
-        );
-      } catch (error) {
-        logError("Error sharing list", error);
-      }
-    },
-    [],
-  );
-
-  const handleListPress = useCallback(
-    (list: Doc<"lists">) => {
-      onClose();
-      if (list.slug) {
-        router.push(`/list/${list.slug}`);
-      }
-    },
-    [onClose],
-  );
+  const handleListPress = useCallback((list: Doc<"lists">) => {
+    if (list.slug) {
+      router.push(`/list/${list.slug}`);
+    }
+  }, []);
 
   return (
-    <Modal
-      visible={visible}
-      presentationStyle="pageSheet"
-      animationType="slide"
-      onRequestClose={onClose}
-    >
-      <View className="flex-1 bg-white" style={{ paddingTop: insets.top }}>
-        <SheetHeader
-          title="Subscribed lists"
-          trailing={
-            <TouchableOpacity onPress={onClose} activeOpacity={0.7}>
-              <Text className="text-base font-semibold text-interactive-1">
-                Done
-              </Text>
-            </TouchableOpacity>
-          }
-        />
-
+    <>
+      <Stack.Screen options={{ title: "Subscribed lists" }} />
+      <View className="flex-1 bg-white">
         {followedLists === undefined ? (
           <View className="flex-1 items-center justify-center">
             <ActivityIndicator size="large" color="#5A32FB" />
@@ -115,10 +65,12 @@ export function FollowedListsModal({
           </View>
         ) : (
           <FlatList
+            contentInsetAdjustmentBehavior="automatic"
             data={followedLists}
             keyExtractor={(list) => list.id}
             contentContainerStyle={{
               paddingHorizontal: 16,
+              paddingTop: 16,
               paddingBottom: insets.bottom + 16,
             }}
             renderItem={({ item: list, index }) => {
@@ -150,19 +102,7 @@ export function FollowedListsModal({
                     </View>
                   </TouchableOpacity>
 
-                  <TouchableOpacity
-                    onPress={() =>
-                      void handleShareList(list.name, list.slug ?? undefined)
-                    }
-                    className="ml-2 rounded-full p-2"
-                    activeOpacity={0.7}
-                    accessibilityLabel={`Share ${list.name}`}
-                    hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
-                  >
-                    <ShareIcon size={18} color="#5A32FB" />
-                  </TouchableOpacity>
-
-                  <View className="ml-1">
+                  <View className="ml-2">
                     <SubscribeButton
                       isSubscribed={true}
                       onPress={() => handleUnfollow(list.id)}
@@ -176,6 +116,6 @@ export function FollowedListsModal({
           />
         )}
       </View>
-    </Modal>
+    </>
   );
 }

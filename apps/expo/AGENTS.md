@@ -27,6 +27,14 @@ NativeWind (TailwindCSS for React Native).
 
 Expo Router provides typed file-based navigation.
 
+### Full-screen sheets / modals
+
+**Never use `<Modal presentationStyle="pageSheet">`.** It's laggy, doesn't compose with navigation state, and behaves oddly on dismiss. There are no exceptions.
+
+For anything that conceptually navigates to a new surface (settings panels, list managers, discovery screens, attribution sheets), build it as an Expo Router screen with `presentation: "modal"` (or `formSheet`) registered in `app/_layout.tsx`. Push it with `router.push("/...")` and dismiss with `router.back()`. The new route fetches its own data — pass an id in the URL, refetch via Convex.
+
+For inline UI controls (pickers like `PlatformSelectNative` / `TimezoneSelectNative`, confirmation dialogs, transient overlays), `<Modal presentationStyle="overFullScreen">` with a centered popup + dimmed backdrop is the pattern. Component-state driven, doesn't take over the screen.
+
 ## Development
 
 - Each developer needs a personal ngrok edge (see root README.md)
