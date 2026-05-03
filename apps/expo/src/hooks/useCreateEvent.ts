@@ -56,7 +56,7 @@ async function optimizeImage(uri: string): Promise<string> {
 }
 
 export function useCreateEvent() {
-  const { setIsImageLoading, addWorkflowId } = useAppStore();
+  const { addWorkflowId } = useAppStore();
   const setIsCapturing = useInFlightEventStore((s) => s.setIsCapturing);
   const addPendingBatchId = useInFlightEventStore((s) => s.addPendingBatchId);
   const { hasNotificationPermission } = useOneSignal();
@@ -90,10 +90,6 @@ export function useCreateEvent() {
 
         // Check if we have an image to process
         if (imageUri) {
-          // Set loading state for both routes since we don't know which one is active
-          setIsImageLoading(true, "add");
-          setIsImageLoading(true, "new");
-
           if (!imageUri.startsWith("file://")) {
             throw new Error("Invalid image URI format");
           }
@@ -175,10 +171,6 @@ export function useCreateEvent() {
         void hapticError();
         throw error; // Rethrow to trigger mutation's onError
       } finally {
-        // Reset loading state for both routes
-        setIsImageLoading(false, "add");
-        setIsImageLoading(false, "new");
-
         if (!suppressCapturing) {
           setIsCapturing(false);
         }
@@ -186,7 +178,6 @@ export function useCreateEvent() {
     },
     [
       setIsCapturing,
-      setIsImageLoading,
       createEventBatch,
       addImagesToBatch,
       hasNotificationPermission,
@@ -213,8 +204,6 @@ export function useCreateEvent() {
         if (!suppressCapturing) {
           setIsCapturing(true);
         }
-        setIsImageLoading(true, "add");
-        setIsImageLoading(true, "new");
 
         const { userId, username, sendNotification = true } = tasks[0]!;
 
@@ -276,8 +265,6 @@ export function useCreateEvent() {
         if (!suppressCapturing) {
           setIsCapturing(false);
         }
-        setIsImageLoading(false, "add");
-        setIsImageLoading(false, "new");
       }
     },
     [
@@ -288,7 +275,6 @@ export function useCreateEvent() {
       userTimezone,
       defaultVisibility,
       setIsCapturing,
-      setIsImageLoading,
     ],
   );
 

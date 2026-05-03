@@ -371,14 +371,6 @@ const InitialLayout = () => {
             headerBackVisible: true,
           }}
         />
-        {/* SHARE EXTENSION ROUTE */}
-        <Stack.Screen
-          name="new"
-          options={{
-            presentation: "modal",
-            headerShown: true,
-          }}
-        />
         <Stack.Screen
           name="settings/account"
           options={{
