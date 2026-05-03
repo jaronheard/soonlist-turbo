@@ -1,5 +1,12 @@
 import React, { useCallback, useMemo, useState } from "react";
-import { FlatList, Modal, Text, TouchableOpacity, View } from "react-native";
+import {
+  FlatList,
+  Modal,
+  Pressable,
+  Text,
+  TouchableOpacity,
+  View,
+} from "react-native";
 
 import { Check, ChevronDown } from "~/components/icons";
 
@@ -94,29 +101,43 @@ export function PlatformSelectNative({
         <ChevronDown size={20} color="#666" />
       </TouchableOpacity>
 
-      <Modal
-        visible={isModalVisible}
-        animationType="slide"
-        presentationStyle="pageSheet"
-        onRequestClose={hideModal}
-      >
-        <View className="flex-1 bg-white">
-          <View className="flex-row items-center justify-between border-b border-gray-200 px-4 py-4">
-            <Text className="text-lg font-semibold">Select Platform</Text>
-            <TouchableOpacity onPress={hideModal} className="p-2">
-              <Text className="text-lg font-semibold text-blue-600">Done</Text>
-            </TouchableOpacity>
-          </View>
+      {isModalVisible && (
+        <Modal
+          transparent={true}
+          animationType="fade"
+          statusBarTranslucent
+          onRequestClose={hideModal}
+          presentationStyle="overFullScreen"
+        >
+          <Pressable
+            onPress={hideModal}
+            className="flex-1 items-center justify-center bg-black/70 p-4"
+          >
+            <Pressable
+              onPress={(e) => e.stopPropagation()}
+              className="w-full max-w-sm overflow-hidden rounded-xl bg-white shadow-lg"
+            >
+              <View className="flex-row items-center justify-between border-b border-gray-200 bg-gray-50 px-4 py-3">
+                <Text className="text-lg font-semibold text-gray-900">
+                  Select Platform
+                </Text>
+                <TouchableOpacity onPress={hideModal} className="p-2">
+                  <Text className="text-base font-semibold text-blue-600">
+                    Done
+                  </Text>
+                </TouchableOpacity>
+              </View>
 
-          <FlatList
-            data={PLATFORMS}
-            renderItem={renderItem}
-            keyExtractor={keyExtractor}
-            showsVerticalScrollIndicator={false}
-            className="flex-1"
-          />
-        </View>
-      </Modal>
+              <FlatList
+                data={PLATFORMS}
+                renderItem={renderItem}
+                keyExtractor={keyExtractor}
+                showsVerticalScrollIndicator={false}
+              />
+            </Pressable>
+          </Pressable>
+        </Modal>
+      )}
     </>
   );
 }

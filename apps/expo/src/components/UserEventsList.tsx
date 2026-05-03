@@ -1,6 +1,6 @@
 import type { FunctionReturnType } from "convex/server";
 import type { ViewStyle } from "react-native";
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useEffect, useMemo } from "react";
 import {
   ActivityIndicator,
   FlatList,
@@ -35,7 +35,6 @@ import {
 } from "~/components/icons";
 import { OverflowPill } from "~/components/OverflowPill";
 import { PrivateVisibilityBadge } from "~/components/PrivateVisibilityBadge";
-import { SavedByModal } from "~/components/SavedByModal";
 import { useAddEventFlow } from "~/hooks/useAddEventFlow";
 import { useEventActions } from "~/hooks/useEventActions";
 import { SHARE_PROMPT_THRESHOLD } from "~/hooks/useShareListPrompt";
@@ -180,8 +179,6 @@ export function UserEventListItem(props: UserEventListItemProps) {
 
   const { user: currentUser } = useUser();
   const eventUser = event.user;
-  const [showFallbackSavedByModal, setShowFallbackSavedByModal] =
-    useState(false);
 
   // Prefetch the full-size image for the detail screen so it loads instantly
   useEffect(() => {
@@ -271,7 +268,7 @@ export function UserEventListItem(props: UserEventListItemProps) {
   // to navigate to; otherwise tap the row → open the single source list.
   const onFallbackListAttributionRowPress =
     fallbackOverflowCount > 0 || !sourceListSlug
-      ? () => setShowFallbackSavedByModal(true)
+      ? () => router.push(`/event/${id}/saved-by`)
       : () => router.push(`/list/${sourceListSlug}`);
 
   const isOwner = demoMode || isCurrentUser;
@@ -524,6 +521,7 @@ export function UserEventListItem(props: UserEventListItemProps) {
           </View>
           {shouldShowCreator ? (
             <EventAttributionRow
+              eventId={id}
               creator={{
                 id: eventUser.id,
                 username: eventUser.username,
@@ -576,23 +574,10 @@ export function UserEventListItem(props: UserEventListItemProps) {
               )}
               <OverflowPill
                 count={fallbackOverflowCount}
-                onPress={() => setShowFallbackSavedByModal(true)}
+                onPress={() => router.push(`/event/${id}/saved-by`)}
               />
             </Pressable>
           ) : null}
-          <SavedByModal
-            visible={showFallbackSavedByModal}
-            onClose={() => setShowFallbackSavedByModal(false)}
-            creator={{
-              id: eventUser.id,
-              username: eventUser.username,
-              displayName: eventUser.displayName,
-              userImage: eventUser.userImage,
-            }}
-            savers={[]}
-            lists={(event as { lists?: Doc<"lists">[] }).lists ?? []}
-            currentUserId={currentUser?.id}
-          />
           <View className="absolute left-0 right-0 top-0 z-20 flex flex-row items-center justify-center space-x-2">
             {isRecent && (
               <View

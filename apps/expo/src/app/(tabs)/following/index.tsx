@@ -6,7 +6,7 @@ import React, {
   useState,
 } from "react";
 import { Text, TouchableOpacity, View } from "react-native";
-import { Redirect, useFocusEffect } from "expo-router";
+import { Redirect, router, useFocusEffect } from "expo-router";
 import { SymbolView } from "expo-symbols";
 import { useUser } from "@clerk/clerk-expo";
 import {
@@ -19,8 +19,6 @@ import {
 import { api } from "@soonlist/backend/convex/_generated/api";
 
 import { DefaultEmptyState } from "~/components/DefaultEmptyState";
-import { DiscoverSoonlistsModal } from "~/components/DiscoverSoonlistsModal";
-import { FollowedListsModal } from "~/components/FollowedListsModal";
 import { MatchAuthLoadingSurface } from "~/components/MatchAuthLoadingSurface";
 import { ReferralEmptyState } from "~/components/ReferralEmptyState";
 import { UpcomingPastSegmentedControl } from "~/components/UpcomingPastSegmentedControl";
@@ -35,8 +33,6 @@ type Segment = "upcoming" | "past";
 function FollowingFeedContent() {
   const { user } = useUser();
   const [selectedSegment, setSelectedSegment] = useState<Segment>("upcoming");
-  const [isModalVisible, setIsModalVisible] = useState(false);
-  const [isDiscoverModalVisible, setIsDiscoverModalVisible] = useState(false);
   const stableTimestamp = useStableTimestamp();
 
   const pendingFollowUsername = useAppStore(
@@ -210,7 +206,7 @@ function FollowingFeedContent() {
         </Text>
         {followedListCount > 0 && (
           <TouchableOpacity
-            onPress={() => setIsModalVisible(true)}
+            onPress={() => router.push("/lists/subscribed")}
             activeOpacity={0.7}
             className="mb-2"
             style={{ paddingLeft: 6 }}
@@ -277,31 +273,21 @@ function FollowingFeedContent() {
   }
 
   return (
-    <>
-      <FollowedListsModal
-        visible={isModalVisible}
-        onClose={() => setIsModalVisible(false)}
-      />
-      <DiscoverSoonlistsModal
-        visible={isDiscoverModalVisible}
-        onClose={() => setIsDiscoverModalVisible(false)}
-      />
-      <UserEventsList
-        groupedEvents={enrichedEvents}
-        onEndReached={handleLoadMore}
-        isFetchingNextPage={status === "LoadingMore"}
-        listBodyLoading={listBodyLoading || hasStaleSegmentData}
-        showCreator="always"
-        primaryAction="save"
-        showSourceStickers
-        savedEventIds={savedEventIds}
-        source="following"
-        HeaderComponent={HeaderComponent}
-        attributionVariant="list-primary"
-        footerCta="discoverSoonlists"
-        onDiscoverSoonlists={() => setIsDiscoverModalVisible(true)}
-      />
-    </>
+    <UserEventsList
+      groupedEvents={enrichedEvents}
+      onEndReached={handleLoadMore}
+      isFetchingNextPage={status === "LoadingMore"}
+      listBodyLoading={listBodyLoading || hasStaleSegmentData}
+      showCreator="always"
+      primaryAction="save"
+      showSourceStickers
+      savedEventIds={savedEventIds}
+      source="following"
+      HeaderComponent={HeaderComponent}
+      attributionVariant="list-primary"
+      footerCta="discoverSoonlists"
+      onDiscoverSoonlists={() => router.push("/lists/discover")}
+    />
   );
 }
 

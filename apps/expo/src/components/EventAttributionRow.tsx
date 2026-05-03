@@ -1,5 +1,5 @@
 import type { StyleProp, TextStyle } from "react-native";
-import React, { useState } from "react";
+import React from "react";
 import { Pressable, Text, View } from "react-native";
 import { router } from "expo-router";
 
@@ -8,7 +8,6 @@ import type { Doc } from "@soonlist/backend/convex/_generated/dataModel";
 import type { UserForDisplay } from "~/types/user";
 import { List } from "~/components/icons";
 import { OverflowPill } from "~/components/OverflowPill";
-import { SavedByModal } from "~/components/SavedByModal";
 import { UserAvatar } from "~/components/UserAvatar";
 import { navigateToUser } from "~/utils/navigateToUser";
 
@@ -18,6 +17,7 @@ export type EventAttributionVariant =
   | "people-only";
 
 interface EventAttributionRowProps {
+  eventId: string;
   creator: UserForDisplay;
   savers: UserForDisplay[];
   iconSize: number;
@@ -27,6 +27,10 @@ interface EventAttributionRowProps {
   additionalSourceCount?: number;
   lists?: Doc<"lists">[];
   variant?: EventAttributionVariant;
+}
+
+function pushSavedBy(eventId: string) {
+  router.push(`/event/${eventId}/saved-by`);
 }
 
 const HIT_SLOP = { top: 8, bottom: 8, left: 4, right: 4 } as const;
@@ -343,6 +347,7 @@ function ListChipLegacy({ name, slug }: { name?: string; slug?: string }) {
 }
 
 export function EventAttributionRow({
+  eventId,
   creator,
   savers,
   iconSize,
@@ -356,6 +361,7 @@ export function EventAttributionRow({
   if (variant === "people-only") {
     return (
       <MySoonlistRow
+        eventId={eventId}
         creator={creator}
         savers={savers}
         iconSize={iconSize}
@@ -367,6 +373,7 @@ export function EventAttributionRow({
   if (variant === "list-primary" && sourceListSlug) {
     return (
       <MySceneRow
+        eventId={eventId}
         creator={creator}
         savers={savers}
         iconSize={iconSize}
@@ -381,6 +388,7 @@ export function EventAttributionRow({
 
   return (
     <PeoplePrimaryRow
+      eventId={eventId}
       creator={creator}
       savers={savers}
       iconSize={iconSize}
@@ -394,17 +402,18 @@ export function EventAttributionRow({
 }
 
 function MySoonlistRow({
+  eventId,
   creator,
   savers,
   iconSize,
   currentUserId,
 }: {
+  eventId: string;
   creator: UserForDisplay;
   savers: UserForDisplay[];
   iconSize: number;
   currentUserId?: string;
 }) {
-  const [showModal, setShowModal] = useState(false);
   const isOwnEvent = currentUserId === creator.id;
   const avatarSize = Math.round(iconSize * 1.25); // 20px at fontScale=1
   const otherSavers = savers.filter(
@@ -421,44 +430,34 @@ function MySoonlistRow({
     const extraNameCount = Math.max(otherSavers.length - 2, 0);
     const [singleSaver] = otherSavers;
     const multipleSavers = otherSavers.length > 1;
-    const openFromSoonlists = () => setShowModal(true);
+    const openFromSoonlists = () => pushSavedBy(eventId);
     const onRowAction =
       multipleSavers || !singleSaver
         ? openFromSoonlists
         : () => navigateToUser(singleSaver, currentUserId);
     return (
-      <>
-        <RowWrapper onRowPress={onRowAction}>
-          <RowText className="text-neutral-2">Also saved by</RowText>
-          <AvatarStack
-            users={stackUsers}
-            size={avatarSize}
-            onPress={onRowAction}
-          />
-          <NameList
-            users={otherSavers}
-            extraCount={extraNameCount}
-            maxNames={2}
-            currentUserId={currentUserId}
-            onOverflowPress={openFromSoonlists}
-            nameLinksEnabled={!multipleSavers}
-          />
-        </RowWrapper>
-        <SavedByModal
-          visible={showModal}
-          onClose={() => setShowModal(false)}
-          creator={creator}
-          savers={savers}
-          lists={[]}
-          currentUserId={currentUserId}
+      <RowWrapper onRowPress={onRowAction}>
+        <RowText className="text-neutral-2">Also saved by</RowText>
+        <AvatarStack
+          users={stackUsers}
+          size={avatarSize}
+          onPress={onRowAction}
         />
-      </>
+        <NameList
+          users={otherSavers}
+          extraCount={extraNameCount}
+          maxNames={2}
+          currentUserId={currentUserId}
+          onOverflowPress={openFromSoonlists}
+          nameLinksEnabled={!multipleSavers}
+        />
+      </RowWrapper>
     );
   }
 
   // Reaching this branch implies otherSavers.length >= 1, so the row shows
   // creator + 1+ savers (2+ people total) — always open the modal.
-  const openFromSoonlists = () => setShowModal(true);
+  const openFromSoonlists = () => pushSavedBy(eventId);
 
   const capturerContent = (
     <>
@@ -486,45 +485,36 @@ function MySoonlistRow({
   const stackUsers = otherSavers.slice(0, 3);
   const extraNameCount = Math.max(otherSavers.length - 1, 0);
   return (
-    <>
-      <RowWrapper onRowPress={openFromSoonlists}>
-        <RowText className="text-neutral-2">Captured by</RowText>
-        <Pressable
-          onPress={() => navigateToUser(creator, currentUserId)}
-          hitSlop={HIT_SLOP}
-          className="flex-row items-center"
-          style={{ columnGap: 7, flexShrink: 1, minWidth: 0 }}
-        >
-          {capturerContent}
-        </Pressable>
-        <RowText className="text-neutral-3">·</RowText>
-        <AvatarStack
-          users={stackUsers}
-          size={avatarSize}
-          onPress={openFromSoonlists}
-        />
-        <NameList
-          users={otherSavers}
-          extraCount={extraNameCount}
-          maxNames={1}
-          currentUserId={currentUserId}
-          onOverflowPress={openFromSoonlists}
-          nameLinksEnabled={false}
-        />
-      </RowWrapper>
-      <SavedByModal
-        visible={showModal}
-        onClose={() => setShowModal(false)}
-        creator={creator}
-        savers={savers}
-        lists={[]}
-        currentUserId={currentUserId}
+    <RowWrapper onRowPress={openFromSoonlists}>
+      <RowText className="text-neutral-2">Captured by</RowText>
+      <Pressable
+        onPress={() => navigateToUser(creator, currentUserId)}
+        hitSlop={HIT_SLOP}
+        className="flex-row items-center"
+        style={{ columnGap: 7, flexShrink: 1, minWidth: 0 }}
+      >
+        {capturerContent}
+      </Pressable>
+      <RowText className="text-neutral-3">·</RowText>
+      <AvatarStack
+        users={stackUsers}
+        size={avatarSize}
+        onPress={openFromSoonlists}
       />
-    </>
+      <NameList
+        users={otherSavers}
+        extraCount={extraNameCount}
+        maxNames={1}
+        currentUserId={currentUserId}
+        onOverflowPress={openFromSoonlists}
+        nameLinksEnabled={false}
+      />
+    </RowWrapper>
   );
 }
 
 function MySceneRow({
+  eventId,
   creator,
   savers,
   iconSize,
@@ -532,8 +522,8 @@ function MySceneRow({
   sourceListName,
   sourceListSlug,
   additionalSourceCount,
-  lists,
 }: {
+  eventId: string;
   creator: UserForDisplay;
   savers: UserForDisplay[];
   iconSize: number;
@@ -543,7 +533,6 @@ function MySceneRow({
   additionalSourceCount?: number;
   lists?: Doc<"lists">[];
 }) {
-  const [showModal, setShowModal] = useState(false);
   const avatarSize = Math.round(iconSize * 1.25); // 20px at fontScale=1
   const listIconSize = Math.round(iconSize * 0.8125); // 13px at fontScale=1
 
@@ -552,49 +541,37 @@ function MySceneRow({
   const allPeople = combineUsers(creator, savers);
   const stackUsers = allPeople.slice(0, 3);
   const remainingListsCount = additionalSourceCount ?? 0;
-  const openFromSoonlists = () => setShowModal(true);
+  const openFromSoonlists = () => pushSavedBy(eventId);
   const onRowAction =
     allPeople.length > 1
       ? openFromSoonlists
       : () => navigateToUser(creator, currentUserId);
 
   return (
-    <>
-      <RowWrapper onRowPress={onRowAction}>
-        <ListChip
-          name={sourceListName}
-          slug={sourceListSlug}
-          size={listIconSize}
-        />
-        {remainingListsCount > 0 ? (
-          <OverflowPill
-            count={remainingListsCount}
-            onPress={openFromSoonlists}
-          />
-        ) : null}
-        <RowText className="text-neutral-3">·</RowText>
-        <AvatarStack
-          users={stackUsers}
-          size={avatarSize}
-          capturerId={creator.id}
-          onPress={onRowAction}
-        />
-      </RowWrapper>
-      <SavedByModal
-        visible={showModal}
-        onClose={() => setShowModal(false)}
-        creator={creator}
-        savers={savers}
-        lists={lists ?? []}
-        currentUserId={currentUserId}
+    <RowWrapper onRowPress={onRowAction}>
+      <ListChip
+        name={sourceListName}
+        slug={sourceListSlug}
+        size={listIconSize}
       />
-    </>
+      {remainingListsCount > 0 ? (
+        <OverflowPill count={remainingListsCount} onPress={openFromSoonlists} />
+      ) : null}
+      <RowText className="text-neutral-3">·</RowText>
+      <AvatarStack
+        users={stackUsers}
+        size={avatarSize}
+        capturerId={creator.id}
+        onPress={onRowAction}
+      />
+    </RowWrapper>
   );
 }
 
 // Discover tab and List detail page. Includes full-width press capture so
 // background taps do not pass through to the event card.
 function PeoplePrimaryRow({
+  eventId,
   creator,
   savers,
   iconSize,
@@ -602,8 +579,8 @@ function PeoplePrimaryRow({
   sourceListName,
   sourceListSlug,
   additionalSourceCount,
-  lists,
 }: {
+  eventId: string;
   creator: UserForDisplay;
   savers: UserForDisplay[];
   iconSize: number;
@@ -613,7 +590,6 @@ function PeoplePrimaryRow({
   additionalSourceCount?: number;
   lists?: Doc<"lists">[];
 }) {
-  const [showModal, setShowModal] = useState(false);
   const isOwnEvent = currentUserId === creator.id;
   const allUsers = combineUsers(creator, savers);
   const displayUsers = allUsers.slice(0, 2);
@@ -621,7 +597,7 @@ function PeoplePrimaryRow({
   const remainingListsCount = additionalSourceCount ?? 0;
   const avatarSize = iconSize * 0.9;
   const isMultiUser = allUsers.length > 1;
-  const openFromSoonlists = () => setShowModal(true);
+  const openFromSoonlists = () => pushSavedBy(eventId);
 
   const hasAnyListInfo =
     !!sourceListSlug || !!sourceListName || remainingListsCount > 0;
@@ -644,73 +620,60 @@ function PeoplePrimaryRow({
   };
 
   return (
-    <>
-      <Pressable
-        onPress={onRowPress}
-        className="mx-auto mt-1 w-full flex-row flex-wrap items-center justify-center gap-2"
-        accessibilityRole="button"
-        style={({ pressed }) => (pressed ? { opacity: 0.9 } : undefined)}
-      >
-        {isOwnEvent ? (
+    <Pressable
+      onPress={onRowPress}
+      className="mx-auto mt-1 w-full flex-row flex-wrap items-center justify-center gap-2"
+      accessibilityRole="button"
+      style={({ pressed }) => (pressed ? { opacity: 0.9 } : undefined)}
+    >
+      {isOwnEvent ? (
+        <Pressable
+          onPress={() => navigateToUser(creator, currentUserId)}
+          hitSlop={HIT_SLOP}
+          className="flex-row items-center gap-1"
+        >
+          <UserAvatar user={creator} size={avatarSize} />
+          <Text className="text-xs text-neutral-2">You</Text>
+        </Pressable>
+      ) : (
+        displayUsers.map((user, index) => (
           <Pressable
-            onPress={() => navigateToUser(creator, currentUserId)}
+            key={user.id}
+            onPress={() =>
+              isMultiUser
+                ? openFromSoonlists()
+                : navigateToUser(user, currentUserId)
+            }
             hitSlop={HIT_SLOP}
             className="flex-row items-center gap-1"
           >
-            <UserAvatar user={creator} size={avatarSize} />
-            <Text className="text-xs text-neutral-2">You</Text>
-          </Pressable>
-        ) : (
-          displayUsers.map((user, index) => (
-            <Pressable
-              key={user.id}
-              onPress={() =>
-                isMultiUser
-                  ? openFromSoonlists()
-                  : navigateToUser(user, currentUserId)
-              }
-              hitSlop={HIT_SLOP}
-              className="flex-row items-center gap-1"
-            >
-              <UserAvatar user={user} size={avatarSize} />
-              <Text className="text-xs text-neutral-2">
-                {user.displayName || user.username}
-                {index < displayUsers.length - 1 || remainingUsersCount > 0
-                  ? ","
-                  : ""}
-              </Text>
-            </Pressable>
-          ))
-        )}
-        {!isOwnEvent && remainingUsersCount > 0 && (
-          <OverflowPill
-            count={remainingUsersCount}
-            onPress={openFromSoonlists}
-          />
-        )}
-        {hasAnyListInfo && (
-          <>
+            <UserAvatar user={user} size={avatarSize} />
             <Text className="text-xs text-neutral-2">
-              {isOwnEvent ? "· Shared to" : "via"}
+              {user.displayName || user.username}
+              {index < displayUsers.length - 1 || remainingUsersCount > 0
+                ? ","
+                : ""}
             </Text>
-            <ListChipLegacy name={sourceListName} slug={sourceListSlug} />
-            {remainingListsCount > 0 && (
-              <OverflowPill
-                count={remainingListsCount}
-                onPress={openFromSoonlists}
-              />
-            )}
-          </>
-        )}
-      </Pressable>
-      <SavedByModal
-        visible={showModal}
-        onClose={() => setShowModal(false)}
-        creator={creator}
-        savers={savers}
-        lists={lists ?? []}
-        currentUserId={currentUserId}
-      />
-    </>
+          </Pressable>
+        ))
+      )}
+      {!isOwnEvent && remainingUsersCount > 0 && (
+        <OverflowPill count={remainingUsersCount} onPress={openFromSoonlists} />
+      )}
+      {hasAnyListInfo && (
+        <>
+          <Text className="text-xs text-neutral-2">
+            {isOwnEvent ? "· Shared to" : "via"}
+          </Text>
+          <ListChipLegacy name={sourceListName} slug={sourceListSlug} />
+          {remainingListsCount > 0 && (
+            <OverflowPill
+              count={remainingListsCount}
+              onPress={openFromSoonlists}
+            />
+          )}
+        </>
+      )}
+    </Pressable>
   );
 }
